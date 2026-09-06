@@ -101,10 +101,13 @@ test("the Phase 2 blocking reviews exist and the rest of Phase 2 does not", () =
   }
 });
 
-test("only the seven Phase 1 standards exist", () => {
+test("only the standards written so far exist", () => {
+  // The guard is not that the corpus is frozen — Phase 2 writes the remaining 45. It is that a
+  // standard arrives deliberately, by being added here, rather than by appearing unnoticed.
   const present = fs.readdirSync(path.join(REPO, "standards")).filter((f) => f.endsWith(".md")).sort();
   assert.deepEqual(present, [
     "01-ai-system-manifest.md",
+    "02-ai-risk-tiering-and-applicability.md",
     "03-machine-readable-ai-policy.md",
     "05-verdict-vocabulary.md",
     "06-standard-structure-and-rule-identity.md",

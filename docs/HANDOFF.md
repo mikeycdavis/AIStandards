@@ -63,15 +63,21 @@ could not run reports as not-evaluated, a prohibition nobody established reports
 | Dependencies | **Zero third-party, structurally.** `test/no-phase-creep.test.mjs` fails if a lockfile appears |
 | Test framework | `node:test` + `node:assert/strict`. Nothing else |
 | Host OS during development | Windows 11, PowerShell 7 |
-| Git | Branch `develop`. **One commit, `18097f6`.** Everything below is uncommitted |
+| Git | Branch `develop`. Checkpoint commit **`d4b4ee2`** (2026-09-04) tracks the whole implementation |
 
 There is no install step. Clone and run.
 
-**The repository is almost entirely untracked.** `git status` shows one modified file and eleven
-untracked paths. This has already cost time once: an attempt to undo a deliberate corruption with
-`git checkout -- artifacts/boundary-review.json` restored nothing, because the file is untracked and
-git had no copy. **Until this is committed, there is no safety net for any file here.** Committing is
-the first thing a new session should consider.
+**The repository was almost entirely untracked until 2026-09-04**, when commit `d4b4ee2` tracked
+125 files. That gap had already cost time once: an attempt to undo a deliberate corruption with
+`git checkout -- artifacts/boundary-review.json` restored nothing, because the file was untracked and
+git had no copy. There is now a safety net; keep it by committing each slice rather than accumulating
+another untracked tree.
+
+**`core.autocrlf` is `true` and there is no `.gitattributes`.** Committed bytes are LF, working-tree
+bytes are CRLF, and a clone on another platform will differ from this one at the byte level. The
+fidelity gate is unaffected because it normalizes CRLF→LF on both sides and declares that it does.
+Adding a `.gitattributes` would rewrite the line endings of every file, so it is left as a deliberate
+open item rather than done in passing.
 
 ## 4 · Commands
 
@@ -89,9 +95,9 @@ Results on 2026-09-04, all re-run for this handoff:
 |---|---|---|
 | `node scripts/test.mjs` | 0 | 225 pass, 0 fail |
 | `node scripts/fidelity.mjs` | 0 | 4 verbatim blocks, all present in the brief |
-| `node scripts/inventory.mjs` | 0 | 53 items, 15 checks run, 47 withdrawn as not-evaluated |
+| `node scripts/inventory.mjs` | 0 | 53 items, **8 implemented**, 16 checks run, 46 withdrawn as not-evaluated |
 | `node scripts/standards.mjs audit .` | 0 | Evidence, no verdict |
-| `node scripts/standards.mjs validate . --json` | 1 | `NON_COMPLIANT`, score 0 |
+| `node scripts/standards.mjs validate . --json` | 1 | `NON_COMPLIANT`, score 0, 32 results |
 
 **The `NON_COMPLIANT` self-verdict is an observed result, not a target and not a permanent
 requirement.** This repository does not yet carry an AI system manifest or tool-permission
@@ -132,9 +138,29 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
 - `artifacts/prompts/ai-standards-spec.md` — 53 items, each classed Derived, Verbatim or Authored
 - `artifacts/boundary-review.json` — evidence for 16 boundary postures across nine packs
 - `scripts/spec.mjs`, `scripts/fidelity.mjs`, `scripts/inventory.mjs` — the gates, none with a write path
-- 7 of 53 standards written: 01, 03, 05, 06, 07, 21, 45
+- **8 of 53 standards written: 01, 02, 03, 05, 06, 07, 21, 45**
 
-**Deliberately not built, and asserted absent by test:** the remaining 46 standards, the remaining 11
+**Standard 02, "AI Risk Tiering and Applicability", landed 2026-09-04** as the first Phase 2 corpus
+slice. It is class **A** (authored — the brief names ten subject areas and no way to decide which
+reach a project) and posture **O**. Six requirements: a four-tier scale discriminated by
+*consequence* rather than capability; a prohibition on this framework ever inferring, proposing or
+defaulting a tier; a rule that a tier narrows scope but never lowers a requirement; the four
+dispositions below; conditional rather than scheduled expiry; and a reported undeclared count.
+
+Its four dispositions are the part other standards will lean on — **justified non-applicability**
+(the subject does not exist, with a `revisitWhen`), **missing evidence** (nothing established it;
+never a pass), **exception** (it applies, is unmet, and is approved by a named person), and
+**contradicted applicability** (the policy says absent and a check saw it present, which blocks
+rather than scores). Only the last two branches are mechanical today.
+
+**It ships with no catalog rules, deliberately, and the document says why in its Validation section:**
+neither `ai-system-manifest.schema.json` nor `ai-policy.schema.json` has a field for a risk tier and
+both are `additionalProperties: false`, so a project cannot record one in a conformant file. A rule
+demanding it would fail every project for the framework's own incompleteness. Its Implementation
+section is split into *implemented today* and *proposed and absent*, so a proposal cannot be read as
+a capability.
+
+**Deliberately not built, and asserted absent by test:** the remaining 45 standards, the remaining 11
 rule shards, templates, `init`, attestations, containers, CI workflows, the adapter, and Phase 3's
 detectors. `test/no-phase-creep.test.mjs` fails if any of them appears early.
 
@@ -193,21 +219,27 @@ governance until a sign-off exists.
 
 ## 9 · The smallest next slice
 
-**Write Standard 02, "AI Risk Tiering and Applicability," and nothing else.**
+**Write Standard 11, "Autonomy Levels and Delegated Authority," and nothing else.**
 
-It is the smallest slice that is genuinely useful, for three reasons. It is class **A** — authored —
-so it exercises the Additions-section check that only authored items trigger, which has so far been
-proven against 9 items but never against a newly written one. It is posture **O**, so it needs no new
-boundary evidence and cannot reopen the review. And it is the standard the other 45 depend on for
-applicability language, so writing it first stops 45 documents from inventing their own.
+Standard 02 named it twice — its Scope defers autonomy to item 11, and its Relationship section names
+11 as one of the two unwritten items most likely to reshape it. Writing it next closes a forward
+reference rather than opening a new one, which is the property that makes a slice small.
 
-Acceptance for that slice: all ten H2 sections present in order; a non-empty Additions section; a
-`Source: item 2 of` line; `node scripts/inventory.mjs` moves from 15 checks run to 16 and from 47
-withdrawn checks to 46, with `implemented` rising from 7 to 8; and 225 tests still pass.
+It is class **D**, derived from the brief's `autonomous` token, so it exercises the token-resolution
+path that Standard 02 (class A) did not. Its posture is **X**, verdict CONFIRMED, with
+EngineeringStandards' `ai.propose-execute` recorded as the single precedent — so unlike Standard 02
+it must carry a crosswalk table, and it is the first document since the boundary review to lean on
+recorded evidence rather than outright ownership. `ai-system.yml` already has an `autonomyTier` enum
+with four declared values, so unlike a risk tier there **is** an artifact to point at.
 
-**Do not** start the remaining 45 standards in the same pass. The skeleton has been proven on seven
-documents; proving it on the eighth before scaling is what stops a systematic defect from being
-written 46 times.
+Semantic acceptance, not counters: the document is recognised by `inventory.mjs` as implementing item
+11; its class-D token resolves to the brief; its crosswalk names the foreign rules as precedent and
+never reuses their ids; it states plainly which of its requirements have no rule in this release; and
+every other item's status is unchanged. The full suite, fidelity and inventory all pass.
+
+**Do not** start the remaining 44 standards in the same pass. The skeleton is now proven on eight
+documents across both provenance classes and postures O and X; proving each new *shape* once before
+scaling is what stops a systematic defect from being written 45 times.
 
 ## 10 · Invariants — do not break these
 

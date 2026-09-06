@@ -178,7 +178,7 @@ under [Authored items](#authored-items).
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
 | 1 | AI System Manifest | D | `AI system manifests` | O | standards/01-ai-system-manifest.md |
-| 2 | AI Risk Tiering and Applicability | A | — | O | — |
+| 2 | AI Risk Tiering and Applicability | A | — | O | standards/02-ai-risk-tiering-and-applicability.md |
 | 3 | Machine-Readable AI Policy | D | `machine-readable policy schema` | O | standards/03-machine-readable-ai-policy.md |
 | 4 | Evidence, Attestations, Expiry, and Review Staleness | D | `attestations, expiry, and review-staleness rules` | O | — |
 | 5 | Verdict Vocabulary | D | `passed, failed, warning, skipped, not-evaluated, and prohibited-but-unestablished` | O | standards/05-verdict-vocabulary.md |
