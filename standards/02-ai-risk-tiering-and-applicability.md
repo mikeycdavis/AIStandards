@@ -284,16 +284,26 @@ policy author reads.
 `not-applicable`, `not-evaluated` and `prohibited-but-unestablished` are its terms, not this
 standard's. R4 says which situation warrants which; Standard 5 says what each one means in a report.
 
-[Standard 1](01-ai-system-manifest.md) R5 declares a lifecycle stage and R1 an autonomy tier. Both
-are **declared observable facts** and neither is a risk tier: autonomy is what the system may do, and
+[Standard 1](01-ai-system-manifest.md) R5 declares a lifecycle stage, and
+[Standard 11](11-autonomy-levels-and-delegated-authority.md) R1 declares an autonomy tier. Both are
+**declared observable facts** and neither is a risk tier: autonomy is what the system may do, and
 risk is what happens when it is wrong. A project at `autonomyTier: read` may be `critical`.
+
+*Corrected 2026-09-06.* This paragraph previously attributed the autonomy tier to Standard 1 R1.
+That was wrong: Standard 1 R1 requires name, purpose and models, and until Standard 11 was written
+no requirement in this pack mandated `autonomyTier` at all, though the manifest schema has carried
+the field since the first release.
 
 [Standard 7](07-boundary-with-adjacent-standards.md) R1 records the search that found no adjacent
 owner for this subject, which is what posture **O** rests on.
 
-Standards 11 (Autonomy Levels) and 8 (Safety Cases) are the two unwritten items most likely to
-reshape this one; both are Phase 2. No ADR covers this standard — `artifacts/adr/` does not exist in
-this release.
+[Standard 11](11-autonomy-levels-and-delegated-authority.md) was written on 2026-09-06 and its R7
+deliberately does **not** carry this standard's R2 in blanket form: R7 prohibits assigning an
+autonomy tier authoritatively while leaving a labelled advisory proposal open. The difference is
+recorded as Q7 in
+[`artifacts/project-plan-breakdown/08-open-questions.md`](../artifacts/project-plan-breakdown/08-open-questions.md)
+and is unresolved. Standard 8 (Safety Cases) remains unwritten and is the item now most likely to
+reshape this one. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
 ## Implementation
 

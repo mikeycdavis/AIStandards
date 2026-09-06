@@ -56,6 +56,43 @@ allows it; nothing requires it.
 Must be read from a registry during Phase 5, never copied from memory.
 **Impact if unanswered:** Phase 5 only.
 
+### Q7 — Does Standard 02's R2 forbid *proposing* a risk tier, or only assigning one?
+
+Raised 2026-09-06 while writing Standard 11. `standards/02-ai-risk-tiering-and-applicability.md` R2
+reads:
+
+> **No detector, heuristic, or audit finding in this framework MAY assert, propose, or default a risk
+> tier, and an undeclared tier MUST be reported as undeclared rather than assumed.**
+
+The reasoning printed beneath it argues that a guess would be drawn from capability signals, which
+R1 makes the wrong discriminator, and would carry the framework's authority into a judgment no
+engineer made. **That argument supports *assert* and *default*. It does not reach *propose*.** An
+advisory suggestion a human must explicitly accept, clearly labelled as not a determination, carries
+no framework authority into the record — the human's acceptance is the determination.
+
+**Evidence on its status.** Item 2 is class `A` in the specification; the brief contains no
+occurrence of "risk", "tier", or "advisory", and its only use of "propose" concerns producing a
+proposed plan. Standard 02's own Additions section declares "R2 in full" as authored. So the blanket
+form is a **newly authored restriction, not an approved requirement**, and it is unilateral.
+
+**Not resolved here, because it is a substantive design decision, not an evidence correction.**
+Standard 02 was left exactly as written. Standard 11's R3 was scoped to prohibit *authoritative
+assignment* of an autonomy tier while leaving a labelled advisory proposal open, so the unapproved
+blanket form was not propagated.
+
+**Impact if unanswered:** the two standards differ in strictness on adjacent ground. If the owner
+affirms the blanket form, Standard 11 R3 tightens to match. If the owner distinguishes advisory from
+authoritative, Standard 02 R2 loses the word "propose" and gains the distinction.
+
+### Q8 — Should the repository pin line endings with a `.gitattributes`?
+
+`core.autocrlf` is `true` and no `.gitattributes` exists, so committed bytes are LF and working-tree
+bytes CRLF. `scripts/fidelity.mjs` declares a CRLF→LF normalization on both sides and reports raw-byte
+matches separately, so nothing currently breaks. Adding one would rewrite every file's line endings
+in a single commit, which is why it has not been done as a side effect of other work.
+**Impact if unanswered:** none today. It becomes real in Phase 5, where `ci-context` sets
+`core.autocrlf=false` when materialising the clone, so container bytes and host bytes will differ.
+
 ## Not questions
 
 Per-shard rule counts are a plan, not a measurement. The catalog does not exist yet, and

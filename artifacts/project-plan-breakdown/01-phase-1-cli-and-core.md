@@ -90,5 +90,5 @@ None. Phase 1 is the root of the graph.
 ## Explicitly deferred out of this phase
 
 Heuristic detectors (Phase 3) · attestations and exceptions (Phase 4) · containers, adapter and
-workflows (Phase 5) · `init` (Phase 2) · the remaining 46 standards (Phase 2) · the remaining 11
+workflows (Phase 5) · `init` (Phase 2) · the remaining 45 standards (Phase 2) · the remaining 11
 rule shards (Phase 2).

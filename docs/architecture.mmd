@@ -1,67 +1,75 @@
 flowchart TB
-    subgraph inputs["Governing inputs — never edited by tooling"]
-        brief["artifacts/prompts/<br/>original_prompt.md<br/><i>the design brief</i>"]
-        spec["artifacts/prompts/<br/>ai-standards-spec.md<br/><i>53 items, classed D/V/A</i>"]
-        bnd["artifacts/<br/>boundary-review.json<br/><i>humanSignOff: null</i>"]
+    subgraph govern["Governing inputs (never generated)"]
+        brief["artifacts/prompts/<br/>original_prompt.md"]
+        spec["artifacts/prompts/<br/>ai-standards-spec.md"]
+        boundary["artifacts/<br/>boundary-review.json"]
+        foreign["artifacts/foreign-<br/>namespace-inventory.json"]
     end
 
-    subgraph review["Review gates — no write path"]
-        fid["fidelity.mjs<br/><i>verbatim blocks vs brief</i>"]
-        inv["inventory.mjs<br/><i>items vs tokens, postures, evidence</i>"]
-        spm["spec.mjs<br/><i>strict parser</i>"]
+    subgraph gates["Review gates (node scripts, exit 0/1/2)"]
+        fidelity["fidelity.mjs<br/>verbatim bytes"]
+        inventory["inventory.mjs<br/>8 catalog checks"]
+        specmod["spec.mjs<br/>spec + prompt parser"]
     end
 
     subgraph corpus["Normative corpus"]
-        rules["rules/ — 7 shards, 32 rules"]
-        stds["standards/ — 7 of 53"]
+        stds["standards/*.md<br/>8 of 53 written"]
+        rules["rules/*.json<br/>7 shards, 32 rules"]
+        schemas["schemas/*.json<br/>5 schemas"]
     end
 
     subgraph engine["Evaluation engine"]
-        cat["catalog.mjs<br/><i>enums, id pattern, bindings</i>"]
-        pol["policy.mjs<br/><i>resolved against the TARGET</i>"]
-        comp["compliance.mjs<br/><i>evaluate, envelope, distinction</i>"]
-        cli["standards.mjs<br/><i>audit | validate</i><br/>12 detectors, 9 evaluated rules"]
+        cli["standards.mjs<br/>audit · validate"]
+        catalog["catalog.mjs<br/>load + invariants"]
+        policy["policy.mjs<br/>target-relative resolve"]
+        compliance["compliance.mjs<br/>evaluate · envelope · distinction"]
     end
 
     subgraph parsers["Dependency-free parsers"]
         yaml["yaml.mjs"]
-        js["jsonschema.mjs"]
-        src["source.mjs<br/><i>use/mention split</i>"]
-        scaf["scaffolding.mjs"]
+        jsonschema["jsonschema.mjs"]
+        source["source.mjs<br/>use/mention split"]
+        scaffolding["scaffolding.mjs"]
     end
 
     subgraph out["Outputs"]
-        audit["audit report<br/><i>evidence, no verdict</i>"]
-        val["validate envelope<br/><i>status + score</i>"]
+        auditrep["audit report<br/>evidence, no verdict"]
+        valrep["validate report<br/>status + distinction[]"]
     end
 
-    brief --> spec
-    spec --> stds
-    spec -.->|"checked by"| fid
-    spec -.->|"checked by"| inv
-    bnd -.->|"checked by"| inv
-    spm --> fid
-    spm --> inv
-    inv --> rules
-    inv --> stds
-    rules --> cat
-    cat --> cli
-    pol --> cli
-    yaml --> pol
-    js --> pol
-    yaml --> cli
-    js --> cli
-    src --> cli
-    scaf --> cli
-    cli --> audit
-    cli --> comp
-    comp --> val
+    target[("Target repository<br/>+ ai-policy.yml")]
 
-    classDef gov fill:#fdf3d8,stroke:#8a6d3b,color:#3a2f14
-    classDef gate fill:#dff0d8,stroke:#3c763d,color:#1b3a1f
-    classDef code fill:#e8eef7,stroke:#31708f,color:#173049
-    classDef result fill:#f3e8f7,stroke:#6b3f7a,color:#2e1a35
-    class brief,spec,bnd gov
-    class fid,inv,spm gate
-    class cat,pol,comp,cli,yaml,js,src,scaf,rules,stds code
-    class audit,val result
+    brief -->|"byte compare"| fidelity
+    spec --> specmod
+    specmod --> inventory
+    boundary --> inventory
+    spec -->|"claims an<br/>implementing file"| stds
+    stds --> inventory
+    rules --> inventory
+    foreign -->|"refused IDs"| catalog
+
+    rules --> catalog
+    schemas --> policy
+    schemas --> cli
+    catalog --> cli
+    target -->|"file walk,<br/>512 KB cap"| cli
+    target -->|"ai-policy.yml"| policy
+    policy --> cli
+    yaml --> policy
+    yaml --> cli
+    jsonschema --> policy
+    source --> cli
+    scaffolding --> cli
+    cli --> compliance
+    cli -->|"audit"| auditrep
+    compliance -->|"validate"| valrep
+
+    classDef input fill:#f4f0e6,stroke:#8a7d5a,color:#2b2b2b
+    classDef gate fill:#e6eef4,stroke:#4a6f8a,color:#2b2b2b
+    classDef code fill:#eaf0e6,stroke:#5a7d4a,color:#2b2b2b
+    classDef output fill:#f4e6ea,stroke:#8a4a5f,color:#2b2b2b
+
+    class brief,spec,boundary,foreign input
+    class fidelity,inventory,specmod gate
+    class cli,catalog,policy,compliance,yaml,jsonschema,source,scaffolding,stds,rules,schemas code
+    class auditrep,valrep output

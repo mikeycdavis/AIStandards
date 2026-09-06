@@ -112,6 +112,7 @@ test("only the standards written so far exist", () => {
     "05-verdict-vocabulary.md",
     "06-standard-structure-and-rule-identity.md",
     "07-boundary-with-adjacent-standards.md",
+    "11-autonomy-levels-and-delegated-authority.md",
     "21-prompt-and-instruction-security.md",
     "45-approval-gates.md",
   ]);

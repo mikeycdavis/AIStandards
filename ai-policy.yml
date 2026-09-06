@@ -7,8 +7,9 @@
 #     no detector yet.
 #   * It is not tuned to make the gate pass. No rule was lowered, declared not-applicable, or
 #     omitted in order to improve the verdict. Where a rule fails or goes unexamined, it says so.
-#   * It is not complete. Rules from shards that arrive in Phase 2 are not listed because they do
-#     not exist yet.
+#   * It is not complete. Rules from shards that arrive later in Phase 2 are not listed because they
+#     do not exist yet. The oversight shard arrived on 2026-09-06 with Standard 11 and IS listed
+#     below; the remaining ten shards are not.
 #
 # The filename matters: AIStandards reads ai-policy.yml, never project-policy.yml. Two closed
 # schemas pinning two framework versions cannot share one file, so a repository governed by both
@@ -102,6 +103,28 @@ rules:
   eval.no-test-set-tuning:
     level: forbidden
   eval.no-fabricated-results:
+    level: forbidden
+
+  # Autonomy and delegated authority — Standard 11, added 2026-09-06.
+  #
+  # Left applicable and undeclared-free for the same reason the manifest rules are: this repository
+  # has no ai-system.yml, so oversight.autonomy-tier-declared has nothing to read and reports
+  # not-evaluated rather than passing. That is the honest state. Declaring these not-applicable
+  # because "a standards pack is not an AI system" is the self-exemption argument rejected above,
+  # and it is rejected here for the same reason.
+  #
+  # oversight.no-authority-beyond-declared-tier is forbidden and not-evaluable. It reports
+  # prohibited-but-unestablished, which is not a pass and is not a failure. It cannot be attested
+  # away, and no exception can reach it, because the exception mechanism does not exist yet.
+  oversight.autonomy-tier-declared:
+    level: required
+  oversight.authority-matches-tier:
+    level: required
+  oversight.intervention-path-declared:
+    level: required
+  oversight.autonomy-increase-approved:
+    level: required
+  oversight.no-authority-beyond-declared-tier:
     level: forbidden
 
   # Agent execution.
