@@ -76,7 +76,7 @@ could not run reports as not-evaluated, a prohibition nobody established reports
 | Dependencies | **Zero third-party, structurally.** `test/no-phase-creep.test.mjs` fails if a lockfile appears |
 | Test framework | `node:test` + `node:assert/strict`. Nothing else |
 | Host OS during development | Windows 11, PowerShell 7 |
-| Git | Branch `develop`. Checkpoint commit **`d4b4ee2`** (2026-09-04) tracks the whole implementation |
+| Git | Branch `develop`. Checkpoint commit **`d4b4ee2`** (2026-09-04) tracks the whole implementation; **`70832f4`** adds Standard 02; **`fc060bf`** (2026-09-06) adds Standard 11, the `oversight` shard and the regenerated documentation |
 
 There is no install step. Clone and run.
 
