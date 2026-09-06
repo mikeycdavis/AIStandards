@@ -1,0 +1,7 @@
+# There are no dependencies, so node_modules should never appear. If it does, something
+# installed a package, and that is a decision this repository has not made.
+node_modules/
+
+# Local CI scratch. The verification record itself is committed from Phase 5; the working
+# directory it is staged through is not.
+artifacts/local-ci/scratch/

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mikeycdavis/AIStandards/schemas/ai-system-manifest.schema.json",
+  "title": "AI System Manifest",
+  "description": "The root evidence artifact for an AI system: what models it uses, what prompts, what tools, what data, how autonomous it is, and where it sits in its lifecycle. Every structural check in this pack reads it. A conforming manifest describes a system; it does not prove that system exists.",
+  "type": "object",
+  "required": ["system", "models"],
+  "additionalProperties": false,
+  "properties": {
+    "$scaffold": {
+      "description": "Present only in generated scaffolding. Its presence means the manifest is a template, and a template is not evidence.",
+      "type": "boolean"
+    },
+    "system": {
+      "type": "object",
+      "required": ["name", "purpose"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "purpose": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "lifecycleStage": {
+          "type": "string",
+          "enum": ["design", "build", "evaluation", "deployment", "monitoring", "retired"]
+        },
+        "autonomyTier": {
+          "description": "read: observes only. propose: suggests, a human acts. execute: acts within declared bounds. autonomous: acts without per-action review.",
+          "type": "string",
+          "enum": ["read", "propose", "execute", "autonomous"]
+        }
+      }
+    },
+    "models": {
+      "description": "Every model the system invokes. A model absent here is a model nothing in this pack can reason about.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "provider"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "The model identifier as passed to the provider. Pinned, not a moving alias.",
+            "type": "string",
+            "minLength": 1
+          },
+          "provider": { "type": "string", "minLength": 1 },
+          "role": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "prompts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "path"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "tools": {
+      "description": "Tools the model may invoke. Declaring a tool here obliges the project to classify it in tool-permissions.yml.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "dataSources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "kind": {
+            "type": "string",
+            "enum": ["retrieval-index", "fine-tuning-set", "evaluation-set", "prompt-fixture", "other"]
+          },
+          "synthetic": { "type": "boolean" },
+          "provenance": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "planPath": { "type": "string", "minLength": 1 },
+        "suiteCommand": { "type": "string", "minLength": 1 },
+        "baselinePath": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+system:
+  name: "Support Triage Assistant"
+  purpose: "Classifies inbound support tickets and drafts a suggested reply for a human to send."
+  owner: "platform-team"
+  lifecycleStage: deployment
+  autonomyTier: propose
+models:
+  - id: "claude-sonnet-4-5-20250929"
+    provider: "anthropic"
+    role: "classifier"
+tools:
+  - name: "send_email"
+  - name: "refund_order"

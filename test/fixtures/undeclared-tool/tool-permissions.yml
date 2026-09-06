@@ -1,0 +1,4 @@
+tools:
+  - name: "send_email"
+    impact: externally-visible
+    requiresApproval: true

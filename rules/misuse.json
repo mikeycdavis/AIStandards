@@ -1,0 +1,26 @@
+{
+  "$comment": "Misuse prevention, Standard 9. This shard is minimal in Phase 1: it carries only the rule the Phase 1 detector detectDisabledSafetyControls binds to. Standard 9's normative document arrives in Phase 2, and the shard grows with it. See artifacts/project-plan-breakdown/01-phase-1-cli-and-core.md for why the shard exists ahead of its standard.",
+  "rules": [
+    {
+      "id": "misuse.safety-controls-not-disabled",
+      "title": "Provider safety controls are not disabled",
+      "standard": 9,
+      "category": "misuse",
+      "level": "forbidden",
+      "severity": "error",
+      "validationType": "configuration",
+      "assurance": "partial",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "Configuration does not turn off a model provider's content filtering, moderation or safety settings.",
+      "rationale": "Disabling a safety control is a decision with a blast radius, and it is almost always made to unblock a test and then never reverted. The setting outlives the reason.",
+      "remediation": "Restore the provider's default safety configuration, or record why a lower setting is required and what compensates for it.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null,
+      "$assuranceNote": "Exact literal recognition against a maintained list, in code positions only. A new provider's spelling is not recognised until the list is updated, and that gap appears as not-evaluated rather than as a pass.",
+      "$exemptibilityNote": "Exemptible, deliberately. Research and red-team systems have a genuine reason to lower a safety setting, and a rule that refused to hear it would be routed around rather than met."
+    }
+  ]
+}

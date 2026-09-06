@@ -1,0 +1,67 @@
+flowchart TB
+    subgraph inputs["Governing inputs — never edited by tooling"]
+        brief["artifacts/prompts/<br/>original_prompt.md<br/><i>the design brief</i>"]
+        spec["artifacts/prompts/<br/>ai-standards-spec.md<br/><i>53 items, classed D/V/A</i>"]
+        bnd["artifacts/<br/>boundary-review.json<br/><i>humanSignOff: null</i>"]
+    end
+
+    subgraph review["Review gates — no write path"]
+        fid["fidelity.mjs<br/><i>verbatim blocks vs brief</i>"]
+        inv["inventory.mjs<br/><i>items vs tokens, postures, evidence</i>"]
+        spm["spec.mjs<br/><i>strict parser</i>"]
+    end
+
+    subgraph corpus["Normative corpus"]
+        rules["rules/ — 7 shards, 32 rules"]
+        stds["standards/ — 7 of 53"]
+    end
+
+    subgraph engine["Evaluation engine"]
+        cat["catalog.mjs<br/><i>enums, id pattern, bindings</i>"]
+        pol["policy.mjs<br/><i>resolved against the TARGET</i>"]
+        comp["compliance.mjs<br/><i>evaluate, envelope, distinction</i>"]
+        cli["standards.mjs<br/><i>audit | validate</i><br/>12 detectors, 9 evaluated rules"]
+    end
+
+    subgraph parsers["Dependency-free parsers"]
+        yaml["yaml.mjs"]
+        js["jsonschema.mjs"]
+        src["source.mjs<br/><i>use/mention split</i>"]
+        scaf["scaffolding.mjs"]
+    end
+
+    subgraph out["Outputs"]
+        audit["audit report<br/><i>evidence, no verdict</i>"]
+        val["validate envelope<br/><i>status + score</i>"]
+    end
+
+    brief --> spec
+    spec --> stds
+    spec -.->|"checked by"| fid
+    spec -.->|"checked by"| inv
+    bnd -.->|"checked by"| inv
+    spm --> fid
+    spm --> inv
+    inv --> rules
+    inv --> stds
+    rules --> cat
+    cat --> cli
+    pol --> cli
+    yaml --> pol
+    js --> pol
+    yaml --> cli
+    js --> cli
+    src --> cli
+    scaf --> cli
+    cli --> audit
+    cli --> comp
+    comp --> val
+
+    classDef gov fill:#fdf3d8,stroke:#8a6d3b,color:#3a2f14
+    classDef gate fill:#dff0d8,stroke:#3c763d,color:#1b3a1f
+    classDef code fill:#e8eef7,stroke:#31708f,color:#173049
+    classDef result fill:#f3e8f7,stroke:#6b3f7a,color:#2e1a35
+    class brief,spec,bnd gov
+    class fid,inv,spm gate
+    class cat,pol,comp,cli,yaml,js,src,scaf,rules,stds code
+    class audit,val result

@@ -1,0 +1,211 @@
+# AIStandards' own AI policy.
+#
+# Three things this file is not:
+#
+#   * It is not a claim of compliance. What this repository actually meets comes from a validation
+#     run, and at v0.1.0 that run reports NOT_EVALUATED, honestly, because most of the catalog has
+#     no detector yet.
+#   * It is not tuned to make the gate pass. No rule was lowered, declared not-applicable, or
+#     omitted in order to improve the verdict. Where a rule fails or goes unexamined, it says so.
+#   * It is not complete. Rules from shards that arrive in Phase 2 are not listed because they do
+#     not exist yet.
+#
+# The filename matters: AIStandards reads ai-policy.yml, never project-policy.yml. Two closed
+# schemas pinning two framework versions cannot share one file, so a repository governed by both
+# this pack and EngineeringStandards carries both files.
+#
+# THE MANIFEST RULES ARE LEFT APPLICABLE, AND THEY FAIL. Read this before "fixing" it.
+#
+# This repository has no ai-system.yml, so lifecycle.manifest-exists, lifecycle.manifest-valid and
+# lifecycle.manifest-not-scaffold fail, and the verdict is NON_COMPLIANT. There is a tempting
+# argument for declaring them not-applicable — AIStandards is a command-line evaluator, not an AI
+# system, so arguably the manifest has no subject here.
+#
+# That argument is not taken, for two reasons. First, it is the self-exemption this pack exists to
+# refuse: a rule declared away by the repository that authored it is a rule nobody will ever see
+# fire. Second, a failing rule is worth more than an exempted one, because it is visible. The
+# honest state of this repository at v0.1.0 is that it does not meet its own manifest requirement,
+# and the correct response is to record that rather than to reclassify it.
+#
+# If a later phase establishes that a standards pack is genuinely out of scope for the manifest
+# requirement, that belongs in Standard 1's Scope section as a rule about ALL such repositories —
+# not in this file as a claim about this one.
+
+standardVersion: "0.1.0"
+project: "AIStandards"
+
+rules:
+  # Lifecycle — this repository is a standards pack, not an AI system, which is why most of these
+  # are declared not-applicable below rather than quietly omitted.
+  lifecycle.manifest-exists:
+    level: required
+  lifecycle.manifest-valid:
+    level: required
+  lifecycle.manifest-not-scaffold:
+    level: required
+  lifecycle.model-version-pinned:
+    level: required
+  lifecycle.stage-declared:
+    level: recommended
+  lifecycle.retirement-plan-exists:
+    level: recommended
+
+  # Approval gates.
+  gate.tool-permission-manifest:
+    level: required
+  gate.actions-classified:
+    level: required
+  gate.irreversible-approval:
+    level: required
+  gate.argument-scoped-classification:
+    level: required
+  gate.no-self-approval:
+    level: forbidden
+  gate.fail-closed:
+    level: forbidden
+
+  # Prompt security.
+  promptsec.prompt-is-versioned-artifact:
+    level: required
+  promptsec.no-inline-system-prompt:
+    level: recommended
+  promptsec.threat-model-exists:
+    level: required
+  promptsec.no-secrets-in-context:
+    level: forbidden
+  promptsec.template-injection-guarded:
+    level: required
+
+  # Misuse.
+  misuse.safety-controls-not-disabled:
+    level: forbidden
+
+  # Privacy.
+  privacy.no-real-personal-data-in-fixtures:
+    level: forbidden
+  privacy.no-credentials-in-prompts:
+    level: forbidden
+  privacy.no-unredacted-prompt-logging:
+    level: forbidden
+  privacy.retention-declared:
+    level: required
+  privacy.deletion-path-exists:
+    level: required
+
+  # Evaluation.
+  eval.plan-exists:
+    level: required
+  eval.suite-executable:
+    level: required
+  eval.regression-baseline-recorded:
+    level: required
+  eval.no-test-set-tuning:
+    level: forbidden
+  eval.no-fabricated-results:
+    level: forbidden
+
+  # Agent execution.
+  agent.step-budget-bounded:
+    level: required
+  agent.least-privilege-declared:
+    level: required
+  agent.no-self-modification:
+    level: forbidden
+  agent.retrieved-content-not-instruction:
+    level: forbidden
+
+# Rules whose SUBJECT does not exist here.
+#
+# This repository is a command-line evaluator and a set of documents. It invokes no model, holds no
+# corpus, and runs no agent. Those declarations are true today and stop being true the moment the
+# repository gains any of those things, which is what revisitWhen records.
+#
+# Note what is NOT declared not-applicable. `promptsec.no-secrets-in-context` and
+# `eval.no-fabricated-results` stay applicable even though this repository has no model context and
+# no evaluation suite, because both prohibit something a contributor could do to this repository
+# itself. Declaring them away because the subject looks absent is the self-exemption this pack's
+# own standards prohibit.
+applicability:
+  lifecycle.model-version-pinned:
+    status: not-applicable
+    reason: "This repository invokes no model. It declares none, and pins none."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "Any script in this repository calls a model provider."
+
+  gate.irreversible-approval:
+    status: not-applicable
+    reason: "No model-initiated action exists. The CLI takes no action outside its own process: it reads files and writes a report to stdout."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "Any command writes durable state outside the working tree, or any action is initiated by a model."
+
+  gate.argument-scoped-classification:
+    status: not-applicable
+    reason: "No model chooses arguments here. Every argument is supplied by a human on the command line."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "A model selects arguments for any operation in this repository."
+
+  gate.fail-closed:
+    status: not-applicable
+    reason: "There is no approval mechanism to fail open, because there is no gated action."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "An approval gate is added to any command."
+
+  gate.no-self-approval:
+    status: not-applicable
+    reason: "No approval exists to be self-supplied."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "An approval gate is added to any command."
+
+  promptsec.threat-model-exists:
+    status: not-applicable
+    reason: "No untrusted content enters an instruction path, because no instruction path exists. This repository sends nothing to a model."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "Any script in this repository constructs a prompt."
+
+  promptsec.template-injection-guarded:
+    status: not-applicable
+    reason: "There are no prompt templates."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "A prompt template is added."
+
+  privacy.no-unredacted-prompt-logging:
+    status: not-applicable
+    reason: "No prompt or completion is produced, so none is logged."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "Any script in this repository sends or receives model text."
+
+  privacy.retention-declared:
+    status: not-applicable
+    reason: "This repository retains no prompts, completions or traces. It writes a report to stdout and keeps nothing."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "Any command writes durable output containing user-supplied text."
+
+  privacy.deletion-path-exists:
+    status: not-applicable
+    reason: "There is no store to delete from."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "This repository gains any persistent store."
+
+  agent.step-budget-bounded:
+    status: not-applicable
+    reason: "There is no agent loop. The CLI is a single-pass program that reads files and exits."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "Any command iterates under model control."
+
+  agent.least-privilege-declared:
+    status: not-applicable
+    reason: "No credential is held. The CLI reads the filesystem it is pointed at and holds no secret of any kind."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "This repository gains a credential."
+
+  agent.no-self-modification:
+    status: not-applicable
+    reason: "No agent runs here, so none can rewrite its own instructions."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "An agent is added."
+
+  agent.retrieved-content-not-instruction:
+    status: not-applicable
+    reason: "Nothing is retrieved and nothing becomes an instruction. File content read by a detector is data that is matched against patterns; it is never executed or sent to a model."
+    reviewedAt: "2026-09-03"
+    revisitWhen: "Any content read by this repository reaches a model's instruction channel."
