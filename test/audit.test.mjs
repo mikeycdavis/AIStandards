@@ -62,25 +62,40 @@ test("descriptive findings carry no rule binding", () => {
 
 const violated = (name, rule) => resultFor(validate(fixture(name)).json, rule)?.result;
 
+// A control must produce no violation AND the expected distinction. For a full-assurance rule that
+// is `passed`. For a partial-assurance rule a clean search is NOT a pass (Standard 5 R6, Q13): it is
+// `not-evaluated`, or `prohibited-but-unestablished` at forbidden level. Both halves are asserted, so
+// the "no false violation" guarantee is kept rather than dropped along with the pass.
+function assertControl(name, rule, distinction) {
+  const r = resultFor(validate(fixture(name)).json, rule);
+  assert.ok(r, `${name} must report ${rule}`);
+  assert.ok(
+    !["failed", "warning"].includes(r.result),
+    `${rule} must not fire on ${name}; got ${r.result}: ${r.message}`,
+  );
+  assert.equal(r.distinction, distinction, `${rule} on ${name}: ${r.message}`);
+}
+
+// [rule, provoking fixture, control fixture, the control's required distinction]
 const PAIRS = [
-  ["lifecycle.manifest-exists", "no-manifest", "valid-manifest"],
-  ["lifecycle.manifest-valid", "invalid-manifest", "valid-manifest"],
-  ["lifecycle.manifest-not-scaffold", "scaffold-manifest", "valid-manifest"],
-  ["lifecycle.model-version-pinned", "floating-model-alias", "pinned-model"],
-  ["gate.tool-permission-manifest", "no-tool-permissions", "declared-tools"],
-  ["gate.actions-classified", "undeclared-tool", "declared-tools"],
-  ["promptsec.prompt-is-versioned-artifact", "inline-system-prompt", "file-backed-prompt"],
-  ["misuse.safety-controls-not-disabled", "disabled-safety", "safety-configured"],
+  ["lifecycle.manifest-exists", "no-manifest", "valid-manifest", "passed"],
+  ["lifecycle.manifest-valid", "invalid-manifest", "valid-manifest", "passed"],
+  ["lifecycle.manifest-not-scaffold", "scaffold-manifest", "valid-manifest", "passed"],
+  ["lifecycle.model-version-pinned", "floating-model-alias", "pinned-model", "not-evaluated"],
+  ["gate.tool-permission-manifest", "no-tool-permissions", "declared-tools", "passed"],
+  ["gate.actions-classified", "undeclared-tool", "declared-tools", "passed"],
+  ["promptsec.prompt-is-versioned-artifact", "inline-system-prompt", "file-backed-prompt", "not-evaluated"],
+  ["misuse.safety-controls-not-disabled", "disabled-safety", "safety-configured", "prohibited-but-unestablished"],
 ];
 
-for (const [rule, provoking, control] of PAIRS) {
+for (const [rule, provoking, control, controlDistinction] of PAIRS) {
   test(`${rule} fires on ${provoking}`, () => {
     const result = violated(provoking, rule);
     assert.ok(["failed", "warning"].includes(result), `expected a violation, got ${result}`);
   });
 
   test(`${rule} does NOT fire on ${control} — the control`, () => {
-    assert.equal(violated(control, rule), "passed", `${rule} must not fire on ${control}`);
+    assertControl(control, rule, controlDistinction);
   });
 }
 
@@ -118,9 +133,11 @@ test("mentions-only exercises the Python floor-division trap", () => {
 });
 
 test("a floating alias named in prose is not a floating alias in use", () => {
-  assert.equal(violated("mentions-only", "lifecycle.model-version-pinned"), "passed");
+  // Partial assurance: no violation, and not a pass either.
+  assertControl("mentions-only", "lifecycle.model-version-pinned", "not-evaluated");
 });
 
 test("BLOCK_NONE named in a comment is not BLOCK_NONE in configuration", () => {
-  assert.equal(violated("mentions-only", "misuse.safety-controls-not-disabled"), "passed");
+  // Partial assurance at forbidden level: no violation, and an unestablished prohibition.
+  assertControl("mentions-only", "misuse.safety-controls-not-disabled", "prohibited-but-unestablished");
 });

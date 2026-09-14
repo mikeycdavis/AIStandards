@@ -1,5 +1,5 @@
 {
-  "$comment": "Agent execution security, Standard 23. No Phase 1 detector binds here; these rules report not-evaluated until Phase 3. The namespace is `agent.` — note MathematicsStandards owns agent.explainable-findings and agent.refusal-on-invariant, which are its own; no id here collides with them.",
+  "$comment": "Agent execution security, stated by standards/23-agent-execution-security.md (R1–R4). No detector binds here: step-budget-bounded and least-privilege-declared report skipped / not-evaluated; retrieved-content-not-instruction reports prohibited-but-unestablished; no-self-modification is not-evaluable, reports prohibited-but-unestablished and is listed beside the verdict in notEvaluable. Whether retrieved-content-not-instruction belongs here, and whether the two forbidden rules are item 51's, is open as Q15 and Q16. The namespace is `agent.` — note MathematicsStandards owns agent.explainable-findings and agent.refusal-on-invariant, which are its own; no id here collides with them.",
   "rules": [
     {
       "id": "agent.step-budget-bounded",
@@ -57,7 +57,7 @@
       "deprecatedIn": null,
       "supersededBy": null,
       "removedIn": null,
-      "$notEvaluableNote": "Static absence of a self-modification code path is not absence of the capability at runtime: an agent with filesystem or configuration tools can reach its own instructions without any code that names them. Establishing this requires a recorded adversarial exercise against the running system, which a separate rule then examines."
+      "$notEvaluableNote": "Static absence of a self-modification code path is not absence of the capability at runtime: an agent with filesystem or configuration tools can reach its own instructions without any code that names them. Establishing this requires a recorded adversarial exercise against the running system, which a separate rule would then examine; no rule in this release does."
     },
     {
       "id": "agent.retrieved-content-not-instruction",

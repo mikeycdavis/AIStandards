@@ -19,7 +19,7 @@
       "deprecatedIn": null,
       "supersededBy": null,
       "removedIn": null,
-      "$assuranceNote": "Exact literal recognition against maintained lists, in the code and string positions of recognised source and configuration file types, and only in a file that also names a recognised safety key; comments are never searched. A spelling, key or file type not on those lists is not seen, and that gap reports as passed, not as not-evaluated: a pass means no recognised disabling literal was found, not that any control is enabled. The rule is withdrawn to not-evaluated only when the walk was shortened by a framework exclusion.",
+      "$assuranceNote": "Exact literal recognition against maintained lists, in the code and string positions of recognised source and configuration file types, and only in a file that also names a recognised safety key; comments are never searched. A spelling, key or file type not on those lists is not seen. Because the check covers less than the rule, a clean result reports skipped / not-evaluated (prohibited-but-unestablished, as the rule is forbidden), never passed: it means no recognised disabling literal was found, not that any control is enabled. A recognised literal still fails. When the walk was shortened by a framework exclusion the rule is withdrawn without scanning, and says so.",
       "$exemptibilityNote": "Exemptible, deliberately. Research and red-team systems have a genuine reason to lower a safety setting, and a rule that refused to hear it would be routed around rather than met."
     },
     {

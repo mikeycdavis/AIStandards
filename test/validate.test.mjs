@@ -74,9 +74,9 @@ test("an undeclared rule is still evaluated at its catalog default", () => {
   );
 });
 
-test("the human report names unexamined prohibitions explicitly, and does not call them passes", () => {
+test("the human report names unestablished prohibitions explicitly, and does not call them passes", () => {
   const r = validateRaw(fixture("valid-manifest"));
-  assert.match(r.stdout, /Prohibitions nobody examined\. These are not passes:/);
+  assert.match(r.stdout, /Prohibitions not established\. These are not passes:/);
 });
 
 test("the human report separates framework coverage from compliance", () => {

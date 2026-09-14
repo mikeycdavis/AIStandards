@@ -135,7 +135,9 @@ exactly like the artifact a vulnerable one produces. What can be produced is a *
 R1 and R2 are `partial` assurance because the detector recognises literals. A prompt assembled from
 concatenated fragments, loaded from a database, or fetched at runtime is invisible to it — so
 **absence of a finding is not evidence that prompts are file-backed**, and the rule's
-`$assuranceNote` says exactly that.
+`$assuranceNote` says exactly that. Since 2026-09-14 a clean result from either rule reports `skipped` /
+`not-evaluated`, never `passed`, as [Standard 5](05-verdict-vocabulary.md) R6 requires for a check that
+covers less than its rule (Q13).
 
 R5's `not-evaluable` is not a weaker version of `manual-review`. Manual review would mean a human can
 establish it by reading the repository; `not-evaluable` means no one can, because the subject is not
@@ -145,7 +147,7 @@ in the repository.
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | A 200+ character literal at a `system:` parameter fails | Such a literal | `file-backed-prompt/` must pass |
+| R1 | A 200+ character literal at a `system:` parameter fails | Such a literal | `file-backed-prompt/` must not fire, and reports `not-evaluated` rather than `passed` |
 | R2 | The same fixture warns rather than fails | It reports `failed` | — |
 | R1, R2 | Prose and comments describing inline prompts do not fire | A finding on `mentions-only/` | **This is the control that matters** |
 | R3 | No detector in this release | — | — |
@@ -205,8 +207,8 @@ Phase 3.**
 
 | Requirement | Rule | State |
 | --- | --- | --- |
-| R1 | `promptsec.prompt-is-versioned-artifact` | **Evaluated, partially.** Recognises a long literal at a known instruction parameter |
-| R2 | `promptsec.no-inline-system-prompt` | **Evaluated, partially.** Same detection, warning severity |
+| R1 | `promptsec.prompt-is-versioned-artifact` | **Evaluated, partially.** Recognises a long literal at a known instruction parameter. A match fails; a clean result reports `skipped` / `not-evaluated`, never `passed` |
+| R2 | `promptsec.no-inline-system-prompt` | **Evaluated, partially.** Same detection, warning severity; a clean result reports `not-evaluated`, never `passed` |
 | R3 | `promptsec.threat-model-exists` | **Not evaluated in this release.** Reported unevaluated, never passed. Phase 3 |
 | R4 | `promptsec.no-secrets-in-context` | **Not evaluated in this release.** `forbidden` and unexamined, so it reports `prohibited-but-unestablished` and caps the verdict rather than passing quietly |
 | R5 | `promptsec.template-injection-guarded` | **`not-evaluable`.** No detector, and none is planned |
@@ -214,7 +216,7 @@ Phase 3.**
 **The detector for R1 and R2 finds one shape of one problem.** It matches an instruction parameter
 followed by a long literal. It does not follow variables, does not resolve concatenation, does not
 read templates, and does not know whether a file-backed prompt is *reviewed* — only that it is a
-file. A system that assembles its prompt from three fragments passes this check and may satisfy
+file. A system that assembles its prompt from three fragments is not flagged by this check and may satisfy
 nothing the standard actually asks for.
 
 **R4 is worth reading carefully as an example of the verdict vocabulary working.** It is a

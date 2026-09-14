@@ -46,9 +46,19 @@ function assertFires(name, file) {
   assert.equal(json.status, "NON_COMPLIANT", "a failed forbidden rule makes the project non-compliant");
 }
 
+// The rule's assurance is partial, so a clean search is not a pass (Standard 5 R6, Q13). A control
+// therefore asserts both halves: no violation, and an unestablished prohibition rather than `passed`.
 function assertDoesNotFire(name) {
-  const { result } = ruleResult(name);
-  assert.equal(result.result, "passed", `${RULE} must not fire on ${name}: ${result.message}`);
+  const { json, result } = ruleResult(name);
+  assert.ok(
+    !["failed", "warning"].includes(result.result),
+    `${RULE} must not fire on ${name}; got ${result.result}: ${result.message}`,
+  );
+  assert.equal(result.level, "forbidden");
+  assert.equal(result.distinction, "prohibited-but-unestablished", `${name}: ${result.message}`);
+  assert.equal(result.result, "skipped");
+  assert.equal(result.disposition, "not-evaluated");
+  assert.ok(json.unestablishedProhibitions.some((p) => p.rule === RULE), `${RULE} must be listed as unestablished`);
   assert.deepEqual(result.evidence, []);
 }
 

@@ -104,7 +104,7 @@
       "deprecatedIn": null,
       "supersededBy": null,
       "removedIn": null,
-      "$notEvaluableNote": "The subject is runtime behaviour at inference time, not repository content. A human reading this repository can establish which tools are granted, and oversight.authority-matches-tier asks exactly that; they cannot establish whether the system chains them into an effect its tier forbids, because that is decided by the model and the environment during a run. What would make it evaluable is a committed adversarial exercise record from a named harness at a recorded revision, which a separate rule then checks for existence and freshness."
+      "$notEvaluableNote": "The subject is runtime behaviour at inference time, not repository content. A human reading this repository can establish which tools are granted, and oversight.authority-matches-tier asks exactly that; they cannot establish whether the system chains them into an effect its tier forbids, because that is decided by the model and the environment during a run. What would make it evaluable is a committed adversarial exercise record from a named harness at a recorded revision, which a separate rule would then check for existence and freshness; no rule in this release does."
     }
   ]
 }

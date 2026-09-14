@@ -137,7 +137,7 @@ item 49's stated early. Standard 13 states them as they stand.
 **Impact if unanswered:** none on the wording of any written standard today. Item 49's document, when
 written, will have to say.
 
-### Q13 — May a partial-assurance check's clean result be `passed` and count toward `COMPLIANT`?
+### Q13 — May a partial-assurance check's clean result be `passed` and count toward `COMPLIANT`? — **resolved 2026-09-14: no**
 
 Standard 5 R6 says: "Where a check could not run, could not read a file, or covered less than the rule
 requires, the result MUST be `skipped` with disposition `not-evaluated`, and MUST NOT be `passed`."
@@ -172,6 +172,68 @@ Options identified, none taken:
 it cannot see into, and that result can contribute to `COMPLIANT`. It does not reach this repository's
 own verdict, which is `NON_COMPLIANT`, and it blocks nothing in Phase 2 — but it must be settled before
 `validate` can gate anything (Phase 6).
+
+**Resolved 2026-09-14 — option 1.** The owner instructed that Standard 5 R6 already requires incomplete
+coverage to stay unevaluated, so conforming the implementation is a correction, not a contract change;
+Standard 5 was not amended. `evaluateRule()` in `scripts/compliance.mjs` now reports a clean result from
+a rule declaring `assurance: partial` as `skipped` / `not-evaluated` — `prohibited-but-unestablished`
+for `misuse.safety-controls-not-disabled`, which is `forbidden` — so it counts toward neither
+`COMPLIANT` nor the score. A confirmed violation still fails, an unknown keeps its own reason, and
+clean full-assurance checks still pass. Committed regressions: `test/fixtures/q13-synthetic-no-config/`
+and `q13-synthetic-env-block-none/`, synthetic inputs whose not-applicable declarations isolate the
+verdict path and are not applicability approvals, now report `NOT_EVALUATED` where they reported
+`COMPLIANT` at 100; `q13-synthetic-full-only/` still reports `COMPLIANT` at 100; and a property test
+asserts that no fixture reports a partial-assurance result `passed` (`test/partial-assurance.test.mjs`).
+Those tests and the rewritten controls fail against the previous `compliance.mjs`.
+
+What the resolution does not cover: coverage is keyed on the *declared* assurance, not measured, so a
+`full`-assurance check's own blind spots and a file a detector skips as unreadable are still Phase 3's
+evidence-availability work; `COMPLIANT` is unreachable while any partial-assurance rule applies; a rule
+added to `EVALUATED_RULES` with `assurance: none` is refused by a test rather than handled; and Standard
+5 R2's meanings table does not name the case (Q14).
+
+### Q14 — Should Standard 5 R2's meanings table name a partial check that ran and found nothing?
+
+R2's table describes `not-evaluated` as "Nobody looked, or a check could not run" and
+`prohibited-but-unestablished` as "A `forbidden`-level rule nobody examined". R6 requires `skipped` /
+`not-evaluated` where a check "covered less than the rule requires", and since Q13 a partial-assurance
+check that ran and found nothing reports exactly that. The table does not name that case. Rewording it
+would state what R6 already requires rather than narrow anything, but it changes the normative text of a
+standard whose authored content has no owner approval. The human report's heading was renamed from
+"Prohibitions nobody examined" to "Prohibitions not established" for the same reason.
+**Impact if unanswered:** a reader of R2 alone may take either distinction to mean that no check ran.
+
+### Q15 — Does `agent.retrieved-content-not-instruction` belong to item 23?
+
+The rule cites standard 23. Its subject overlaps Standard 21 R3 and R5 and Standard 11 R6, and its source
+of retrieved content is item 24's title, Retrieval and Context Supply Chain. Standard 21's Relationship
+section assigns the ground to item 23, so moving the rule would also change Standard 21. On shared ground
+the rule is `code-analysis` while `promptsec.template-injection-guarded` is `not-evaluable`; Standard 23
+explains the difference as a structural half and a behavioural half and does not decide whether both
+types can stand. **Not resolved here, because the answer changes a rule's `standard` field or validation
+type.** **Impact if unanswered:** none while no detector binds either rule.
+
+### Q16 — Are the two forbidden agent rules item 51's prohibitions?
+
+Item 51, Agent and Tool Execution Prohibitions, is the authored negative face of `tool, agent, and
+retrieval security`. `agent.no-self-modification` and `agent.retrieved-content-not-instruction` are
+`forbidden`, were minted in Phase 1 and cite standard 23. The parallel for privacy is Q12.
+**Impact if unanswered:** none on the wording of any written standard today. Item 51's document, when
+written, will have to say.
+
+### Q17 — Who states a sandboxing requirement?
+
+Standard 45's Relationship section names item 23 as the owner of sandboxing. No rule in `rules/agent.json`
+concerns it, the brief does not mention it, and Standard 23 records the gap rather than authoring a
+requirement. Either item 23 gains authored normative content or Standard 45's attribution changes.
+**Impact if unanswered:** no written standard requires execution isolation for an agent.
+
+### Q18 — Should Standard 23 R4 reach tool output other than fetched content?
+
+`agent.retrieved-content-not-instruction` names a retrieval index, a web page and a user document.
+Standard 23 reads a tool returning fetched content as within those sources and other tool output, and
+the user's own message, as outside them. Whether they should be inside is item 22's and Standard 21's
+ground. **Impact if unanswered:** none while no detector binds the rule.
 
 ## Not questions
 

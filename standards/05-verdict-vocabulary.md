@@ -98,12 +98,16 @@ The aggregation this implies is stated in full in
 [`scripts/compliance.mjs`](../scripts/compliance.mjs):
 
 ```text
-confirmed violation + unknown check    -> failed, carrying ONLY the confirmed finding
-no violation       + unknown check     -> not-evaluated
-no violation       + everything known  -> passed
+confirmed violation + unknown check                        -> failed, carrying ONLY the confirmed finding
+no violation       + unknown check                        -> not-evaluated
+no violation       + everything known, assurance partial  -> not-evaluated
+no violation       + everything known, assurance full     -> passed
 ```
 
-The middle row is the requirement. The first row matters too, and is subtler: a confirmed violation
+The second and third rows are the requirement: a check that could not run, and a check that ran over
+less than the rule. *Corrected 2026-09-14: this table had three rows and no assurance distinction, so a
+check that ran over a declared partial scope and found nothing reported `passed`, contrary to the
+bolded requirement above. The requirement is unchanged; the code was brought to it (Q13).* The first row matters too, and is subtler: a confirmed violation
 stands even when a different check for the same rule could not run, because an unknown elsewhere does
 not un-observe what was observed — but only the confirmed findings are carried as evidence, so the
 report never presents an unknown as the reason for a failure.
@@ -145,7 +149,7 @@ the verdict would make it a fact about the project.
 | R3 | A test recomputing the distinction independently for every fixture result | Test | Automated |
 | R4 | Fixtures reaching `prohibited-but-unestablished`, and a bidirectional array check | Test | Automated |
 | R5 | A fixture with an unestablished rule reporting `NOT_EVALUATED` | Test | Automated |
-| R6 | A fixture where a check cannot run, reporting unevaluated rather than passed | Test | Automated |
+| R6 | A fixture where a check cannot run, reporting unevaluated rather than passed; fixtures where a partial-assurance check runs clean, reporting unevaluated rather than passed | Test | Automated |
 | R7 | A fixture reaching `BLOCKED_BY_INVARIANT` with a null score | Test | Automated |
 | R8 | A test mutating the not-evaluable list and asserting status and score are unchanged | Test | Automated |
 
@@ -169,6 +173,7 @@ run on every commit and a catalog rule with no detector would not.
 | R4 | The array and the filtered results agree in both directions | Either contains something the other does not | — |
 | R5 | An unestablished applicable rule prevents `COMPLIANT` | Status is `COMPLIANT` anyway | A fixture with nothing unestablished must be able to reach `COMPLIANT` |
 | R6 | A withdrawn check reports unevaluated | It reports `passed` | — |
+| R6 | A partial-assurance check that runs clean reports unevaluated | It reports `passed`, or the project reaches `COMPLIANT` on it | Clean full-assurance checks must still report `passed`, and a project where only they apply must reach `COMPLIANT` |
 | R7 | The invariant fixture reports null score | A score is present | A fixture with no breach must carry a score |
 | R8 | Mutating `notEvaluable` leaves status and score byte-identical | Either changes | — |
 
@@ -191,7 +196,8 @@ both of which are visible, rather than changing what the words mean.
   are this repository's own.
 - **R3 in full**, and the test that recomputes it.
 - **R6's aggregation truth table.** The brief requires that unavailable evidence never becomes a
-  false pass; the three-row table is the authored mechanism for it.
+  false pass; the truth table — three rows as first written, four since the 2026-09-14 correction that
+  made it meet R6's bolded sentence — is the authored mechanism for it.
 - **R7 and `BLOCKED_BY_INVARIANT`.** The status is not in the brief. It is adopted from a sibling
   pack's precedent and recorded as an addition, not as the brief's word.
 - **R8's symmetry.** The brief does not mention coverage. The rule that unverifiability must not
@@ -216,11 +222,11 @@ the cap in R5.
 | Requirement | State |
 | --- | --- |
 | R1 | **Enforced.** [`schemas/validate-report.schema.json`](../schemas/validate-report.schema.json) is closed and enumerates each vocabulary separately |
-| R2 | **Enforced.** All six values are reachable across the fixtures, asserted directly |
+| R2 | **Enforced.** All six values are reachable across the fixtures, asserted directly. The meanings table does not name one case R6 requires: a partial-assurance check that ran and found nothing reports `not-evaluated`, or `prohibited-but-unestablished` at `forbidden` level, though the table describes those as nobody looking or a check not running. The wording is open as Q14; the behaviour follows R6 |
 | R3 | **Enforced.** `distinction()` is a pure function; the test recomputes it independently |
 | R4 | **Enforced.** Branch order is asserted, and the array is checked bidirectionally |
 | R5 | **Enforced** |
-| R6 | **Enforced for checks that could not run** — the withdrawal and unknown paths. **Not enforced for a check that ran and covered less than the rule requires**: the four `assurance: partial` rules' detectors report a clean narrow search as `passed`, which `evaluate()` counts toward `COMPLIANT` and the score. *Corrected 2026-09-14: this row had said Enforced for the checks that exist.* The mismatch is open as Q13 in `artifacts/project-plan-breakdown/08-open-questions.md`. The broader evidence-availability architecture — read budgets, truncation domains, unreadable-file withdrawal — is Phase 3 |
+| R6 | **Enforced for checks that could not run** — the withdrawal and unknown paths — **and, since the 2026-09-14 Q13 correction, for checks whose rule declares `assurance: partial`**: `evaluateRule()` reports their clean result `skipped` / `not-evaluated`, so it counts toward neither `COMPLIANT` nor the score, while a confirmed violation still fails. Asserted by `test/partial-assurance.test.mjs` and `test/compliance.test.mjs`, including committed synthetic reproductions that had reported `COMPLIANT` at 100. **Coverage is keyed on the declared assurance, not measured**: a `full`-assurance check's own blind spots, and a file a detector skips as unreadable, are not detected. *Corrected twice on 2026-09-14: this row first said Enforced for the checks that exist, then recorded the partial-assurance gap as open.* The broader evidence-availability architecture — read budgets, truncation domains, unreadable-file withdrawal — is Phase 3 |
 | R7 | **Enforced.** One invariant exists in this release: `invariant.applicability-contradicted` |
 | R8 | **Enforced** |
 

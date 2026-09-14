@@ -72,12 +72,20 @@ export function distinction(result, disposition, level) {
  *
  * THE AGGREGATION TRUTH TABLE, which is the heart of this file:
  *
- *   confirmed violation + unknown check   -> failed, carrying ONLY the confirmed finding
- *   no violation       + unknown check   -> not-evaluated
- *   no violation       + everything known -> passed
+ *   confirmed violation + unknown check                         -> failed, carrying ONLY the confirmed finding
+ *   no violation       + unknown check                         -> not-evaluated
+ *   no violation       + everything known, assurance partial   -> not-evaluated
+ *   no violation       + everything known, assurance full      -> passed
  *
- * The middle row is the one that matters. A check that could not run is not a check that found
+ * The second row is the one that matters. A check that could not run is not a check that found
  * nothing, and reporting it as a pass is how a tool comes to certify a repository it never read.
+ *
+ * The third row is the same requirement for a check that DID run. Standard 5 R6 covers a check that
+ * "covered less than the rule requires", and a rule declaring `assurance: partial` says exactly that
+ * about its own detector. A clean narrow search establishes that nothing was found inside the scope
+ * searched; it establishes nothing outside it, so it is not a pass and cannot count toward COMPLIANT
+ * or the score. A confirmed violation from the same detector still stands (first row), and an
+ * unknown keeps its own reason (second row): partial assurance never erases a finding.
  */
 function evaluateRule(entry, observations, evaluatedRules) {
   const { rule, level, applicable, applicabilityReason } = entry;
@@ -157,12 +165,32 @@ function evaluateRule(entry, observations, evaluatedRules) {
     };
   }
 
+  const evidence = found.flatMap((o) => o.evidence ?? []);
+
+  if (rule.assurance === "partial") {
+    // Ran, found nothing, and by its own declaration covered less than the rule requires. Standard 5
+    // R6: skipped / not-evaluated, never passed. The distinction is left to distinction(), so a
+    // forbidden rule surfaces as prohibited-but-unestablished. The detector's own message and
+    // evidence are kept, because what WAS searched is still worth reading.
+    const within = found[0]?.message;
+    return {
+      ...base,
+      result: RESULT.skipped,
+      disposition: DISPOSITION.notEvaluated,
+      message:
+        "Not established. The check ran over a declared partial scope and found nothing within it; " +
+        "this rule's assurance is partial, so what lies outside that scope was not examined." +
+        (within ? ` Within the searched scope: ${within}` : ""),
+      evidence,
+    };
+  }
+
   return {
     ...base,
     result: RESULT.passed,
     disposition: DISPOSITION.evaluated,
     message: found[0]?.message ?? "No violation found by the stated search.",
-    evidence: found.flatMap((o) => o.evidence ?? []),
+    evidence,
   };
 }
 

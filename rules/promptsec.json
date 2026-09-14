@@ -19,7 +19,7 @@
       "deprecatedIn": null,
       "supersededBy": null,
       "removedIn": null,
-      "$assuranceNote": "Literal recognition only. A prompt assembled from concatenated fragments or fetched at runtime is invisible here, so absence of a finding is not evidence that prompts are file-backed."
+      "$assuranceNote": "Literal recognition only. A prompt assembled from concatenated fragments or fetched at runtime is invisible here, so absence of a finding is not evidence that prompts are file-backed. A clean result therefore reports not-evaluated, never passed."
     },
     {
       "id": "promptsec.no-inline-system-prompt",
@@ -98,7 +98,7 @@
       "deprecatedIn": null,
       "supersededBy": null,
       "removedIn": null,
-      "$notEvaluableNote": "The subject is whether the model treats interpolated content as instruction, which is behaviour at inference time and not repository content. It becomes checkable only through a recorded red-team artifact produced by a named harness at a recorded revision, which a separate rule then examines. Reading the guard establishes that someone wrote a guard, never that it holds."
+      "$notEvaluableNote": "The subject is whether the model treats interpolated content as instruction, which is behaviour at inference time and not repository content. It becomes checkable only through a recorded red-team artifact produced by a named harness at a recorded revision, which a separate rule would then examine; no rule in this release does. Reading the guard establishes that someone wrote a guard, never that it holds."
     }
   ]
 }

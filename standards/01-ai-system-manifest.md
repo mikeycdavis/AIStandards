@@ -156,11 +156,14 @@ rather than leaving a reader to assume otherwise.
 R1 through R3 are the only rules in this release that earn `full` assurance, and it is worth being
 clear about why so few do: each checks a file that this framework itself defines the shape of. That
 is the only class of thing a repository scanner can be certain about. R4 is `partial` because alias
-recognition is a maintained list, not a decision procedure — an unrecognised spelling is not seen,
-and that gap reports as `passed`, not as not-evaluated: a pass means no recognised moving alias was
-found. *Corrected 2026-09-14: this sentence previously said an unrecognised spelling appears as
-unevaluated. `detectFloatingModelAlias` records a clean observation for it, which `evaluateRule()` in
-`scripts/compliance.mjs` reports as `passed`.*
+recognition is a maintained list, not a decision procedure — an unrecognised spelling is not seen.
+Because the check covers less than the rule, a clean result reports `skipped` / `not-evaluated`, never
+`passed` ([Standard 5](05-verdict-vocabulary.md) R6): it means no recognised moving alias was found.
+*Corrected twice on 2026-09-14. This sentence first said an unrecognised spelling appears as
+unevaluated, which was then wrong: `detectFloatingModelAlias` records a clean observation for it, which
+`evaluateRule()` in `scripts/compliance.mjs` reported as `passed`. The Q13 correction brought the code
+to Standard 5 R6, and a clean result from this partial check — an unrecognised spelling included — now
+reports `not-evaluated`.*
 
 Nothing here is non-exemptible. A project can have a real reason a specific model identifier cannot
 be pinned, and recording that reason is better than a requirement routed around.
@@ -172,7 +175,7 @@ be pinned, and recording that reason is better than a requirement routed around.
 | R1 | A repository with no manifest fails | No `ai-system.yml` | `valid-manifest/` must pass |
 | R2 | A manifest missing a required field fails | Any schema violation | `valid-manifest/` must pass |
 | R3 | A scaffold manifest fails | The marker, or placeholder-only content | A partially-filled manifest must **not** be reported as scaffolding |
-| R4 | `claude-sonnet-latest` fails | An identifier matching a known alias shape | `pinned-model/` must pass, and prose naming an alias must not fire |
+| R4 | `claude-sonnet-latest` fails | An identifier matching a known alias shape | `pinned-model/` must not fire and must report `not-evaluated` rather than `passed`, and prose naming an alias must not fire |
 | R5 | A manifest with no stage warns | No `lifecycleStage` | — |
 | R6 | No falsifier is automated | — | — |
 
@@ -231,7 +234,7 @@ manifest is true.**
 | R1 | `lifecycle.manifest-exists` | **Evaluated.** Checks for a file at a known name |
 | R2 | `lifecycle.manifest-valid` | **Evaluated.** Schema conformance |
 | R3 | `lifecycle.manifest-not-scaffold` | **Evaluated.** Marker plus placeholder-substance |
-| R4 | `lifecycle.model-version-pinned` | **Evaluated, partially.** Matches a maintained list of alias shapes |
+| R4 | `lifecycle.model-version-pinned` | **Evaluated, partially.** Matches a maintained list of alias shapes. A match fails; a clean result reports `skipped` / `not-evaluated`, never `passed` |
 | R5 | `lifecycle.stage-declared` | **Not evaluated in this release.** Reported unevaluated, never passed |
 | R6 | `lifecycle.retirement-plan-exists` | `manual-review`. No detector, here or planned |
 

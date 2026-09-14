@@ -79,7 +79,7 @@
       "deprecatedIn": null,
       "supersededBy": null,
       "removedIn": null,
-      "$assuranceNote": "Recognises alias shapes from a maintained list. A provider may retire an alias form or re-point a pinned-looking id server-side; this cannot see that. A pass means the string is pinned, not that the weights are.",
+      "$assuranceNote": "Recognises alias shapes from a maintained list. A provider may retire an alias form or re-point a pinned-looking id server-side; this cannot see that. Because the check covers less than the rule, a clean result reports not-evaluated, never passed: it means no recognised moving alias was found, not that the string is pinned, and never that the weights are.",
       "crosswalk": [
         {
           "pack": "MachineLearningStandards",

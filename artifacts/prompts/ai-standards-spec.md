@@ -219,7 +219,7 @@ under [Authored items](#authored-items).
 | --- | --- | --- | --- | --- | --- |
 | 21 | Prompt and Instruction Security | D | `Prompt, tool, agent, and retrieval security` | O | standards/21-prompt-and-instruction-security.md |
 | 22 | Tool and Function-Call Security | D | `tool, agent, and retrieval security` | O | — |
-| 23 | Agent Execution Security | D | `agent, and retrieval security` | O | — |
+| 23 | Agent Execution Security | D | `agent, and retrieval security` | O | standards/23-agent-execution-security.md |
 | 24 | Retrieval and Context Supply Chain | D | `retrieval security` | O | — |
 
 > Bullet 4 shares one head noun across four modifiers. Each item's token is the longest tail of the

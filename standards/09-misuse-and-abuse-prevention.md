@@ -152,8 +152,8 @@ contradicted applicability of Standard 2 R4, and blocks the verdict. Such a syst
 `failed` on this rule, which is the accurate report of what it has done.
 
 **The check behind this rule is narrower than the sentence above.** It recognises a short list of
-literal spellings in a limited set of file types, and a `passed` result means only that none of them
-was found — not that any control is enabled. What it does exactly, and what it misses, is set out
+literal spellings in a limited set of file types, and a clean result means only that none of them
+was found — not that any control is enabled — and is reported as not established rather than `passed`. What it does exactly, and what it misses, is set out
 under [Implementation](#implementation).
 
 Rule `misuse.safety-controls-not-disabled`, `forbidden`, the only rule in this standard with a
@@ -237,9 +237,9 @@ or effective, or a misuse case as addressed, on the basis of a document's presen
 value's presence, or the absence of a disabling literal; and a `passed` result for R2's rule MUST NOT
 be presented as evidence that any provider control is enabled.**
 
-The detector bound to R2 reports `passed` whenever it does not recognise a disabling spelling —
+The detector bound to R2 records a clean observation whenever it does not recognise a disabling spelling —
 including for a spelling it has never heard of, a file type it does not read, and a repository with no
-configuration at all. That result does not claim that any control is enabled; whether it may be `passed` at all is open as Q13, because Standard 5 R6 forbids `passed` for a check that covered less than the rule requires. *Corrected 2026-09-14: this sentence had called the result honest about what it is.* It would become dishonest the moment
+configuration at all. That result does not claim that any control is enabled; since the Q13 correction on 2026-09-14 it is reported `skipped` / `not-evaluated`, with the distinction `prohibited-but-unestablished`, and not `passed`, because Standard 5 R6 forbids `passed` for a check that covered less than the rule requires. *Corrected 2026-09-14: this sentence had called the result honest about what it is.* It would become dishonest the moment
 anything in this framework rendered it as "safety controls enabled", or counted a misuse analysis's
 existence as misuse prevented.
 
@@ -258,7 +258,7 @@ repository, which is named as the weaker mechanism it is in Implementation.
 | Silence read as safety | No analysis exists; nobody can tell "no foreseeable misuse" from "nobody looked" | R1 |
 | The case nobody decided about | A case is listed with neither a control nor an acceptance | R1 |
 | The test setting that shipped | A safety setting turned off to unblock an evaluation, never reverted | R2 |
-| Disabled under another spelling | A setting turned off with a value or key the detector does not recognise, reported `passed` | R2 — **not caught**; see Implementation |
+| Disabled under another spelling | A setting turned off with a value or key the detector does not recognise, reported as an unestablished prohibition rather than a failure | R2 — **not caught**; see Implementation |
 | Misuse at volume | One identity generates output at a rate no human use would need, and nothing bounds it | R3 |
 | Unattributable use | A shared credential means no request can be traced to anyone, so no one can be restricted | R3 |
 | Filtered and forgotten | Blocked requests are dropped; the same identity rephrases until one gets through, and nobody sees the pattern | R4 |
@@ -346,28 +346,36 @@ pass". The code does the opposite: `detectDisabledSafetyControls` records an obs
 violation and no unknown, and `evaluateRule()` in `scripts/compliance.mjs` turns exactly that into
 `passed`. `test/audit.test.mjs` asserts `passed` for the `safety-configured` and `mentions-only`
 fixtures, and neither contains a disabling literal. This document states what the code does, and the
-note is corrected to match it in the same change.
+note is corrected to match it in the same change. *Superseded later on 2026-09-14 by the Q13
+correction: `evaluateRule()` now reports that clean observation as `skipped` / `not-evaluated`, the
+tests assert `prohibited-but-unestablished` with no violation, and the note was corrected again.*
 
 ## Tests and falsifiers
 
 | Requirement | Minimum test | Falsifier | Negative control | Status in this release |
 | --- | --- | --- | --- | --- |
 | R1 | Human review of the analysis | No analysis; a case with neither control nor acceptance; a provider default named against a case the analysis does not show it addresses | A reasoned finding that no case was identified must **not** be reported missing; a reasoned acceptance must **not** be reported as a missing control | **No detector.** `manual-review` |
-| R2 | `disabled-safety/` reports a violation | A recognised disabling literal in a code or string position of a searched file that names a recognised safety key | `safety-configured/` must pass; `mentions-only/`, which names `BLOCK_NONE` in a comment and in a README, must pass | **Detector, partial.** Blind spots report `passed`; see Implementation |
+| R2 | `disabled-safety/` reports a violation | A recognised disabling literal in a code or string position of a searched file that names a recognised safety key | `safety-configured/` must not fire and must report `prohibited-but-unestablished`, not `passed`; `mentions-only/`, which names `BLOCK_NONE` in a comment and in a README, the same | **Detector, partial.** A clean result, blind spots included, reports `prohibited-but-unestablished`; see Implementation |
 | R3 | Human review of the attribution scheme and bounds | A system taking requests from outside its operating team with no attribution, or with no bound on any one identity | A system whose every caller is its operating team is out of scope, not failing; a bound enforced in deployment configuration must not be rejected for being outside the repository | **No detector.** `manual-review` |
 | R4 | Human review of the signal list, role and action | A named case with no recognisable signal; no reviewing role; no action applicable to an identity or source | A system whose R1 analysis names no case owes none of this | **No detector.** `manual-review` |
 | R5 | — | **No falsifier is possible from this repository.** That is what `not-evaluable` means | The rule must never report `passed`, whatever controls and records exist | Catalog invariants apply once the rule is in the catalog |
-| R6 | None of the four rules this standard adds is in `EVALUATED_RULES` | A detector reporting a misuse control enabled or effective, or a case addressed, from presence or absence | R2's detector reporting `passed` with the message that an unlisted spelling would not be seen is **not** a violation: it reports the absence of a recognised literal, not an enabled control | **Enforced by construction** — no detector reads a misuse analysis or reports on enablement |
+| R6 | None of the four rules this standard adds is in `EVALUATED_RULES` | A detector reporting a misuse control enabled or effective, or a case addressed, from presence or absence | R2's clean result — `prohibited-but-unestablished`, with the message that an unlisted spelling would not be seen — is **not** a violation: it reports the absence of a recognised literal, not an enabled control | **Enforced by construction** — no detector reads a misuse analysis or reports on enablement |
 
 What the existing suite asserts about R2, stated precisely because it is narrower than the rule:
 
 - **The detector fires on one shape.** `test/audit.test.mjs` pairs the rule with `disabled-safety/`,
   whose `src/config.js` sets `threshold: "BLOCK_NONE"` inside `safetySettings`, and asserts a
   violation.
-- **Two controls must pass.** The same pairing asserts `passed` for `safety-configured/`, whose
-  threshold is `"BLOCK_MEDIUM_AND_ABOVE"`, and a separate test asserts `passed` for `mentions-only/`.
-  The first passes because no disabling literal is present, not because the detector recognises an
+- **Two controls must not fire, and neither may pass.** The same pairing asserts no violation and the
+  distinction `prohibited-but-unestablished` for `safety-configured/`, whose threshold is
+  `"BLOCK_MEDIUM_AND_ABOVE"`, and a separate test asserts the same for `mentions-only/`; until the
+  2026-09-14 Q13 correction both asserted `passed`. Neither result says a control is enabled: no
+  disabling literal is present, and the detector does not recognise an
   enabled setting — it recognises none.
+- **`test/partial-assurance.test.mjs`, added 2026-09-14, asserts that no partial-assurance result is
+  `passed` in any fixture**, and that `test/fixtures/q13-synthetic-env-block-none/` — a synthetic input
+  whose `.env` sets `SAFETY_SETTINGS=BLOCK_NONE` in a file type the detector does not read — reports this
+  rule `prohibited-but-unestablished` and the project `NOT_EVALUATED`, where it had reported `COMPLIANT`.
 - **The self-walk is withdrawn, not passed.** `test/validate.test.mjs` asserts that this repository's
   own result for the rule is `skipped` / `not-evaluated`, with the framework-exclusion message.
 - **A false not-applicable declaration blocks.** `test/validate.test.mjs` asserts
@@ -401,7 +409,8 @@ returns `skipped` for every not-evaluable rule before any detector is consulted 
 about misuse.
 
 **Four of six requirements have no mechanical falsifier in this release, and one never will from a
-repository. The fifth, R2, has a partial one whose blind spots report as passes.** R6's footing is the
+repository. The fifth, R2, has a partial one, whose clean result — blind spots included — reports as an unestablished
+prohibition, not a pass.** R6's footing is the
 absence of code rather than a test that fails.
 
 ## Exceptions and staleness
@@ -476,12 +485,15 @@ wording. Everything normative here is authored, and none of it has owner approva
 - **The placement of the four added rules in `misuse.`**, the classification of R1, R3 and R4 as
   `manual-review`, and the decision that none of the five rules is `nonExemptible`.
 - **The admission that four of six requirements have no mechanical falsifier**, that R2's detector
-  reports its blind spots as passes, and that the untested detector behaviour described below was
+  reported its blind spots as passes until the Q13 correction, and that the untested detector behaviour described below was
   observed by uncommitted runs rather than asserted by the suite.
 - **The 2026-09-14 corrections after the detector repair**: Implementation items 2 and 5 and their line
   numbers restated from the repaired code, the suite list extended, and R6's description of R2's
   `passed` result no longer called honest, pending Q13. These are evidence corrections made during
   integration, not owner-approved content.
+- **The corrections after the Q13 correction, the same day**: R2's clean result described as
+  `prohibited-but-unestablished` rather than `passed` wherever this document described it, the controls
+  restated, and an Implementation row added. Evidence corrections, not owner-approved content.
 
 ## Relationship to other standards and ADRs
 
@@ -541,6 +553,7 @@ Stated as separate lists so that a proposal is not read as a capability.
 | `detectDisabledSafetyControls` | Examines R2's rule, as described exactly below | `scripts/standards.mjs`, lines 423–493 |
 | Withdrawal on a framework exclusion | Withdraws R2's rule, without scanning, when the walk was shortened by a framework exclusion | `SKIP` and `CONTENT_DERIVED_RULES`, lines 54–58 and 121–125; the `withdrawn` flag, line 534 |
 | Contradicted applicability | Blocks the verdict when R2's rule is declared not-applicable and the detector observes a violation | `checkApplicabilityContradictions()`, lines 500–514 |
+| Reporting of R2's clean result | Because the rule declares `assurance: partial`, a clean observation reports `skipped` / `not-evaluated`, distinction `prohibited-but-unestablished`, never `passed`, and keeps an applicable project from `COMPLIANT`; a recognised literal still fails. Since the 2026-09-14 Q13 correction | `evaluateRule()` in `scripts/compliance.mjs`; `test/partial-assurance.test.mjs` |
 | Reporting of unexamined `manual-review` rules | R1, R3 and R4 report `skipped` / `not-evaluated`, never `passed`, and keep an applicable project from `COMPLIANT` | `evaluateRule()` and `evaluate()` in `scripts/compliance.mjs` |
 | Reporting of `not-evaluable` rules | R5 is reported and listed in `notEvaluable`, outside the scored denominator, without effect on status | `scripts/compliance.mjs` |
 | `not-evaluable` catalog invariants | Refuse a not-evaluable rule that claims assurance, is attestable, is `nonExemptible`, or lacks a substantive note | `checkRule()` in `scripts/catalog.mjs` |
@@ -597,24 +610,27 @@ removed, and every line number below was updated with them.*
    being scanned** (lines 452–455), so a disabling literal elsewhere in the repository is not reported
    either. The result is `skipped` / `not-evaluated`, the distinction `prohibited-but-unestablished`,
    and the status cannot reach `COMPLIANT`.
-7. **Everything else is `passed`.** When no hit is found and the rule was not withdrawn, the detector
-   records an observation with neither a violation nor an unknown (line 492), and `evaluateRule()` in
-   `scripts/compliance.mjs` reports that as `passed`. This includes an unrecognised spelling, key or file
+7. **Everything else is not established.** When no hit is found and the rule was not withdrawn, the
+   detector records an observation with neither a violation nor an unknown (line 492), and
+   `evaluateRule()` in `scripts/compliance.mjs` reports that as `skipped` / `not-evaluated`, distinction
+   `prohibited-but-unestablished`, because the rule declares `assurance: partial` (Standard 5 R6; until
+   the 2026-09-14 Q13 correction it reported `passed`). This includes an unrecognised spelling, key or file
    type; a repository with no searched files at all; a file that could not be read, which is skipped at
    line 461 without recording an unknown; and anything past the first 524,288 characters of a file larger
-   than 512 KiB, which `readText()` truncates and the detector does not check for. The pass message
+   than 512 KiB, which `readText()` truncates and the detector does not check for. The message carried into the result
    itself says that "a provider spelling not on the maintained list would not be seen".
 
 The last item is the one R6 exists for. Standard 5 R6 requires a check that could not read a file to
 report `not-evaluated`, and Standard 5's own Implementation records unreadable-file withdrawal and
 truncation domains as Phase 3 work. This detector is an instance of that recorded gap, not an exception
-to Standard 5.
+to Standard 5. Since the Q13 correction neither an unread file nor a clean search reports `passed`, but
+the two still produce the same result and message.
 
 **Proposed, and deliberately absent from this release.**
 
 | Proposed | Why it is not here |
 | --- | --- |
-| Withdraw R2's rule to `not-evaluated` when a searched file is unreadable or truncated | Standard 5's Implementation places the evidence-availability architecture in Phase 3. Doing it for one detector first would give this rule a different meaning of `passed` from its neighbours |
+| Withdraw R2's rule to `not-evaluated` when a searched file is unreadable or truncated | Standard 5's Implementation places the evidence-availability architecture in Phase 3. Doing it for one detector first would give this rule a different withdrawal behaviour from its neighbours. Since the Q13 correction neither case yields `passed`; what is missing is a result that tells them apart |
 | Report a configuration file of an unrecognised type as unexamined rather than silently skipping it | The same Phase 3 work. Until then an unread `.env` and a clean one are indistinguishable in the result |
 | Require the literal to be the value assigned to the key, rather than anywhere in the same file | Needs a parse of each configuration format rather than a lexical split. It would remove the `"OFF"` false positive, the JSON `false` false negative and the single-literal type false positive, and it is Phase 3 detector work |
 | Tests pinning the `OFF` literal, the `false` form of the off-pattern, the key gate and the truncation path | Each is behaviour the detector has and no test asserts. The quoted form of the off-pattern has been pinned by `test/safety-detector.test.mjs` since the 2026-09-14 repair; the rest is Phase 3 work, and a test asserting that a blind spot reports `passed` would pin it as intended behaviour |

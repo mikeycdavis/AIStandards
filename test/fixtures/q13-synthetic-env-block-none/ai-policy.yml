@@ -1,0 +1,203 @@
+# SYNTHETIC TEST INPUT. Not a real project and not a real policy.
+#
+# Q13 reproduction: a repository whose .env disables a provider safety control (SAFETY_SETTINGS=BLOCK_NONE).
+#
+# Its not-applicable declarations exist only to isolate the verdict path of the rules a detector
+# examines (EVALUATED_RULES in scripts/standards.mjs). They are not real applicability approvals:
+# nobody reviewed them, and none may be copied into a real ai-policy.yml. The rules left applicable
+# outside EVALUATED_RULES are not-evaluable, so they change neither status nor score.
+# See Q13 in artifacts/project-plan-breakdown/08-open-questions.md and test/partial-assurance.test.mjs.
+standardVersion: "0.1.0"
+project: "q13-synthetic-env-block-none"
+
+rules:
+  agent.step-budget-bounded:
+    level: required
+  agent.least-privilege-declared:
+    level: required
+  agent.no-self-modification:
+    level: forbidden
+  agent.retrieved-content-not-instruction:
+    level: forbidden
+  eval.plan-exists:
+    level: required
+  eval.suite-executable:
+    level: required
+  eval.regression-baseline-recorded:
+    level: required
+  eval.no-test-set-tuning:
+    level: forbidden
+  eval.no-fabricated-results:
+    level: forbidden
+  gate.tool-permission-manifest:
+    level: required
+  gate.actions-classified:
+    level: required
+  gate.irreversible-approval:
+    level: required
+  gate.argument-scoped-classification:
+    level: required
+  gate.no-self-approval:
+    level: forbidden
+  gate.fail-closed:
+    level: forbidden
+  lifecycle.manifest-exists:
+    level: required
+  lifecycle.manifest-valid:
+    level: required
+  lifecycle.manifest-not-scaffold:
+    level: required
+  lifecycle.model-version-pinned:
+    level: required
+  lifecycle.stage-declared:
+    level: recommended
+  lifecycle.retirement-plan-exists:
+    level: recommended
+  lifecycle.safety-requirements-stated:
+    level: required
+  lifecycle.safety-context-declared:
+    level: required
+  lifecycle.safety-case-argued:
+    level: required
+  lifecycle.safety-evidence-traceable:
+    level: required
+  lifecycle.safety-properties-hold-at-inference:
+    level: required
+  misuse.safety-controls-not-disabled:
+    level: forbidden
+  misuse.misuse-cases-identified:
+    level: required
+  misuse.abuse-volume-bounded:
+    level: recommended
+  misuse.misuse-signals-acted-on:
+    level: required
+  misuse.controls-effective-at-inference:
+    level: required
+  oversight.autonomy-tier-declared:
+    level: required
+  oversight.authority-matches-tier:
+    level: required
+  oversight.intervention-path-declared:
+    level: required
+  oversight.autonomy-increase-approved:
+    level: required
+  oversight.no-authority-beyond-declared-tier:
+    level: forbidden
+  privacy.no-real-personal-data-in-fixtures:
+    level: forbidden
+  privacy.no-credentials-in-prompts:
+    level: forbidden
+  privacy.no-unredacted-prompt-logging:
+    level: forbidden
+  privacy.retention-declared:
+    level: required
+  privacy.deletion-path-exists:
+    level: required
+  promptsec.prompt-is-versioned-artifact:
+    level: required
+  promptsec.no-inline-system-prompt:
+    level: recommended
+  promptsec.threat-model-exists:
+    level: required
+  promptsec.no-secrets-in-context:
+    level: forbidden
+  promptsec.template-injection-guarded:
+    level: required
+
+applicability:
+  agent.step-budget-bounded:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  agent.least-privilege-declared:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  agent.retrieved-content-not-instruction:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  eval.plan-exists:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  eval.suite-executable:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  eval.regression-baseline-recorded:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  eval.no-test-set-tuning:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  eval.no-fabricated-results:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  gate.irreversible-approval:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  gate.argument-scoped-classification:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  gate.no-self-approval:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  gate.fail-closed:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  lifecycle.stage-declared:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  lifecycle.retirement-plan-exists:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  lifecycle.safety-requirements-stated:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  lifecycle.safety-context-declared:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  lifecycle.safety-case-argued:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  lifecycle.safety-evidence-traceable:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  misuse.misuse-cases-identified:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  misuse.abuse-volume-bounded:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  misuse.misuse-signals-acted-on:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  oversight.autonomy-tier-declared:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  oversight.authority-matches-tier:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  oversight.intervention-path-declared:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  oversight.autonomy-increase-approved:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  privacy.no-real-personal-data-in-fixtures:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  privacy.no-credentials-in-prompts:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  privacy.no-unredacted-prompt-logging:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  privacy.retention-declared:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  privacy.deletion-path-exists:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  promptsec.threat-model-exists:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."
+  promptsec.no-secrets-in-context:
+    status: not-applicable
+    reason: "SYNTHETIC TEST INPUT: declared not-applicable only to isolate the verdict path of the evaluated rules; not a real applicability approval."

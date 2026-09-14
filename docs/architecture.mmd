@@ -16,7 +16,7 @@ flowchart TB
     end
 
     subgraph corpus["Normative corpus"]
-        stds["standards/*.md<br/>11 of 53 written"]
+        stds["standards/*.md<br/>13 of 53 written"]
         rules["rules/*.json<br/>8 shards, 46 rules"]
         schemas["schemas/*.json<br/>5 schemas"]
     end
@@ -25,13 +25,13 @@ flowchart TB
         cli["standards.mjs<br/>audit · validate"]
         catalog["catalog.mjs<br/>load + invariants"]
         policy["policy.mjs<br/>target-relative resolve"]
-        compliance["compliance.mjs<br/>evaluate · envelope · distinction"]
+        compliance["compliance.mjs<br/>evaluate · envelope · distinction<br/>partial clean = not-evaluated"]
     end
 
     subgraph parsers["Dependency-free parsers"]
         yaml["yaml.mjs"]
         jsonschema["jsonschema.mjs"]
-        source["source.mjs<br/>use/mention split"]
+        source["source.mjs<br/>use/mention split,<br/>comments blanked in place"]
         scaffolding["scaffolding.mjs"]
     end
 
@@ -68,7 +68,7 @@ flowchart TB
     jsonschema --> policy
     source --> cli
     scaffolding --> cli
-    cli --> compliance
+    cli -->|"observations +<br/>rule assurance"| compliance
     cli -->|"audit"| auditrep
     compliance -->|"validate"| valrep
 

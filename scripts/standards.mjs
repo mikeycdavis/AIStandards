@@ -337,8 +337,8 @@ function detectUndeclaredTool(run) {
 // --- Judgmental detectors, partial assurance ---------------------------------------------------
 
 // Alias shapes that name a moving target. Deliberately a maintained list of exact shapes rather
-// than a general heuristic. An unrecognised spelling is not seen and reports as passed, not as
-// not-evaluated; Standard 1 and the rule's assurance note both say so.
+// than a general heuristic. An unrecognised spelling is not seen. The rule's assurance is partial,
+// so a clean observation reports as not-evaluated, never passed (Standard 5 R6, Q13).
 const FLOATING_ALIAS = /(^|[-@:/])(latest|preview|current|stable|edge|nightly)$/i;
 
 function detectFloatingModelAlias(run) {
@@ -649,7 +649,7 @@ function commandValidate(target, flags) {
     }
     if (report.unestablishedProhibitions.length > 0) {
       out.push("");
-      out.push("Prohibitions nobody examined. These are not passes:");
+      out.push("Prohibitions not established. These are not passes:");
       for (const p of report.unestablishedProhibitions) out.push(`  ${p.rule} — ${p.reason}`);
     }
     if (report.notEvaluable.length > 0) {

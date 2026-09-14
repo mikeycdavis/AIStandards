@@ -34,6 +34,7 @@ sequenceDiagram
         CLI-->>Caller: exit 3
     else normal path
         CLI->>Comp: evaluate + envelope
+        Note over Comp: Per rule: violation fails; unknown is<br/>not-evaluated; a clean result from an<br/>assurance-partial rule is not-evaluated,<br/>never passed; only a clean full check passes.
         Note over Comp: distinction() derived per result.<br/>forbidden branch tested BEFORE<br/>the general not-evaluated branch.
         Comp-->>CLI: envelope with top-level status
         CLI-->>Caller: JSON + exit 0 / 1
