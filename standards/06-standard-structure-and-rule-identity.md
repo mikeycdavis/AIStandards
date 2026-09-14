@@ -39,7 +39,7 @@ diffed independently, or cited without ambiguity.
 ### R2 — The ten sections
 
 **Each standard MUST carry all ten H2 sections, in order: Scope, Requirements, Failure modes,
-Evidence, Validation severity and exemptibility, Tests and falsifiers, Exceptions and staleness,
+Evidence, Validation, severity, and exemptibility, Tests and falsifiers, Exceptions and staleness,
 Additions this standard makes beyond the source, Relationship to other standards and ADRs,
 Implementation.**
 
@@ -54,7 +54,7 @@ surface, and *Implementation*, which is where the honest limits go.
 Conformance is asserted against the brief's nine, not against the section count. A future change that
 merges or splits a section must update the mapping the test holds, and the test fails until it does.
 
-Rule `structure.nine-sections`, which does not exist in this release. See
+No catalog rule carries R1 or R2; `scripts/standards-sections.mjs` checks them. See
 [Implementation](#implementation).
 
 ### R3 — Every requirement is falsifiable, or is declared not-evaluable
@@ -185,10 +185,11 @@ standard's table fails, and so does the reverse.
 ## Exceptions and staleness
 
 Not exemptible, per above. The generated-table markers in each standard are checked on every run, so
-a drifted table is a build failure rather than a thing someone notices later. In this release the
-check is a test rather than a generator — `scripts/sync-rule-tables.mjs` is Phase 2 — which means the
-tables are hand-written and machine-verified, rather than machine-written. That is weaker in one way
-(a human writes the table) and identical in the way that matters (a wrong table fails).
+a drifted table is a build failure rather than a thing someone notices later. Since 2026-09-14 the tables are written by `scripts/sync-rule-tables.mjs`, whose `--check` mode
+fails on any drift, and `test/standards-tables.test.mjs` still verifies the same agreement
+independently, so a generator defect cannot certify its own output. The generator takes each row's
+requirement label from the one `### RN` section that cites the rule id, and refuses rather than
+guesses when that citation is missing or ambiguous.
 
 ## Additions this standard makes beyond the source
 
@@ -224,8 +225,8 @@ of which any id here collides with.
 
 | Requirement | State |
 | --- | --- |
-| R1 | **Not evaluated in this release.** No detector reads `standards/`. Phase 2 |
-| R2 | **Not evaluated in this release.** The nine-requirement mapping test is Phase 2, when all 53 standards exist |
+| R1 | **Checked** for this repository's documents by `scripts/standards-sections.mjs`: filename, H1, Source line and specification row agree |
+| R2 | **Checked** for every written standard by `scripts/standards-sections.mjs`: ten sections present, once each, in order, non-empty, and each brief requirement resolves through the mapping. Unwritten items are not required to exist |
 | R3 | `manual-review`. Whether a falsifier is a real falsifier is a judgement about the domain |
 | R4 | **Enforced.** `RULE_ID` at load; `CatalogError` on mismatch |
 | R5 | **Enforced.** `NAMESPACES` and `FOREIGN_NAMESPACES` at load |
@@ -233,9 +234,12 @@ of which any id here collides with.
 | R7 | **Enforced.** Missing lifecycle fields raise at load |
 | R8 | **Enforced.** The `not-evaluable` invariants raise at load |
 
-**R1 and R2 have no detector in this release, and that is worth being blunt about.** This standard
-requires every standard document to carry ten sections, and nothing checks it — the seven documents
-in this release conform because they were written to conform, which is exactly the kind of assurance
-this pack refuses to accept from an adopting project. The check arrives in Phase 2 alongside the
-remaining forty-six documents, and until then the requirement is stated and unenforced. It is
-reported as unevaluated rather than passing, because that is what it is.
+**R1 and R2 are checked mechanically as of 2026-09-14, and only mechanically.**
+`scripts/standards-sections.mjs`, run by `test/standards-sections.test.mjs`, rejects a missing,
+duplicated, reordered or empty section, resolves each of the brief's nine requirements to its section
+through a mapping held as data, and checks each document's filename, H1 and Source line against its
+specification row. It reads this repository's written standards only; an unwritten item is not
+required to exist. It establishes that a section exists, is in order and is not empty — not that what
+the section says is adequate, which remains human review. Before that date this paragraph recorded
+R1 and R2 as stated and unenforced: the documents written until then conformed because they were
+written to conform, and the checker found all nine conforming when it first ran.

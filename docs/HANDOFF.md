@@ -29,7 +29,9 @@ skill on 2026-09-06** against commit `70832f4`, replacing a hand-scanned version
 skill was unavailable. `docs/architecture.mmd` and `docs/validate-flow.mmd` are its canonical diagram
 sources; the fenced blocks inside the document are byte-identical copies, verified programmatically.
 No SVG is rendered — that would require a build-time download, and this repository has no
-dependencies. **Do not hand-patch the architecture document; regenerate it.**
+dependencies. **Do not hand-patch the architecture document; regenerate it.** It predates the 2026-09-14 batch and
+does not describe `scripts/sync-rule-tables.mjs` or `scripts/standards-sections.mjs`; that staleness
+is recorded here rather than patched in.
 
 `docs/architecture-baseline-2026-09-03.md` is the superseded pre-implementation capture, kept because
 it is the evidence that nothing pre-existed. Neither is evidence about the other, and the baseline
@@ -76,7 +78,7 @@ could not run reports as not-evaluated, a prohibition nobody established reports
 | Dependencies | **Zero third-party, structurally.** `test/no-phase-creep.test.mjs` fails if a lockfile appears |
 | Test framework | `node:test` + `node:assert/strict`. Nothing else |
 | Host OS during development | Windows 11, PowerShell 7 |
-| Git | Branch `develop`. Checkpoint commit **`d4b4ee2`** (2026-09-04) tracks the whole implementation; **`70832f4`** adds Standard 02; **`fc060bf`** (2026-09-06) adds Standard 11, the `oversight` shard and the regenerated documentation |
+| Git | Branch `develop`. Checkpoint commit **`d4b4ee2`** (2026-09-04) tracks the whole implementation; **`70832f4`** adds Standard 02; **`fc060bf`** (2026-09-06) adds Standard 11, the `oversight` shard and the regenerated documentation; the 2026-09-14 batch commit (`git log --grep "Standard 08"`) adds Standard 08, the rule-table generator and the document-conformance checker |
 
 There is no install step. Clone and run.
 
@@ -142,17 +144,20 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
 - 12 modules under `scripts/`, 2 897 lines, no third-party import anywhere
 - Two commands: `audit` (evidence, no verdict) and `validate` (policy-aware verdict)
 - 7 rule shards, **32 rules** at the close of Phase 1; 9 of them reachable by a detector. An
-  eighth shard (`rules/oversight.json`, 5 rules) arrived with Standard 11 in Phase 2, making **37**
+  eighth shard (`rules/oversight.json`, 5 rules) arrived with Standard 11 in Phase 2, making **37**; Standard 08 added five rules to
+  `rules/lifecycle.json` on 2026-09-14, making **42**
 - 12 detectors: 4 descriptive (bound to no rule), 8 judgmental
 - 5 schemas; policy resolution against the **target**, never this checkout
-- 18 test files, **227** assertions as of 2026-09-06
+- 20 test files, **304** assertions as of 2026-09-14 (18 files and 227 on 2026-09-06)
 
 **Phase 2 — in progress.**
 
 - `artifacts/prompts/ai-standards-spec.md` — 53 items, each classed Derived, Verbatim or Authored
 - `artifacts/boundary-review.json` — evidence for 16 boundary postures across nine packs
 - `scripts/spec.mjs`, `scripts/fidelity.mjs`, `scripts/inventory.mjs` — the gates, none with a write path
-- **9 of 53 standards written: 01, 02, 03, 05, 06, 07, 11, 21, 45**
+- `scripts/sync-rule-tables.mjs` (writes the generated tables; `--check` is read-only) and
+  `scripts/standards-sections.mjs` (read-only document conformance), both 2026-09-14
+- **10 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 11, 21, 45**
 
 **Standard 02, "AI Risk Tiering and Applicability", landed 2026-09-04** as the first Phase 2 corpus
 slice. It is class **A** (authored — the brief names ten subject areas and no way to decide which
@@ -191,7 +196,8 @@ pass. R1 closes that.
 
 `oversight.no-authority-beyond-declared-tier` is `forbidden` and `not-evaluable`. It now reports
 `prohibited-but-unestablished` in this repository's own verdict — visible, not a pass, not a failure,
-and excluded from the scored denominator in both directions.
+and excluded from the scored denominator in both directions. It does not change the status: see the
+2026-09-14 correction below.
 
 **A substantive question was found and deliberately not resolved.** Standard 02's R2 forbids a
 detector to "assert, **propose**, or default" a risk tier. The reasoning printed beneath it supports
@@ -207,8 +213,41 @@ is an owner decision, not an evidence correction.
 tier. It does not — Standard 1 R1 requires name, purpose and models. The paragraph is corrected in
 place with a dated note.
 
-**Deliberately not built, and asserted absent by test:** the remaining 44 standards, the remaining 10
-rule shards, templates, `init`, attestations, containers, CI workflows, the adapter, and Phase 3's
+**2026-09-14 batch — Standard 08, the rule-table generator, and the document-conformance checker.**
+Built concurrently by three sub-agents in separate git worktrees, each with an exclusive file scope,
+and integrated centrally into one commit. Shared cells — the specification, rule shards, runner list,
+phase guard, policy, package scripts, this handoff — were edited only during integration.
+
+- **Standard 08, "AI Safety Requirements and Safety Cases."** Class **D** (`AI safety`), posture **O**
+  (item 8 is listed under `notGovernedElsewhere` in the boundary review). Six requirements keep a
+  *safety requirement*, a *safety case* and the property *holding at inference time* apart: state each
+  requirement with an observable violation, or record a reasoned no-hazard finding (R1); bind them to
+  a declared operating context and name what invalidates it (R2); argue every stated property down to
+  cited evidence, marking gaps rather than omitting them (R3); label each citation by kind and
+  revision, never citing the argument as its own support (R4); the properties hold at inference time,
+  `required` and `not-evaluable` (R5); and no part of this framework may report a case sound from a
+  document's presence (R6, no rule). Five rules were added to `rules/lifecycle.json` — four
+  `manual-review`, one `not-evaluable`. It does not grade safety cases by risk tier, and it neither
+  restates nor extends Standard 02 R2; Q7 is untouched.
+- **`scripts/sync-rule-tables.mjs`.** Writes each generated table from the catalog; `--check` is
+  read-only and exits 1 on drift, 2 on malformed input. A row's requirement label is taken from the
+  single `### RN` section that cites the rule id in backticks — a mapping verified against all 22
+  pre-existing rows before the tool was written — and the tool refuses rather than guesses when that
+  citation is missing or ambiguous. Run in write mode it changed no existing document.
+- **`scripts/standards-sections.mjs`.** Rejects a missing, duplicated, out-of-order or empty section in
+  any written standard, resolves the brief's nine requirements through a mapping held as data, and
+  checks filename, H1, Source line and specification row. All ten documents conform. It checks
+  structure, not adequacy. Its identity checks overlap `inventory.mjs`'s; both are kept.
+- **Evidence corrections made during integration.** Standard 11 R6, the rationale of
+  `oversight.no-authority-beyond-declared-tier` and `README.md` said a forbidden not-evaluable rule
+  caps the verdict. `evaluate()` in `scripts/compliance.mjs` excludes not-evaluable rules from the set
+  that holds a status, and Standard 5 R8 requires exactly that, so all three were wrong and are
+  corrected. Standard 06's R2 prose now spells the Validation heading as every document does, and its
+  Implementation section no longer says R1 and R2 are unchecked.
+
+**Deliberately not built, and asserted absent by test:** the remaining 43 standards, shards for
+the nine reserved namespaces that have none, `scripts/manifest.mjs`, `scripts/toolperms.mjs`, templates,
+`init`, attestations, containers, CI workflows, the adapter, and Phase 3's
 detectors. `test/no-phase-creep.test.mjs` fails if any of them appears early.
 
 ## 6 · What is verified, and what is only asserted
@@ -224,6 +263,16 @@ collapse.
 - Every one of the 9 authored items is declared as authored and carries a non-empty Additions section.
 - Every boundary posture that defers carries recorded evidence naming a real standard in a real pack.
 - No rule id in this catalog collides with any of the 560 ids recorded across nine adjacent packs.
+- Every written standard carries the ten sections once each, in order and non-empty; each of the
+  brief's nine requirements resolves to its section; and filename, H1 and Source line agree with the
+  specification row — `scripts/standards-sections.mjs`, since 2026-09-14. Structure, not adequacy.
+- Every generated rule table equals what `scripts/sync-rule-tables.mjs` renders from the catalog, and
+  `test/standards-tables.test.mjs` checks the same agreement independently.
+
+**Checked by nothing:** a written standard whose shard carries rules for it but whose document has no
+generated block. `inventory.mjs`'s `checkRuleBindings()` only confirms each rule cites a real item,
+and the generator and the tables test only read blocks that exist. Every written standard with rules
+has a block today (01, 08, 11, 21, 45).
 
 **Asserted but not verified, and the gap is not closable by more code:**
 
@@ -271,32 +320,38 @@ governance until a sign-off exists.
 5. **Whether to pin line endings with a `.gitattributes`** — Q8. `core.autocrlf` is `true` and no
    `.gitattributes` exists. Nothing breaks today; it becomes real in Phase 5, where the container
    materialises its clone with `core.autocrlf=false`.
+6. **Whether Standard 08's authored calls stand.** Its rules sit in `lifecycle.` because no `safety.`
+   namespace is reserved; R5 is `required` rather than `forbidden` because the prohibitive form belongs
+   to item 48; and safety cases are deliberately not graded by risk tier. Each is disclosed in its
+   Additions section, and none has owner approval.
 
 ## 9 · The smallest next slice
 
-**Write Standard 8, "AI Safety Requirements and Safety Cases," and nothing else.**
+**Write Standard 9, "Misuse and Abuse Prevention," and nothing else in the corpus.**
 
-Standard 11 was written on 2026-09-06 and is no longer next. Item 8 is class **D** (the brief's
-`AI safety` token) and posture **O**, so it needs no boundary evidence and exercises the §5 procedure
-in `artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` without the crosswalk
-complication. Standard 02 names it as the remaining unwritten item most likely to reshape it.
+Standard 8 was written on 2026-09-14 and is no longer next. Item 9 is class **D** (the brief's
+`misuse prevention` token) and posture **O**, so it needs no boundary evidence. It is next for three
+observed reasons: `rules/misuse.json` already carries `misuse.safety-controls-not-disabled`, citing
+standard 9, with no document stating it; Standard 08 explicitly leaves misuse controls to item 9; and
+it is the only unwritten item that already owns a catalog rule of its own with no other claimant.
 
-The exact procedure is written out step by step, with per-step verification, in
-`artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` §5. **Read that rather than
-reconstructing it.** The step most easily missed is claiming the document in the specification's
-`Implemented by` column — skipping it makes three tests fail with messages about the specification
-rather than about the new file.
+Follow `artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` §5, which now includes
+writing the table with `node scripts/sync-rule-tables.mjs` and checking structure with
+`node scripts/standards-sections.mjs`. Because `misuse.safety-controls-not-disabled` already exists,
+the new document must cite it in backticks in exactly one `### RN` section, or the generator refuses.
 
-Semantic acceptance, not counters: `inventory.mjs` recognises the document as implementing item 8;
-its class-D token resolves to the brief; it states plainly which requirements have no rule in this
-release; and every other item's status is unchanged.
+Semantic acceptance, not counters: `inventory.mjs` recognises the document as implementing item 9;
+its token resolves to the brief; it states which requirements have no rule; and every other item's
+status is unchanged.
 
-**Do not** start the remaining 43 standards in the same pass. The skeleton is now proven on nine
-documents across both provenance classes and postures O and X; proving each new *shape* once before
-scaling is what stops a systematic defect from being written 44 times.
+**Do not** start the remaining 42 standards in the same pass.
 
-**Before item 8, consider asking the owner to rule on Q7** (see §8). It is the only open question
-that changes the wording of an already-written standard.
+**Q7 is still open** (see §8). Standard 08 was written without depending on it, and item 9 is
+expected to be writable the same way (inferred, not checked). It remains the only open question that
+changes the wording of an already-written standard.
+
+Phase 2 tooling still unbuilt: `scripts/manifest.mjs`, `scripts/toolperms.mjs`, the templates and
+`init`. None is needed for item 9.
 
 ## 10 · Invariants — do not break these
 

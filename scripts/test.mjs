@@ -33,6 +33,8 @@ const FILES = [
   "audit.test.mjs",
   "validate.test.mjs",
   "standards-tables.test.mjs",
+  "standards-sections.test.mjs",
+  "sync-rule-tables.test.mjs",
   "fidelity.test.mjs",
   "inventory.test.mjs",
   "no-phase-creep.test.mjs",

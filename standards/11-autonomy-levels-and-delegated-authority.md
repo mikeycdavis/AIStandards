@@ -157,8 +157,12 @@ retrieved content as instruction, or by continuing past a refused or unavailable
 
 This is the requirement everything above exists to make meaningful, and **this framework cannot check
 it.** It is stated anyway, at `forbidden` level and `not-evaluable` validation type, because a
-prohibition that is stated and unexamined is reported as `prohibited-but-unestablished` and caps the
-verdict, whereas an unstated one is invisible. See [Standard 5](05-verdict-vocabulary.md).
+prohibition that is stated and unexamined is reported as `prohibited-but-unestablished` and listed in
+`unestablishedProhibitions`, whereas an unstated one is invisible. Being `not-evaluable`, it does
+not cap the status: [Standard 5](05-verdict-vocabulary.md) R8 keeps unverifiability outside the verdict,
+and `evaluate()` in `scripts/compliance.mjs` excludes not-evaluable rules from the set that holds a
+status at `NOT_EVALUATED`. *Corrected 2026-09-14: this paragraph previously said the rule caps the
+verdict, which the code does not do.*
 
 Rule `oversight.no-authority-beyond-declared-tier`, **forbidden** and **not-evaluable**. Its
 `$notEvaluableNote` names what would make it checkable: a committed adversarial exercise record from

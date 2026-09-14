@@ -61,39 +61,39 @@ commit and buries whatever you were actually doing. It is recorded as an open it
 
 ---
 
-## 2. Current state, verified 2026-09-06
+## 2. Current state, verified 2026-09-14
 
-**Written: 8 of 53 standards** — `standards/01-ai-system-manifest.md`,
+**Written: 10 of 53 standards** — `standards/01-ai-system-manifest.md`,
 `02-ai-risk-tiering-and-applicability.md`, `03-machine-readable-ai-policy.md`,
 `05-verdict-vocabulary.md`, `06-standard-structure-and-rule-identity.md`,
-`07-boundary-with-adjacent-standards.md`, `21-prompt-and-instruction-security.md`,
+`07-boundary-with-adjacent-standards.md`, `08-ai-safety-requirements-and-safety-cases.md`,
+`11-autonomy-levels-and-delegated-authority.md`, `21-prompt-and-instruction-security.md`,
 `45-approval-gates.md`.
 
-**45 standards remain unwritten.**
+**43 standards remain unwritten.**
 
-**Rules: 32 across 7 shards** — `rules/agent.json` (4), `eval.json` (5), `gate.json` (6),
-`lifecycle.json` (6), `misuse.json` (1), `privacy.json` (5), `promptsec.json` (5). The plan targets
-roughly 96 across 17 namespaces, so 11 shards remain. **Nine** of the 32 are reachable by a detector
-(`EVALUATED_RULES`, `scripts/standards.mjs:130`); the other 23 report `skipped / not-evaluated` by
-construction. That gap is Phase 3's work, not this phase's.
+**Rules: 42 across 8 shards** — `rules/agent.json` (4), `eval.json` (5), `gate.json` (6),
+`lifecycle.json` (11, five of them Standard 08's), `misuse.json` (1), `oversight.json` (5),
+`privacy.json` (5), `promptsec.json` (5). Nine of the seventeen reserved namespaces have no shard.
+**Nine** of the 42 rules are reachable by a detector (`EVALUATED_RULES` in `scripts/standards.mjs`);
+the rest report `skipped / not-evaluated` by construction. That gap is Phase 3's work.
 
-**Built and passing:** `scripts/inventory.mjs` (385 lines, 8 checks) and `scripts/fidelity.mjs`
-(94 lines).
+**Built and passing:** `scripts/inventory.mjs`, `scripts/fidelity.mjs`, and since 2026-09-14
+`scripts/sync-rule-tables.mjs` (writes generated tables; `--check` is read-only) and
+`scripts/standards-sections.mjs` (read-only document conformance).
 
-**Not built, despite appearing in the Deliverables list below:** `scripts/sync-rule-tables.mjs`,
-`scripts/manifest.mjs`, `scripts/toolperms.mjs`, `scripts/init.mjs`,
-`artifacts/standards-source-inventory.json`, and every template. **Do not run
-`node scripts/sync-rule-tables.mjs --check`** — the file does not exist and you will get a module-not-
-found error, not a check failure. It is listed in §7 Verification as the phase's *exit* command, not
-as something runnable today.
+**Not built, despite appearing in the Deliverables list below:** `scripts/manifest.mjs`,
+`scripts/toolperms.mjs`, `scripts/init.mjs`, `artifacts/standards-source-inventory.json`, and every
+template.
 
 ---
 
 ## 3. Purpose
 
 Write the full normative corpus and prove it traces to the brief. The two blocking catalog reviews
-that gate this phase have run and pass mechanically (see §9). The remaining work is the 45 unwritten
-standards, the 11 remaining rule shards, the templates, and `init`.
+that gate this phase have run and pass mechanically (see §9). The remaining work is the 43 unwritten
+standards, shards for the nine reserved namespaces that have none, `manifest.mjs`, `toolperms.mjs`,
+the templates, and `init`.
 
 ## 4. Deliverables
 
@@ -102,12 +102,13 @@ standards, the 11 remaining rule shards, the templates, and `init`.
   `Implemented by` column as its standard is written.
 - `artifacts/standards-source-inventory.json` — `expectedCount`, `reviewedOn`, and per item
   `{number, title, class, derivedFrom, implementedBy}`. **Not written.**
-- All 53 standards, each with the ten H2 sections carrying the brief's nine requirements. **8 done.**
-- The remaining 11 rule shards, to roughly 96 rules. **Not started.**
+- All 53 standards, each with the ten H2 sections carrying the brief's nine requirements. **10 done.**
+- Shards for the nine reserved namespaces that have none, to roughly 96 rules. **Eight shards exist,
+  42 rules**; Standards 11 and 08 added rules during this phase.
 - All templates: manifest, threat model, evaluation plan, tool permissions, incident report,
   red-team report, ADR, starter policy, agent instruction files. **None written.**
-- `scripts/inventory.mjs` **(done)**, `fidelity.mjs` **(done)**, `sync-rule-tables.mjs`,
-  `manifest.mjs`, `toolperms.mjs`.
+- `scripts/inventory.mjs` **(done)**, `fidelity.mjs` **(done)**, `sync-rule-tables.mjs` **(done 2026-09-14)**,
+  `standards-sections.mjs` **(done 2026-09-14)**, `manifest.mjs`, `toolperms.mjs`.
 - `scripts/init.mjs` — bootstraps a consuming project, writing scaffold markers. **Not written.**
 
 ---
@@ -198,17 +199,22 @@ specification rather than about your new file. That is exactly what happened whi
 `test/no-phase-creep.test.mjs` holds a sorted literal list of the standards that exist, under the
 test named `only the standards written so far exist`. Add the new filename in sorted position.
 
-The guard is not that the corpus is frozen — this phase writes 45 more. It is that a standard
+The guard is not that the corpus is frozen — this phase writes the remaining 43. It is that a standard
 arrives *deliberately*, by being added to that list, rather than by appearing unnoticed.
 
 **Verify (steps 1–5):**
 
+If the standard ships rules, add them to their shard first, cite each rule id in backticks in exactly
+one `### RN` section, and write the table with `node scripts/sync-rule-tables.mjs` rather than by
+hand. The generator exits 2 when a rule is cited in no requirement section, or in more than one.
+
 ```bash
-node scripts/test.mjs && node scripts/fidelity.mjs && node scripts/inventory.mjs
+node scripts/test.mjs && node scripts/fidelity.mjs && node scripts/inventory.mjs && node scripts/sync-rule-tables.mjs --check && node scripts/standards-sections.mjs
 ```
 
-Success is all three exiting 0, with the test runner reporting `0` failures and `inventory.mjs`
-reporting one more item under `implemented` than before. Use the *semantic* criteria in §6 to judge
+Success is all five exiting 0, with the test runner reporting `0` failures, `inventory.mjs` reporting
+one more item under `implemented` than before, and `standards-sections.mjs` listing the new document
+as conforming. Use the *semantic* criteria in §6 to judge
 the standard itself — a moved counter proves the file was seen, not that it is correct.
 
 ### Step 6 — Commit
@@ -223,27 +229,31 @@ One standard per commit, message `Standard NN — Title`. Run step 5's verificat
 Semantic, not arithmetic. Counter movement is evidence a file was noticed, never evidence it is
 right — do not treat a target number as the goal.
 
-- [ ] Every written standard has all ten H2 sections, present and in the order listed in §5 step 3
-- [ ] Each of the brief's nine requirements resolves to a present, non-empty section for every
-      standard, via the mapping table held as test data
+- [x] Every written standard has all ten H2 sections, present and in the order listed in §5 step 3 —
+      *checked by `scripts/standards-sections.mjs` since 2026-09-14, for the documents written so far*
+- [x] Each of the brief's nine requirements resolves to a present, non-empty section for every
+      written standard, via the mapping held as data in `scripts/standards-sections.mjs`
 - [ ] Every rule cites a standard; every standard cites at least one rule **or records in its
       Validation section why it ships with none**
 - [ ] **Fidelity review passes** — every class-V block is byte-identical to the brief
 - [ ] **Boundary review passes mechanically**, and is separately recorded as lacking human sign-off
 - [ ] Every class-A item carries a non-empty `## Additions` section that enumerates its authored
       requirements
-- [ ] Generated rule tables match the catalog byte-for-byte *(blocked: `sync-rule-tables.mjs` unwritten)*
+- [x] Generated rule tables match the catalog byte-for-byte — *`node scripts/sync-rule-tables.mjs --check`,
+      since 2026-09-14*
 - [ ] **`init` output satisfies zero rules**, asserted directly *(blocked: `init.mjs` unwritten)*
 
 ## 7. Verification — the phase exit command
 
-Runnable today:
+The full form, runnable since 2026-09-14:
 
 ```bash
-node scripts/test.mjs && node scripts/inventory.mjs && node scripts/fidelity.mjs
+node scripts/test.mjs && node scripts/inventory.mjs && node scripts/fidelity.mjs && node scripts/sync-rule-tables.mjs --check
 ```
 
-The full form, once `sync-rule-tables.mjs` exists, adds `node scripts/sync-rule-tables.mjs --check`.
+`node scripts/standards-sections.mjs` runs inside `node scripts/test.mjs` through
+`test/standards-sections.test.mjs`, and may also be run directly. Passing this command does not
+complete the phase: 43 standards, the templates and `init` remain.
 
 ## 8. Out of scope for this phase — a closed list
 
@@ -322,11 +332,50 @@ Do not extend the blanket form into other standards until the owner rules on it.
 deliberately written to prohibit *authoritative assignment* while leaving advisory proposal open.
 Logged in `08-open-questions.md`.
 
+**Standard 11 — Autonomy Levels and Delegated Authority** (2026-09-06, commit `fc060bf`). Class `D`,
+posture `X`, with the `oversight` shard of five rules.
+
+**2026-09-14 batch — Standard 08, the rule-table generator, and the document-conformance checker.**
+Built concurrently by three sub-agents in separate git worktrees, each with an exclusive file scope,
+and integrated centrally into one commit. Shared cells — the specification, rule shards, runner list,
+phase guard, policy, package scripts, this handoff — were edited only during integration.
+
+- **Standard 08, "AI Safety Requirements and Safety Cases."** Class **D** (`AI safety`), posture **O**
+  (item 8 is listed under `notGovernedElsewhere` in the boundary review). Six requirements keep a
+  *safety requirement*, a *safety case* and the property *holding at inference time* apart: state each
+  requirement with an observable violation, or record a reasoned no-hazard finding (R1); bind them to
+  a declared operating context and name what invalidates it (R2); argue every stated property down to
+  cited evidence, marking gaps rather than omitting them (R3); label each citation by kind and
+  revision, never citing the argument as its own support (R4); the properties hold at inference time,
+  `required` and `not-evaluable` (R5); and no part of this framework may report a case sound from a
+  document's presence (R6, no rule). Five rules were added to `rules/lifecycle.json` — four
+  `manual-review`, one `not-evaluable`. It does not grade safety cases by risk tier, and it neither
+  restates nor extends Standard 02 R2; Q7 is untouched.
+- **`scripts/sync-rule-tables.mjs`.** Writes each generated table from the catalog; `--check` is
+  read-only and exits 1 on drift, 2 on malformed input. A row's requirement label is taken from the
+  single `### RN` section that cites the rule id in backticks — a mapping verified against all 22
+  pre-existing rows before the tool was written — and the tool refuses rather than guesses when that
+  citation is missing or ambiguous. Run in write mode it changed no existing document.
+- **`scripts/standards-sections.mjs`.** Rejects a missing, duplicated, out-of-order or empty section in
+  any written standard, resolves the brief's nine requirements through a mapping held as data, and
+  checks filename, H1, Source line and specification row. All ten documents conform. It checks
+  structure, not adequacy. Its identity checks overlap `inventory.mjs`'s; both are kept.
+- **Evidence corrections made during integration.** Standard 11 R6, the rationale of
+  `oversight.no-authority-beyond-declared-tier` and `README.md` said a forbidden not-evaluable rule
+  caps the verdict. `evaluate()` in `scripts/compliance.mjs` excludes not-evaluable rules from the set
+  that holds a status, and Standard 5 R8 requires exactly that, so all three were wrong and are
+  corrected. Standard 06's R2 prose now spells the Validation heading as every document does, and its
+  Implementation section no longer says R1 and R2 are unchecked.
+
 ## 11. The next slice
 
-**Standard 8 — AI Safety Requirements and Safety Cases**, or any other unwritten item. Standard 11
-(Autonomy Levels and Delegated Authority) was written on 2026-09-06 and is no longer next.
+**Standard 9 — Misuse and Abuse Prevention.** Standard 8 was written on 2026-09-14 and is no longer
+next.
 
-Item 8 is class `D` (token `AI safety`), posture `O`. Being posture `O` it needs no boundary evidence,
-which makes it a clean exercise of the §5 procedure without the crosswalk complication. Standard 02
-names it as one of the two items its own text most depends on.
+Item 9 is class `D` (token `misuse prevention`), posture `O`, so it needs no boundary evidence.
+`rules/misuse.json` already carries `misuse.safety-controls-not-disabled` citing standard 9 with no
+document to state it, and Standard 08 leaves misuse controls to item 9. Because that rule exists, the
+new document must cite it in backticks in exactly one `### RN` section before
+`node scripts/sync-rule-tables.mjs` will write its table.
+
+Q7 remains open and is not a dependency of item 9 (inferred).

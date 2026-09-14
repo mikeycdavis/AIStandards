@@ -11,7 +11,10 @@
     "audit": "node scripts/standards.mjs audit .",
     "validate": "node scripts/standards.mjs validate .",
     "fidelity": "node scripts/fidelity.mjs",
-    "inventory": "node scripts/inventory.mjs"
+    "inventory": "node scripts/inventory.mjs",
+    "catalog-sync": "node scripts/sync-rule-tables.mjs",
+    "catalog-sync:check": "node scripts/sync-rule-tables.mjs --check",
+    "sections": "node scripts/standards-sections.mjs"
   },
   "engines": {
     "node": ">=18"

@@ -1,0 +1,43 @@
+{
+  "$comment": "Fixture catalog for test/sync-rule-tables.test.mjs. Not a real shard.",
+  "rules": [
+    {
+      "id": "fairness.fixture-cohort-report",
+      "title": "Fixture: a rule for Standard 90 in a shard its document does not name",
+      "standard": 90,
+      "category": "fairness",
+      "level": "recommended",
+      "severity": "warning",
+      "validationType": "document",
+      "assurance": "partial",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "Belongs to fixture Standard 90, whose only generated block names rules/cost.json.",
+      "rationale": "Must never appear in Standard 90's table: rows come only from the shard the marker names.",
+      "remediation": "None; this is a test fixture.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null
+    },
+    {
+      "id": "fairness.fixture-disparity-threshold",
+      "title": "Fixture: a disparity threshold is set",
+      "standard": 91,
+      "category": "fairness",
+      "level": "required",
+      "severity": "error",
+      "validationType": "configuration",
+      "assurance": "partial",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "Fixture rule cited by R1 of fixture Standard 91, in that document's second generated block.",
+      "rationale": "Exercises a document carrying two blocks from two shards.",
+      "remediation": "None; this is a test fixture.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null
+    }
+  ]
+}

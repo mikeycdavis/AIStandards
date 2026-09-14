@@ -4,9 +4,9 @@
 // exemptibility. The catalog is the single source of truth; the document carries a copy. A copy
 // that can drift is worse than no copy, because a reader trusts the document in front of them.
 //
-// In this release the generator (scripts/sync-rule-tables.mjs) is Phase 2, so the tables are
-// hand-written and machine-verified rather than machine-written. That is weaker in one way — a
-// human types the table — and identical in the way that matters: a wrong table fails the build.
+// The tables are written by scripts/sync-rule-tables.mjs, which takes each row's requirement label
+// from the one `### RN` section citing the rule id. This test stays as an independent check of the
+// same agreement, so a generator defect cannot certify its own output.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";

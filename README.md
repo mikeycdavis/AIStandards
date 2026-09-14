@@ -3,8 +3,8 @@
 Numbered AI engineering standards, and the `audit` and `validate` commands that check a repository
 against them.
 
-**Version 0.1.0 — Phase 1 complete, Phase 2 begun.** This is a working CLI with seven of
-fifty-three standards and thirty-two of a planned ninety-six rules, nine of which a detector can
+**Version 0.1.0 — Phase 1 complete, Phase 2 begun.** This is a working CLI with ten of
+fifty-three standards and forty-two of a planned ninety-six rules, nine of which a detector can
 actually reach. The catalog's two blocking reviews
 have passed, so the fifty-three items and their numbering are settled. What it does, it does
 honestly. What it does not do, it reports as not done rather than as passed.
@@ -44,8 +44,9 @@ by an exclusion all report as `not-evaluated`. Not as `passed`. This repository'
 `NON_COMPLIANT` at 0%, and that is the honest number.
 
 **A prohibition nobody examined is named as such.** `prohibited-but-unestablished` is its own
-outcome, reported in its own array, and it caps the verdict — because a `forbidden` rule nobody
-looked for is not a rule anybody is meeting.
+outcome, reported in its own array, and where the rule is checkable it caps the verdict — because a
+`forbidden` rule nobody looked for is not a rule anybody is meeting. A `not-evaluable` prohibition is
+reported the same way and, per the next paragraph, does not move the status.
 
 **A requirement this framework cannot check says so.** `not-evaluable` is a first-class validation
 type for requirements whose subject is the model's behaviour rather than the repository's contents.

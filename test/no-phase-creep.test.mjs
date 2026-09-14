@@ -90,14 +90,19 @@ test("Phase 5 features are absent: no adapter, no containers, no workflows", () 
   }
 });
 
-test("the Phase 2 blocking reviews exist and the rest of Phase 2 does not", () => {
+test("the Phase 2 tooling built so far exists, and the rest of Phase 2 does not", () => {
   // The two catalog reviews are the FIRST Phase 2 work, because every later phase builds on a
-  // numbering they can still change. Everything downstream of them stays absent until they pass.
+  // numbering they can still change. The rule-table generator and the document-conformance checker
+  // followed on 2026-09-14, each admitted here deliberately. Manifest and tool-permission tooling,
+  // init and the templates stay absent until they are built on purpose.
   for (const rel of ["scripts/inventory.mjs", "scripts/fidelity.mjs", "scripts/spec.mjs"]) {
     assert.ok(exists(rel), `${rel} is a blocking review and must exist`);
   }
-  for (const rel of ["scripts/sync-rule-tables.mjs", "scripts/manifest.mjs", "scripts/toolperms.mjs", "templates"]) {
-    assert.ok(!exists(rel), `${rel} comes after the reviews and must not exist yet`);
+  for (const rel of ["scripts/sync-rule-tables.mjs", "scripts/standards-sections.mjs"]) {
+    assert.ok(exists(rel), `${rel} is Phase 2 tooling already delivered and must exist`);
+  }
+  for (const rel of ["scripts/manifest.mjs", "scripts/toolperms.mjs", "scripts/init.mjs", "templates"]) {
+    assert.ok(!exists(rel), `${rel} has not been built in Phase 2 yet and must not exist`);
   }
 });
 
@@ -112,6 +117,7 @@ test("only the standards written so far exist", () => {
     "05-verdict-vocabulary.md",
     "06-standard-structure-and-rule-identity.md",
     "07-boundary-with-adjacent-standards.md",
+    "08-ai-safety-requirements-and-safety-cases.md",
     "11-autonomy-levels-and-delegated-authority.md",
     "21-prompt-and-instruction-security.md",
     "45-approval-gates.md",

@@ -98,7 +98,7 @@
       "nonExemptible": false,
       "introducedIn": "0.1.0",
       "description": "At inference time the system does not obtain, escalate to, or act on authority its declared tier does not grant — by chaining permitted tools into an impermissible effect, by acting on retrieved content as instruction, or by continuing past a refused approval.",
-      "rationale": "This is the requirement the declaration exists to make meaningful, and it is the one the framework cannot check. Stating it anyway is the point: a prohibition nobody examined is reported as prohibited-but-unestablished and caps the verdict, where an unstated one would be invisible.",
+      "rationale": "This is the requirement the declaration exists to make meaningful, and it is the one the framework cannot check. Stating it anyway is the point: a prohibition nobody examined is reported as prohibited-but-unestablished and listed beside the verdict, where an unstated one would be invisible. Being not-evaluable it does not change the status (Standard 5 R8).",
       "remediation": "Commission an adversarial exercise against the declared tier and commit its record. Until such a record exists this rule is reported as unexamined and must not be read as satisfied.",
       "aliases": [],
       "deprecatedIn": null,

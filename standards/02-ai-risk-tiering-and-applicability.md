@@ -302,8 +302,9 @@ deliberately does **not** carry this standard's R2 in blanket form: R7 prohibits
 autonomy tier authoritatively while leaving a labelled advisory proposal open. The difference is
 recorded as Q7 in
 [`artifacts/project-plan-breakdown/08-open-questions.md`](../artifacts/project-plan-breakdown/08-open-questions.md)
-and is unresolved. Standard 8 (Safety Cases) remains unwritten and is the item now most likely to
-reshape this one. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
+and is unresolved. [Standard 8](08-ai-safety-requirements-and-safety-cases.md) was written on 2026-09-14.
+It relies on this standard's R1, R3, R4 and R5, does not grade safety cases by risk tier, and neither
+restates nor extends R2; Q7 is unaffected. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
 ## Implementation
 
