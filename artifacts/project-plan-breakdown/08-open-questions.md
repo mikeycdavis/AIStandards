@@ -107,6 +107,72 @@ correction.
 **Impact if unanswered:** none on the wording of any written standard today. Item 48's document, when
 written, will have to say whether misuse prohibitions are its ground.
 
+### Q10 — Do the retention and deletion rules belong to item 15 rather than item 13?
+
+`privacy.retention-declared` and `privacy.deletion-path-exists` cite standard 13, while item 15 is
+titled "Retention, Deletion, and Memorization" and derives from the brief token `retention`. Nothing
+recorded explains the placement. Standard 13, written 2026-09-14, states both rules as their identity
+requires, claims for them only that retention is declared and that a deletion path reaches the
+model-adjacent stores, and leaves periods, schedules, backups and memorization to item 15.
+**Not resolved here, because the answer changes a rule's `standard` field.**
+**Impact if unanswered:** none today. Item 15's document, when written, will have to say whether it
+takes the two rules.
+
+### Q11 — Should the credentials rule stay under item 13?
+
+`privacy.no-credentials-in-prompts` concerns credentials, which are not personal data, and its rationale
+concerns replication and injection. It overlaps Standard 21's `promptsec.no-secrets-in-context` on a
+credential committed in a prompt file; both are `forbidden` and non-exemptible. Standard 13 records the
+overlap and does not decide which rule owns the committed-asset case.
+**Impact if unanswered:** none while neither rule has a detector. Once either does, one credential could
+be reported under two standards.
+
+### Q12 — Are the three forbidden privacy rules item 49's prohibitions?
+
+Item 49, Data and Privacy Prohibitions, is the authored negative face of `Data privacy` — item 13's own
+token. `privacy.no-real-personal-data-in-fixtures`, `privacy.no-credentials-in-prompts` and
+`privacy.no-unredacted-prompt-logging` are `forbidden`, were minted in Phase 1, and cite standard 13.
+Unlike Q9, the specification does name the token; what it does not record is whether these rules are
+item 49's stated early. Standard 13 states them as they stand.
+**Impact if unanswered:** none on the wording of any written standard today. Item 49's document, when
+written, will have to say.
+
+### Q13 — May a partial-assurance check's clean result be `passed` and count toward `COMPLIANT`?
+
+Standard 5 R6 says: "Where a check could not run, could not read a file, or covered less than the rule
+requires, the result MUST be `skipped` with disposition `not-evaluated`, and MUST NOT be `passed`."
+Four rules declare `assurance: partial` — `lifecycle.model-version-pinned`,
+`misuse.safety-controls-not-disabled`, `promptsec.prompt-is-versioned-artifact` and
+`promptsec.no-inline-system-prompt` — so their detectors cover less than their rules by declaration.
+`evaluateRule()` in `scripts/compliance.mjs` reports a clean observation from any of them as `passed`;
+`rule.assurance` is copied into the result and read by no decision; and `evaluate()` reaches
+`COMPLIANT` when nothing is failed or unestablished. Observed 2026-09-14 with uncommitted probe targets
+whose policy declares every rule outside `EVALUATED_RULES` not-applicable: a repository with no
+configuration at all, and one whose `.env` sets `SAFETY_SETTINGS=BLOCK_NONE`, each reported
+`COMPLIANT` with score 100.
+
+Options identified, none taken:
+1. A clean partial-assurance result becomes `skipped` / `not-evaluated` (for a `forbidden` rule,
+   `prohibited-but-unestablished`). Conforms the code to R6; `COMPLIANT` becomes unreachable while any
+   partial rule applies. Changes the `passed` controls in `test/audit.test.mjs` (`pinned-model`,
+   `file-backed-prompt`, `safety-configured`, the `mentions-only` assertions), the controls in
+   `test/safety-detector.test.mjs`, and the rules' `$assuranceNote` text and Standards 1, 9 and 21.
+2. A new result or distinction value for a clean result within a declared scope. Changes Standard 5 R2's
+   six values, `schemas/validate-report.schema.json`, `distinction()` and `test/distinction.test.mjs`.
+3. Keep per-rule `passed`, but stop partial clean results from yielding `COMPLIANT` or from counting in
+   the score. Changes `evaluate()`, possibly the status set, Standard 5 R5, and compliance and validate
+   tests.
+4. Amend Standard 5 R2 and R6 so "covered the rule" means the declared assurance scope. No code change,
+   but it narrows an evidence requirement so the code meets it, which the brief forbids doing merely to
+   make a gate pass; it would need a reason independent of that.
+
+**Not resolved here, because every option changes the verdict contract or a normative standard.** The
+2026-09-14 detector repair fixed a layout-dependent defect for supported input and did not touch this.
+**Impact if unanswered:** a narrow literal scan can report a forbidden rule `passed` over a repository
+it cannot see into, and that result can contribute to `COMPLIANT`. It does not reach this repository's
+own verdict, which is `NON_COMPLIANT`, and it blocks nothing in Phase 2 — but it must be settled before
+`validate` can gate anything (Phase 6).
+
 ## Not questions
 
 Per-shard rule counts are a plan, not a measurement. The catalog does not exist yet, and

@@ -220,7 +220,7 @@ the cap in R5.
 | R3 | **Enforced.** `distinction()` is a pure function; the test recomputes it independently |
 | R4 | **Enforced.** Branch order is asserted, and the array is checked bidirectionally |
 | R5 | **Enforced** |
-| R6 | **Enforced** for the checks that exist. The broader evidence-availability architecture — read budgets, truncation domains, unreadable-file withdrawal — is Phase 3 |
+| R6 | **Enforced for checks that could not run** — the withdrawal and unknown paths. **Not enforced for a check that ran and covered less than the rule requires**: the four `assurance: partial` rules' detectors report a clean narrow search as `passed`, which `evaluate()` counts toward `COMPLIANT` and the score. *Corrected 2026-09-14: this row had said Enforced for the checks that exist.* The mismatch is open as Q13 in `artifacts/project-plan-breakdown/08-open-questions.md`. The broader evidence-availability architecture — read budgets, truncation domains, unreadable-file withdrawal — is Phase 3 |
 | R7 | **Enforced.** One invariant exists in this release: `invariant.applicability-contradicted` |
 | R8 | **Enforced** |
 

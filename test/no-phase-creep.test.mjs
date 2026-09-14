@@ -120,6 +120,7 @@ test("only the standards written so far exist", () => {
     "08-ai-safety-requirements-and-safety-cases.md",
     "09-misuse-and-abuse-prevention.md",
     "11-autonomy-levels-and-delegated-authority.md",
+    "13-personal-data-in-ai-systems.md",
     "21-prompt-and-instruction-security.md",
     "45-approval-gates.md",
   ]);

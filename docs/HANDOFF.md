@@ -31,6 +31,10 @@ after the rule-table coverage check landed. The previous regeneration, on 2026-0
 are its canonical diagram sources; the fenced blocks inside the document are byte-identical copies,
 verified programmatically. No SVG is rendered — that would require a build-time download, and this
 repository has no dependencies. **Do not hand-patch the architecture document; regenerate it.**
+**It is stale after the Standard 13 commit** (`git log --grep "Standard 13"`): it gives
+`scripts/standards.mjs` as 726 lines and `scripts/source.mjs` as 158, both since changed by the
+safety-detector repair, and its detector-limits row predates that repair. It was not regenerated in
+that batch.
 
 `docs/architecture-baseline-2026-09-03.md` is the superseded pre-implementation capture, kept because
 it is the evidence that nothing pre-existed. Neither is evidence about the other, and the baseline
@@ -72,12 +76,12 @@ could not run reports as not-evaluated, a prohibition nobody established reports
 
 | Fact | Value |
 |---|---|
-| Runtime | Node ≥ 18 declared in `package.json`, ESM `.mjs` throughout. **Executed** on 2026-09-14 against the tree committed with Standard 09: Node 18.20.8, 20.19.6, 22.23.2 and 24.21.0 in locally present Docker images, and 24.15.0 on the host, all 316 tests passing. **Every other version is unverified, including 18.0.0–18.20.7** |
+| Runtime | Node ≥ 18 declared in `package.json`, ESM `.mjs` throughout. **Executed** on 2026-09-14 against the tree committed with Standard 09: Node 18.20.8, 20.19.6, 22.23.2 and 24.21.0 in locally present Docker images, and 24.15.0 on the host, all 316 tests passing. On the tree committed with Standard 13, the seven test files covering the changed detector and splitter (93 tests) were re-run on Node 18.20.8 in a local Docker image, and the full suite of 333 on the host's 24.15.0; nothing was re-run on 20.x or 22.x for that commit. **Every other version is unverified, including 18.0.0–18.20.7** |
 | Package manager | **None used.** There are no dependencies to install, and no lockfile exists |
 | Dependencies | **Zero third-party, structurally.** `test/no-phase-creep.test.mjs` fails if a lockfile appears |
 | Test framework | `node:test` + `node:assert/strict`. Nothing else |
 | Host OS during development | Windows 11, PowerShell 7 |
-| Git | Branch `develop`. Checkpoint commit **`d4b4ee2`** (2026-09-04) tracks the whole implementation; **`70832f4`** adds Standard 02; **`fc060bf`** (2026-09-06) adds Standard 11, the `oversight` shard and the regenerated documentation; the 2026-09-14 batch commit (`git log --grep "Standard 08"`) adds Standard 08, the rule-table generator and the document-conformance checker; the Standard 09 commit (`git log --grep "Standard 09"`) adds Standard 09, four misuse rules, the rule-table coverage check and the regenerated architecture document |
+| Git | Branch `develop`. Checkpoint commit **`d4b4ee2`** (2026-09-04) tracks the whole implementation; **`70832f4`** adds Standard 02; **`fc060bf`** (2026-09-06) adds Standard 11, the `oversight` shard and the regenerated documentation; the 2026-09-14 batch commit (`git log --grep "Standard 08"`) adds Standard 08, the rule-table generator and the document-conformance checker; the Standard 09 commit (`git log --grep "Standard 09"`) adds Standard 09, four misuse rules, the rule-table coverage check and the regenerated architecture document; the Standard 13 commit (`git log --grep "Standard 13"`) adds Standard 13 and the safety-detector repair |
 
 There is no install step. Clone and run.
 
@@ -98,7 +102,8 @@ portable evidence.** The development checkout holds `.claude/settings.local.json
 check-ignore -v` attributes its ignoring to a user-level global ignore file, not to any rule in this
 repository. An environment without that file, or unable to read it, sees `.claude/` as untracked.
 `audit` does not exclude `.claude/` either, so its file count includes that file where it exists:
-83 in the development checkout on 2026-09-14, where a clone without it would count 82.
+85 in the development checkout on the tree committed with Standard 13 (83 with Standard 09), where a
+clone without it would count 84.
 
 ## 4 · Commands
 
@@ -155,8 +160,8 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
   same day, making **46**
 - 12 detectors: 4 descriptive (bound to no rule), 8 judgmental
 - 5 schemas; policy resolution against the **target**, never this checkout
-- 19 test files, **316** assertions on the tree committed with Standard 09 (17 files and 227 on
-  2026-09-06). *Corrected 2026-09-14: this line had said 20 files, and 18 on 2026-09-06; the explicit
+- 20 test files, **333** assertions on the tree committed with Standard 13 (19 and 316 with Standard
+  09; 17 files and 227 on 2026-09-06). *Corrected 2026-09-14: this line had said 20 files, and 18 on 2026-09-06; the explicit
   list in `scripts/test.mjs` holds 19, and held 17 at every earlier commit.*
 
 **Phase 2 — in progress.**
@@ -167,7 +172,7 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
 - `scripts/sync-rule-tables.mjs` (writes the generated tables; `--check` is read-only; refuses a
   written standard missing a block for a shard that holds its rules) and
   `scripts/standards-sections.mjs` (read-only document conformance), both 2026-09-14
-- **11 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 21, 45**
+- **12 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 21, 45**
 
 **Standard 02, "AI Risk Tiering and Applicability", landed 2026-09-04** as the first Phase 2 corpus
 slice. It is class **A** (authored — the brief names ten subject areas and no way to decide which
@@ -285,9 +290,52 @@ scope. Shared cells were edited only during integration.
   detector misses and over-matches: file types it never reads, a key and a literal accepted anywhere
   in the same file, a quoted-value pattern that fires only by adjacency, and unreadable or truncated
   files reporting `passed`. Those descriptions come from uncommitted probe runs; no test pins them,
-  and changing the detector is Phase 3 work.
+  and changing the detector is Phase 3 work. *Partly superseded the same day: see the third batch
+  below.*
 
-**Deliberately not built, and asserted absent by test:** the remaining 42 standards, shards for
+**2026-09-14, third batch — Standard 13 and a safety-detector repair.** Built concurrently by two
+sub-agents, each in a git worktree created outside the repository at `308a0d7` with an exclusive file
+scope. Shared cells were edited only during integration.
+
+- **Standard 13, "Personal Data in AI Systems."** Class **D** (`Data privacy`), posture **O** (item 13
+  is listed under `notGovernedElsewhere`). It states the five Phase 1 rules in `rules/privacy.json`
+  with their identities unchanged — no real personal data in prompt corpora and fixtures (R1), no
+  credentials in prompt assets (R2, non-exemptible), redaction before prompt or completion text is
+  logged (R3), declared retention for prompts, completions and traces (R4), and a deletion path
+  reaching every model-adjacent store (R5) — and adds R6, with no rule: no part of this framework may
+  report personal data absent or privacy established from a search's silence, a label or a document's
+  presence, or present any result as legal conformance. It adds no rule and states that it is not a
+  legal standard. Three placement questions it found are recorded, not decided: **Q10** (the retention
+  and deletion rules cite 13, while item 15 is Retention, Deletion, and Memorization), **Q11** (a
+  credentials rule under a personal-data item, overlapping Standard 21's
+  `promptsec.no-secrets-in-context`) and **Q12** (whether the three `forbidden` privacy rules are item
+  49's). `privacy.retention-declared`'s remediation told projects to declare retention in the manifest,
+  whose closed schema has no such field and rejects one; it now names a committed document.
+- **Safety-detector repair.** `detectDisabledSafetyControls` searched the code partition followed by the
+  string partition, which moved every quoted value to the end of the searched text. YAML
+  `moderation: 'off'` therefore failed as the only line of a file and passed once any line followed it,
+  and the same setting in a JavaScript object or a Python keyword argument never failed — reproduced
+  through the CLI at `308a0d7`. The detector now searches the file with comments blanked in place
+  (`withoutComments` from `splitSource()` in `scripts/source.mjs`), so the result follows the setting
+  rather than the layout, and comments are still never searched. The first version of the fix made a
+  TypeScript union type and a ternary branch fail; two guards on the quoted form remove those. The
+  trade-offs left — a single-literal TypeScript type and a Python conditional expression now fail, a
+  shell pipeline assignment passes — are recorded in Standard 09's Implementation section.
+  `test/safety-detector.test.mjs` asserts the behaviour through the CLI with paired provoking and
+  control fixtures, and its provoking cases fail against `308a0d7`. No key, literal, file type or
+  verdict rule was added.
+- **A verdict-contract conflict, found and left open as Q13.** Standard 5 R6 forbids `passed` for a
+  check that covered less than the rule requires. The detectors of the four `assurance: partial` rules
+  report a clean narrow search as `passed`, and `evaluate()` counts that toward `COMPLIANT`. Uncommitted
+  probe targets whose policy declared every undetected rule not-applicable reported `COMPLIANT`,
+  score 100, with no configuration at all and with `SAFETY_SETTINGS=BLOCK_NONE` in a `.env` file the
+  detector never reads. Standard 5's Implementation row for R6 had called R6 enforced for the checks
+  that exist, and is corrected; Standard 09's R6 no longer calls R2's `passed` honest. No option was
+  taken, because each changes the verdict contract or a normative standard.
+- **Evidence corrections.** Standard 09's Implementation items 2 and 5, its suite description and every
+  line number it gives into `scripts/standards.mjs` were restated from the repaired code.
+
+**Deliberately not built, and asserted absent by test:** the remaining 41 standards, shards for
 the nine reserved namespaces that have none, `scripts/manifest.mjs`, `scripts/toolperms.mjs`, templates,
 `init`, attestations, containers, CI workflows, the adapter, and Phase 3's
 detectors. `test/no-phase-creep.test.mjs` fails if any of them appears early.
@@ -329,6 +377,11 @@ collapse.
 - **The review is a snapshot at nine pinned commits.** Nothing in this repository notices when one of
   those scopes is amended, and re-reading them is a human action nothing will prompt.
 
+**A verdict can be `COMPLIANT` over checks that covered less than their rules.** Standard 5 R6 forbids
+it; `evaluate()` in `scripts/compliance.mjs` allows it for the four `assurance: partial` rules. It is
+recorded as Q13 and not fixed. Until it is settled, read a `passed` result for those rules as "the stated
+narrow search found nothing", never as the rule met.
+
 **Catalog numbering is technically frozen and not yet maintainer-approved governance.** The
 specification settles what item 27 is, and `inventory.mjs` fails if a document drifts from it. That is
 a mechanical guarantee of internal consistency. It is not an assertion that the division of ownership
@@ -363,10 +416,11 @@ governance until a sign-off exists.
 5. **Whether to pin line endings with a `.gitattributes`** — Q8. `core.autocrlf` is `true` and no
    `.gitattributes` exists. Nothing breaks today; it becomes real in Phase 5, where the container
    materialises its clone with `core.autocrlf=false`.
-6. **Whether the substantive authored content of Standards 08 and 09 stands.** Both disclose every
-   authored element in their Additions sections — for 08, that safety cases are not graded by risk
+6. **Whether the substantive authored content of Standards 08, 09 and 13 stands.** Each discloses every
+   authored element in its Additions section — for 08, that safety cases are not graded by risk
    tier; for 09, the definitions of misuse and abuse, reading jailbreak attempts as Standard 21's
-   subject, and R3 as `SHOULD`. Routine placement and metadata within the established plan —
+   subject, and R3 as `SHOULD`; for 13, its definitions of personal, real and synthetic data and of a
+   model-adjacent store, its readings of R3 to R5, and R6. Routine placement and metadata within the established plan —
    namespace, level, validation type, exemptibility — carry their rationale in those sections and
    are not listed here as awaiting a separate approval merely because an agent authored them. None
    of it is owner-approved, and nothing in this repository says otherwise.
@@ -374,36 +428,45 @@ governance until a sign-off exists.
    `artifacts/project-plan-breakdown/08-open-questions.md`. Item 48 names `AI safety` and
    `human oversight` as its positive tokens, and no prohibition item names `misuse prevention`.
    Standard 09 mints no prohibition and records the gap rather than resolving it.
+8. **Where three privacy rules belong** — Q10, Q11 and Q12 in
+   `artifacts/project-plan-breakdown/08-open-questions.md`: whether the retention and deletion rules
+   belong to item 15, whether the credentials rule belongs under item 13 or with Standard 21's, and
+   whether the three `forbidden` privacy rules are item 49's prohibitions. Each changes a rule's
+   `standard` field or a specification row. Standard 13 states the rules as they stand.
+9. **Whether a partial-assurance check's clean result may be `passed` and reach `COMPLIANT`** — Q13.
+   Four options are recorded. Each changes the verdict contract, its code and its tests, or amends
+   Standard 5 — and amending Standard 5 so that the code meets it would narrow an evidence requirement,
+   which needs a reason other than the gate. It must be settled before `validate` gates anything.
 
 ## 9 · The smallest next slice
 
-**Write Standard 13, "Personal Data in AI Systems," and nothing else in the corpus.** This is an
-inference, not a plan entry: the plan's recorded next slice was Standard 9, written on 2026-09-14.
+**Write Standard 23, "Agent Execution Security," and nothing else in the corpus.** This is an
+inference, not a plan entry: the recorded next slice was Standard 13, written on 2026-09-14.
 
-The reasoning is the one that made item 9 next. Three unwritten items already own catalog rules with
-no document to state them: 13 (`rules/privacy.json`, five), 17 (`rules/eval.json`, five) and 23
-(`rules/agent.json`, four). Item 17 is posture **B** and needs its boundary-review evidence; 13 and 23
-are posture **O**, both listed under `notGovernedElsewhere`, and need none. 13 is the lower number, and
-Standard 09's R4 already defers what a misuse log may retain to it. Items 13 and 23 touch different
-shards and documents and may be writable concurrently — re-check that with `/whats-next` before
-starting rather than trusting this sentence.
+Two unwritten items now own catalog rules with no document to state them: 17 (`rules/eval.json`, five)
+and 23 (`rules/agent.json`, four). Item 17 is posture **B** and needs its boundary-review evidence; 23 is
+posture **O**, listed under `notGovernedElsewhere`, and needs none. Re-check that with `/whats-next`
+before starting rather than trusting this paragraph.
 
-Follow `artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` §5. The generator now also
-requires the document to carry a generated block for every shard holding its rules — for item 13,
-`rules/privacy.json` — and still requires each rule id to be cited in backticks in exactly one `### RN`
-section. `privacy.` is a segment `SHARED_SEGMENTS` in `scripts/catalog.mjs` records as also used by
-UIUXDesignStandards; no full id collides, and the document must not restate that pack's ground.
+Follow `artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` §5. The document must carry a
+generated block for `rules/agent.json` and cite each of its rule ids in backticks in exactly one
+`### RN` section. `agent.` is a segment Standard 7 records as also used by MathematicsStandards; no full
+id collides, and the document must not restate that pack's ground. Cite code by symbol name rather than
+line number wherever another change may be moving the file.
 
-Semantic acceptance, not counters: `inventory.mjs` recognises the document as implementing item 13;
+Semantic acceptance, not counters: `inventory.mjs` recognises the document as implementing item 23;
 its token resolves to the brief; it states which requirements have no rule; and every other item's
 status is unchanged.
 
-**Do not** start the remaining 41 standards in the same pass.
+**Do not** start the remaining 40 standards in the same pass.
 
-**Q7 and Q9 are open** (see §8). Neither is expected to block item 13 (inferred, not checked).
+**Q13 is the open question most likely to matter next** — not for item 23, but for anything that
+touches verdict semantics, and for Phase 6 gating. Q7, Q9, Q10, Q11 and Q12 are also open (see §8);
+none is expected to block item 23 (inferred, not checked).
 
 Phase 2 tooling still unbuilt: `scripts/manifest.mjs`, `scripts/toolperms.mjs`, the templates and
-`init`. None is needed for item 13.
+`init`. None is needed for item 23. `docs/architecture.md` is stale (§1); regenerate it with
+`/codebase-docs` rather than editing it.
 
 ## 10 · Invariants — do not break these
 

@@ -63,14 +63,14 @@ commit and buries whatever you were actually doing. It is recorded as an open it
 
 ## 2. Current state, verified 2026-09-14
 
-**Written: 11 of 53 standards** — `standards/01-ai-system-manifest.md`,
+**Written: 12 of 53 standards** — `standards/01-ai-system-manifest.md`,
 `02-ai-risk-tiering-and-applicability.md`, `03-machine-readable-ai-policy.md`,
 `05-verdict-vocabulary.md`, `06-standard-structure-and-rule-identity.md`,
 `07-boundary-with-adjacent-standards.md`, `08-ai-safety-requirements-and-safety-cases.md`,
 `09-misuse-and-abuse-prevention.md`, `11-autonomy-levels-and-delegated-authority.md`,
-`21-prompt-and-instruction-security.md`, `45-approval-gates.md`.
+`13-personal-data-in-ai-systems.md`, `21-prompt-and-instruction-security.md`, `45-approval-gates.md`.
 
-**42 standards remain unwritten.**
+**41 standards remain unwritten.**
 
 **Rules: 46 across 8 shards** — `rules/agent.json` (4), `eval.json` (5), `gate.json` (6),
 `lifecycle.json` (11, five of them Standard 08's), `misuse.json` (5, four of them Standard 09's),
@@ -92,7 +92,7 @@ template.
 ## 3. Purpose
 
 Write the full normative corpus and prove it traces to the brief. The two blocking catalog reviews
-that gate this phase have run and pass mechanically (see §9). The remaining work is the 42 unwritten
+that gate this phase have run and pass mechanically (see §9). The remaining work is the 41 unwritten
 standards, shards for the nine reserved namespaces that have none, `manifest.mjs`, `toolperms.mjs`,
 the templates, and `init`.
 
@@ -103,7 +103,7 @@ the templates, and `init`.
   `Implemented by` column as its standard is written.
 - `artifacts/standards-source-inventory.json` — `expectedCount`, `reviewedOn`, and per item
   `{number, title, class, derivedFrom, implementedBy}`. **Not written.**
-- All 53 standards, each with the ten H2 sections carrying the brief's nine requirements. **11 done.**
+- All 53 standards, each with the ten H2 sections carrying the brief's nine requirements. **12 done.**
 - Shards for the nine reserved namespaces that have none, to roughly 96 rules. **Eight shards exist,
   46 rules**; Standards 11, 08 and 09 added rules during this phase.
 - All templates: manifest, threat model, evaluation plan, tool permissions, incident report,
@@ -259,7 +259,7 @@ node scripts/test.mjs && node scripts/inventory.mjs && node scripts/fidelity.mjs
 
 `node scripts/standards-sections.mjs` runs inside `node scripts/test.mjs` through
 `test/standards-sections.test.mjs`, and may also be run directly. Passing this command does not
-complete the phase: 42 standards, the templates and `init` remain.
+complete the phase: 41 standards, the templates and `init` remain.
 
 ## 8. Out of scope for this phase — a closed list
 
@@ -390,15 +390,26 @@ edited only during integration.
   reports `passed`. Corrected in `rules/misuse.json`, Standard 1 and a comment in
   `scripts/standards.mjs`.
 
+**2026-09-14, third batch — Standard 13 and a safety-detector repair.** Two sub-agents, each in a git
+worktree created outside the repository at `308a0d7`; shared cells were edited only during integration.
+
+- **Standard 13, "Personal Data in AI Systems."** Class `D` (`Data privacy`), posture `O`. States the
+  five Phase 1 privacy rules unchanged (R1 to R5) and adds R6 with no rule; adds no rule and claims no
+  legal meaning. Open questions Q10, Q11 and Q12 record the rule placements it could not explain.
+- **Safety-detector repair.** `detectDisabledSafetyControls` no longer changes its result when a harmless
+  line is added; asserted by `test/safety-detector.test.mjs`. Not the Phase 3 evidence architecture.
+- **Q13**, a conflict between Standard 5 R6 and how `evaluate()` treats partial-assurance results, is
+  recorded and not resolved.
+
 ## 11. The next slice
 
-**Standard 13 — Personal Data in AI Systems.** Standard 9 was written on 2026-09-14 and is no longer
+**Standard 23 — Agent Execution Security.** Standard 13 was written on 2026-09-14 and is no longer
 next. This choice is inferred rather than planned; `docs/HANDOFF.md` §9 gives the reasoning.
 
-Items 13, 17 and 23 are the unwritten items that already own catalog rules. Item 13 is class `D`
-(token `Data privacy`), posture `O`, so it needs no boundary evidence; item 17 is posture `B` and does.
-`rules/privacy.json` carries five rules citing standard 13, so the new document must carry a
-`rules/privacy.json` generated block and cite each of those ids in backticks in exactly one `### RN`
-section before `node scripts/sync-rule-tables.mjs` will pass.
+Items 17 and 23 are the unwritten items that still own catalog rules. Item 23 is posture `O`, so it
+needs no boundary evidence; item 17 is posture `B` and does. `rules/agent.json` carries four rules
+citing standard 23, so the new document must carry a `rules/agent.json` generated block and cite each of
+those ids in backticks in exactly one `### RN` section before `node scripts/sync-rule-tables.mjs` will
+pass.
 
-Q7 and Q9 remain open and are not expected to block item 13 (inferred).
+Q7, Q9, Q10, Q11, Q12 and Q13 remain open. None is expected to block item 23 (inferred).

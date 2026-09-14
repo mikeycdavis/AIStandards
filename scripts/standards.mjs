@@ -24,7 +24,7 @@ import { fileURLToPath } from "node:url";
 import { loadCatalog, assertBindings, coverage, CatalogError, REPO_ROOT } from "./catalog.mjs";
 import { resolvePolicyPath, loadPolicy, assertVersionIdentity, applyPolicy, PolicyError, POLICY_BASENAME } from "./policy.mjs";
 import { evaluate, envelope, distinction, STATUS, DISPOSITION } from "./compliance.mjs";
-import { splitSource, isCode } from "./source.mjs";
+import { splitSource, isCode, extensionOf } from "./source.mjs";
 import { inspectScaffolding } from "./scaffolding.mjs";
 import { parseYaml, YamlError } from "./yaml.mjs";
 import { validate as validateSchema } from "./jsonschema.mjs";
@@ -420,13 +420,32 @@ function detectInlineSystemPrompt(run, withdrawn) {
   }
 }
 
-// Exact literal spellings that disable a provider safety control. Maintained list, code positions
-// only, so prose describing these settings is never mistaken for using them.
+// Exact literal spellings that disable a provider safety control. Maintained list, searched in code
+// and literal positions only and never in comments, so prose describing these settings is never
+// mistaken for using them.
 const DISABLED_SAFETY = [
   "BLOCK_NONE",
   "OFF",
 ];
 const SAFETY_KEY = /\b(safety_settings|safetySettings|moderation|content_filter|contentFilter|safety_mode|safetyMode|harm_block_threshold|harmBlockThreshold)\b/;
+
+// The off-pattern: a key that switches a control, `:` or `=`, then `false` or a quoted `none` or
+// `off`. Two shapes place a quoted value straight after such a key without assigning it, and only
+// the quoted form is guarded against them:
+//   a union type member, `moderation: "off" | "on"`: the value is followed by a single `|`. A `||`
+//     is not guarded, because `"off" || fallback` evaluates to "off".
+//   a ternary consequent, `strict ? moderation : "off"`: the key follows `?` (or `?` and a PHP `$`)
+//     and the separator is `:`. A key followed by `=` there is an assignment and is not guarded.
+//     Not applied to YAML, where `? moderation` opens an explicit key whose value is `: 'off'`.
+const OFF_KEYS = String.raw`\b(?:moderation|content_filter|contentFilter|safety_mode|safetyMode)`;
+const OFF_FALSE = new RegExp(String.raw`${OFF_KEYS}\s*[:=]\s*false`, "i");
+const offQuoted = (ternaryGuard) => new RegExp(
+  String.raw`(?:${ternaryGuard ? String.raw`(?<!\?\s*\$?)` : ""}${OFF_KEYS}\s*:|${OFF_KEYS}\s*=)` +
+  String.raw`\s*(?:["']none["']|["']off["'])(?!\s*\|(?!\|))`,
+  "i",
+);
+const OFF_QUOTED = offQuoted(true);
+const OFF_QUOTED_YAML = offQuoted(false);
 
 function detectDisabledSafetyControls(run, withdrawn) {
   const rule = "misuse.safety-controls-not-disabled";
@@ -445,7 +464,13 @@ function detectDisabledSafetyControls(run, withdrawn) {
 
     // The use/mention split is the whole point here: a README explaining why BLOCK_NONE is
     // dangerous, or a comment recording that it was removed, must not be a finding.
-    const searchable = `${split.code}\n${split.strings}`;
+    //
+    // The searched text is the file with its comments blanked in place, not the code partition
+    // followed by the string partition. The off-pattern below needs a key, its separator and a
+    // quoted value to stay adjacent as written. Concatenating the partitions moved every quoted
+    // value to the end of the text, so `moderation: 'off'` matched only when nothing followed it
+    // and `{ moderation: "off" }` never matched: the result depended on layout, not on the setting.
+    const searchable = split.withoutComments;
     if (!SAFETY_KEY.test(searchable)) continue;
     for (const literal of DISABLED_SAFETY) {
       if (new RegExp(`\\b${literal}\\b`).test(searchable)) {
@@ -453,7 +478,9 @@ function detectDisabledSafetyControls(run, withdrawn) {
         break;
       }
     }
-    if (/\b(moderation|content_filter|contentFilter|safety_mode|safetyMode)\s*[:=]\s*(false|["']none["']|["']off["'])/i.test(searchable)) {
+    const ext = extensionOf(file);
+    const offQuotedHere = ext === ".yml" || ext === ".yaml" ? OFF_QUOTED_YAML : OFF_QUOTED;
+    if (OFF_FALSE.test(searchable) || offQuotedHere.test(searchable)) {
       hits.push(`${file} (safety control set off)`);
     }
   }

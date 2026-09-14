@@ -1,5 +1,5 @@
 {
-  "$comment": "Personal data in AI systems, Standard 13. No Phase 1 detector binds to this shard. Every rule here therefore reports skipped / not-evaluated, and the forbidden ones report prohibited-but-unestablished — which is the honest state for a requirement nobody has examined, and is deliberately not a pass. Detectors arrive in Phase 3.",
+  "$comment": "Personal data in AI systems, Standard 13. No Phase 1 detector binds to this shard. Every rule here therefore reports skipped / not-evaluated, and the forbidden ones report prohibited-but-unestablished — which is the honest state for a requirement nobody has examined, and is deliberately not a pass. Detectors arrive in Phase 3. standards/13-personal-data-in-ai-systems.md states all five rules; the placement of the retention, deletion and credentials rules under Standard 13 is recorded there as unexplained and is open as Q10 and Q11.",
   "rules": [
     {
       "id": "privacy.no-real-personal-data-in-fixtures",
@@ -72,7 +72,7 @@
       "introducedIn": "0.1.0",
       "description": "The system declares how long prompts, completions and traces are kept, and what deletes them.",
       "rationale": "An undeclared retention period is an indefinite one, and indefinite retention of model context is the failure mode that turns a small privacy incident into a large one.",
-      "remediation": "Declare retention and a deletion path in the manifest.",
+      "remediation": "Declare retention and a deletion path in a committed document; the manifest schema has no field for either.",
       "aliases": [],
       "deprecatedIn": null,
       "supersededBy": null,

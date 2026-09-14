@@ -45,18 +45,26 @@ export function extensionOf(filePath) {
 /**
  * Split source text into the parts a detector may treat as usage, and the parts it must not.
  *
- * @returns {{code: string, comments: string, strings: string, usable: boolean}}
+ * @returns {{code: string, comments: string, strings: string, withoutComments: string, usable: boolean}}
  *   `usable` is false for a file whose syntax is unknown, so a caller can withdraw rather than
  *   scan it with the wrong rules. An unknown file is not an empty file.
+ *
+ *   `withoutComments` is the whole text with every comment blanked to spaces IN PLACE (line breaks
+ *   kept), and code, string and regular-expression literals left where they were written. The
+ *   partitions lose adjacency: `code` has a hole where each literal was, and `strings` has no
+ *   record of what preceded it. A caller that needs a key and the literal assigned to it to stay
+ *   next to each other must search this view, not a concatenation of the partitions.
  */
 export function splitSource(text, filePath) {
   const kind = BY_EXTENSION.get(extensionOf(filePath));
-  if (!kind) return { code: "", comments: "", strings: "", usable: false };
+  if (!kind) return { code: "", comments: "", strings: "", withoutComments: "", usable: false };
 
   const syntax = SYNTAX[kind];
   const code = [];
   const comments = [];
   const strings = [];
+  const inPlace = [];
+  const blank = (s) => s.replace(/[^\r\n]/g, " ");
 
   let i = 0;
   const n = text.length;
@@ -81,6 +89,7 @@ export function splitSource(text, filePath) {
         const end = text.indexOf(close, i + open.length);
         const stop = end === -1 ? n : end + close.length;
         comments.push(text.slice(i, stop));
+        inPlace.push(blank(text.slice(i, stop)));
         i = stop;
         matched = true;
         break;
@@ -93,6 +102,7 @@ export function splitSource(text, filePath) {
         let end = text.indexOf("\n", i);
         if (end === -1) end = n;
         comments.push(text.slice(i, end));
+        inPlace.push(blank(text.slice(i, end)));
         i = end;
         matched = true;
         break;
@@ -114,6 +124,7 @@ export function splitSource(text, filePath) {
         j += 1;
       }
       strings.push(text.slice(i, Math.min(j, n)));
+      inPlace.push(text.slice(i, Math.min(j, n)));
       i = Math.min(j, n);
       regexAllowed = false;
       continue;
@@ -137,6 +148,7 @@ export function splitSource(text, filePath) {
         if (closed) {
           while (j < n && /[a-z]/.test(text[j])) j += 1; // flags
           strings.push(text.slice(i, j));
+          inPlace.push(text.slice(i, j));
           i = j;
           regexAllowed = false;
           continue;
@@ -145,6 +157,7 @@ export function splitSource(text, filePath) {
     }
 
     code.push(ch);
+    inPlace.push(ch);
     if (!/\s/.test(ch)) regexAllowed = !/[A-Za-z0-9_$)\]]/.test(ch);
     i += 1;
   }
@@ -153,6 +166,7 @@ export function splitSource(text, filePath) {
     code: code.join(""),
     comments: comments.join("\n"),
     strings: strings.join("\n"),
+    withoutComments: inPlace.join(""),
     usable: true,
   };
 }

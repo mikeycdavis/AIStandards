@@ -199,7 +199,7 @@ under [Authored items](#authored-items).
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
 | 12 | Context and Corpus Provenance | D | `provenance` | B | — |
-| 13 | Personal Data in AI Systems | D | `Data privacy` | O | — |
+| 13 | Personal Data in AI Systems | D | `Data privacy` | O | standards/13-personal-data-in-ai-systems.md |
 | 14 | Consent and Licensing | D | `consent` | O | — |
 | 15 | Retention, Deletion, and Memorization | D | `retention` | O | — |
 | 16 | Access Control for Models, Context, and Tools | D | `access control` | O | — |

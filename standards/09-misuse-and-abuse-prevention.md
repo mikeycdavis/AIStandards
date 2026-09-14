@@ -239,7 +239,7 @@ be presented as evidence that any provider control is enabled.**
 
 The detector bound to R2 reports `passed` whenever it does not recognise a disabling spelling —
 including for a spelling it has never heard of, a file type it does not read, and a repository with no
-configuration at all. That result is honest about what it is. It would become dishonest the moment
+configuration at all. That result does not claim that any control is enabled; whether it may be `passed` at all is open as Q13, because Standard 5 R6 forbids `passed` for a check that covered less than the rule requires. *Corrected 2026-09-14: this sentence had called the result honest about what it is.* It would become dishonest the moment
 anything in this framework rendered it as "safety controls enabled", or counted a misuse analysis's
 existence as misuse prevented.
 
@@ -375,7 +375,12 @@ What the existing suite asserts about R2, stated precisely because it is narrowe
   not-applicable and whose `src/config.js` sets `BLOCK_NONE`.
 - **`test/source.test.mjs` asserts that the use/mention split moves `BLOCK_NONE` out of the code text**
   when it appears in a comment, a string or a regular-expression literal.
-- **Nothing in the suite exercises** the `OFF` literal, the `false` / `none` / `off` pattern, the
+- **`test/safety-detector.test.mjs`, added 2026-09-14, asserts the quoted form of the off-pattern**
+  through the CLI: a quoted `off` fails in YAML with lines before or after it, in a JavaScript or
+  TypeScript object, and as a Python keyword argument; the union-type and ternary guards hold, while a
+  `||` fallback, an assignment inside a ternary and a YAML explicit key still fail. Each non-firing case
+  is paired with a firing one, and the controls name the disabling spelling in a comment or README.
+- **Nothing in the suite exercises** the `OFF` literal, the `false` form of the off-pattern, the
   requirement that a safety key appear in the same file, a file type outside the searched set, a
   truncated file, or an unrecognised spelling.
 
@@ -473,6 +478,10 @@ wording. Everything normative here is authored, and none of it has owner approva
 - **The admission that four of six requirements have no mechanical falsifier**, that R2's detector
   reports its blind spots as passes, and that the untested detector behaviour described below was
   observed by uncommitted runs rather than asserted by the suite.
+- **The 2026-09-14 corrections after the detector repair**: Implementation items 2 and 5 and their line
+  numbers restated from the repaired code, the suite list extended, and R6's description of R2's
+  `passed` result no longer called honest, pending Q13. These are evidence corrections made during
+  integration, not owner-approved content.
 
 ## Relationship to other standards and ADRs
 
@@ -529,9 +538,9 @@ Stated as separate lists so that a proposal is not read as a capability.
 
 | Mechanism | What it does | Where |
 | --- | --- | --- |
-| `detectDisabledSafetyControls` | Examines R2's rule, as described exactly below | `scripts/standards.mjs`, lines 422–465 |
-| Withdrawal on a framework exclusion | Withdraws R2's rule, without scanning, when the walk was shortened by a framework exclusion | `SKIP` and `CONTENT_DERIVED_RULES`, lines 54–58 and 121–125; the `withdrawn` flag, line 506 |
-| Contradicted applicability | Blocks the verdict when R2's rule is declared not-applicable and the detector observes a violation | `checkApplicabilityContradictions()`, lines 472–486 |
+| `detectDisabledSafetyControls` | Examines R2's rule, as described exactly below | `scripts/standards.mjs`, lines 423–493 |
+| Withdrawal on a framework exclusion | Withdraws R2's rule, without scanning, when the walk was shortened by a framework exclusion | `SKIP` and `CONTENT_DERIVED_RULES`, lines 54–58 and 121–125; the `withdrawn` flag, line 534 |
+| Contradicted applicability | Blocks the verdict when R2's rule is declared not-applicable and the detector observes a violation | `checkApplicabilityContradictions()`, lines 500–514 |
 | Reporting of unexamined `manual-review` rules | R1, R3 and R4 report `skipped` / `not-evaluated`, never `passed`, and keep an applicable project from `COMPLIANT` | `evaluateRule()` and `evaluate()` in `scripts/compliance.mjs` |
 | Reporting of `not-evaluable` rules | R5 is reported and listed in `notEvaluable`, outside the scored denominator, without effect on status | `scripts/compliance.mjs` |
 | `not-evaluable` catalog invariants | Refuse a not-evaluable rule that claims assurance, is attestable, is `nonExemptible`, or lacks a substantive note | `checkRule()` in `scripts/catalog.mjs` |
@@ -542,7 +551,9 @@ The last four apply to the added rules only once they are in `rules/misuse.json`
 mechanisms, not work done for this standard.
 
 **What the detector for R2 does, exactly.** Read from the code, and where the suite is silent,
-confirmed by the uncommitted runs described under Tests and falsifiers.
+confirmed by the uncommitted runs described under Tests and falsifiers. *Items 2 and 5 were corrected
+on 2026-09-14 after the detector was repaired; they had described a layout-dependent result the repair
+removed, and every line number below was updated with them.*
 
 1. **Which files.** Every file the walk collects — which skips `.git` and `node_modules` at any depth —
    whose extension `scripts/source.mjs` maps to a comment syntax: the JavaScript and TypeScript
@@ -550,41 +561,47 @@ confirmed by the uncommitted runs described under Tests and falsifiers.
    Perl, PowerShell, SQL and JSON. Anything else is never read by this rule. `.env`, `.ini`, `.tf` and
    Markdown files were each observed to report `passed` with a disabling literal in them.
 2. **Which text.** Each file is split lexically into code, comments, and string and regular-expression
-   literals, and the detector searches the code text followed by the string text (line 447). **Comments
+   literals, and the detector searches the whole file with every comment blanked to spaces in place and
+   code and literals left where they were written (`split.withoutComments`, line 473). **Comments
    are never searched**, which is the use/mention split `mentions-only/` exists to test.
 3. **The key gate.** A file is skipped unless its searched text contains one of nine key spellings —
    `safety_settings`, `safetySettings`, `moderation`, `content_filter`, `contentFilter`, `safety_mode`,
-   `safetyMode`, `harm_block_threshold`, `harmBlockThreshold` (line 428). **The key and the literal need
+   `safetyMode`, `harm_block_threshold`, `harmBlockThreshold` (line 430). **The key and the literal need
    only be in the same file, anywhere in it.** A key in one file and `"BLOCK_NONE"` in another reports
    `passed`; a key present only in a comment reports `passed`; and a file that names `safetySettings`
    and also contains an unrelated `"OFF"`, or an error message reading `"BLOCK_NONE is not allowed"`,
    reports `failed`.
 4. **The literal list.** Two whole-word, case-sensitive literals: `BLOCK_NONE` and `OFF` (lines
-   424–427, 450). `"block_none"` reports `passed`. In YAML, unquoted `safety_mode: OFF` reports `failed`
+   426–429, 475). `"block_none"` reports `passed`. In YAML, unquoted `safety_mode: OFF` reports `failed`
    and unquoted `safety_mode: off` reports `passed`. The code does not record which provider either
    literal belongs to.
 5. **The off-pattern.** Independently of the list, a case-insensitive match for `moderation`,
    `content_filter`, `contentFilter`, `safety_mode` or `safetyMode`, then `:` or `=`, then `false` or a
-   quoted `none` or `off` (line 455). The `false` form fires where the key is in a code position — a
-   JavaScript object key, a Python keyword argument, a YAML key — and **does not fire in JSON**,
-   where the key is itself a string literal and is moved out of the code text. **The quoted forms fire
-   only by adjacency.** Because the split moves every quoted value out of the code text, `none` or `off`
-   in quotes matches only when key, separator and value end up next to each other in the searched text:
-   inside a single string literal, or when the key and separator are the last code in the file and the
-   quoted value is its first string literal. `moderation: 'off'` as the only line of a YAML file reports
-   `failed`; the same line followed by another line reports `passed`; `{ moderation: "off" }` in
-   JavaScript reports `passed`. That is an effect of concatenation order, not a designed behaviour. A
-   hyphenated `content-filter` is not a recognised key.
+   quoted `none` or `off` (defined at lines 432–448, applied at line 483). Because the searched text
+   keeps code and literals in place, key, separator and value are matched as written, wherever they sit
+   in the file: `moderation: 'off'` in YAML reports `failed` whatever lines precede or follow it, and so
+   do `{ moderation: "off" }` in JavaScript and `moderation="off"` as a Python keyword argument. **It
+   does not fire in JSON**, where the key is quoted and its closing quote stands between key and
+   separator. Two guards apply to the quoted form only: a value followed by a single `|`, as in a union
+   type `moderation: "off" | "on"`, does not match, while `"off" || fallback` does; and outside YAML, a
+   key directly after `?` with `:` as its separator, as in a ternary branch `strict ? moderation :
+   "off"`, does not match. Consequences observed by uncommitted runs: a TypeScript type with a single
+   literal, `interface S { moderation: "off" }`, reports `failed`; a Python conditional
+   `moderation="off" if strict else "on"` reports `failed`; a shell pipeline `moderation='off' | tee log`
+   reports `passed`; the unguarded `false` form makes `moderation: false | true` in a type report
+   `failed`; and a value that reaches the key through a variable is not seen. The quoted form and both
+   guards are asserted by `test/safety-detector.test.mjs`. A hyphenated `content-filter` is not a
+   recognised key.
 6. **Withdrawal.** When the walk was shortened by a framework exclusion — in this release, only a
    `test/fixtures` directory at the target's root — the rule is observed as unknown **without any file
-   being scanned** (lines 432–435), so a disabling literal elsewhere in the repository is not reported
+   being scanned** (lines 452–455), so a disabling literal elsewhere in the repository is not reported
    either. The result is `skipped` / `not-evaluated`, the distinction `prohibited-but-unestablished`,
    and the status cannot reach `COMPLIANT`.
 7. **Everything else is `passed`.** When no hit is found and the rule was not withdrawn, the detector
-   records an observation with neither a violation nor an unknown (line 464), and `evaluateRule()` in
+   records an observation with neither a violation nor an unknown (line 492), and `evaluateRule()` in
    `scripts/compliance.mjs` reports that as `passed`. This includes an unrecognised spelling, key or file
    type; a repository with no searched files at all; a file that could not be read, which is skipped at
-   line 441 without recording an unknown; and anything past the first 524,288 characters of a file larger
+   line 461 without recording an unknown; and anything past the first 524,288 characters of a file larger
    than 512 KiB, which `readText()` truncates and the detector does not check for. The pass message
    itself says that "a provider spelling not on the maintained list would not be seen".
 
@@ -599,8 +616,8 @@ to Standard 5.
 | --- | --- |
 | Withdraw R2's rule to `not-evaluated` when a searched file is unreadable or truncated | Standard 5's Implementation places the evidence-availability architecture in Phase 3. Doing it for one detector first would give this rule a different meaning of `passed` from its neighbours |
 | Report a configuration file of an unrecognised type as unexamined rather than silently skipping it | The same Phase 3 work. Until then an unread `.env` and a clean one are indistinguishable in the result |
-| Require the literal to be the value assigned to the key, rather than anywhere in the same file | Needs a parse of each configuration format rather than a lexical split. It would remove both the `"OFF"` false positive and the JSON `false` false negative, and it is Phase 3 detector work |
-| Tests pinning the `OFF` literal, the off-pattern, the key gate and the truncation path | Each is behaviour the detector has and no test asserts. Adding tests is Phase 3 work, and tests written now would pin the incidental adjacency behaviour as though it were designed |
+| Require the literal to be the value assigned to the key, rather than anywhere in the same file | Needs a parse of each configuration format rather than a lexical split. It would remove the `"OFF"` false positive, the JSON `false` false negative and the single-literal type false positive, and it is Phase 3 detector work |
+| Tests pinning the `OFF` literal, the `false` form of the off-pattern, the key gate and the truncation path | Each is behaviour the detector has and no test asserts. The quoted form of the off-pattern has been pinned by `test/safety-detector.test.mjs` since the 2026-09-14 repair; the rest is Phase 3 work, and a test asserting that a blind spot reports `passed` would pin it as intended behaviour |
 | A manifest field declaring the path of the misuse analysis | A schema change alters what a conformant consuming project may declare. It is a schema-versioning decision, not a side effect of writing this document |
 | A detector that the misuse analysis, the bounds record, or the signal runbook exists | Would establish file presence, which R6 forbids reporting as more. With no path field it would have to guess filenames |
 | A rule checking that an adversarial exercise record against the named cases exists and is current | Would give R5 a route out of `not-evaluable` for the exercised inputs. How such records are produced and kept is item 35's subject, and item 35 is unwritten |
