@@ -9,7 +9,7 @@ sequenceDiagram
 
     Caller->>CLI: validate <target> --json
     CLI->>Cat: loadCatalog(rules/)
-    Cat-->>CLI: 32 rules, or throw CatalogError
+    Cat-->>CLI: 46 rules, or throw CatalogError
     CLI->>Pol: resolvePolicyPath(target, --policy)
     Note over Pol: Resolved against the TARGET.<br/>The pack root is never a fallback.
     Pol-->>CLI: {path, source: explicit | target-default}

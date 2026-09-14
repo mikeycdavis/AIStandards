@@ -6,15 +6,18 @@ flowchart TB
         foreign["artifacts/foreign-<br/>namespace-inventory.json"]
     end
 
-    subgraph gates["Review gates (node scripts, exit 0/1/2)"]
+    subgraph gates["Review gates and corpus tooling (exit 0/1/2)"]
         fidelity["fidelity.mjs<br/>verbatim bytes"]
-        inventory["inventory.mjs<br/>8 catalog checks"]
+        inventory["inventory.mjs<br/>catalog review checks"]
         specmod["spec.mjs<br/>spec + prompt parser"]
+        sections["standards-sections.mjs<br/>ten-section conformance"]
+        sync["sync-rule-tables.mjs<br/>tables + coverage"]
+        nstest["test/namespace.test.mjs<br/>no full-id collision"]
     end
 
     subgraph corpus["Normative corpus"]
-        stds["standards/*.md<br/>8 of 53 written"]
-        rules["rules/*.json<br/>7 shards, 32 rules"]
+        stds["standards/*.md<br/>11 of 53 written"]
+        rules["rules/*.json<br/>8 shards, 46 rules"]
         schemas["schemas/*.json<br/>5 schemas"]
     end
 
@@ -42,13 +45,18 @@ flowchart TB
     brief -->|"byte compare"| fidelity
     spec --> specmod
     specmod --> inventory
+    specmod --> sections
     boundary --> inventory
     spec -->|"claims an<br/>implementing file"| stds
     stds --> inventory
+    stds -->|"headings, H1,<br/>Source line"| sections
     rules --> inventory
-    foreign -->|"refused IDs"| catalog
+    foreign -->|"recorded foreign ids"| nstest
+    catalog --> nstest
 
     rules --> catalog
+    catalog --> sync
+    sync -->|"rewrites generated<br/>blocks only"| stds
     schemas --> policy
     schemas --> cli
     catalog --> cli
@@ -70,6 +78,6 @@ flowchart TB
     classDef output fill:#f4e6ea,stroke:#8a4a5f,color:#2b2b2b
 
     class brief,spec,boundary,foreign input
-    class fidelity,inventory,specmod gate
+    class fidelity,inventory,specmod,sections,sync,nstest gate
     class cli,catalog,policy,compliance,yaml,jsonschema,source,scaffolding,stds,rules,schemas code
     class auditrep,valrep output

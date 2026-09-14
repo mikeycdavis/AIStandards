@@ -43,7 +43,7 @@ Terms a reader would genuinely misread without a definition. Everything else is 
 | File | Phase | Status |
 |---|---|---|
 | [01-phase-1-cli-and-core.md](01-phase-1-cli-and-core.md) | 1 — CLI, catalog, policy, core detectors | **complete** (2026-09-04) |
-| [02-phase-2-normative-corpus.md](02-phase-2-normative-corpus.md) | 2 — 53 standards, templates, `init` | **in-progress** — the two blocking reviews passed 2026-09-04 (mechanical only, no human sign-off); Standards 02 and 11 written 2026-09-06; Standard 08, `sync-rule-tables.mjs` and `standards-sections.mjs` added 2026-09-14; 43 standards, shards for nine namespaces, `manifest.mjs`, `toolperms.mjs`, templates and `init` remain |
+| [02-phase-2-normative-corpus.md](02-phase-2-normative-corpus.md) | 2 — 53 standards, templates, `init` | **in-progress** — the two blocking reviews passed 2026-09-04 (mechanical only, no human sign-off); Standards 02 and 11 written 2026-09-06; Standard 08, `sync-rule-tables.mjs` and `standards-sections.mjs` added 2026-09-14, then Standard 09 and the rule-table coverage check the same day; 42 standards, shards for nine namespaces, `manifest.mjs`, `toolperms.mjs`, templates and `init` remain |
 | [03-phase-3-detectors-and-evidence.md](03-phase-3-detectors-and-evidence.md) | 3 — detectors, evidence availability | not-started |
 | [04-phase-4-attestations.md](04-phase-4-attestations.md) | 4 — attestations, exceptions, staleness | not-started |
 | [05-phase-5-ci-and-adapter.md](05-phase-5-ci-and-adapter.md) | 5 — CI, containers, adapter | not-started |

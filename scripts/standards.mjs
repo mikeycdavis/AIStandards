@@ -337,7 +337,8 @@ function detectUndeclaredTool(run) {
 // --- Judgmental detectors, partial assurance ---------------------------------------------------
 
 // Alias shapes that name a moving target. Deliberately a maintained list of exact shapes rather
-// than a general heuristic: an unrecognised spelling appears as not-evaluated, never as a pass.
+// than a general heuristic. An unrecognised spelling is not seen and reports as passed, not as
+// not-evaluated; Standard 1 and the rule's assurance note both say so.
 const FLOATING_ALIAS = /(^|[-@:/])(latest|preview|current|stable|edge|nightly)$/i;
 
 function detectFloatingModelAlias(run) {

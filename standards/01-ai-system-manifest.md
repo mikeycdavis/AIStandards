@@ -156,8 +156,11 @@ rather than leaving a reader to assume otherwise.
 R1 through R3 are the only rules in this release that earn `full` assurance, and it is worth being
 clear about why so few do: each checks a file that this framework itself defines the shape of. That
 is the only class of thing a repository scanner can be certain about. R4 is `partial` because alias
-recognition is a maintained list, not a decision procedure — an unrecognised spelling appears as
-unevaluated rather than as a pass.
+recognition is a maintained list, not a decision procedure — an unrecognised spelling is not seen,
+and that gap reports as `passed`, not as not-evaluated: a pass means no recognised moving alias was
+found. *Corrected 2026-09-14: this sentence previously said an unrecognised spelling appears as
+unevaluated. `detectFloatingModelAlias` records a clean observation for it, which `evaluateRule()` in
+`scripts/compliance.mjs` reports as `passed`.*
 
 Nothing here is non-exemptible. A project can have a real reason a specific model identifier cannot
 be pinned, and recording that reason is better than a requirement routed around.

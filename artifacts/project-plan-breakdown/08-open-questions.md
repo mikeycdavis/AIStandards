@@ -93,6 +93,20 @@ in a single commit, which is why it has not been done as a side effect of other 
 **Impact if unanswered:** none today. It becomes real in Phase 5, where `ci-context` sets
 `core.autocrlf=false` when materialising the clone, so container bytes and host bytes will differ.
 
+### Q9 — Does `misuse prevention` have a prohibitive face, and which item owns it?
+
+The specification's must-never items each name the positive tokens they are the negative face of.
+Item 48, Safety and Oversight Prohibitions, names `AI safety` and `human oversight`. No prohibition
+item names `misuse prevention`, although the brief lists it in the same bullet. Standard 09, written
+2026-09-14, therefore mints no prohibition, states its one `forbidden` rule (minted in Phase 1) as it
+stands, and records the gap in its Scope and Additions sections rather than resolving it.
+
+**Not resolved here, because the answer changes a specification row.** Whether item 48 takes the
+token, or misuse prevention has no prohibitive face, is a catalog-identity decision, not an evidence
+correction.
+**Impact if unanswered:** none on the wording of any written standard today. Item 48's document, when
+written, will have to say whether misuse prohibitions are its ground.
+
 ## Not questions
 
 Per-shard rule counts are a plan, not a measurement. The catalog does not exist yet, and

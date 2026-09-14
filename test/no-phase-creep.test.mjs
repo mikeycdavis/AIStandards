@@ -118,6 +118,7 @@ test("only the standards written so far exist", () => {
     "06-standard-structure-and-rule-identity.md",
     "07-boundary-with-adjacent-standards.md",
     "08-ai-safety-requirements-and-safety-cases.md",
+    "09-misuse-and-abuse-prevention.md",
     "11-autonomy-levels-and-delegated-authority.md",
     "21-prompt-and-instruction-security.md",
     "45-approval-gates.md",

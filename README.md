@@ -3,8 +3,8 @@
 Numbered AI engineering standards, and the `audit` and `validate` commands that check a repository
 against them.
 
-**Version 0.1.0 — Phase 1 complete, Phase 2 begun.** This is a working CLI with ten of
-fifty-three standards and forty-two of a planned ninety-six rules, nine of which a detector can
+**Version 0.1.0 — Phase 1 complete, Phase 2 begun.** This is a working CLI with eleven of
+fifty-three standards and forty-six of a planned ninety-six rules, nine of which a detector can
 actually reach. The catalog's two blocking reviews
 have passed, so the fifty-three items and their numbering are settled. What it does, it does
 honestly. What it does not do, it reports as not done rather than as passed.
@@ -66,18 +66,22 @@ Exit codes are process semantics. The verdict is the `status` field of the JSON 
 ## What is in this release
 
 **Standards** — [1 AI System Manifest](standards/01-ai-system-manifest.md) ·
+[2 AI Risk Tiering and Applicability](standards/02-ai-risk-tiering-and-applicability.md) ·
 [3 Machine-Readable AI Policy](standards/03-machine-readable-ai-policy.md) ·
 [5 Verdict Vocabulary](standards/05-verdict-vocabulary.md) ·
 [6 Standard Structure and Rule Identity](standards/06-standard-structure-and-rule-identity.md) ·
 [7 Boundary with Adjacent Standards Packs](standards/07-boundary-with-adjacent-standards.md) ·
+[8 AI Safety Requirements and Safety Cases](standards/08-ai-safety-requirements-and-safety-cases.md) ·
+[9 Misuse and Abuse Prevention](standards/09-misuse-and-abuse-prevention.md) ·
+[11 Autonomy Levels and Delegated Authority](standards/11-autonomy-levels-and-delegated-authority.md) ·
 [21 Prompt and Instruction Security](standards/21-prompt-and-instruction-security.md) ·
 [45 Approval Gates](standards/45-approval-gates.md)
 
-The first five are machinery — each documents something the code does, so no behaviour ships
-undocumented. The last two are the easiest and hardest domain standards, chosen to prove the document
-skeleton at both extremes.
+1, 3, 5, 6 and 7 are machinery — each documents something the code does, so no behaviour ships
+undocumented. 21 and 45, written in Phase 1, are the easiest and hardest domain standards, chosen to
+prove the document skeleton at both extremes. 2, 8, 9 and 11 are the Phase 2 corpus written so far.
 
-**Rules** — 32 across seven shards; **9 have a detector**. The rest report as unevaluated. That ratio
+**Rules** — 46 across eight shards; **9 have a detector**. The rest report as unevaluated. That ratio
 is not a defect to be hidden: an AI standards pack is mostly manual review, and a design claiming
 otherwise would be claiming detectors nobody has written.
 

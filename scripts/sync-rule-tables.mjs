@@ -11,6 +11,16 @@
 // backticks. A rule cited in no section, or in more than one, is an error: a label inferred from
 // shard order or table position would be a claim about the document that the document never made.
 //
+// EVERY SHARD WITH RULES FOR A WRITTEN STANDARD HAS A BLOCK IN ITS DOCUMENT. A written standard is a
+// `standards/NN-*.md` file, and NN is its number. For each shard holding at least one rule whose
+// `standard` is NN, that document must carry a block naming the shard; a missing one is reported with
+// the document, the shard and the uncovered rule ids, even when the document's other blocks are
+// present and in sync. Checking only the blocks that exist would pass a document that never shows a
+// reader its rules. A standard with rules but no document (not yet written, under the phased plan)
+// and a written standard with no rules both need nothing. No order between blocks is required.
+// Coverage omission is malformed input, exit 2 in both modes: write mode never inserts a block,
+// because where a table belongs in the prose is an authoring decision, not a rendering one.
+//
 // NOTHING OUTSIDE A BLOCK IS TOUCHED. The marker lines and every byte around them are preserved, and
 // each block is rendered with the document's own line terminator. A document that mixes CRLF and bare
 // LF is refused rather than normalised, because normalising it would rewrite bytes nobody asked about.
@@ -19,7 +29,8 @@
 // for. A run that finds no generated block at all is a configuration error, not a pass.
 //
 // Usage: node scripts/sync-rule-tables.mjs [--root=<dir>] [--check]
-// Exit 0 in sync, or written · 1 drift found (--check only) · 2 malformed input or configuration error.
+// Exit 0 in sync, or written · 1 drift found (--check only) · 2 malformed input (including a written
+// standard missing a block for a shard that holds its rules, in either mode) or configuration error.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -42,8 +53,14 @@ export const TABLE_SEPARATOR = "| --- | --- | --- | --- | --- | --- |";
 
 const REQUIREMENT_HEADING = /^### R(\d+) — /;
 const FENCE = /^ {0,3}(`{3,}|~{3,})/;
+// The filename prefix that makes a document a written standard, and the one documentNumber reads.
+const NUMBER_PREFIX = /^(\d{2})-/;
 
-const USAGE = "Usage: node scripts/sync-rule-tables.mjs [--root=<dir>] [--check]\n";
+const USAGE =
+  "Usage: node scripts/sync-rule-tables.mjs [--root=<dir>] [--check]\n" +
+  "Exit 0 in sync, or written; 1 drift found (--check only); 2 malformed input or configuration error.\n" +
+  "A written standard missing a block for a shard that holds its rules is malformed input (exit 2) in\n" +
+  "both modes; write mode never inserts a block.\n";
 
 export class SyncError extends Error {
   constructor(message) {
@@ -114,7 +131,7 @@ function fenceTracker() {
 
 /** The standard number, from the NN- filename prefix, cross-checked against the `# Standard N — ` H1. */
 export function documentNumber(file, lines, where) {
-  const prefix = /^(\d{2})-/.exec(file);
+  const prefix = NUMBER_PREFIX.exec(file);
   if (!prefix) {
     throw new SyncError(`${where}: filename has no two-digit NN- prefix, so the standard it documents cannot be established`);
   }
@@ -215,6 +232,7 @@ export function renderBlock({ shard, number, sections, catalog, where, markerLin
 /**
  * The regenerated text of one document, or null when it carries no marker text at all.
  * `drift` is the first line that differs from what would be written, or null when in sync.
+ * `shards` names every block's shard, in document order, for the coverage check.
  */
 export function syncDocument({ file, buffer, catalog }) {
   const where = `standards/${file}`;
@@ -272,7 +290,46 @@ export function syncDocument({ file, buffer, catalog }) {
     // rendering itself is wrong. Refusing is better than writing a file the check disagrees with.
     throw new Error(`${where}: internal inconsistency between drift detection and regenerated text`);
   }
-  return { file, rel: where, blocks: blocks.length, eol, newText, changed, drift };
+  return { file, rel: where, blocks: blocks.length, shards: blocks.map((b) => b.shard), eol, newText, changed, drift };
+}
+
+/**
+ * Standard number → shard → the ids of that shard's rules for that standard, in catalog order.
+ * Shards come out in the catalog's sorted shard order, so every message built from this is stable.
+ */
+export function requiredCoverage(catalog) {
+  const byStandard = new Map();
+  for (const rule of catalog.rules.values()) {
+    if (!byStandard.has(rule.standard)) byStandard.set(rule.standard, new Map());
+    const shards = byStandard.get(rule.standard);
+    if (!shards.has(rule.shard)) shards.set(rule.shard, []);
+    shards.get(rule.shard).push(rule.id);
+  }
+  return byStandard;
+}
+
+/**
+ * Every shard that holds rules for this document's standard and that no block in it names.
+ * A file without the NN- prefix is not a written standard and needs nothing here. The number is the
+ * filename's, as in documentNumber; a document with blocks has already had its H1 cross-checked.
+ */
+export function coverageProblems({ file, shards, coverage }) {
+  const prefix = NUMBER_PREFIX.exec(file);
+  if (!prefix) return [];
+  const number = Number.parseInt(prefix[1], 10);
+  const needed = coverage.get(number);
+  if (!needed) return [];
+  const present = new Set(shards);
+  const problems = [];
+  for (const [shard, ids] of needed) {
+    if (present.has(shard)) continue;
+    problems.push(
+      `standards/${file}: coverage omitted — no generated block names rules/${shard}, which holds ` +
+      `${ids.length} rule(s) for Standard ${number}: ${ids.join(", ")}. Add the block where the table ` +
+      "belongs; write mode never inserts one.",
+    );
+  }
+  return problems;
 }
 
 /** Plan a sync of every standards/*.md under root. Throws SyncError on any malformed input; writes nothing. */
@@ -296,6 +353,7 @@ export function planSync(root) {
     if (err instanceof CatalogError) throw new SyncError(`the catalog in ${rulesDir} failed to load: ${err.message}`);
     throw err;
   }
+  const coverage = requiredCoverage(catalog);
 
   const names = fs
     .readdirSync(standardsDir, { withFileTypes: true })
@@ -306,13 +364,18 @@ export function planSync(root) {
   const documents = [];
   const errors = [];
   for (const file of names) {
+    let doc;
     try {
-      const doc = syncDocument({ file, buffer: fs.readFileSync(path.join(standardsDir, file)), catalog });
-      if (doc) documents.push(doc);
+      doc = syncDocument({ file, buffer: fs.readFileSync(path.join(standardsDir, file)), catalog });
     } catch (err) {
       if (!(err instanceof SyncError)) throw err;
+      // A document that could not be read has already failed the run, and its blocks are not known,
+      // so its coverage is not judged: a coverage message built on a guess would be noise.
       errors.push(err.message);
+      continue;
     }
+    if (doc) documents.push(doc);
+    errors.push(...coverageProblems({ file, shards: doc ? doc.shards : [], coverage }));
   }
   if (errors.length > 0) throw new SyncError(errors.join("\n"));
 

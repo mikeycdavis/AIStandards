@@ -3,8 +3,8 @@
   "rules": [
     {
       "id": "fairness.fixture-cohort-report",
-      "title": "Fixture: a rule for Standard 90 in a shard its document does not name",
-      "standard": 90,
+      "title": "Fixture: a rule for a standard with no document",
+      "standard": 94,
       "category": "fairness",
       "level": "recommended",
       "severity": "warning",
@@ -12,8 +12,8 @@
       "assurance": "partial",
       "nonExemptible": false,
       "introducedIn": "0.1.0",
-      "description": "Belongs to fixture Standard 90, whose only generated block names rules/cost.json.",
-      "rationale": "Must never appear in Standard 90's table: rows come only from the shard the marker names.",
+      "description": "Belongs to fixture Standard 94, which has no document in this root. It cited Standard 90 until the coverage check made a Standard 90 rule in a shard doc 90 names no block for an error; the same-standard, other-shard exclusion is now shown by coverage/permitted's Standard 96.",
+      "rationale": "A rule citing an unwritten standard requires no block, and must never appear in any table here.",
       "remediation": "None; this is a test fixture.",
       "aliases": [],
       "deprecatedIn": null,

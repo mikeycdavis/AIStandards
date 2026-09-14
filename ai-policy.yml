@@ -9,8 +9,9 @@
 #     omitted in order to improve the verdict. Where a rule fails or goes unexamined, it says so.
 #   * It is not complete. Rules from shards that arrive later in Phase 2 are not listed because they
 #     do not exist yet. The oversight shard arrived on 2026-09-06 with Standard 11 and IS listed
-#     below, as are the five Standard 8 rules added to the lifecycle shard on 2026-09-14; the
-#     remaining ten shards are not.
+#     below, as are the five Standard 8 rules added to the lifecycle shard and the four Standard 9
+#     rules added to the misuse shard on 2026-09-14. The nine reserved namespaces that have no
+#     shard have nothing to list.
 #
 # The filename matters: AIStandards reads ai-policy.yml, never project-policy.yml. Two closed
 # schemas pinning two framework versions cannot share one file, so a repository governed by both
@@ -81,6 +82,18 @@ rules:
   # Misuse.
   misuse.safety-controls-not-disabled:
     level: forbidden
+  # Standard 9, added 2026-09-14. Left applicable for the reason the Standard 8 rules are: declaring
+  # them not-applicable because a standards pack is not an AI system is the self-exemption rejected
+  # above. The three manual-review rules report not-evaluated; misuse.controls-effective-at-inference
+  # is not-evaluable and sits beside the verdict without changing it.
+  misuse.misuse-cases-identified:
+    level: required
+  misuse.abuse-volume-bounded:
+    level: recommended
+  misuse.misuse-signals-acted-on:
+    level: required
+  misuse.controls-effective-at-inference:
+    level: required
 
   # Privacy.
   privacy.no-real-personal-data-in-fixtures:

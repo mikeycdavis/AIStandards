@@ -10,6 +10,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -365,6 +366,251 @@ test("CLI: an unknown flag, a positional argument, a spaced --root or an empty -
     assert.match(r.stderr, /unknown argument/);
     assert.match(r.stderr, /Usage: node scripts\/sync-rule-tables\.mjs/);
   }
+});
+
+// ---------------------------------------------------------------------------------------------
+// Coverage: every shard holding rules for a written standard has a block in its document
+// ---------------------------------------------------------------------------------------------
+
+// Each root under coverage/ is self-contained and carries the same two shards byte-for-byte. The
+// negative roots are the permitted root with one document replaced, so copying the permitted
+// document back is each negative case's control.
+const COVERAGE = path.join(FIXTURES, "coverage");
+const PERMITTED = path.join(COVERAGE, "permitted");
+const DOC95 = "standards/95-fixture-single-shard.md";
+const DOC96 = "standards/96-fixture-two-shards.md";
+const DOC97 = "standards/97-fixture-fairness-only.md";
+const DOC98 = "standards/98-fixture-rule-free.md";
+
+/** sha256 of every file under a directory, keyed by forward-slash relative path. */
+function hashTree(dir) {
+  const hashes = {};
+  const walk = (d) => {
+    for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+      const full = path.join(d, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else hashes[path.relative(dir, full).split(path.sep).join("/")] = crypto.createHash("sha256").update(fs.readFileSync(full)).digest("hex");
+    }
+  };
+  walk(dir);
+  return hashes;
+}
+
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const stderrLines = (r) => r.stderr.split(/\r?\n/).filter((l) => l !== "");
+const omission = (doc, shard, standard, ids) =>
+  new RegExp(
+    `^sync-rule-tables: ${escapeRe(doc)}: coverage omitted — no generated block names rules/${escapeRe(shard)}, ` +
+    `which holds ${ids.length} rule\\(s\\) for Standard ${standard}: ${ids.map(escapeRe).join(", ")}\\. ` +
+    "Add the block where the table belongs; write mode never inserts one\\.$",
+  );
+const blockOf = (shard) =>
+  new RegExp(`<!-- BEGIN GENERATED FROM rules/${escapeRe(shard)}[^\\n]*\\n[\\s\\S]*?<!-- END GENERATED -->\\r?\\n?`);
+const fixtureRules = (root) =>
+  ["cost.json", "fairness.json"].flatMap((shard) =>
+    JSON.parse(read(root, `rules/${shard}`)).rules.map((r) => ({ id: r.id, standard: r.standard, shard })),
+  );
+
+const COVERAGE_OMISSIONS = [
+  {
+    name: "only-block-missing",
+    shape: "(a) a written standard's only required block is missing",
+    doc: DOC95, standard: 95, shard: "cost.json", ids: ["cost.fixture-cap-declared"],
+    blocksKept: [], inSyncBeside: [],
+  },
+  {
+    name: "one-of-several-missing",
+    shape: "(b) one of several required shard blocks is missing",
+    doc: DOC96, standard: 96, shard: "fairness.json", ids: ["fairness.fixture-parity-measured", "fairness.fixture-parity-published"],
+    blocksKept: ["cost.json"], inSyncBeside: [],
+  },
+  {
+    name: "omitted-beside-valid",
+    shape: "(c) one document omits coverage while the others' blocks are valid and in sync",
+    doc: DOC97, standard: 97, shard: "fairness.json", ids: ["fairness.fixture-audit-scheduled"],
+    blocksKept: [], inSyncBeside: [DOC95, DOC96],
+  },
+];
+
+for (const c of COVERAGE_OMISSIONS) {
+  test(`coverage ${c.shape}: exit 2 in both modes naming the document, shard and rule ids; nothing written`, (t) => {
+    const fixture = path.join(COVERAGE, c.name);
+    const message = omission(c.doc, c.shard, c.standard, c.ids);
+
+    // Preconditions, so the case fails for the reason it names.
+    assert.ok(read(fixture, "rules/cost.json") === read(PERMITTED, "rules/cost.json"), "the catalog must be the permitted root's");
+    assert.ok(read(fixture, "rules/fairness.json") === read(PERMITTED, "rules/fairness.json"), "the catalog must be the permitted root's");
+    assert.doesNotMatch(read(fixture, c.doc), new RegExp(`BEGIN GENERATED FROM rules/${escapeRe(c.shard)}`), "the block must actually be missing");
+    for (const kept of c.blocksKept) {
+      assert.match(read(fixture, c.doc), new RegExp(`BEGIN GENERATED FROM rules/${escapeRe(kept)}`), `the ${kept} block must be present`);
+    }
+    for (const beside of c.inSyncBeside) {
+      assert.ok(read(fixture, beside) === read(PERMITTED, beside), `${beside} must be the permitted, in-sync document`);
+      assert.match(read(fixture, beside), /BEGIN GENERATED/, `${beside} must carry a block`);
+    }
+
+    // --check against the committed fixture: exit 2, one message, and every file's hash unchanged.
+    const hashes = hashTree(fixture);
+    const r = check(fixture);
+    assert.equal(r.code, 2, show(r));
+    assert.equal(r.stdout, "", "a malformed run must not also report a result");
+    assert.equal(stderrLines(r).length, 1, `exactly one problem is expected:\n${r.stderr}`);
+    assert.match(stderrLines(r)[0], message);
+    assert.deepEqual(hashTree(fixture), hashes, "--check changed a file under the committed fixture");
+
+    // Write mode, on a temporary copy only: refused, and no block inserted.
+    const root = tempRoot(t, fixture);
+    const before = snapshot(root);
+    const w = write(root);
+    assert.equal(w.code, 2, show(w));
+    assert.equal(w.stdout, "");
+    assert.match(stderrLines(w)[0], message);
+    assertUntouched(before, snapshot(root), `write mode on ${c.name}`);
+
+    // Control: with the permitted copy of the document, the same root passes.
+    fs.copyFileSync(path.join(PERMITTED, c.doc), path.join(root, c.doc));
+    const fixed = check(root);
+    assert.equal(fixed.code, 0, `control: restoring the block must pass\n${show(fixed)}`);
+  });
+}
+
+const DOC96_SHARD_RULES = {
+  "cost.json": ["cost.fixture-cap-enforced"],
+  "fairness.json": ["fairness.fixture-parity-measured", "fairness.fixture-parity-published"],
+};
+for (const [shard, ids] of Object.entries(DOC96_SHARD_RULES)) {
+  test(`coverage (b) mutation: removing only the rules/${shard} block of a two-shard standard is reported, in both modes`, (t) => {
+    const root = tempRoot(t, PERMITTED);
+    const other = shard === "cost.json" ? "fairness.json" : "cost.json";
+    const original = read(root, DOC96);
+    const mutated = original.replace(blockOf(shard), "");
+    assert.notEqual(mutated, original, "the mutation must actually remove the block");
+    assert.match(mutated, new RegExp(`BEGIN GENERATED FROM rules/${escapeRe(other)}`), "the other block must remain");
+    put(root, DOC96, mutated);
+
+    const before = snapshot(root);
+    for (const args of [["--check"], []]) {
+      const r = run([`--root=${root}`, ...args]);
+      assert.equal(r.code, 2, `${args.join(" ") || "write"}: ${show(r)}`);
+      assert.equal(r.stdout, "");
+      assert.equal(stderrLines(r).length, 1, r.stderr);
+      assert.match(stderrLines(r)[0], omission(DOC96, shard, 96, ids));
+      assertUntouched(before, snapshot(root), `removed ${shard} block, ${args.join(" ") || "write"}`);
+    }
+  });
+}
+
+test("coverage permitted: a rule-free written standard, rules citing an unwritten standard, and a multi-shard standard with every block in any order pass", (t) => {
+  // Preconditions: each permitted case is really present, or the pass proves nothing about it.
+  const rules = fixtureRules(PERMITTED);
+  const docs = fs.readdirSync(path.join(PERMITTED, "standards"));
+  assert.ok(docs.includes(path.basename(DOC98)) && !rules.some((r) => r.standard === 98), "a written standard with no rules");
+  assert.doesNotMatch(read(PERMITTED, DOC98), /GENERATED/, "the rule-free standard carries no block");
+  assert.ok(rules.some((r) => r.standard === 99) && !docs.some((f) => f.startsWith("99-")), "rules citing an unwritten standard");
+  assert.deepEqual([...new Set(rules.filter((r) => r.standard === 96).map((r) => r.shard))].sort(), ["cost.json", "fairness.json"]);
+  const order = [...read(PERMITTED, DOC96).matchAll(/BEGIN GENERATED FROM rules\/([a-z]+\.json)/g)].map((m) => m[1]);
+  assert.deepEqual(order, ["fairness.json", "cost.json"], "the blocks must be in the reverse of the catalog's shard order");
+
+  const hashes = hashTree(PERMITTED);
+  const r = check(PERMITTED);
+  assert.equal(r.code, 0, show(r));
+  assert.equal(r.stderr, "");
+  assert.match(r.stdout, /4 generated block\(s\) in 3 document\(s\) match the catalog/);
+  assert.deepEqual(hashTree(PERMITTED), hashes, "--check changed a file under the committed fixture");
+
+  const root = tempRoot(t, PERMITTED);
+  const before = snapshot(root);
+  const w = write(root);
+  assert.equal(w.code, 0, show(w));
+  assert.match(w.stdout, /no changes/);
+  assertUntouched(before, snapshot(root), "write on the permitted root");
+});
+
+test("rows: a standard with rules in two shards gets each shard's rules only in that shard's block", (t) => {
+  // The in-sync fixture's Standard 90 showed this exclusion while a Standard 90 rule could sit in a
+  // shard its document named no block for. Coverage now forbids that, so it is shown here instead.
+  const root = tempRoot(t, PERMITTED);
+  const original = read(root, DOC96);
+  put(root, DOC96, stripBlocks(original));
+  assert.deepEqual(tableRows(read(root, DOC96)), [], "the mutation must actually empty both blocks");
+  assert.equal(check(root).code, 1, "emptied blocks are drift, not a coverage omission");
+
+  const w = write(root);
+  assert.equal(w.code, 0, show(w));
+  const text = read(root, DOC96);
+  assert.equal(text, original, "regenerating both emptied blocks reproduces the committed document exactly");
+  const blocks = [...text.matchAll(/BEGIN GENERATED FROM rules\/([a-z]+)\.json[^\n]*\n([\s\S]*?)<!-- END GENERATED -->/g)];
+  assert.equal(blocks.length, 2);
+  for (const [, namespace, body] of blocks) {
+    const rows = tableRows(body);
+    assert.ok(rows.length > 0, `the ${namespace} block must have rows`);
+    for (const row of rows) assert.match(row, new RegExp(`^\\| R\\d+ \\| \`${namespace}\\.`), `a row from another shard in the ${namespace} block`);
+  }
+});
+
+test("coverage: write mode rewrites nothing when one document has fixable drift and another omits coverage", (t) => {
+  const fixture = path.join(COVERAGE, "drift-and-omission");
+  const message = omission(DOC97, "fairness.json", 97, ["fairness.fixture-audit-scheduled"]);
+
+  const hashes = hashTree(fixture);
+  const c = check(fixture);
+  assert.equal(c.code, 2, `coverage omission outranks drift\n${show(c)}`);
+  assert.equal(c.stdout, "", "no DRIFT report alongside malformed input");
+  assert.match(stderrLines(c)[0], message);
+  assert.deepEqual(hashTree(fixture), hashes, "--check changed a file under the committed fixture");
+
+  const root = tempRoot(t, fixture);
+  const drifted = fs.readFileSync(path.join(root, DOC95));
+  const before = snapshot(root);
+  const w = write(root);
+  assert.notEqual(w.code, 0, show(w));
+  assert.equal(w.code, 2, show(w));
+  assert.doesNotMatch(w.stdout, /wrote/);
+  assert.match(stderrLines(w)[0], message);
+  assert.ok(fs.readFileSync(path.join(root, DOC95)).equals(drifted), "the drifted document's bytes changed");
+  assertUntouched(before, snapshot(root), "a write refused for a coverage omission");
+
+  // Control: the drift is real, and fixable, once the omission is repaired.
+  fs.copyFileSync(path.join(PERMITTED, DOC97), path.join(root, DOC97));
+  const again = check(root);
+  assert.equal(again.code, 1, show(again));
+  assert.match(again.stdout, /DRIFT standards\/95-fixture-single-shard\.md:\d+/);
+  const fixed = write(root);
+  assert.equal(fixed.code, 0, show(fixed));
+  assert.match(fixed.stdout, /wrote standards\/95-fixture-single-shard\.md/);
+  assert.deepEqual(tableRows(read(root, DOC95)), tableRows(read(PERMITTED, DOC95)));
+});
+
+test("coverage: omissions and malformed documents are collected across documents and reported together", (t) => {
+  const root = tempRoot(t, path.join(COVERAGE, "omitted-beside-valid"));
+  put(root, DOC95, read(root, DOC95).replace("<!-- END GENERATED -->", "End marker removed."));
+  put(root, DOC96, read(root, DOC96).replace(blockOf("cost.json"), ""));
+
+  const before = snapshot(root);
+  for (const args of [["--check"], []]) {
+    const r = run([`--root=${root}`, ...args]);
+    assert.equal(r.code, 2, show(r));
+    assert.equal(r.stdout, "");
+    const lines = stderrLines(r);
+    assert.equal(lines.length, 3, r.stderr);
+    // A document that fails to parse has its coverage left unjudged, so 95 reports only its marker.
+    assert.match(lines[0], /standards\/95-fixture-single-shard\.md:\d+: BEGIN GENERATED marker has no matching END GENERATED marker/);
+    assert.match(lines[1], omission(DOC96, "cost.json", 96, ["cost.fixture-cap-enforced"]));
+    assert.match(lines[2], omission(DOC97, "fairness.json", 97, ["fairness.fixture-audit-scheduled"]));
+    assertUntouched(before, snapshot(root), `collected errors, ${args.join(" ") || "write"}`);
+  }
+});
+
+test("coverage: a document with no block is identified by its filename prefix, as standards-sections does", (t) => {
+  // A wrong H1 on a document with no block is standards-sections' finding to make. Coverage follows
+  // the filename, so the omission is still reported against Standard 97.
+  const root = tempRoot(t, path.join(COVERAGE, "omitted-beside-valid"));
+  put(root, DOC97, read(root, DOC97).replace(/^# Standard 97 — /, "# Standard 12 — "));
+  assert.match(read(root, DOC97), /^# Standard 12 — /);
+  const r = check(root);
+  assert.equal(r.code, 2, show(r));
+  assert.equal(stderrLines(r).length, 1, r.stderr);
+  assert.match(stderrLines(r)[0], omission(DOC97, "fairness.json", 97, ["fairness.fixture-audit-scheduled"]));
 });
 
 // ---------------------------------------------------------------------------------------------
