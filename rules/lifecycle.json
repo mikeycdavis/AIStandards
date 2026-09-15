@@ -83,7 +83,7 @@
       "crosswalk": [
         {
           "pack": "MachineLearningStandards",
-          "rule": "reproducibility.run-config-recorded",
+          "rule": "reproducibility.experiment-config-recorded",
           "relationship": "defers-to",
           "note": "For trained models, MachineLearningStandards owns reproducibility and run configuration. This rule covers only the identifier a deployed system names for a model it did not train."
         }

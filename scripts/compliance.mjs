@@ -83,8 +83,9 @@ export function distinction(result, disposition, level) {
  * The third row is the same requirement for a check that DID run. Standard 5 R6 covers a check that
  * "covered less than the rule requires", and a rule declaring `assurance: partial` says exactly that
  * about its own detector. A clean narrow search establishes that nothing was found inside the scope
- * searched; it establishes nothing outside it, so it is not a pass and cannot count toward COMPLIANT
- * or the score. A confirmed violation from the same detector still stands (first row), and an
+ * searched; it establishes nothing outside it, so it is not a pass: it earns no passed credit and holds
+ * the status away from COMPLIANT, while the rule, being applicable and evaluable, stays in the scored
+ * denominator that evaluate() computes. A confirmed violation from the same detector still stands (first row), and an
  * unknown keeps its own reason (second row): partial assurance never erases a finding.
  */
 function evaluateRule(entry, observations, evaluatedRules) {

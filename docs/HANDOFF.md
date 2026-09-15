@@ -28,7 +28,12 @@ most likely way to go wrong here.
 `codebase-docs` skill on 2026-09-14** against the tree integrated for the Q13 correction and Standard 23
 (`git log --grep "Q13"`), because the safety-detector repair and the Q13 correction had changed
 behaviour it described, not only its line counts. Earlier regenerations: 2026-09-14 against the tree
-committed with Standard 09, and 2026-09-06 against `70832f4`, which had replaced a hand-scanned version. `docs/architecture.mmd` and `docs/validate-flow.mmd`
+committed with Standard 09, and 2026-09-06 against `70832f4`, which had replaced a hand-scanned version.
+**It was not regenerated for the 2026-09-15 commit** (`git log --grep "Standard 17"`), which changed
+no behaviour, and three things in it are now stale: it counts 13 of 53 standards; its account of
+`evaluateRule()` says a narrow clean search no longer counts toward the score, when it earns no credit
+but stays in the scored denominator; and its gaps table lists Q14 as open. Regenerate it at the next
+behaviour change rather than patching those lines. `docs/architecture.mmd` and `docs/validate-flow.mmd`
 are its canonical diagram sources; the fenced blocks inside the document are byte-identical copies,
 verified programmatically. No SVG is rendered — that would require a build-time download, and this
 repository has no dependencies. **Do not hand-patch the architecture document; regenerate it.**
@@ -73,12 +78,12 @@ could not run reports as not-evaluated, a prohibition nobody established reports
 
 | Fact | Value |
 |---|---|
-| Runtime | Node ≥ 18 declared in `package.json`, ESM `.mjs` throughout. **Executed** on 2026-09-14 against the tree committed with Standard 09: Node 18.20.8, 20.19.6, 22.23.2 and 24.21.0 in locally present Docker images, and 24.15.0 on the host, all 316 tests passing. On the tree committed with Standard 13, the seven test files covering the changed detector and splitter (93 tests) were re-run on Node 18.20.8 in a local Docker image, and the full suite of 333 on the host's 24.15.0; nothing was re-run on 20.x or 22.x for that commit. On the tree committed with the Q13 correction and Standard 23, ten test files covering the changed evaluation code and catalog (157 tests) ran on Node 18.20.8 in a local Docker image, and the full suite of 367 on the host's 24.15.0; 20.x and 22.x were not re-run. **Every other version is unverified, including 18.0.0–18.20.7** |
+| Runtime | Node ≥ 18 declared in `package.json`, ESM `.mjs` throughout. **Executed** on 2026-09-14 against the tree committed with Standard 09: Node 18.20.8, 20.19.6, 22.23.2 and 24.21.0 in locally present Docker images, and 24.15.0 on the host, all 316 tests passing. On the tree committed with Standard 13, the seven test files covering the changed detector and splitter (93 tests) were re-run on Node 18.20.8 in a local Docker image, and the full suite of 333 on the host's 24.15.0; nothing was re-run on 20.x or 22.x for that commit. On the tree committed with the Q13 correction and Standard 23, ten test files covering the changed evaluation code and catalog (157 tests) ran on Node 18.20.8 in a local Docker image, and the full suite of 367 on the host's 24.15.0; 20.x and 22.x were not re-run. On the tree committed with Standard 17 and the Q14 clarification, which changed documents, catalog crosswalks, a code comment and tests but no runtime code, only the full suite of 374 ran, on the host's 24.15.0; no other runtime was re-run. **Every other version is unverified, including 18.0.0–18.20.7** |
 | Package manager | **None used.** There are no dependencies to install, and no lockfile exists |
 | Dependencies | **Zero third-party, structurally.** `test/no-phase-creep.test.mjs` fails if a lockfile appears |
 | Test framework | `node:test` + `node:assert/strict`. Nothing else |
 | Host OS during development | Windows 11, PowerShell 7 |
-| Git | Branch `develop`. Checkpoint commit **`d4b4ee2`** (2026-09-04) tracks the whole implementation; **`70832f4`** adds Standard 02; **`fc060bf`** (2026-09-06) adds Standard 11, the `oversight` shard and the regenerated documentation; the 2026-09-14 batch commit (`git log --grep "Standard 08"`) adds Standard 08, the rule-table generator and the document-conformance checker; the Standard 09 commit (`git log --grep "Standard 09"`) adds Standard 09, four misuse rules, the rule-table coverage check and the regenerated architecture document; the Standard 13 commit (`git log --grep "Standard 13"`) adds Standard 13 and the safety-detector repair; the Q13 commit (`git log --grep "Q13"`) brings partial-assurance evaluation to Standard 5 R6 and adds Standard 23 |
+| Git | Branch `develop`. Checkpoint commit **`d4b4ee2`** (2026-09-04) tracks the whole implementation; **`70832f4`** adds Standard 02; **`fc060bf`** (2026-09-06) adds Standard 11, the `oversight` shard and the regenerated documentation; the 2026-09-14 batch commit (`git log --grep "Standard 08"`) adds Standard 08, the rule-table generator and the document-conformance checker; the Standard 09 commit (`git log --grep "Standard 09"`) adds Standard 09, four misuse rules, the rule-table coverage check and the regenerated architecture document; the Standard 13 commit (`git log --grep "Standard 13"`) adds Standard 13 and the safety-detector repair; the Q13 commit (`git log --grep "Q13"`) brings partial-assurance evaluation to Standard 5 R6 and adds Standard 23; the Standard 17 commit (`git log --grep "Standard 17"`) adds Standard 17, clarifies Standard 5's meanings and scoring (Q14) and corrects three crosswalks |
 
 There is no install step. Clone and run.
 
@@ -99,8 +104,8 @@ portable evidence.** The development checkout holds `.claude/settings.local.json
 check-ignore -v` attributes its ignoring to a user-level global ignore file, not to any rule in this
 repository. An environment without that file, or unable to read it, sees `.claude/` as untracked.
 `audit` does not exclude `.claude/` either, so its file count includes that file where it exists:
-87 in the development checkout on the tree committed with the Q13 correction (85 with Standard 13, 83
-with Standard 09), where a clone without it would count 86.
+88 in the development checkout on the tree committed with Standard 17 (87 with the Q13 correction, 85
+with Standard 13, 83 with Standard 09), where a clone without it would count 87.
 
 ## 4 · Commands
 
@@ -157,7 +162,7 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
   same day, making **46**
 - 12 detectors: 4 descriptive (bound to no rule), 8 judgmental
 - 5 schemas; policy resolution against the **target**, never this checkout
-- 21 test files, **367** assertions on the tree committed with the Q13 correction (20 and 333 with
+- 21 test files, **374** assertions on the tree committed with Standard 17 (367 with the Q13 correction; 20 and 333 with
   Standard 13; 19 and 316 with Standard 09; 17 files and 227 on 2026-09-06). *Corrected 2026-09-14: this line had said 20 files, and 18 on 2026-09-06; the explicit
   list in `scripts/test.mjs` holds 19, and held 17 at every earlier commit.*
 
@@ -169,7 +174,7 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
 - `scripts/sync-rule-tables.mjs` (writes the generated tables; `--check` is read-only; refuses a
   written standard missing a block for a shard that holds its rules) and
   `scripts/standards-sections.mjs` (read-only document conformance), both 2026-09-14
-- **13 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 21, 23, 45**
+- **14 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 45**
 
 **Standard 02, "AI Risk Tiering and Applicability", landed 2026-09-04** as the first Phase 2 corpus
 slice. It is class **A** (authored — the brief names ten subject areas and no way to decide which
@@ -340,8 +345,11 @@ scope. Shared cells were edited only during integration.
 - **Q13 resolved: a partial check's clean result is no longer `passed`.** On the owner's instruction that
   Standard 5 R6 already requires it, `evaluateRule()` in `scripts/compliance.mjs` reports a clean result
   from a rule declaring `assurance: partial` as `skipped` / `not-evaluated` —
-  `prohibited-but-unestablished` for the `forbidden` safety rule — so it counts toward neither
-  `COMPLIANT` nor the score. A confirmed violation still fails, an unknown keeps its own reason, and
+  `prohibited-but-unestablished` for the `forbidden` safety rule — so it earns no `passed` credit and
+  holds the status away from `COMPLIANT`, while an applicable partial rule stays in the scored
+  denominator and so lowers the score (only not-applicable and not-evaluable rules leave that
+  denominator). *Corrected 2026-09-15: this said the result counted toward neither `COMPLIANT` nor the
+  score, which misstated the denominator.* A confirmed violation still fails, an unknown keeps its own reason, and
   clean full-assurance checks still pass. Standard 5's requirement was not changed. Three synthetic
   fixtures are committed: `q13-synthetic-no-config/` and `q13-synthetic-env-block-none/` reported
   `COMPLIANT` at 100 under the previous code and now report `NOT_EVALUATED` at 56;
@@ -378,7 +386,41 @@ scope. Shared cells were edited only during integration.
   Standard 5 R2's meanings table does not name that case; its text was not changed.
 - **`docs/architecture.md` regenerated** by the `codebase-docs` skill against this tree.
 
-**Deliberately not built, and asserted absent by test:** the remaining 40 standards, shards for
+**2026-09-15, fifth batch — Standard 17 and the Q14 clarification.** Built concurrently by two
+sub-agents, each in a git worktree created outside the repository at `82ba7ea` with an exclusive file
+scope; shared cells were edited only during integration.
+
+- **Standard 17, "Evaluation Plans for Generative Systems."** Class **D** (`Model evaluation`), posture
+  **B**. It states the five rules in `rules/eval.json` with identities, levels and types unchanged — a
+  plan committed before the run (R1), a runnable suite (R2), a recorded baseline of the prior version
+  (R3), no selection against the held-out set (R4, `forbidden`, non-exemptible) and no result without a
+  run (R5, `forbidden`, non-exemptible) — and adds four requirements with no rule: name the evaluated
+  subject (R6), record the scorer, including a judge model (R7), fix the criterion for a non-numeric
+  result in advance (R8), and no part of this framework may report an evaluation sound from inspection
+  (R9). MachineLearningStandards Standards 2, 5, 12, 14, 15, 19 and 20 were read through git objects at
+  `f3a1258`, the commit the boundary review pins (identical at `082ecba`, the inventory's pin), and are
+  linked, not restated. It does not treat a hosted model or an absent training pipeline as making a
+  system non-ML, and states no baseline for metric justification, uncertainty or comparison conditions
+  where that pack does not reach a system. Q19 to Q22 record what it could not settle. All five rules
+  still report `skipped` / `not-evaluated`, the two `forbidden` ones `prohibited-but-unestablished`.
+- **Q14 resolved as clarification.** Standard 5 R2's meanings table now names every path
+  `evaluateRule()` takes to each distinction, including a partial-assurance check that ran clean; the
+  `warning` and `skipped` rows were also inaccurate and are corrected. A note under R6 states status
+  precedence and scoring. Five tests were added to `test/compliance.test.mjs`. No bolded requirement,
+  heading or distinction value changed, and nothing about runtime behaviour.
+- **Scoring statement corrected.** The Q13 batch described a clean partial result as counting "toward
+  neither `COMPLIANT` nor the score". It earns no `passed` credit, but an applicable rule that is not
+  `not-evaluable` stays in `denominator.scored` and lowers the score; `evaluate()` excludes only
+  not-applicable and `not-evaluable` rules. Corrected in Standard 5, this handoff, the plan, Q13's
+  resolution and a comment in `scripts/compliance.mjs`.
+- **Evidence corrections during integration.** Crosswalks from `eval.plan-exists`,
+  `eval.no-test-set-tuning` and `lifecycle.model-version-pinned` named MachineLearningStandards ids that
+  exist at neither recorded commit and now name `evaluation.metric-selection-justified`,
+  `split.no-test-set-tuning` and `reproducibility.experiment-config-recorded`. Nothing checks that a
+  crosswalk's foreign id exists. Standard 7 R2's example of a non-ML system, "a retrieval application
+  over a hosted model", is withdrawn with a dated note; its permission is unchanged.
+
+**Deliberately not built, and asserted absent by test:** the remaining 39 standards, shards for
 the nine reserved namespaces that have none, `scripts/manifest.mjs`, `scripts/toolperms.mjs`, templates,
 `init`, attestations, containers, CI workflows, the adapter, and Phase 3's
 detectors. `test/no-phase-creep.test.mjs` fails if any of them appears early.
@@ -463,12 +505,12 @@ governance until a sign-off exists.
 5. **Whether to pin line endings with a `.gitattributes`** — Q8. `core.autocrlf` is `true` and no
    `.gitattributes` exists. Nothing breaks today; it becomes real in Phase 5, where the container
    materialises its clone with `core.autocrlf=false`.
-6. **Whether the substantive authored content of Standards 08, 09, 13 and 23 stands.** Each discloses every
+6. **Whether the substantive authored content of Standards 08, 09, 13, 17 and 23 stands.** Each discloses every
    authored element in its Additions section — for 08, that safety cases are not graded by risk
    tier; for 09, the definitions of misuse and abuse, reading jailbreak attempts as Standard 21's
    subject, and R3 as `SHOULD`; for 13, its definitions of personal, real and synthetic data and of a
    model-adjacent store, its readings of R3 to R5, and R6; for 23, its definitions of an agent execution loop, an agent and
-   retrieved content, its readings of R1 to R4, R5, and the decision to state no sandboxing requirement. Routine placement and metadata within the established plan —
+   retrieved content, its readings of R1 to R4, R5, and the decision to state no sandboxing requirement; for 17, its definitions of an evaluation result, the evaluated subject, the held-out set and a scorer, its readings of R1 to R5, R6 to R9, and the decision to state no baseline on MachineLearningStandards' ground. Routine placement and metadata within the established plan —
    namespace, level, validation type, exemptibility — carry their rationale in those sections and
    are not listed here as awaiting a separate approval merely because an agent authored them. None
    of it is owner-approved, and nothing in this repository says otherwise.
@@ -481,49 +523,48 @@ governance until a sign-off exists.
    belong to item 15, whether the credentials rule belongs under item 13 or with Standard 21's, and
    whether the three `forbidden` privacy rules are item 49's prohibitions. Each changes a rule's
    `standard` field or a specification row. Standard 13 states the rules as they stand.
-9. **Whether Standard 5 R2's meanings table should name a partial check that ran and found nothing** —
-   Q14. Q13 itself was resolved on 2026-09-14 by option 1, on the owner's instruction, without amending
-   Standard 5; the behaviour follows R6. Rewording R2 would change the normative text of an unapproved
-   standard, which is why it is left open.
+9. **Whether Standard 5's wording stands as clarified** — Q14 was resolved on 2026-09-15 by rewording
+   R2's meanings table and adding an explanatory note under R6 on status and score, on the owner's
+   instruction that aligning the wording with implemented R6 is in scope. No bolded requirement changed.
+   The wording is authored and, like the rest of Standard 5, has no owner approval.
 10. **Where Standard 23's rules and neighbours belong** — Q15 to Q18: whether
    `agent.retrieved-content-not-instruction` belongs to item 23 and whether its `code-analysis` type can
    stand beside Standard 21 R5's `not-evaluable` one; whether the two `forbidden` agent rules are item
    51's; who states a sandboxing requirement, given Standard 45 attributes it to item 23; and whether
    R4 reaches tool output beyond fetched content. Each changes a rule's `standard` field or validation
    type, or another standard's text.
+11. **Where Standard 17's rules belong, and whether to state an evaluation baseline outside
+   MachineLearningStandards** — Q19 to Q22: whether the two `forbidden` eval rules are item 50's; whether
+   `eval.regression-baseline-recorded` belongs to item 20; whether `eval.no-test-set-tuning` can stay
+   `code-analysis`; and whether this pack should state requirements on metric justification, uncertainty
+   and comparison conditions where that pack does not reach a system. The last turns on whether its
+   evaluation standards reach a hosted model, which only its maintainers can read.
 
 ## 9 · The smallest next slice
 
-**Write Standard 17, "Evaluation Plans for Generative Systems," and nothing else in the corpus.** This
-is an inference, not a plan entry: the recorded next slice was Standard 23, written on 2026-09-14.
+**No next slice is recorded, and the rule that chose the last two no longer chooses anything.**
+Standards 23 and 17 were picked because each was the only unwritten item owning catalog rules; with
+Standard 17 written on 2026-09-15, every item that owns rules has a document. Run `/whats-next` before
+starting rather than trusting this section. Candidates, all inferred rather than planned:
 
-Item 17 is now the only unwritten item that owns catalog rules: `rules/eval.json` holds five, all citing
-standard 17. It is posture **B**, recorded in `artifacts/boundary-review.json` with verdict CONFIRMED and
-evidence naming MachineLearningStandards' `12-metric-selection.md`: MachineLearningStandards governs
-metric selection and comparison for ML systems, and AIStandards the generative framing and the baseline
-for AI systems that are not ML systems. The document must read that evidence, link to the ML standard
-rather than copy it, and define the non-ML baseline directly. Re-check the choice with `/whats-next`
-before starting rather than trusting this paragraph.
+- **A check that every crosswalk's foreign id exists in `artifacts/foreign-namespace-inventory.json`.**
+  Three wrong MachineLearningStandards ids were found and corrected by hand in the fifth batch; nothing
+  would catch a fourth. The inventory is a snapshot that can only be behind, so such a check must say how
+  it treats an id newer than the snapshot.
+- **The Phase 2 tooling the phase cannot close without:** `scripts/manifest.mjs`,
+  `scripts/toolperms.mjs`, the templates and `init`, with `init` output asserted to satisfy zero rules.
+- **Another standard.** None now owns rules, so each would be prose only; pick by what later work
+  cites. Follow `artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` §5 and cite code by
+  symbol name. Do not start the remaining 39 in one pass.
 
-Follow `artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` §5. The document must carry a
-generated block for `rules/eval.json` and cite each of its rule ids in backticks in exactly one `### RN`
-section. Two of its rules are `forbidden`, so say whether they are item 50's prohibitions stated early,
-as Q12 and Q16 do for their items, rather than deciding it. Cite code by symbol name.
+**Q22 and Q7 are the open questions most likely to matter next.** Q22 decides whether this pack states
+any evaluation requirement for systems MachineLearningStandards does not reach, and cannot be answered
+without that pack's maintainers or an owner decision to author on its ground. Q7 is the only open
+question that changes an already-written standard's wording. Q9 to Q12 and Q15 to Q21 are also open
+(see §8).
 
-Semantic acceptance, not counters: `inventory.mjs` recognises the document as implementing item 17;
-its token resolves to the brief; it states which requirements have no rule; its deference to
-MachineLearningStandards matches the recorded posture; and every other item's status is unchanged.
-
-**Do not** start the remaining 39 standards in the same pass.
-
-**Q14 is the open question most likely to matter next**, because it concerns how Standard 5 words the
-distinctions every standard relies on. Q7, Q9, Q10, Q11, Q12 and Q15 to Q18 are also open (see §8);
-none is expected to block item 17 (inferred, not checked).
-
-Phase 2 tooling still unbuilt: `scripts/manifest.mjs`, `scripts/toolperms.mjs`, the templates and
-`init`. None is needed for item 17. `docs/architecture.md` was regenerated for the tree committed with
-the Q13 correction; regenerate it again with `/codebase-docs` after a behaviour change rather than
-editing it.
+`docs/architecture.md` is stale in the three places §1 names; regenerate it with `/codebase-docs` at the
+next behaviour change rather than editing it.
 
 ## 10 · Invariants — do not break these
 

@@ -177,8 +177,11 @@ own verdict, which is `NON_COMPLIANT`, and it blocks nothing in Phase 2 — but 
 coverage to stay unevaluated, so conforming the implementation is a correction, not a contract change;
 Standard 5 was not amended. `evaluateRule()` in `scripts/compliance.mjs` now reports a clean result from
 a rule declaring `assurance: partial` as `skipped` / `not-evaluated` — `prohibited-but-unestablished`
-for `misuse.safety-controls-not-disabled`, which is `forbidden` — so it counts toward neither
-`COMPLIANT` nor the score. A confirmed violation still fails, an unknown keeps its own reason, and
+for `misuse.safety-controls-not-disabled`, which is `forbidden` — so it earns no `passed` credit and
+holds the status away from `COMPLIANT`. An applicable partial rule stays in `denominator.scored`, so it
+lowers the score; `evaluate()` excludes only not-applicable and not-evaluable rules from that
+denominator. *Corrected 2026-09-15: this said the result counted toward neither `COMPLIANT` nor the
+score.* A confirmed violation still fails, an unknown keeps its own reason, and
 clean full-assurance checks still pass. Committed regressions: `test/fixtures/q13-synthetic-no-config/`
 and `q13-synthetic-env-block-none/`, synthetic inputs whose not-applicable declarations isolate the
 verdict path and are not applicability approvals, now report `NOT_EVALUATED` where they reported
@@ -190,9 +193,9 @@ What the resolution does not cover: coverage is keyed on the *declared* assuranc
 `full`-assurance check's own blind spots and a file a detector skips as unreadable are still Phase 3's
 evidence-availability work; `COMPLIANT` is unreachable while any partial-assurance rule applies; a rule
 added to `EVALUATED_RULES` with `assurance: none` is refused by a test rather than handled; and Standard
-5 R2's meanings table does not name the case (Q14).
+5 R2's meanings table does not name the case (Q14, resolved 2026-09-15).
 
-### Q14 — Should Standard 5 R2's meanings table name a partial check that ran and found nothing?
+### Q14 — Should Standard 5 R2's meanings table name a partial check that ran and found nothing? — **resolved 2026-09-15: yes, as clarification**
 
 R2's table describes `not-evaluated` as "Nobody looked, or a check could not run" and
 `prohibited-but-unestablished` as "A `forbidden`-level rule nobody examined". R6 requires `skipped` /
@@ -202,6 +205,25 @@ would state what R6 already requires rather than narrow anything, but it changes
 standard whose authored content has no owner approval. The human report's heading was renamed from
 "Prohibitions nobody examined" to "Prohibitions not established" for the same reason.
 **Impact if unanswered:** a reader of R2 alone may take either distinction to mean that no check ran.
+
+**Resolved 2026-09-15 — reworded as clarification of the existing R6 contract, not amended.** On the
+owner's instruction that aligning the wording with implemented R6 advances an existing requirement,
+Standard 5 R2's meanings table now names every path `evaluateRule()` in `scripts/compliance.mjs` takes to
+each distinction. `not-evaluated` (and `prohibited-but-unestablished` at `forbidden` level) covers a rule
+no detector examines, a `manual-review` rule not reviewed, a check that could not run, and a check that
+ran clean over a declared partial scope. `not-evaluable` rules keep their separate treatment: the same
+result and disposition, but outside the scored denominator and without effect on the status (R8). The
+`warning` row had said "a level below required", but the code keys on level `recommended` or severity
+`warning`; `skipped` is produced only by a not-applicable declaration, and nothing produces `excepted`,
+`attested` or `COMPLIANT_WITH_EXCEPTIONS` in this release. A note under R6 states the score precisely: a
+clean partial result earns no `passed` credit but stays in `denominator.scored` and lowers the score.
+It also gives the status precedence, reading R5's cap as excluding `not-evaluable` rules as R8 and
+`evaluate()` both require. The R1–R8 bolded sentences, the headings, the six values and runtime
+behaviour are unchanged. Evidence: five tests added to `test/compliance.test.mjs`; the worker reports that
+each of the four unit tests failed against at least one mutated copy of `compliance.mjs`, and the fifth,
+a property test over every fixture, was not mutation-tested; and the worked example (score 56 for
+`q13-synthetic-no-config/`, 100 for `q13-synthetic-full-only/`) matches `validate --json` output. Like
+the rest of Standard 5's authored content, the wording has no owner approval.
 
 ### Q15 — Does `agent.retrieved-content-not-instruction` belong to item 23?
 
@@ -234,6 +256,43 @@ requirement. Either item 23 gains authored normative content or Standard 45's at
 Standard 23 reads a tool returning fetched content as within those sources and other tool output, and
 the user's own message, as outside them. Whether they should be inside is item 22's and Standard 21's
 ground. **Impact if unanswered:** none while no detector binds the rule.
+
+### Q19 — Are the two forbidden evaluation rules item 50's prohibitions?
+
+`eval.no-test-set-tuning` and `eval.no-fabricated-results` are `forbidden`, were minted in Phase 1 and
+cite standard 17. Item 50, Evaluation Integrity Prohibitions, is the authored negative face of
+`benchmark integrity` — item 18's token, not item 17's `Model evaluation` — so the parallel with Q12
+and Q16 is weaker than it looks. **Impact if unanswered:** none on the wording of any written standard
+today. Item 50's document, when written, will have to say.
+
+### Q20 — Does `eval.regression-baseline-recorded` belong to item 20?
+
+The rule cites standard 17. Item 20 is Regression Testing Across Model and Prompt Versions; Standard 17
+R3 states the rule and leaves when regressions are tested, and what difference fails a change, to item
+20. The parallel is Q10. **Not resolved here, because the answer changes a rule's `standard` field.**
+**Impact if unanswered:** none while no detector binds the rule.
+
+### Q21 — Can `eval.no-test-set-tuning` stay `code-analysis`?
+
+The selection it forbids is as often a person choosing between runs, which leaves no code, and Standard
+17 R4 reads the rule as reaching both. MachineLearningStandards types its related
+`split.no-test-set-tuning` as `code-analysis` with `assurance: partial` and attestation, and its
+assurance note says the repeated-inspection half "is not code at all". **Not resolved here, because the
+answer changes a validation type.** **Impact if unanswered:** none while no detector binds the rule; a
+future detector would reach only the loop form.
+
+### Q22 — Should this pack state an evaluation baseline where MachineLearningStandards does not reach a system?
+
+Standard 7 R2 lets this pack define a baseline directly for a system that is not a machine-learning
+system. Standard 17 links metric justification (that pack's Standard 12), comparison conditions (19)
+and uncertainty (20) and states no requirement on them, so where that pack does not reach a system
+neither pack covers them. Which systems those are turns on whether its evaluation standards include a
+hosted model the project did not train, recorded as unknown in `artifacts/boundary-review.json` (item
+17); a hosted model or an absent training pipeline does not by itself decide it, and Standard 7 R2's
+hosted-model example was withdrawn on 2026-09-15 for that reason. **Not resolved here, because an answer
+either authors requirements on ground that pack owns or needs its maintainers' reading.** **Impact if
+unanswered:** for such systems, no requirement covers justifying a metric by the cost of error,
+quantifying uncertainty or holding a comparison's conditions identical.
 
 ## Not questions
 

@@ -53,12 +53,12 @@ Their meanings, which are not interchangeable:
 
 | Distinction | Means |
 | --- | --- |
-| `passed` | A check ran, covered the rule, and found no violation |
-| `failed` | A check ran and confirmed a violation |
-| `warning` | A check confirmed a violation of a rule the project adopted at a level below required |
-| `skipped` | The rule was not evaluated for a stated reason that is not ignorance — most often that the project declared it not-applicable |
-| `not-evaluated` | Nobody looked, or a check could not run. **This is not a pass** |
-| `prohibited-but-unestablished` | A `forbidden`-level rule nobody examined |
+| `passed` | A check ran, covered the rule, and found no violation. In this release "covered the rule" means the rule declares `assurance: full`: coverage is read from that declaration, not measured (R6) |
+| `failed` | A check ran and confirmed a violation, and the rule is neither adopted at `recommended` level nor of `warning` severity. The finding stands whatever the rule's declared assurance, and even where another check for the same rule could not run (R6) |
+| `warning` | A check confirmed a violation, and the rule is adopted at `recommended` level or its catalog severity is `warning`. A warning does not change the status |
+| `skipped` | The rule was not evaluated for a stated reason that is not ignorance. In this release the only such reason is the project's declaration that the rule is not-applicable (disposition `not-applicable`); the `excepted` and `attested` dispositions are in the vocabulary, but nothing produces them yet |
+| `not-evaluated` | No check established the rule's state, at any level other than `forbidden`. That is so when nobody looked — no detector examines the rule, or it is a `manual-review` rule whose review has not been performed; when a check could not run or could not read what it needed; and when a check ran and found nothing but its declared coverage is less than the rule (`assurance: partial`), so it cannot establish the whole rule (R6). **This is not a pass**. A `not-evaluable` rule carries the same result and disposition, but it sits outside the scored denominator and does not affect the status (R8) |
+| `prohibited-but-unestablished` | The same as `not-evaluated`, for a rule at `forbidden` level: a prohibition no check established, for any of the reasons in the row above — including a check that ran over a declared partial scope and found nothing (R4, R6). Each is also listed in `unestablishedProhibitions`. A `not-evaluable` prohibition is reported and listed the same way but, per R8, does not cap the status |
 
 ### R3 — Distinction is derived, never stored
 
@@ -111,6 +111,33 @@ bolded requirement above. The requirement is unchanged; the code was brought to 
 stands even when a different check for the same rule could not run, because an unknown elsewhere does
 not un-observe what was observed — but only the confirmed findings are carried as evidence, so the
 report never presents an unknown as the reason for a failure.
+
+What an unestablished result does to the status and the score, as `evaluate()` in
+[`scripts/compliance.mjs`](../scripts/compliance.mjs) computes them in this release, is described here
+and adds no requirement. A clean result from a partial-assurance rule is not `passed`, so it earns no
+credit in the score's numerator. It is not removed from the denominator: `denominator.scored` counts
+every applicable rule except `not-evaluable` ones, so an applicable, evaluable rule reporting
+`not-evaluated` — for any of R2's reasons, a clean partial check included — lowers the score just as a
+failure or a warning does. Only rules declared not-applicable and `not-evaluable` rules are excluded.
+The score is passed ÷ scored × 100, rounded to the nearest integer, and it is null when the status is
+`BLOCKED_BY_INVARIANT` or when nothing is scored. The status is decided in a fixed order: an invariant
+breach gives `BLOCKED_BY_INVARIANT` (R7); otherwise a `failed` result at `required` or `forbidden` level
+gives `NON_COMPLIANT`; otherwise any applicable rule with disposition `not-evaluated` that is not
+`not-evaluable` gives `NOT_EVALUATED` (R5, with R8 keeping `not-evaluable` rules out of that count);
+otherwise `COMPLIANT`. A warning never changes the status. `COMPLIANT_WITH_EXCEPTIONS` is in the status
+vocabulary and the report schema, but no branch of `evaluate()` produces it in this release, and nothing
+produces the `excepted` or `attested` disposition either. `assurance.automated` counts only results
+with disposition `evaluated`, so a partial-assurance rule appears there only when it confirmed a
+violation; its clean result counts in `assurance.notEvaluated`.
+
+For example, `test/fixtures/q13-synthetic-no-config/` — a synthetic test input whose not-applicable
+declarations isolate the verdict path and are not applicability approvals — has 14 applicable rules.
+The 5 `not-evaluable` ones are excluded, leaving 9 scored: the 5 full-assurance checks pass and the 4
+partial-assurance checks run clean and report unestablished. The status is `NOT_EVALUATED` and the
+score is 5 ÷ 9 × 100 = 55.6, rounded to 56, not 100. In `test/fixtures/q13-synthetic-full-only/`, where the synthetic policy
+declares the partial-assurance rules not-applicable, 5 of 5 scored rules pass and the status is
+`COMPLIANT` at 100, with two `not-evaluable` prohibitions still listed in `unestablishedProhibitions`,
+which R8 keeps from moving the status.
 
 ### R7 — An invariant breach blocks rather than scores
 
@@ -198,6 +225,11 @@ both of which are visible, rather than changing what the words mean.
 - **R6's aggregation truth table.** The brief requires that unavailable evidence never becomes a
   false pass; the truth table — three rows as first written, four since the 2026-09-14 correction that
   made it meet R6's bolded sentence — is the authored mechanism for it.
+- **The expanded meanings table under R2 and the note under R6 on status and score** (2026-09-15,
+  Q14). The brief names the six distinctions without defining their paths or any scoring. The
+  per-value explanations, the statement that an unestablished rule stays in the scored denominator,
+  the precedence order, the note that `COMPLIANT_WITH_EXCEPTIONS` is not produced in this release,
+  and the worked fixture example are authored descriptions of `evaluate()`. They add no requirement.
 - **R7 and `BLOCKED_BY_INVARIANT`.** The status is not in the brief. It is adopted from a sibling
   pack's precedent and recorded as an addition, not as the brief's word.
 - **R8's symmetry.** The brief does not mention coverage. The rule that unverifiability must not
@@ -222,11 +254,11 @@ the cap in R5.
 | Requirement | State |
 | --- | --- |
 | R1 | **Enforced.** [`schemas/validate-report.schema.json`](../schemas/validate-report.schema.json) is closed and enumerates each vocabulary separately |
-| R2 | **Enforced.** All six values are reachable across the fixtures, asserted directly. The meanings table does not name one case R6 requires: a partial-assurance check that ran and found nothing reports `not-evaluated`, or `prohibited-but-unestablished` at `forbidden` level, though the table describes those as nobody looking or a check not running. The wording is open as Q14; the behaviour follows R6 |
+| R2 | **Enforced.** All six values are reachable across the fixtures, asserted directly. *Clarified 2026-09-15 (Q14):* the meanings table now names the case R6 requires — a partial-assurance check that ran and found nothing reports `not-evaluated`, or `prohibited-but-unestablished` at `forbidden` level — alongside nobody looking, a `manual-review` rule not reviewed, and a check that could not run; keeps `not-evaluable` rules' separate treatment; says `passed` means `assurance: full` today, that `warning` follows level `recommended` or severity `warning`, and that only a not-applicable declaration produces `skipped`. The table first described those two values as nobody looking or a check not running. The bolded requirement, the six values and R6 are unchanged, and the clarification narrows nothing. Like the rest of this standard's authored content it has no owner approval |
 | R3 | **Enforced.** `distinction()` is a pure function; the test recomputes it independently |
 | R4 | **Enforced.** Branch order is asserted, and the array is checked bidirectionally |
 | R5 | **Enforced** |
-| R6 | **Enforced for checks that could not run** — the withdrawal and unknown paths — **and, since the 2026-09-14 Q13 correction, for checks whose rule declares `assurance: partial`**: `evaluateRule()` reports their clean result `skipped` / `not-evaluated`, so it counts toward neither `COMPLIANT` nor the score, while a confirmed violation still fails. Asserted by `test/partial-assurance.test.mjs` and `test/compliance.test.mjs`, including committed synthetic reproductions that had reported `COMPLIANT` at 100. **Coverage is keyed on the declared assurance, not measured**: a `full`-assurance check's own blind spots, and a file a detector skips as unreadable, are not detected. *Corrected twice on 2026-09-14: this row first said Enforced for the checks that exist, then recorded the partial-assurance gap as open.* The broader evidence-availability architecture — read budgets, truncation domains, unreadable-file withdrawal — is Phase 3 |
+| R6 | **Enforced for checks that could not run** — the withdrawal and unknown paths — **and, since the 2026-09-14 Q13 correction, for checks whose rule declares `assurance: partial`**: `evaluateRule()` reports their clean result `skipped` / `not-evaluated`, so it earns no `passed` credit and holds the status at `NOT_EVALUATED` when nothing outranks it, while it stays in `denominator.scored` and lowers the score (see the note under R6); a confirmed violation still fails. Asserted by `test/partial-assurance.test.mjs` and `test/compliance.test.mjs`, including committed synthetic reproductions that had reported `COMPLIANT` at 100. **Coverage is keyed on the declared assurance, not measured**: a `full`-assurance check's own blind spots, and a file a detector skips as unreadable, are not detected. *Corrected twice on 2026-09-14: this row first said Enforced for the checks that exist, then recorded the partial-assurance gap as open. Corrected 2026-09-15 (Q14): it said such a result "counts toward neither `COMPLIANT` nor the score", but it is excluded from the numerator only.* The broader evidence-availability architecture — read budgets, truncation domains, unreadable-file withdrawal — is Phase 3 |
 | R7 | **Enforced.** One invariant exists in this release: `invariant.applicability-contradicted` |
 | R8 | **Enforced** |
 

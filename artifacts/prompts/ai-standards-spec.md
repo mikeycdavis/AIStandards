@@ -208,7 +208,7 @@ under [Authored items](#authored-items).
 
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
-| 17 | Evaluation Plans for Generative Systems | D | `Model evaluation` | B | — |
+| 17 | Evaluation Plans for Generative Systems | D | `Model evaluation` | B | standards/17-evaluation-plans-for-generative-systems.md |
 | 18 | Benchmark Integrity and Contamination | D | `benchmark integrity` | B | — |
 | 19 | Robustness Evaluation | D | `robustness` | O | — |
 | 20 | Regression Testing Across Model and Prompt Versions | D | `regression testing` | O | — |

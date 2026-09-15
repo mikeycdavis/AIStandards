@@ -63,15 +63,16 @@ commit and buries whatever you were actually doing. It is recorded as an open it
 
 ## 2. Current state, verified 2026-09-14
 
-**Written: 13 of 53 standards** — `standards/01-ai-system-manifest.md`,
+**Written: 14 of 53 standards** — `standards/01-ai-system-manifest.md`,
 `02-ai-risk-tiering-and-applicability.md`, `03-machine-readable-ai-policy.md`,
 `05-verdict-vocabulary.md`, `06-standard-structure-and-rule-identity.md`,
 `07-boundary-with-adjacent-standards.md`, `08-ai-safety-requirements-and-safety-cases.md`,
 `09-misuse-and-abuse-prevention.md`, `11-autonomy-levels-and-delegated-authority.md`,
-`13-personal-data-in-ai-systems.md`, `21-prompt-and-instruction-security.md`,
-`23-agent-execution-security.md`, `45-approval-gates.md`.
+`13-personal-data-in-ai-systems.md`, `17-evaluation-plans-for-generative-systems.md`,
+`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `45-approval-gates.md`
+(Standard 17 added 2026-09-15).
 
-**40 standards remain unwritten.**
+**39 standards remain unwritten.**
 
 **Rules: 46 across 8 shards** — `rules/agent.json` (4), `eval.json` (5), `gate.json` (6),
 `lifecycle.json` (11, five of them Standard 08's), `misuse.json` (5, four of them Standard 09's),
@@ -260,7 +261,7 @@ node scripts/test.mjs && node scripts/inventory.mjs && node scripts/fidelity.mjs
 
 `node scripts/standards-sections.mjs` runs inside `node scripts/test.mjs` through
 `test/standards-sections.test.mjs`, and may also be run directly. Passing this command does not
-complete the phase: 40 standards, the templates and `init` remain.
+complete the phase: 39 standards, the templates and `init` remain.
 
 ## 8. Out of scope for this phase — a closed list
 
@@ -406,26 +407,39 @@ worktree created outside the repository at `308a0d7`; shared cells were edited o
 worktree created outside the repository at `c203d99`; shared cells were edited only during integration.
 
 - **Q13 resolved by option 1.** A clean result from a rule declaring `assurance: partial` reports
-  `skipped` / `not-evaluated` and never counts toward `COMPLIANT` or the score; violations, unknowns and
+  `skipped` / `not-evaluated`, earns no `passed` credit and holds the status away from `COMPLIANT`, while an
+  applicable partial rule stays in the scored denominator (corrected 2026-09-15); violations, unknowns and
   full-assurance checks are unchanged. Synthetic reproductions that reported `COMPLIANT` at 100 now
   report `NOT_EVALUATED`, asserted by `test/partial-assurance.test.mjs`. Standard 5's requirement was not
-  amended; its R2 wording is open as Q14.
+  amended; its R2 wording was open as Q14, clarified on 2026-09-15.
 - **Standard 23, "Agent Execution Security."** Class `D` (`agent, and retrieval security`), posture `O`.
   States the four Phase 1 agent rules unchanged (R1 to R4) and adds R5 with no rule; adds no rule and no
   sandboxing requirement. Q15 to Q18 record the placements and boundaries it could not settle.
 - **Evidence corrections.** Standards 1, 5, 9 and 21, four rule notes and a code comment restated for the
   new behaviour; three `not-evaluable` notes no longer promise a rule that does not exist.
 
+**2026-09-15, fifth batch — Standard 17 and the Q14 clarification.** Two sub-agents, each in a git
+worktree created outside the repository at `82ba7ea`; shared cells were edited only during integration.
+
+- **Standard 17, "Evaluation Plans for Generative Systems."** Class `D` (`Model evaluation`), posture `B`.
+  States the five `rules/eval.json` rules unchanged (R1 to R5) and adds R6 to R9 with no rule: the
+  evaluated subject, the scorer, non-numeric results, and a bar on this framework reporting an
+  evaluation sound from inspection. Links MachineLearningStandards Standards 2, 5, 12, 14, 15, 19 and 20,
+  read at the pinned commit, and restates none; states no baseline for those subjects where that pack
+  does not reach a system (Q22). Q19 to Q22 record what it could not settle.
+- **Q14 resolved as clarification.** Standard 5 R2's meanings table names every path to each
+  distinction, including a partial check that ran clean; a note under R6 states that such a result earns
+  no `passed` credit but stays in the scored denominator. No bolded requirement changed.
+- **Evidence corrections.** The sentence "counts toward neither `COMPLIANT` nor the score" was wrong about
+  the denominator and is corrected in Standard 5, the handoff, this plan, Q13's resolution and a comment
+  in `scripts/compliance.mjs`. Three crosswalks named MachineLearningStandards ids that exist at neither
+  recorded commit (`eval.plan-exists`, `eval.no-test-set-tuning`, `lifecycle.model-version-pinned`) and
+  now name real ones. Standard 7 R2's hosted-model example of a non-ML system is withdrawn.
+
 ## 11. The next slice
 
-**Standard 17 — Evaluation Plans for Generative Systems.** Standard 23 was written on 2026-09-14 and is
-no longer next. This choice is inferred rather than planned; `docs/HANDOFF.md` §9 gives the reasoning.
+**Not recorded, and no longer decided by rule ownership.** With Standard 17 written on 2026-09-15, every
+item that owns catalog rules has a document, so the rule that picked items 23 and 17 picks nothing.
+Re-run `/whats-next` before starting; `docs/HANDOFF.md` §9 lists the candidates (inferred).
 
-Item 17 is the only unwritten item that still owns catalog rules (`rules/eval.json`, five). It is
-posture `B`, with recorded boundary evidence deferring metric selection and comparison to
-MachineLearningStandards for ML systems, so the document must link to that standard rather than copy
-it and define the baseline for non-ML AI systems directly. It must carry a `rules/eval.json` generated
-block and cite each of those ids in backticks in exactly one `### RN` section before
-`node scripts/sync-rule-tables.mjs` will pass.
-
-Q7, Q9, Q10, Q11, Q12 and Q14 to Q18 remain open. None is expected to block item 17 (inferred).
+Q7, Q9 to Q12 and Q15 to Q22 remain open.

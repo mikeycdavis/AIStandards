@@ -22,9 +22,9 @@
       "crosswalk": [
         {
           "pack": "MachineLearningStandards",
-          "rule": "evaluation.metric-selection",
+          "rule": "evaluation.metric-selection-justified",
           "relationship": "defers-to",
-          "note": "MachineLearningStandards owns metric selection and model comparison. This rule adds only the generative-system framing: rubric and judge protocols, and non-numeric outputs. It does not restate ML's requirements."
+          "note": "MachineLearningStandards Standard 12 owns choosing and justifying the primary metric, and recording it before the reported evaluation, for the evaluations it reaches; its model comparison is Standard 19. This rule adds the plan's data and bar and the generative-system framing: rubric and judge protocols, and non-numeric outputs. It does not restate ML's requirements. Whether Standard 12 reaches a hosted model the project did not train is not stated by that pack."
         }
       ]
     },
@@ -88,9 +88,9 @@
       "crosswalk": [
         {
           "pack": "MachineLearningStandards",
-          "rule": "leakage.target-leakage",
+          "rule": "split.no-test-set-tuning",
           "relationship": "defers-to",
-          "note": "MachineLearningStandards owns leakage for datasets under the project's control. This rule covers prompt and configuration selection against a generative held-out set, which ML's rules do not reach."
+          "note": "MachineLearningStandards Standards 14 P1 and 5 P1 forbid any model choice made in light of the final test set, by automated search or by repeated human inspection, for the work they reach. Their texts do not name prompts, and whether that rule reaches prompt or configuration selection for a hosted model is not stated there. This rule states the prohibition for prompts, models and configuration selected against a generative held-out set."
         }
       ]
     },

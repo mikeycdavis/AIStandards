@@ -2,9 +2,11 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { evaluate, envelope, STATUS, RESULT, DISPOSITION, DISTINCTION } from "../scripts/compliance.mjs";
 import { loadCatalog, resolve } from "../scripts/catalog.mjs";
-import { validate, fixture, resultFor } from "./helpers.mjs";
+import { validate, fixture, resultFor, HERE } from "./helpers.mjs";
 
 // A minimal resolved-policy map, so the decision order can be tested without a fixture for each case.
 function resolvedOf(entries) {
@@ -423,4 +425,117 @@ test("Q13 decision order: a required failure still outranks an unestablished par
   assert.equal(v.status, STATUS.NON_COMPLIANT);
   assert.equal(v.score, 0);
   assert.equal(v.unestablishedProhibitions.length, 1);
+});
+
+// --- Q14: Standard 5's R2 meanings and R6 status-and-score note ---------------------------------
+//
+// Each test pins a statement the clarified text makes that no earlier test asserted directly. They
+// describe evaluate() as it is; none of them adds a requirement.
+
+test("Q14: a forbidden not-evaluable rule is prohibited-but-unestablished and listed, but caps nothing", () => {
+  const v = evaluate({
+    resolved: resolvedOf({
+      "a.one": {},
+      "c.unknowable": { level: "forbidden", validationType: "not-evaluable", $notEvaluableNote: "n" },
+    }),
+    observations: [{ rule: "a.one", message: "clean" }],
+    evaluatedRules: EVALUATED,
+  });
+  const r = v.results.find((x) => x.rule === "c.unknowable");
+  assert.equal(r.result, RESULT.skipped);
+  assert.equal(r.disposition, DISPOSITION.notEvaluated);
+  assert.equal(r.distinction, DISTINCTION.prohibitedButUnestablished);
+  assert.deepEqual(v.unestablishedProhibitions.map((p) => p.rule), ["c.unknowable"], "reported and listed the same way");
+  assert.deepEqual(v.notEvaluable.map((n) => n.rule), ["c.unknowable"]);
+  assert.equal(v.status, STATUS.COMPLIANT, "R8: a not-evaluable prohibition does not cap the status");
+  assert.equal(v.score, 100);
+  assert.equal(v.denominator.applicable, 2);
+  assert.equal(v.denominator.scored, 1, "outside the scored denominator");
+});
+
+test("Q14: a manual-review rule nobody reviewed is not-evaluated, caps the status, and stays scored", () => {
+  const v = evaluate({
+    resolved: resolvedOf({ "a.one": {}, "m.review": { validationType: "manual-review" } }),
+    observations: [{ rule: "a.one", message: "clean" }],
+    evaluatedRules: EVALUATED,
+  });
+  const r = v.results.find((x) => x.rule === "m.review");
+  assert.equal(r.result, RESULT.skipped);
+  assert.equal(r.disposition, DISPOSITION.notEvaluated);
+  assert.equal(r.distinction, DISTINCTION.notEvaluated);
+  assert.match(r.message, /^Requires human review\./);
+  assert.equal(v.status, STATUS.NOT_EVALUATED);
+  assert.equal(v.denominator.scored, 2);
+  assert.equal(v.score, 50);
+  assert.deepEqual(v.assurance, { automated: 1, manualReview: 1, notEvaluated: 1 });
+});
+
+test("Q14 scoring: failed, warning and unestablished results stay in the denominator; only not-applicable and not-evaluable leave it", () => {
+  const v = evaluate({
+    resolved: resolvedOf({
+      "a.pass": {},
+      "a.fail": {},
+      "a.warn": { level: "recommended", severity: "warning" },
+      "a.unknown": {},
+      "b.nodetector": {},
+      "c.na": { applicable: false, reason: "no subject here" },
+      "c.ne": { validationType: "not-evaluable", $notEvaluableNote: "n" },
+    }),
+    observations: [
+      { rule: "a.pass", message: "clean" },
+      { rule: "a.fail", violation: true, message: "x" },
+      { rule: "a.warn", violation: true, message: "y" },
+      { rule: "a.unknown", unknown: true, message: "could not run" },
+    ],
+    evaluatedRules: ["a.pass", "a.fail", "a.warn", "a.unknown"],
+  });
+  assert.equal(v.denominator.total, 7);
+  assert.equal(v.denominator.applicable, 6);
+  assert.equal(v.denominator.scored, 5, "pass, fail, warn, unknown and no-detector are scored");
+  assert.equal(v.score, 20, "round(1 / 5 * 100)");
+  assert.deepEqual(v.summary, { passed: 1, failed: 1, warnings: 1, skipped: 4 });
+  assert.equal(v.status, STATUS.NON_COMPLIANT);
+});
+
+test("Q14 scoring: the score is null when nothing is scored, not only under an invariant breach", () => {
+  const v = evaluate({
+    resolved: resolvedOf({
+      "c.na": { applicable: false, reason: "no subject here" },
+      "c.ne": { validationType: "not-evaluable", $notEvaluableNote: "n" },
+    }),
+    observations: [],
+    evaluatedRules: EVALUATED,
+  });
+  assert.deepEqual(v.invariantViolations, []);
+  assert.notEqual(v.status, STATUS.BLOCKED_BY_INVARIANT);
+  assert.equal(v.denominator.scored, 0);
+  assert.equal(v.score, null);
+});
+
+test("Q14: across every fixture, no COMPLIANT_WITH_EXCEPTIONS, no excepted or attested result, and skipped only from not-applicable", () => {
+  const dirs = fs
+    .readdirSync(path.join(HERE, "fixtures"), { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
+    .sort();
+  let envelopes = 0;
+  let skippedSeen = 0;
+  for (const name of dirs) {
+    const { json } = validate(fixture(name));
+    if (!json || !Array.isArray(json.results)) continue;
+    envelopes += 1;
+    assert.notEqual(json.status, STATUS.COMPLIANT_WITH_EXCEPTIONS, `${name}: evaluate() has no branch producing it`);
+    for (const r of json.results) {
+      assert.ok(
+        ![DISPOSITION.excepted, DISPOSITION.attested].includes(r.disposition),
+        `${name}: ${r.rule} reports ${r.disposition}, which nothing in this release produces`,
+      );
+      if (r.distinction === DISTINCTION.skipped) {
+        skippedSeen += 1;
+        assert.equal(r.disposition, DISPOSITION.notApplicable, `${name}: ${r.rule} is skipped for a reason other than not-applicable`);
+      }
+    }
+  }
+  assert.ok(envelopes >= 20, `only ${envelopes} fixtures produced an envelope`);
+  assert.ok(skippedSeen > 0, "no skipped distinction was seen, so the property is vacuous");
 });

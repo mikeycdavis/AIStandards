@@ -78,10 +78,17 @@ MUST NOT restate its requirement in local words.**
 A restatement is a fork. It drifts on the first amendment to the original, and from then on a project
 satisfying one is in breach of the other with no way to tell which is current.
 
-Where an AI system is **not** a machine-learning system — a retrieval application over a hosted
-model, which trains nothing — this pack MAY define the applicable baseline directly, because there is
-no ML standard governing a system with no training run. That is an addition, not a substitution, and
-it says so where it appears.
+Where an AI system is **not** a machine-learning system, this pack MAY define the applicable baseline
+directly, because no ML standard governs it. That is an addition, not a substitution, and it says so
+where it appears.
+
+*Corrected 2026-09-15: this paragraph gave "a retrieval application over a hosted model, which trains
+nothing" as an example of such a system, and said no ML standard governs a system with no training
+run. Neither follows. Using a hosted model, or having no training pipeline, does not by that fact place
+a system outside MachineLearningStandards: whether that pack's evaluation standards reach a hosted
+model the project did not train is recorded as unknown in
+[`artifacts/boundary-review.json`](../artifacts/boundary-review.json) (item 17), and nothing in that
+pack resolves it. The permission itself is unchanged.*
 
 ### R3 — Canonical AI-facing rules are this pack's, and the crosswalk is semantic
 

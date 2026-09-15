@@ -121,6 +121,7 @@ test("only the standards written so far exist", () => {
     "09-misuse-and-abuse-prevention.md",
     "11-autonomy-levels-and-delegated-authority.md",
     "13-personal-data-in-ai-systems.md",
+    "17-evaluation-plans-for-generative-systems.md",
     "21-prompt-and-instruction-security.md",
     "23-agent-execution-security.md",
     "45-approval-gates.md",
