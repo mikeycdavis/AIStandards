@@ -14,7 +14,8 @@
     "inventory": "node scripts/inventory.mjs",
     "catalog-sync": "node scripts/sync-rule-tables.mjs",
     "catalog-sync:check": "node scripts/sync-rule-tables.mjs --check",
-    "sections": "node scripts/standards-sections.mjs"
+    "sections": "node scripts/standards-sections.mjs",
+    "init": "node scripts/init.mjs"
   },
   "engines": {
     "node": ">=18"

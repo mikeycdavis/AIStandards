@@ -30,6 +30,16 @@ node scripts/standards.mjs validate /path/to/repo --json
 
 The policy-aware verdict. Reads `ai-policy.yml` **from the target**, never from this checkout.
 
+```bash
+node scripts/standards.mjs init /path/to/repo --docs
+```
+
+Writes scaffolding into an explicitly named directory: a manifest, a permission file and a starter policy,
+plus narrative templates with `--docs`. It never defaults to the current directory, never writes into this
+pack, and refuses the whole run rather than overwrite a file you have edited. **What it writes is not
+evidence.** A freshly initialised project reports `NON_COMPLIANT` with no rule passed, and stays that way
+until a person writes the manifest.
+
 Requires Node 18 or later. There are no dependencies to install, and that is a decision rather than
 an omission — every import is a `node:` builtin or a local module.
 
@@ -88,7 +98,7 @@ prove the document skeleton at both extremes. 2, 8, 9, 11, 13, 17 and 23 are the
 is not a defect to be hidden: an AI standards pack is mostly manual review, and a design claiming
 otherwise would be claiming detectors nobody has written.
 
-**Not in this release, deliberately.** `init` (later in Phase 2), attestations and exceptions (Phase 4),
+**Not in this release, deliberately.** Attestations and exceptions (Phase 4),
 containers, workflows and the StandardsEnforcer adapter (Phase 5). The escape hatch is built after
 the checks it is an escape from, never before — a sibling pack in this portfolio records what
 happened when its bootstrap wrote evidence its own evaluator then accepted. `test/no-phase-creep.test.mjs`

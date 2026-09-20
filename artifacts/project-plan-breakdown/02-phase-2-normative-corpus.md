@@ -85,9 +85,11 @@ namespaces have no shard. **Nine** of the 46 rules are reachable by a detector (
 2026-09-14 batch it also refuses a written standard missing a block for a shard holding its rules) and
 `scripts/standards-sections.mjs` (read-only document conformance).
 
-**Not built, despite appearing in the Deliverables list below:** `scripts/manifest.mjs`,
-`scripts/toolperms.mjs`, `scripts/init.mjs`, `artifacts/standards-source-inventory.json`, and every
-template.
+**Built 2026-09-19 (§12):** `scripts/manifest.mjs`, `scripts/toolperms.mjs`, `scripts/init.mjs` and
+`templates/` (twelve templates and `index.json`).
+
+**Not built, despite appearing in the Deliverables list below:**
+`artifacts/standards-source-inventory.json`.
 
 ---
 
@@ -95,8 +97,9 @@ template.
 
 Write the full normative corpus and prove it traces to the brief. The two blocking catalog reviews
 that gate this phase have run and pass mechanically (see §9). The remaining work is the 40 unwritten
-standards, shards for the nine reserved namespaces that have none, `manifest.mjs`, `toolperms.mjs`,
-the templates, and `init`.
+standards, shards for the nine reserved namespaces that have none, and
+`artifacts/standards-source-inventory.json`. `manifest.mjs`, `toolperms.mjs`, the templates and `init`
+were built on 2026-09-19.
 
 ## 4. Deliverables
 
@@ -109,10 +112,10 @@ the templates, and `init`.
 - Shards for the nine reserved namespaces that have none, to roughly 96 rules. **Eight shards exist,
   46 rules**; Standards 11, 08 and 09 added rules during this phase.
 - All templates: manifest, threat model, evaluation plan, tool permissions, incident report,
-  red-team report, ADR, starter policy, agent instruction files. **None written.**
+  red-team report, ADR, starter policy, agent instruction files. **Written 2026-09-19** (§12).
 - `scripts/inventory.mjs` **(done)**, `fidelity.mjs` **(done)**, `sync-rule-tables.mjs` **(done 2026-09-14)**,
-  `standards-sections.mjs` **(done 2026-09-14)**, `manifest.mjs`, `toolperms.mjs`.
-- `scripts/init.mjs` — bootstraps a consuming project, writing scaffold markers. **Not written.**
+  `standards-sections.mjs` **(done 2026-09-14)**, `manifest.mjs` and `toolperms.mjs` **(done 2026-09-19)**.
+- `scripts/init.mjs` — bootstraps a consuming project, writing scaffold markers. **Done 2026-09-19.**
 
 ---
 
@@ -249,7 +252,8 @@ right — do not treat a target number as the goal.
 - [x] Generated rule tables match the catalog byte-for-byte — *`node scripts/sync-rule-tables.mjs --check`,
       since 2026-09-14, which also fails a written standard missing a block for a shard holding its
       rules*
-- [ ] **`init` output satisfies zero rules**, asserted directly *(blocked: `init.mjs` unwritten)*
+- [x] **`init` output satisfies zero rules**, asserted directly — `test/init-e2e.test.mjs` initialises a
+      disposable target from the real templates and asserts no result is `passed`; see §12.6
 
 ## 7. Verification — the phase exit command
 
@@ -261,7 +265,8 @@ node scripts/test.mjs && node scripts/inventory.mjs && node scripts/fidelity.mjs
 
 `node scripts/standards-sections.mjs` runs inside `node scripts/test.mjs` through
 `test/standards-sections.test.mjs`, and may also be run directly. Passing this command does not
-complete the phase: 39 standards, the templates and `init` remain.
+complete the phase: 39 standards, the nine missing shards and
+`artifacts/standards-source-inventory.json` remain.
 
 ## 8. Out of scope for this phase — a closed list
 
@@ -436,6 +441,18 @@ worktree created outside the repository at `82ba7ea`; shared cells were edited o
   recorded commit (`eval.plan-exists`, `eval.no-test-set-tuning`, `lifecycle.model-version-pinned`) and
   now name real ones. Standard 7 R2's hosted-model example of a non-ML system is withdrawn.
 
+**2026-09-19, sixth batch — the adoption slice.** A coordinator prerequisite, then two sub-agents, each in a
+git worktree created outside the repository at `a2d5069`; shared cells were edited only during integration.
+
+- **Prerequisite (`a2d5069`):** scaffold manifests and permission files no longer make the four rules that
+  read them pass (§12.1), and the contract in §12 was fixed.
+- **`templates/`, `scripts/manifest.mjs`, `scripts/toolperms.mjs`** — twelve templates and a registry;
+  classification of the two machine files from text, in one place, called by the detectors.
+- **`scripts/init.mjs`**, routed from `standards init` — initialises an explicitly selected target;
+  refuses the pack checkout, refuses the whole run on any conflict, rolls back on failure.
+- **Integration:** detector wiring, the phase guard (later-phase restrictions retained), runner registration,
+  `package.json` command, README, handoff.
+
 ## 11. The next slice
 
 **Not recorded, and no longer decided by rule ownership.** With Standard 17 written on 2026-09-15, every
@@ -527,3 +544,28 @@ format, marker}]}`, one entry per file in `templates/` and no file unlisted. `gr
 Fill `humanSignOff`, decide hosted-model applicability, assert any applicability, or make a schema-valid file
 count as evidence. The foreign-crosswalk id check stays pending. Cross-references in the templates to
 MachineLearningStandards follow Standard 17's pinned-source findings and add no ML-owned requirement.
+
+### 12.6 Outcome, 2026-09-19
+
+Built to §12.2–§12.4. Decisions the workers made beyond the contract, each inferred and reversible:
+
+- **`init` refuses a registry with no core `ai-policy.yml` entry**, and refuses a starter policy whose
+  `standardVersion` differs from `VERSION`: either would make every `validate` of the adopter exit 2.
+- **Registry destinations are refused if absolute, drive-lettered, containing `..`, a backslash or a colon,
+  or duplicated case-insensitively.**
+- **`--force-overwrite` naming a destination outside the selected plan is an error**, so a typo cannot
+  silently do nothing; naming an in-plan file that already matches is accepted as harmless.
+- **`classifyManifest()` and `classifyToolPermissions()` expose `scaffold` separately from `status`.**
+  A schema-invalid file that also carries the marker is `invalid`, and the detectors still treat it as a
+  scaffold for the rules that read it, exactly as before; using `status` alone would have changed that.
+- **The human report's closing NOTE also prints on a refused run**, where nothing was written. Cosmetic.
+
+**Known limits.** Templates are LF in git and CRLF in this Windows working tree, and `init` copies
+working-tree bytes, so a target inherits the checkout's line endings. Repeating `init` is unchanged within
+one checkout. No `.gitattributes` was added (Q8). `init` writes no `evaluation-plan.yml`, no `.gitignore`
+entry and nothing outside the three core files and the optional `docs/ai/` set. The file set, marker forms,
+destination and conflict behaviour are the coordinator's inference from the plan, the schemas and Standard 17;
+the owner may reverse any of them.
+
+**What proves §6's criterion.** `node --test --test-concurrency=1 test/init-e2e.test.mjs` (real templates, with
+and without `--docs`); `test/init.test.mjs` covers the same property on synthetic templates.

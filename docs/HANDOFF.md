@@ -29,11 +29,14 @@ most likely way to go wrong here.
 (`git log --grep "Q13"`), because the safety-detector repair and the Q13 correction had changed
 behaviour it described, not only its line counts. Earlier regenerations: 2026-09-14 against the tree
 committed with Standard 09, and 2026-09-06 against `70832f4`, which had replaced a hand-scanned version.
-**It was not regenerated for the 2026-09-15 commit** (`git log --grep "Standard 17"`), which changed
-no behaviour, and three things in it are now stale: it counts 13 of 53 standards; its account of
-`evaluateRule()` says a narrow clean search no longer counts toward the score, when it earns no credit
-but stays in the scored denominator; and its gaps table lists Q14 as open. Regenerate it at the next
-behaviour change rather than patching those lines. `docs/architecture.mmd` and `docs/validate-flow.mmd`
+**It was not regenerated for the 2026-09-15 commit** (`git log --grep "Standard 17"`) **nor for the
+adoption slice of 2026-09-19** (`git log --grep "adoption"`), and it is now stale in these places: it counts
+13 of 53 standards; its account of `evaluateRule()` says a narrow clean search no longer counts toward the
+score, when it earns no credit but stays in the scored denominator; its gaps table lists Q14 as open; and,
+most materially, it describes no `init` command, no `templates/`, no `scripts/manifest.mjs` or
+`scripts/toolperms.mjs`, and predates the change that makes the four rules reading a scaffold report
+not-evaluated. Regenerate it with `/codebase-docs` rather than patching those lines; it is the first thing
+the next session should do if it needs the architecture to be true. `docs/architecture.mmd` and `docs/validate-flow.mmd`
 are its canonical diagram sources; the fenced blocks inside the document are byte-identical copies,
 verified programmatically. No SVG is rendered — that would require a build-time download, and this
 repository has no dependencies. **Do not hand-patch the architecture document; regenerate it.**
@@ -78,12 +81,12 @@ could not run reports as not-evaluated, a prohibition nobody established reports
 
 | Fact | Value |
 |---|---|
-| Runtime | Node ≥ 18 declared in `package.json`, ESM `.mjs` throughout. **Executed** on 2026-09-14 against the tree committed with Standard 09: Node 18.20.8, 20.19.6, 22.23.2 and 24.21.0 in locally present Docker images, and 24.15.0 on the host, all 316 tests passing. On the tree committed with Standard 13, the seven test files covering the changed detector and splitter (93 tests) were re-run on Node 18.20.8 in a local Docker image, and the full suite of 333 on the host's 24.15.0; nothing was re-run on 20.x or 22.x for that commit. On the tree committed with the Q13 correction and Standard 23, ten test files covering the changed evaluation code and catalog (157 tests) ran on Node 18.20.8 in a local Docker image, and the full suite of 367 on the host's 24.15.0; 20.x and 22.x were not re-run. On the tree committed with Standard 17 and the Q14 clarification, which changed documents, catalog crosswalks, a code comment and tests but no runtime code, only the full suite of 374 ran, on the host's 24.15.0; no other runtime was re-run. **Every other version is unverified, including 18.0.0–18.20.7** |
+| Runtime | Node ≥ 18 declared in `package.json`, ESM `.mjs` throughout. **Executed** on 2026-09-14 against the tree committed with Standard 09: Node 18.20.8, 20.19.6, 22.23.2 and 24.21.0 in locally present Docker images, and 24.15.0 on the host, all 316 tests passing. On the tree committed with Standard 13, the seven test files covering the changed detector and splitter (93 tests) were re-run on Node 18.20.8 in a local Docker image, and the full suite of 333 on the host's 24.15.0; nothing was re-run on 20.x or 22.x for that commit. On the tree committed with the Q13 correction and Standard 23, ten test files covering the changed evaluation code and catalog (157 tests) ran on Node 18.20.8 in a local Docker image, and the full suite of 367 on the host's 24.15.0; 20.x and 22.x were not re-run. On the tree committed with Standard 17 and the Q14 clarification, which changed documents, catalog crosswalks, a code comment and tests but no runtime code, only the full suite of 374 ran, on the host's 24.15.0; no other runtime was re-run. On the tree committed with the adoption slice, the twelve test files covering the changed runtime code (198 tests, none skipped, including `init` against real symlinks) ran on Node 18.20.8 in a local Docker image, and the full suite of 449 on the host's 24.15.0; 20.x and 22.x were not re-run. **Every other version is unverified, including 18.0.0–18.20.7** |
 | Package manager | **None used.** There are no dependencies to install, and no lockfile exists |
 | Dependencies | **Zero third-party, structurally.** `test/no-phase-creep.test.mjs` fails if a lockfile appears |
 | Test framework | `node:test` + `node:assert/strict`. Nothing else |
 | Host OS during development | Windows 11, PowerShell 7 |
-| Git | Branch `develop`. Checkpoint commit **`d4b4ee2`** (2026-09-04) tracks the whole implementation; **`70832f4`** adds Standard 02; **`fc060bf`** (2026-09-06) adds Standard 11, the `oversight` shard and the regenerated documentation; the 2026-09-14 batch commit (`git log --grep "Standard 08"`) adds Standard 08, the rule-table generator and the document-conformance checker; the Standard 09 commit (`git log --grep "Standard 09"`) adds Standard 09, four misuse rules, the rule-table coverage check and the regenerated architecture document; the Standard 13 commit (`git log --grep "Standard 13"`) adds Standard 13 and the safety-detector repair; the Q13 commit (`git log --grep "Q13"`) brings partial-assurance evaluation to Standard 5 R6 and adds Standard 23; the Standard 17 commit (`git log --grep "Standard 17"`) adds Standard 17, clarifies Standard 5's meanings and scoring (Q14) and corrects three crosswalks |
+| Git | Branch `develop`. Checkpoint commit **`d4b4ee2`** (2026-09-04) tracks the whole implementation; **`70832f4`** adds Standard 02; **`fc060bf`** (2026-09-06) adds Standard 11, the `oversight` shard and the regenerated documentation; the 2026-09-14 batch commit (`git log --grep "Standard 08"`) adds Standard 08, the rule-table generator and the document-conformance checker; the Standard 09 commit (`git log --grep "Standard 09"`) adds Standard 09, four misuse rules, the rule-table coverage check and the regenerated architecture document; the Standard 13 commit (`git log --grep "Standard 13"`) adds Standard 13 and the safety-detector repair; the Q13 commit (`git log --grep "Q13"`) brings partial-assurance evaluation to Standard 5 R6 and adds Standard 23; the Standard 17 commit (`git log --grep "Standard 17"`) adds Standard 17, clarifies Standard 5's meanings and scoring (Q14) and corrects three crosswalks; the adoption commit (`git log --grep "adoption"`) adds the templates, `manifest.mjs`, `toolperms.mjs` and `init`, preceded by `a2d5069`, which stopped scaffolding satisfying any rule |
 
 There is no install step. Clone and run.
 
@@ -104,8 +107,8 @@ portable evidence.** The development checkout holds `.claude/settings.local.json
 check-ignore -v` attributes its ignoring to a user-level global ignore file, not to any rule in this
 repository. An environment without that file, or unable to read it, sees `.claude/` as untracked.
 `audit` does not exclude `.claude/` either, so its file count includes that file where it exists:
-88 in the development checkout on the tree committed with Standard 17 (87 with the Q13 correction, 85
-with Standard 13, 83 with Standard 09), where a clone without it would count 87.
+109 in the development checkout on the tree committed with the adoption slice (88 with Standard 17, 87 with
+the Q13 correction, 85 with Standard 13, 83 with Standard 09), where a clone without it would count 108.
 
 ## 4 · Commands
 
@@ -162,7 +165,7 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
   same day, making **46**
 - 12 detectors: 4 descriptive (bound to no rule), 8 judgmental
 - 5 schemas; policy resolution against the **target**, never this checkout
-- 21 test files, **374** assertions on the tree committed with Standard 17 (367 with the Q13 correction; 20 and 333 with
+- 26 test files, **449** assertions on the tree committed with the adoption slice (21 and 374 with Standard 17; 367 with the Q13 correction; 20 and 333 with
   Standard 13; 19 and 316 with Standard 09; 17 files and 227 on 2026-09-06). *Corrected 2026-09-14: this line had said 20 files, and 18 on 2026-09-06; the explicit
   list in `scripts/test.mjs` holds 19, and held 17 at every earlier commit.*
 
@@ -175,6 +178,8 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
   written standard missing a block for a shard that holds its rules) and
   `scripts/standards-sections.mjs` (read-only document conformance), both 2026-09-14
 - **14 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 45**
+- `templates/` (twelve templates and `index.json`), `scripts/manifest.mjs`, `scripts/toolperms.mjs` and
+  `scripts/init.mjs`, all 2026-09-19 — see the sixth batch below
 
 **Standard 02, "AI Risk Tiering and Applicability", landed 2026-09-04** as the first Phase 2 corpus
 slice. It is class **A** (authored — the brief names ten subject areas and no way to decide which
@@ -420,10 +425,47 @@ scope; shared cells were edited only during integration.
   crosswalk's foreign id exists. Standard 7 R2's example of a non-ML system, "a retrieval application
   over a hosted model", is withdrawn with a dated note; its permission is unchanged.
 
+**2026-09-19, sixth batch — the adoption slice.** A coordinator prerequisite, then two sub-agents, each in
+a git worktree created outside the repository at `a2d5069` with an exclusive file scope. The contract they
+built to is §12 of `artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md`; every decision in it is
+the coordinator's inference from the plan, the schemas and Standard 17, and the owner may reverse any.
+
+- **Prerequisite, `a2d5069`: scaffolding is not evidence for any rule that reads it.** A scaffold manifest is
+  schema-valid by construction. `validate` had reported four of the five `assurance: full` rules *passed*
+  on it — `lifecycle.manifest-exists`, `lifecycle.manifest-valid` and, vacuously because a scaffold
+  declares no tools, both `gate.` rules — and `test/scaffolding.test.mjs` tolerated a score rise of 20.
+  Those four now report `skipped` / `not-evaluated` while the file they read is a scaffold, for the
+  manifest and the permission file alike; only `lifecycle.manifest-not-scaffold` reports on it, as
+  `failed`; a violation the file genuinely contains still stands. Two of the new tests fail against the
+  previous detectors.
+- **`init`.** `node scripts/standards.mjs init <target> [--docs] [--dry-run] [--force-overwrite=<file>] [--json]`
+  (also `node scripts/init.mjs`, `npm run init`). It writes `ai-system.yml`, `tool-permissions.yml` and
+  `ai-policy.yml`, and with `--docs` six narrative templates under `docs/ai/`. The three agent-instruction
+  templates are reference files and are never written. It requires an explicit target, refuses the pack
+  checkout by real path, refuses the **whole run** on any conflict with an edited file, refuses symlinked
+  parents, writes through temporary files and rolls back on failure. Repeating it is exit 0 with every file
+  `unchanged`. It fills in no declaration: the manifest carries only `REPLACE-ME` name, purpose and model,
+  the permission file is `tools: []`, and the starter policy lists every catalog rule at its catalog level
+  with no `applicability` block and no `project`.
+- **What was proved, by inspecting a real initialised target as well as by test.** Before init, `validate`
+  exits 2 with no envelope and `audit` emits no status or score. After `init --docs`: status
+  `NON_COMPLIANT`, score 0, **zero results `passed`**, exactly one `failed`
+  (`lifecycle.manifest-not-scaffold`), 33 `not-evaluated` and 12 `prohibited-but-unestablished`, the
+  target's own policy resolved and `project` the target's name. A user's edited file survives a re-run and
+  the run exits 2 with nothing else written.
+- **`scripts/manifest.mjs` and `scripts/toolperms.mjs`** classify the two machine files from text into
+  `unparseable`, `invalid`, `scaffold` or `ok`, and the detectors in `scripts/standards.mjs` now call
+  them. A schema-invalid file that also carries the marker is `invalid`, and is still treated as a
+  scaffold for the rules that read it.
+- **Guard.** `test/no-phase-creep.test.mjs` now requires these files and that a bare `init` refuses; the
+  attestation, exception, container, workflow and adapter restrictions are unchanged.
+- **Limits.** Templates are LF in git and CRLF in this Windows working tree, and `init` copies working-tree
+  bytes, so a target inherits the checkout's line endings; no `.gitattributes` was added (Q8). Coverage is
+  still declared, not measured. The human report's closing NOTE prints on a refused run too.
+
 **Deliberately not built, and asserted absent by test:** the remaining 39 standards, shards for
-the nine reserved namespaces that have none, `scripts/manifest.mjs`, `scripts/toolperms.mjs`, templates,
-`init`, attestations, containers, CI workflows, the adapter, and Phase 3's
-detectors. `test/no-phase-creep.test.mjs` fails if any of them appears early.
+the nine reserved namespaces that have none, `artifacts/standards-source-inventory.json`, attestations,
+containers, CI workflows, the adapter, and Phase 3's detectors. `test/no-phase-creep.test.mjs` fails if any of them appears early.
 
 ## 6 · What is verified, and what is only asserted
 
@@ -539,6 +581,11 @@ governance until a sign-off exists.
    `code-analysis`; and whether this pack should state requirements on metric justification, uncertainty
    and comparison conditions where that pack does not reach a system. The last turns on whether its
    evaluation standards reach a hosted model, which only its maintainers can read.
+12. **Whether the adoption slice's inferred contract stands** — plan 02 §12: which files `init` writes and
+   where, the `docs/ai/` destination, that the agent-instruction templates are reference-only, that no
+   `evaluation-plan.yml` exists, that a starter policy adopts every rule with nothing declared
+   not-applicable, and that any conflict refuses the whole run. None is owner-confirmed. The templates'
+   wording is authored and unapproved, like every standard's.
 
 ## 9 · The smallest next slice
 
@@ -551,8 +598,10 @@ starting rather than trusting this section. Candidates, all inferred rather than
   Three wrong MachineLearningStandards ids were found and corrected by hand in the fifth batch; nothing
   would catch a fourth. The inventory is a snapshot that can only be behind, so such a check must say how
   it treats an id newer than the snapshot.
-- **The Phase 2 tooling the phase cannot close without:** `scripts/manifest.mjs`,
-  `scripts/toolperms.mjs`, the templates and `init`, with `init` output asserted to satisfy zero rules.
+- **Regenerate `docs/architecture.md`** with `/codebase-docs` (§1 lists what is stale). The adoption slice
+  changed behaviour, so this is now owed rather than optional.
+- **`artifacts/standards-source-inventory.json`**, the last unbuilt Phase 2 deliverable other than the
+  standards and the nine missing shards.
 - **Another standard.** None now owns rules, so each would be prose only; pick by what later work
   cites. Follow `artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` §5 and cite code by
   symbol name. Do not start the remaining 39 in one pass.
@@ -563,8 +612,8 @@ without that pack's maintainers or an owner decision to author on its ground. Q7
 question that changes an already-written standard's wording. Q9 to Q12 and Q15 to Q21 are also open
 (see §8).
 
-`docs/architecture.md` is stale in the three places §1 names; regenerate it with `/codebase-docs` at the
-next behaviour change rather than editing it.
+Completing the adoption slice does not complete Phase 2: 39 standards, nine missing shards and the
+source inventory remain.
 
 ## 10 · Invariants — do not break these
 

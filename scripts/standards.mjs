@@ -26,7 +26,9 @@ import { resolvePolicyPath, loadPolicy, assertVersionIdentity, applyPolicy, Poli
 import { evaluate, envelope, distinction, STATUS, DISPOSITION } from "./compliance.mjs";
 import { splitSource, isCode, extensionOf } from "./source.mjs";
 import { inspectScaffolding } from "./scaffolding.mjs";
-import { parseYaml, YamlError } from "./yaml.mjs";
+import { MANIFEST_NAMES, classifyManifest, manifestToolNames } from "./manifest.mjs";
+import { TOOLPERM_NAMES, classifyToolPermissions, compareToolNames } from "./toolperms.mjs";
+import { runInitCommand } from "./init.mjs";
 import { validate as validateSchema } from "./jsonschema.mjs";
 
 const EXIT_OK = 0;
@@ -172,8 +174,8 @@ function createRun(root) {
 
 // --- Descriptive detectors: they observe, they do not judge -----------------------------------
 
-const MANIFEST_NAMES = ["ai-system.yml", "ai-system.yaml"];
-const TOOLPERM_NAMES = ["tool-permissions.yml", "tool-permissions.yaml"];
+// The manifest and the permission file are classified once, from their text, by manifest.mjs and
+// toolperms.mjs; the detectors below read that classification instead of re-deriving it.
 
 function detectManifestPresence(run) {
   const found = run.files.find((f) => MANIFEST_NAMES.includes(f));
@@ -184,13 +186,14 @@ function detectManifestPresence(run) {
     run.addFinding({ id: "manifest-unreadable", category: "surface", severity: "warning", label: "OBSERVED", message: `${found} could not be read`, evidence: [found] });
     return;
   }
-  try {
-    run.manifest = parseYaml(read.text);
-    run.addFinding({ id: "detected-manifest", category: "surface", label: "OBSERVED", message: `AI system manifest at ${found}`, evidence: [found] });
-  } catch (cause) {
-    run.manifestParseError = cause instanceof YamlError ? cause.message : String(cause);
+  run.manifestClass = classifyManifest(read.text);
+  if (run.manifestClass.status === "unparseable") {
+    run.manifestParseError = run.manifestClass.parseError;
     run.addFinding({ id: "detected-manifest", category: "surface", severity: "warning", label: "OBSERVED", message: `Manifest at ${found} does not parse: ${run.manifestParseError}`, evidence: [found] });
+    return;
   }
+  run.manifest = run.manifestClass.document;
+  run.addFinding({ id: "detected-manifest", category: "surface", label: "OBSERVED", message: `AI system manifest at ${found}`, evidence: [found] });
 }
 
 function detectToolPermissions(run) {
@@ -199,11 +202,9 @@ function detectToolPermissions(run) {
   if (!found) return;
   const read = readText(run.root, found);
   if (!read.ok) return;
-  try {
-    run.toolPermissions = parseYaml(read.text);
-  } catch (cause) {
-    run.toolPermissionsParseError = cause instanceof YamlError ? cause.message : String(cause);
-  }
+  run.toolPermissionsClass = classifyToolPermissions(read.text);
+  if (run.toolPermissionsClass.status === "unparseable") run.toolPermissionsParseError = run.toolPermissionsClass.parseError;
+  else run.toolPermissions = run.toolPermissionsClass.document;
 }
 
 function detectPromptAssets(run) {
@@ -217,7 +218,7 @@ function detectPromptAssets(run) {
 }
 
 function detectToolDefinitions(run) {
-  const declared = Array.isArray(run.manifest?.tools) ? run.manifest.tools.map((t) => t?.name).filter(Boolean) : [];
+  const declared = manifestToolNames(run.manifest);
   run.aiSurface.toolDefinitions = declared;
   if (declared.length > 0) {
     run.addFinding({ id: "detected-tools", category: "surface", label: "OBSERVED", message: `${declared.length} tool(s) declared in the manifest`, evidence: declared });
@@ -235,11 +236,11 @@ function detectToolDefinitions(run) {
 // genuinely contains (unparseable, schema-invalid) still stands, because scaffolding never erases a
 // finding.
 function manifestIsScaffold(run) {
-  return Boolean(run.aiSurface.manifest) && run.manifestParseError == null && inspectScaffolding(run.manifest).scaffold;
+  return Boolean(run.manifestClass?.scaffold);
 }
 
 function toolPermissionsAreScaffold(run) {
-  return Boolean(run.toolPermissionsPath) && run.toolPermissionsParseError == null && inspectScaffolding(run.toolPermissions).scaffold;
+  return Boolean(run.toolPermissionsClass?.scaffold);
 }
 
 function detectMissingManifest(run) {
@@ -274,7 +275,7 @@ function detectInvalidManifest(run) {
     run.observe({ rule: "lifecycle.manifest-valid", violation: true, message: `Manifest does not parse: ${run.manifestParseError}`, evidence: [run.aiSurface.manifest] });
     return;
   }
-  const problems = validateSchema(run.manifest, SCHEMAS.manifest);
+  const problems = run.manifestClass ? run.manifestClass.problems : validateSchema(run.manifest, SCHEMAS.manifest);
   if (problems.length > 0) {
     run.observe({ rule: "lifecycle.manifest-valid", violation: true, message: `Manifest does not conform to its schema: ${problems[0]}`, evidence: problems.slice(0, 10) });
     return;
@@ -296,7 +297,7 @@ function detectScaffoldManifest(run) {
     run.observe({ rule: "lifecycle.manifest-not-scaffold", unknown: true, message: "No readable manifest to inspect for scaffolding." });
     return;
   }
-  const { scaffold, reasons, placeholders } = inspectScaffolding(run.manifest);
+  const { scaffold, reasons, placeholders } = run.manifestClass ?? inspectScaffolding(run.manifest);
   if (scaffold) {
     run.observe({
       rule: "lifecycle.manifest-not-scaffold",
@@ -366,7 +367,7 @@ function detectUndeclaredTool(run) {
     run.observe({ rule: "gate.actions-classified", unknown: true, message: `Permission manifest does not parse: ${run.toolPermissionsParseError}` });
     return;
   }
-  const problems = validateSchema(run.toolPermissions, SCHEMAS.toolPermissions);
+  const problems = run.toolPermissionsClass ? run.toolPermissionsClass.problems : validateSchema(run.toolPermissions, SCHEMAS.toolPermissions);
   if (problems.length > 0) {
     run.observe({ rule: "gate.actions-classified", violation: true, message: `Permission manifest does not conform: ${problems[0]}`, evidence: problems.slice(0, 10) });
     return;
@@ -375,8 +376,7 @@ function detectUndeclaredTool(run) {
     run.observe({ rule: "gate.actions-classified", unknown: true, message: "The permission manifest is generated scaffolding, so no impact class was declared by anyone.", evidence: [run.toolPermissionsPath] });
     return;
   }
-  const classified = new Set((run.toolPermissions.tools ?? []).map((t) => t.name));
-  const missing = declaredTools.filter((name) => !classified.has(name));
+  const { classified, missing } = compareToolNames(run.toolPermissions, declaredTools);
   if (missing.length > 0) {
     run.observe({
       rule: "gate.actions-classified",
@@ -723,8 +723,10 @@ function commandValidate(target, flags) {
   return EXIT_OK;
 }
 
-const USAGE = `Usage: standards <audit|validate> [path] [flags]
+const USAGE = `Usage: standards <audit|validate|init> [path] [flags]
 
+  init       Bootstrap a target with scaffolding. Writes files a human must complete; init output
+             satisfies no rule. Its own flags: --docs, --dry-run, --force-overwrite=<file>, --json.
   audit      Evidence discovery. What this repository has, and what could not be seen.
              Needs no policy. Never produces a verdict.
   validate   Policy-aware compliance evaluation. Loads the AI policy from the TARGET,
@@ -739,7 +741,7 @@ const USAGE = `Usage: standards <audit|validate> [path] [flags]
 Exit codes: 0 clean, 1 project-level failure, 2 configuration error, 3 blocked by invariant.
 These are process semantics. The verdict is the "status" field of the JSON report.
 
-Not implemented in this release: init (Phase 2), attestations and exceptions (Phase 4).`;
+Not implemented in this release: attestations and exceptions (Phase 4).`;
 
 function parseArgs(argv) {
   const flags = { json: false, strict: false, policy: null, dir: null };
@@ -756,6 +758,10 @@ function parseArgs(argv) {
 }
 
 function main(argv) {
+  // `init` owns its own argument parsing: its flags are not audit/validate's, and parsing them here
+  // would reject --docs, --dry-run and --force-overwrite before init ever saw them.
+  if (argv[0] === "init") return runInitCommand(argv.slice(1));
+
   let parsed;
   try {
     parsed = parseArgs(argv.slice(1));
@@ -765,15 +771,6 @@ function main(argv) {
   }
   const command = argv[0];
   const { flags, positional } = parsed;
-
-  if (command === "init") {
-    process.stderr.write(
-      "standards: `init` is not implemented in this release. It is Phase 2 scope, and it is " +
-      "deliberately built after the checks rather than before them, so a bootstrap cannot write " +
-      "the evidence this evaluator then accepts.\n",
-    );
-    return EXIT_INVOCATION;
-  }
 
   if (command !== "audit" && command !== "validate") {
     process.stderr.write(`${USAGE}\n`);

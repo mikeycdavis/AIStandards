@@ -1,6 +1,6 @@
 // Phase 1 boundaries, asserted rather than remembered.
 //
-// The plan defers `init`, attestations, exceptions, containers, workflows and the adapter to later
+// The plan defers attestations, exceptions, containers, workflows and the adapter to later
 // phases, each for a stated reason — most importantly that an escape hatch must not be built before
 // the checks it is an escape from. These tests fail if a later phase's feature appears early, so
 // the deferral is enforced rather than merely intended.
@@ -39,21 +39,22 @@ test("every runtime import is a node: builtin or a local module", () => {
   assert.deepEqual(offenders, [], "a bare import specifier is a third-party dependency");
 });
 
-test("init is NOT implemented, and says why", () => {
-  const r = cli(["init", "."]);
-  assert.equal(r.code, 2, "init must not run");
-  assert.match(r.stderr, /not implemented/);
-  assert.match(r.stderr, /Phase 2/);
-  assert.ok(!exists("scripts/init.mjs"), "scripts/init.mjs must not exist yet");
+test("init exists, but only ever runs against an explicitly selected target", () => {
+  // Built on purpose in Phase 2, after the checks and the scaffold guard it depends on. What must
+  // still hold is that it cannot fall back to a default: a bare `init` is a refusal, never a run
+  // against the working directory (which here is the pack checkout).
+  assert.ok(exists("scripts/init.mjs"), "scripts/init.mjs is a Phase 2 deliverable and must exist");
+  const r = cli(["init"]);
+  assert.equal(r.code, 2, "init with no target must refuse");
+  assert.match(r.stderr, /target directory is required/);
+  assert.ok(!/not implemented/i.test(r.stderr), "init is implemented in this release");
 });
 
-test("the usage text does not advertise init", () => {
+test("the usage text advertises init, and still says attestations and exceptions are not implemented", () => {
   const r = cli([]);
-  assert.match(r.stderr, /Usage: standards <audit\|validate>/);
-  assert.ok(
-    !/^\s+init\s+Bootstrap/m.test(r.stderr),
-    "init must not be advertised as available",
-  );
+  assert.match(r.stderr, /Usage: standards <audit\|validate\|init>/);
+  assert.match(r.stderr, /^\s+init\s+Bootstrap/m);
+  assert.match(r.stderr, /Not implemented in this release: attestations and exceptions \(Phase 4\)/);
 });
 
 test("Phase 4 features are absent: no attestations, no exceptions", () => {
@@ -94,15 +95,15 @@ test("the Phase 2 tooling built so far exists, and the rest of Phase 2 does not"
   // The two catalog reviews are the FIRST Phase 2 work, because every later phase builds on a
   // numbering they can still change. The rule-table generator and the document-conformance checker
   // followed on 2026-09-14, each admitted here deliberately. Manifest and tool-permission tooling,
-  // init and the templates stay absent until they are built on purpose.
+  // init and the templates were built on 2026-09-19 and are admitted below.
   for (const rel of ["scripts/inventory.mjs", "scripts/fidelity.mjs", "scripts/spec.mjs"]) {
     assert.ok(exists(rel), `${rel} is a blocking review and must exist`);
   }
   for (const rel of ["scripts/sync-rule-tables.mjs", "scripts/standards-sections.mjs"]) {
     assert.ok(exists(rel), `${rel} is Phase 2 tooling already delivered and must exist`);
   }
-  for (const rel of ["scripts/manifest.mjs", "scripts/toolperms.mjs", "scripts/init.mjs", "templates"]) {
-    assert.ok(!exists(rel), `${rel} has not been built in Phase 2 yet and must not exist`);
+  for (const rel of ["scripts/manifest.mjs", "scripts/toolperms.mjs", "scripts/init.mjs", "templates/index.json"]) {
+    assert.ok(exists(rel), `${rel} is a planned Phase 2 deliverable, built on 2026-09-19, and must exist`);
   }
 });
 

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0",
+  "templates": [
+    { "source": "ai-system.yml", "destination": "ai-system.yml", "group": "core", "format": "yaml", "marker": "key" },
+    { "source": "tool-permissions.yml", "destination": "tool-permissions.yml", "group": "core", "format": "yaml", "marker": "key" },
+    { "source": "ai-policy.yml", "destination": "ai-policy.yml", "group": "core", "format": "yaml", "marker": "yaml-comment" },
+    { "source": "AI-SYSTEM.md", "destination": "docs/ai/AI-SYSTEM.md", "group": "docs", "format": "markdown", "marker": "markdown-comment" },
+    { "source": "THREAT-MODEL.md", "destination": "docs/ai/THREAT-MODEL.md", "group": "docs", "format": "markdown", "marker": "markdown-comment" },
+    { "source": "EVALUATION-PLAN.md", "destination": "docs/ai/EVALUATION-PLAN.md", "group": "docs", "format": "markdown", "marker": "markdown-comment" },
+    { "source": "INCIDENT-REPORT.md", "destination": "docs/ai/INCIDENT-REPORT.md", "group": "docs", "format": "markdown", "marker": "markdown-comment" },
+    { "source": "RED-TEAM-REPORT.md", "destination": "docs/ai/RED-TEAM-REPORT.md", "group": "docs", "format": "markdown", "marker": "markdown-comment" },
+    { "source": "ADR.md", "destination": "docs/ai/ADR.md", "group": "docs", "format": "markdown", "marker": "markdown-comment" },
+    { "source": "AGENTS.md", "destination": null, "group": "reference", "format": "markdown", "marker": "markdown-comment" },
+    { "source": "CLAUDE.md", "destination": null, "group": "reference", "format": "markdown", "marker": "markdown-comment" },
+    { "source": "copilot-instructions.md", "destination": null, "group": "reference", "format": "markdown", "marker": "markdown-comment" }
+  ]
+}

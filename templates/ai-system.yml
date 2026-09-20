@@ -1,0 +1,32 @@
+$scaffold: true
+# This file is a TEMPLATE, not evidence. The key above marks it as generated scaffolding, and a
+# manifest that still carries it is reported as scaffolding by `standards validate`.
+#
+# To adopt it: replace every REPLACE-ME with a value a person has checked, then delete the
+# `$scaffold` line. Deleting the line without writing the values does not make this a manifest;
+# a file whose every value is still REPLACE-ME is recognised as scaffolding on that basis alone.
+#
+# Only the fields the schema requires are present. Nothing else is declared for you, because each
+# optional declaration would be a claim about the system that nobody has made yet.
+system:
+  name: "REPLACE-ME"
+  purpose: "REPLACE-ME"
+  # Optional fields you may add once you can state them truthfully:
+  #   owner:           who answers for the system
+  #   lifecycleStage:  one of design, build, evaluation, deployment, monitoring, retired
+  #   autonomyTier:    one of read, propose, execute, autonomous
+  #                    (read observes only; propose suggests and a human acts; execute acts
+  #                    within declared bounds; autonomous acts without per-action review)
+models:
+  # One entry per model the system invokes. `id` is the identifier as passed to the provider.
+  # Optional: role.
+  - id: "REPLACE-ME"
+    provider: "REPLACE-ME"
+# Optional top-level sections, each described in schemas/ai-system-manifest.schema.json:
+#   prompts:      a list of entries with `name` and `path`; the path must name a file that exists
+#   tools:        a list of entries with `name` (and optional `description`); every declared tool
+#                 must also be classified in tool-permissions.yml
+#   dataSources:  a list of entries with `name` and `kind`; kind is one of retrieval-index,
+#                 fine-tuning-set, evaluation-set, prompt-fixture, other; optional synthetic
+#                 (true or false) and provenance
+#   evaluation:   optional planPath, suiteCommand and baselinePath
