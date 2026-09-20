@@ -6,12 +6,37 @@
 // own evaluator then accepted. That is a structural defect, not a bug in one detector, and the fix
 // belongs in the first release rather than after the same incident.
 //
-// AIStandards has no `init` command yet — it is Phase 2 scope. This module exists first, so that
-// when `init` arrives, the recognition that keeps its output from satisfying rules already exists
-// and is already tested. Building the bootstrap before the guard is the order that produced the
-// incident.
+// This module was written BEFORE `init`, so the recognition that keeps a bootstrap's output from
+// satisfying rules already existed and was already tested when `init` arrived. Building the
+// bootstrap before the guard is the order that produced the incident.
+//
+// TWO MARKER REPRESENTATIONS, because the files a bootstrap writes are of two kinds:
+//
+//   - A machine-read document whose schema has a slot for it carries the key `$scaffold: true`.
+//     That is a value in the parsed document, so it survives parsing and inspectScaffolding() sees it.
+//   - A file with no such slot — a policy, whose schema is closed, or a Markdown template — carries
+//     the text marker below on its FIRST non-blank line, as a comment. It is positional on purpose:
+//     a marker anywhere in a file cannot be told from a document that merely mentions one.
 
 export const SCAFFOLD_MARKER = "$scaffold";
+
+/** The text marker for files that cannot carry a `$scaffold` key. */
+export const SCAFFOLD_TEXT_MARKER = "AISTANDARDS-SCAFFOLD";
+
+/**
+ * True when the first non-blank line is a comment carrying the text marker: `# AISTANDARDS-SCAFFOLD`
+ * in YAML, or `<!-- AISTANDARDS-SCAFFOLD ... -->` in Markdown.
+ */
+export function hasScaffoldTextMarker(text) {
+  if (typeof text !== "string") return false;
+  const first = text.split(/\r?\n/).find((line) => line.trim() !== "");
+  if (first === undefined) return false;
+  const line = first.trim();
+  return (
+    (line.startsWith("#") && line.slice(1).trim().startsWith(SCAFFOLD_TEXT_MARKER)) ||
+    (line.startsWith("<!--") && line.slice(4).trim().startsWith(SCAFFOLD_TEXT_MARKER))
+  );
+}
 
 // Placeholder text a generator writes for a human to replace. Matching is deliberately narrow:
 // these are shapes no considered answer takes, not merely short ones.

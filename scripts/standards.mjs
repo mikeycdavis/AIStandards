@@ -226,8 +226,33 @@ function detectToolDefinitions(run) {
 
 // --- Judgmental detectors, full assurance ------------------------------------------------------
 
+// GENERATED SCAFFOLDING IS NOT EVIDENCE, for any rule that reads it. A scaffold manifest is
+// schema-valid by construction, so before this existed it made manifest-exists and manifest-valid
+// pass, and made both gate rules pass vacuously because it declares no tools — a bootstrap writing
+// the evidence its own evaluator then accepted, which is the incident scaffolding.mjs exists to
+// prevent. Where the file is a scaffold, every rule that would have read it reports not-evaluated;
+// only lifecycle.manifest-not-scaffold reports on the scaffold itself. A violation the file
+// genuinely contains (unparseable, schema-invalid) still stands, because scaffolding never erases a
+// finding.
+function manifestIsScaffold(run) {
+  return Boolean(run.aiSurface.manifest) && run.manifestParseError == null && inspectScaffolding(run.manifest).scaffold;
+}
+
+function toolPermissionsAreScaffold(run) {
+  return Boolean(run.toolPermissionsPath) && run.toolPermissionsParseError == null && inspectScaffolding(run.toolPermissions).scaffold;
+}
+
 function detectMissingManifest(run) {
   if (run.aiSurface.manifest) {
+    if (manifestIsScaffold(run)) {
+      run.observe({
+        rule: "lifecycle.manifest-exists",
+        unknown: true,
+        message: `The file at ${run.aiSurface.manifest} is generated scaffolding, which is not evidence that a manifest was written.`,
+        evidence: [run.aiSurface.manifest],
+      });
+      return;
+    }
     run.observe({ rule: "lifecycle.manifest-exists", message: `Manifest present at ${run.aiSurface.manifest}.`, evidence: [run.aiSurface.manifest] });
     return;
   }
@@ -252,6 +277,15 @@ function detectInvalidManifest(run) {
   const problems = validateSchema(run.manifest, SCHEMAS.manifest);
   if (problems.length > 0) {
     run.observe({ rule: "lifecycle.manifest-valid", violation: true, message: `Manifest does not conform to its schema: ${problems[0]}`, evidence: problems.slice(0, 10) });
+    return;
+  }
+  if (manifestIsScaffold(run)) {
+    run.observe({
+      rule: "lifecycle.manifest-valid",
+      unknown: true,
+      message: "The manifest is generated scaffolding. It conforms to the schema by construction, and that is not evidence about the system.",
+      evidence: [run.aiSurface.manifest],
+    });
     return;
   }
   run.observe({ rule: "lifecycle.manifest-valid", message: "Manifest conforms to its schema.", evidence: [run.aiSurface.manifest] });
@@ -281,6 +315,10 @@ function detectMissingToolPermissions(run) {
     run.observe({ rule: "gate.tool-permission-manifest", unknown: true, message: "No readable manifest, so whether tools exist is unknown." });
     return;
   }
+  if (manifestIsScaffold(run)) {
+    run.observe({ rule: "gate.tool-permission-manifest", unknown: true, message: "The manifest is generated scaffolding, so whether the system has tools is not established." });
+    return;
+  }
   if (declaredTools.length === 0) {
     run.observe({ rule: "gate.tool-permission-manifest", message: "The manifest declares no tools, so no permission manifest is owed." });
     return;
@@ -294,11 +332,24 @@ function detectMissingToolPermissions(run) {
     });
     return;
   }
+  if (toolPermissionsAreScaffold(run)) {
+    run.observe({
+      rule: "gate.tool-permission-manifest",
+      unknown: true,
+      message: `The file at ${run.toolPermissionsPath} is generated scaffolding, which is not evidence that the declared tools were classified.`,
+      evidence: [run.toolPermissionsPath],
+    });
+    return;
+  }
   run.observe({ rule: "gate.tool-permission-manifest", message: `Tool permission manifest present at ${run.toolPermissionsPath}.`, evidence: [run.toolPermissionsPath] });
 }
 
 function detectUndeclaredTool(run) {
   const declaredTools = run.aiSurface.toolDefinitions;
+  if (manifestIsScaffold(run)) {
+    run.observe({ rule: "gate.actions-classified", unknown: true, message: "The manifest is generated scaffolding, so the tool list is not established." });
+    return;
+  }
   if (declaredTools.length === 0) {
     if (!run.aiSurface.manifest || run.manifestParseError != null) {
       run.observe({ rule: "gate.actions-classified", unknown: true, message: "No readable manifest, so the tool list is unknown." });
@@ -318,6 +369,10 @@ function detectUndeclaredTool(run) {
   const problems = validateSchema(run.toolPermissions, SCHEMAS.toolPermissions);
   if (problems.length > 0) {
     run.observe({ rule: "gate.actions-classified", violation: true, message: `Permission manifest does not conform: ${problems[0]}`, evidence: problems.slice(0, 10) });
+    return;
+  }
+  if (toolPermissionsAreScaffold(run)) {
+    run.observe({ rule: "gate.actions-classified", unknown: true, message: "The permission manifest is generated scaffolding, so no impact class was declared by anyone.", evidence: [run.toolPermissionsPath] });
     return;
   }
   const classified = new Set((run.toolPermissions.tools ?? []).map((t) => t.name));

@@ -443,3 +443,87 @@ item that owns catalog rules has a document, so the rule that picked items 23 an
 Re-run `/whats-next` before starting; `docs/HANDOFF.md` §9 lists the candidates (inferred).
 
 Q7, Q9 to Q12 and Q15 to Q22 remain open.
+
+## 12. The adoption slice contract
+
+**Fixed 2026-09-19, before any of it was built.** The plan lists `templates/`, `scripts/manifest.mjs`,
+`scripts/toolperms.mjs` and `scripts/init.mjs` as Phase 2 deliverables (§4) and names no file set, marker
+form, conflict behaviour or module boundary. Each decision below is inferred from the evidence cited and
+is the coordinator's, not the owner's; the owner may reverse any of them. **Completing this slice does not
+complete Phase 2**: 39 standards, shards for nine namespaces and the foreign-crosswalk id check remain.
+
+### 12.1 Why detectors changed first
+
+A scaffold manifest is schema-valid by construction. Before this slice `validate` reported four of the five
+`assurance: full` rules **passed** on it — `lifecycle.manifest-exists`, `lifecycle.manifest-valid`, and both
+`gate.` rules vacuously, because a scaffold declares no tools — and `test/scaffolding.test.mjs` tolerated a
+score rise of up to 20. That is the incident `scripts/scaffolding.mjs` exists to prevent, and it makes "`init`
+output satisfies zero rules" (§6) false for any `init` that writes a manifest. So the four rules now report
+`skipped` / `not-evaluated` while the file they read is a scaffold, and only `lifecycle.manifest-not-scaffold`
+reports on it, as `failed`. A violation the file genuinely contains still stands. A freshly initialised
+target is therefore `NON_COMPLIANT` — honestly, because a required rule fails — with **zero** passed results.
+
+### 12.2 Files, markers and groups
+
+`templates/index.json` is the registry, `{"schemaVersion":"1.0","templates":[{source, destination, group,
+format, marker}]}`, one entry per file in `templates/` and no file unlisted. `group` is `core`, `docs` or
+`reference`; `destination` is `null` exactly for `reference`.
+
+| Source in `templates/` | Destination in the target | Group | Format | Marker |
+| --- | --- | --- | --- | --- |
+| `ai-system.yml` | `ai-system.yml` | core | yaml | `$scaffold: true` as the first key |
+| `tool-permissions.yml` | `tool-permissions.yml` | core | yaml | `$scaffold: true` as the first key |
+| `ai-policy.yml` | `ai-policy.yml` | core | yaml | comment `# AISTANDARDS-SCAFFOLD` on the first non-blank line |
+| `AI-SYSTEM.md`, `THREAT-MODEL.md`, `EVALUATION-PLAN.md`, `INCIDENT-REPORT.md`, `RED-TEAM-REPORT.md`, `ADR.md` | `docs/ai/<same name>` | docs | markdown | `<!-- AISTANDARDS-SCAFFOLD ... -->` on the first non-blank line |
+| `AGENTS.md`, `CLAUDE.md`, `copilot-instructions.md` | none | reference | markdown | as above |
+
+- **Marker representations** are `SCAFFOLD_MARKER`, `SCAFFOLD_TEXT_MARKER` and `hasScaffoldTextMarker()` in
+  `scripts/scaffolding.mjs`. The policy schema is closed and has no slot, so its marker is a comment; it
+  selects rules and is evidence of nothing either way.
+- **`ai-policy.yml`** lists every catalog rule at its catalog level, with `standardVersion` equal to `VERSION`,
+  **no `applicability` block and no `project`**: nothing is lowered and nothing is declared not-applicable. A
+  test keeps it equal to `rules/*.json`; `init` copies it byte for byte.
+- **`ai-system.yml`** carries only `system.name`, `system.purpose`, `models[0].id` and `models[0].provider`,
+  all `REPLACE-ME`. It declares **no** lifecycle stage, autonomy tier, tool, prompt, data source or evaluation
+  path: each would be an invented declaration or a path to a file that does not exist.
+- **`tool-permissions.yml`** is `tools: []`. The schema's `impact` enum has no placeholder value, so any tool
+  entry would be a fabricated classification.
+- **No `evaluation-plan.yml`**, although the approved plan lists one: no schema for it exists, and Standard 17
+  R1 records that none governs a plan's form. `EVALUATION-PLAN.md` may name only the manifest's real
+  `evaluation.planPath`, `suiteCommand` and `baselinePath`.
+- **The `reference` group is not written by `init`.** `AGENTS.md`, `CLAUDE.md` and `copilot-instructions.md`
+  belong at conventional locations that are usually occupied, so `init` never touches them.
+- **No template prescribes a field the schemas reject**, and none contains a fixed line number.
+
+### 12.3 Module roles
+
+- `scripts/manifest.mjs` — `MANIFEST_NAMES`; `classifyManifest(text)` returning parse result, schema problems,
+  scaffold inspection and one status (`unparseable`, `invalid`, `scaffold` or `ok`); `manifestToolNames()`.
+  Pure over text; no file reads.
+- `scripts/toolperms.mjs` — `TOOLPERM_NAMES`; `classifyToolPermissions(text)` likewise; and a comparison of
+  its tool names with a declared list. Pure over text.
+- The coordinator wires both into the detectors in `scripts/standards.mjs`, replacing the inline copies, with
+  the existing suite as the guard.
+- `scripts/init.mjs` — runnable as `node scripts/init.mjs <target> [flags]` and exporting
+  `runInitCommand(args, io)`, which owns `init`'s argument parsing and returns an exit code; the coordinator
+  routes `standards init` to it. It reads `templates/index.json` and copies files.
+
+### 12.4 `init` behaviour
+
+- **Target:** required and explicit. No target, a missing directory, a file, or the pack checkout itself
+  (compared by real path) is exit 2 with nothing written. It never defaults to the working directory.
+- **Options:** `--docs` also writes the `docs` group; `--dry-run` writes nothing and reports the plan;
+  `--force-overwrite=<destination>` (repeatable) permits replacing one named, differing file; `--json`.
+- **Existing files:** a destination byte-identical to its template is `unchanged`. A differing one is a
+  **conflict**, and any conflict refuses the whole run: exit 2, nothing written, every conflict listed.
+  `--force-overwrite` naming a path outside the plan is an error, so a typo cannot silently do nothing.
+  Repeating a successful run is therefore exit 0 with every file `unchanged`, and never touches a user's edit.
+- **Writing:** all destinations are verified first; no destination or parent may be a symlink; files are written
+  through a temporary file and renamed; on any failure everything created or replaced is put back.
+- **Exit codes:** 0 done, including nothing to do and dry runs; 2 invocation, conflict or write error.
+
+### 12.5 What this does not do
+
+Fill `humanSignOff`, decide hosted-model applicability, assert any applicability, or make a schema-valid file
+count as evidence. The foreign-crosswalk id check stays pending. Cross-references in the templates to
+MachineLearningStandards follow Standard 17's pinned-source findings and add no ML-owned requirement.

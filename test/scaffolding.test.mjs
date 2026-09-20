@@ -85,3 +85,64 @@ test("a scaffold manifest does not raise the score", () => {
     `scaffolding raised the score from ${none.score} to ${scaffold.score} — the bootstrap would be writing its own evidence`,
   );
 });
+
+// --- Scaffolding is not evidence for ANY rule that reads it --------------------------------------
+//
+// A scaffold manifest is schema-valid by construction. Before the detectors were corrected it made
+// lifecycle.manifest-exists and lifecycle.manifest-valid pass, and made both gate rules pass
+// vacuously because a scaffold declares no tools — four rules cleared by writing a file, which is
+// exactly the incident this module exists to prevent. The weaker assertion above (the score rises by
+// at most 20) let that stand; these do not.
+
+import { hasScaffoldTextMarker, SCAFFOLD_TEXT_MARKER } from "../scripts/scaffolding.mjs";
+
+test("a scaffold manifest satisfies ZERO rules, and only the scaffold rule reports on it", () => {
+  const json = validate(fixture("scaffold-manifest")).json;
+  const passed = json.results.filter((r) => r.result === "passed").map((r) => r.rule);
+  assert.deepEqual(passed, [], "generated content must not clear any rule");
+  assert.equal(resultFor(json, "lifecycle.manifest-not-scaffold").result, "failed");
+  for (const rule of ["lifecycle.manifest-exists", "lifecycle.manifest-valid", "gate.tool-permission-manifest", "gate.actions-classified"]) {
+    const r = resultFor(json, rule);
+    assert.equal(r.result, "skipped", `${rule} must not pass on scaffolding`);
+    assert.equal(r.disposition, "not-evaluated");
+    assert.match(r.message, /scaffolding/i, `${rule} must say why`);
+  }
+});
+
+test("THE CONTROL: a written manifest still passes the rules the scaffold does not", () => {
+  const json = validate(fixture("valid-manifest")).json;
+  for (const rule of ["lifecycle.manifest-exists", "lifecycle.manifest-valid", "lifecycle.manifest-not-scaffold"]) {
+    assert.equal(resultFor(json, rule).result, "passed", `${rule} is the positive control`);
+  }
+});
+
+test("a scaffold permission file beside a real manifest satisfies neither gate rule", () => {
+  const json = validate(fixture("scaffold-tool-permissions")).json;
+  for (const rule of ["gate.tool-permission-manifest", "gate.actions-classified"]) {
+    const r = resultFor(json, rule);
+    assert.equal(r.result, "skipped", `${rule} must not pass on a scaffold permission file`);
+    assert.equal(r.disposition, "not-evaluated");
+    assert.match(r.message, /scaffolding/i);
+  }
+  // The manifest itself is real, so its own rules are unaffected.
+  assert.equal(resultFor(json, "lifecycle.manifest-not-scaffold").result, "passed");
+});
+
+test("THE CONTROL: a completed permission file still satisfies both gate rules", () => {
+  const json = validate(fixture("declared-tools")).json;
+  assert.equal(resultFor(json, "gate.tool-permission-manifest").result, "passed");
+  assert.equal(resultFor(json, "gate.actions-classified").result, "passed");
+});
+
+test("the text marker is recognised on the first non-blank line only, in YAML and Markdown form", () => {
+  assert.equal(SCAFFOLD_TEXT_MARKER, "AISTANDARDS-SCAFFOLD");
+  assert.equal(hasScaffoldTextMarker(`# ${SCAFFOLD_TEXT_MARKER}: replace this\nstandardVersion: "0.1.0"\n`), true);
+  assert.equal(hasScaffoldTextMarker(`\n\r\n  # ${SCAFFOLD_TEXT_MARKER}\nx: 1\n`), true, "leading blank lines are skipped");
+  assert.equal(hasScaffoldTextMarker(`<!-- ${SCAFFOLD_TEXT_MARKER}: template -->\n# Title\n`), true);
+  assert.equal(hasScaffoldTextMarker(`<!-- ${SCAFFOLD_TEXT_MARKER}: template -->\r\n# Title\r\n`), true, "CRLF");
+  // NEGATIVE CONTROLS: a document that merely mentions the marker is not a scaffold.
+  assert.equal(hasScaffoldTextMarker(`# Notes\nThe marker is ${SCAFFOLD_TEXT_MARKER}.\n`), false, "not on the first line");
+  assert.equal(hasScaffoldTextMarker(`standardVersion: "${SCAFFOLD_TEXT_MARKER}"\n`), false, "not a comment");
+  assert.equal(hasScaffoldTextMarker(""), false);
+  assert.equal(hasScaffoldTextMarker(null), false);
+});
