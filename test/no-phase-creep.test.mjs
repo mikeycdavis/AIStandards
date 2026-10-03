@@ -126,6 +126,7 @@ test("only the standards written so far exist", () => {
     "21-prompt-and-instruction-security.md",
     "23-agent-execution-security.md",
     "25-grounding-and-hallucination-control.md",
+    "33-ai-observability.md",
     "45-approval-gates.md",
   ]);
 });

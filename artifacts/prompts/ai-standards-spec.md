@@ -249,7 +249,7 @@ under [Authored items](#authored-items).
 
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
-| 33 | AI Observability | D | `Observability` | B | — |
+| 33 | AI Observability | D | `Observability` | B | standards/33-ai-observability.md |
 | 34 | AI Incident Response | D | `incident response` | O | — |
 | 35 | Red Teaming | D | `red teaming` | O | — |
 | 36 | Auditability of AI Actions | D | `auditability` | O | — |
