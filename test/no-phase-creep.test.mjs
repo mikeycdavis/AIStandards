@@ -125,6 +125,7 @@ test("only the standards written so far exist", () => {
     "17-evaluation-plans-for-generative-systems.md",
     "21-prompt-and-instruction-security.md",
     "23-agent-execution-security.md",
+    "25-grounding-and-hallucination-control.md",
     "45-approval-gates.md",
   ]);
 });

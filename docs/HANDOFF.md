@@ -179,7 +179,7 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
 - `scripts/sync-rule-tables.mjs` (writes the generated tables; `--check` is read-only; refuses a
   written standard missing a block for a shard that holds its rules) and
   `scripts/standards-sections.mjs` (read-only document conformance), both 2026-09-14
-- **14 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 45**
+- **15 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 45**
 - `templates/` (twelve templates and `index.json`), `scripts/manifest.mjs`, `scripts/toolperms.mjs` and
   `scripts/init.mjs`, all 2026-09-19 — see the sixth batch below
 
@@ -465,7 +465,7 @@ the coordinator's inference from the plan, the schemas and Standard 17, and the 
   bytes, so a target inherits the checkout's line endings; no `.gitattributes` was added (Q8). Coverage is
   still declared, not measured. The human report's closing NOTE prints on a refused run too.
 
-**Deliberately not built, and asserted absent by test:** the remaining 39 standards, shards for
+**Deliberately not built, and asserted absent by test:** the remaining 38 standards, shards for
 the nine reserved namespaces that have none, `artifacts/standards-source-inventory.json`, attestations,
 containers, CI workflows, the adapter, and Phase 3's detectors. `test/no-phase-creep.test.mjs` fails if any of them appears early.
 
@@ -616,7 +616,7 @@ without that pack's maintainers or an owner decision to author on its ground. Q7
 question that changes an already-written standard's wording. Q9 to Q12 and Q15 to Q21 are also open
 (see §8).
 
-Completing the adoption slice does not complete Phase 2: 39 standards, nine missing shards and the
+Completing the adoption slice does not complete Phase 2: 38 standards, nine missing shards and the
 source inventory remain.
 
 ## 10 · Invariants — do not break these

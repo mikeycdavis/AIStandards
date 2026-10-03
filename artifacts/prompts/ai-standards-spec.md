@@ -231,7 +231,7 @@ under [Authored items](#authored-items).
 
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
-| 25 | Grounding and Hallucination Control | D | `Hallucination` | O | — |
+| 25 | Grounding and Hallucination Control | D | `Hallucination` | O | standards/25-grounding-and-hallucination-control.md |
 | 26 | Uncertainty Expression and Abstention | D | `uncertainty` | B | — |
 | 27 | Citation and Source Attribution | D | `citation` | B | — |
 | 28 | Capability Honesty to Users | D | `capability honesty` | X | — |
