@@ -430,6 +430,231 @@ function detectFloatingModelAlias(run) {
 const INSTRUCTION_PARAM = /(?<!\w-)\b(system|system_prompt|systemPrompt|instructions|systemInstruction)["']?\s*[:=]\s*(["'`])/g;
 const INLINE_THRESHOLD = 200;
 
+// Measure the quoted literal that opens at `start` in the ORIGINAL text, and return the length of its
+// body, or -1 when it is not terminated on its line (a template literal may span lines). A backslash
+// skips the next character, so an escaped quote does not end the literal.
+function measureLiteral(text, start) {
+  const quote = text[start];
+  let end = start + 1;
+  while (end < text.length) {
+    if (text[end] === "\\") { end += 2; continue; }
+    if (text[end] === quote) break;
+    if (text[end] === "\n" && quote !== "`") return -1;
+    end += 1;
+  }
+  return end - start - 1;
+}
+
+// Two further shapes of the same problem, each its OWN detection shape with its own name in the
+// evidence. Both read the code-only view (index-aligned with the text, strings blanked except a quoted
+// property NAME) to find KEYS, and the original text to measure the literal a key holds.
+//
+//   message role shape        a message object whose `role` is the quoted word `system` (a bare
+//                             `system` in YAML) and whose `content` is a quoted literal, in either key
+//                             order: `{"role": "system", "content": "..."}`, and the YAML list-of-messages
+//                             form. The `content` must be a key of the SAME object (or YAML mapping) that
+//                             holds the role, not of a nested or neighbouring one.
+//   systemInstruction parts   the Gemini object form `systemInstruction: { parts: [{ text: "..." }] }`,
+//   shape                     also spelled `system_instruction`: a `text` key inside the `parts` of the
+//                             object.
+//
+// A role is a key only when it opens a mapping entry (the previous code character is `{` or `,`, or it
+// begins a YAML line after any `- ` markers) and its separator is `:`. So `const role = "system"`, a
+// keyword argument, a ternary branch and a hyphenated or prefixed name are not the key. Not claimed:
+// a role or content held in a variable, template-literal or concatenated content, content that is an
+// array of typed parts, the `developer` role, TOML tables, keyword-argument constructors, block scalars,
+// and block-style YAML `systemInstruction` (Standard 21, "The detector for R1 and R2").
+const KEY_PREFIX = String.raw`(?<![\w$-])(["']?)`;
+const ROLE_KEY = new RegExp(String.raw`${KEY_PREFIX}role\1[ \t\r\n]*:[ \t\r\n]*`, "g");
+const SYSTEM_BARE = /system(?=[ \t]*(?:\r?\n|$|[,}]))/y;
+const CONTENT_KEY = /(["']?)content\1[ \t\r\n]*:[ \t\r\n]*(["'])/y;
+const PARTS_KEY = /(["']?)parts\1[ \t\r\n]*:[ \t\r\n]*(?=[[{])/y;
+const TEXT_KEY = new RegExp(String.raw`${KEY_PREFIX}text\1[ \t\r\n]*:[ \t\r\n]*(["'])`, "g");
+const SYSTEM_INSTRUCTION_KEY = new RegExp(String.raw`${KEY_PREFIX}(?:system_instruction|systemInstruction)\1[ \t\r\n]*[:=][ \t\r\n]*\{`, "g");
+
+const OPENERS = "{[(";
+const CLOSERS = "}])";
+
+// Index of the bracket that closes the one opening at `open`, or -1. Strings and comments are blanked
+// in the view, so a bracket inside one is not counted.
+function matchClose(view, open) {
+  let depth = 0;
+  for (let k = open; k < view.length; k += 1) {
+    if (OPENERS.includes(view[k])) depth += 1;
+    else if (CLOSERS.includes(view[k])) {
+      depth -= 1;
+      if (depth === 0) return k;
+    }
+  }
+  return -1;
+}
+
+// Index of the `{` that directly encloses `idx`, or -1 when the innermost open bracket is not a brace.
+function enclosingBrace(view, idx) {
+  let depth = 0;
+  for (let k = idx - 1; k >= 0; k -= 1) {
+    if (CLOSERS.includes(view[k])) depth += 1;
+    else if (OPENERS.includes(view[k])) {
+      if (depth === 0) return view[k] === "{" ? k : -1;
+      depth -= 1;
+    }
+  }
+  return -1;
+}
+
+// True when the key at `idx` opens a mapping entry in a braced object: the previous code character is
+// `{` or `,`.
+function opensEntry(view, idx) {
+  for (let k = idx - 1; k >= 0; k -= 1) {
+    if (/\s/.test(view[k])) continue;
+    return view[k] === "{" || view[k] === ",";
+  }
+  return false;
+}
+
+// Longest quoted `content` literal among the keys of the object (open..close), at its own depth only.
+function contentInObject(view, text, open, close) {
+  let longest = -1;
+  let depth = 0;
+  let expectKey = true;
+  for (let k = open + 1; k < close; k += 1) {
+    const ch = view[k];
+    if (/\s/.test(ch)) continue;
+    if (depth === 0 && expectKey) {
+      CONTENT_KEY.lastIndex = k;
+      const m = CONTENT_KEY.exec(view);
+      if (m) longest = Math.max(longest, measureLiteral(text, k + m[0].length - 1));
+    }
+    expectKey = false;
+    if (OPENERS.includes(ch)) depth += 1;
+    else if (CLOSERS.includes(ch)) depth -= 1;
+    else if (ch === "," && depth === 0) expectKey = true;
+  }
+  return longest;
+}
+
+// The YAML block mapping that holds the key at `idx` (a key that begins its line, after any `- `
+// markers): the start offsets of every key of that mapping, found by indentation. `col` is the key's
+// column, which is the same for every key of one mapping, including a first key that follows `- `.
+function yamlMappingKeys(view, idx, lineStart) {
+  const col = idx - lineStart;
+  const keys = [idx];
+  const lineInfo = (start) => {
+    const nl = view.indexOf("\n", start);
+    const line = view.slice(start, nl === -1 ? view.length : nl);
+    const lead = /^([ \t]*)((?:-[ \t]+)*)/.exec(line);
+    return { line, nl, indent: lead[1].length, keyCol: lead[0].length, dashed: lead[2] !== "", blank: line.trim() === "" };
+  };
+  const boundary = (line) => /^(---|\.\.\.)/.test(line);
+
+  // Upward, unless this key itself follows a `- ` marker: then it opens its item and nothing above is
+  // in its mapping.
+  if (/^[ \t]*$/.test(view.slice(lineStart, idx))) {
+    let cur = lineStart;
+    while (cur > 0) {
+      const start = view.lastIndexOf("\n", cur - 2) + 1;
+      const info = lineInfo(start);
+      cur = start;
+      if (info.blank) continue;
+      if (boundary(info.line)) break;
+      if (info.dashed && info.indent < col) {
+        if (info.keyCol === col) keys.push(start + col);
+        break;
+      }
+      if (info.indent === col && !info.dashed) keys.push(start + col);
+      else if (info.indent < col) break;
+    }
+  }
+
+  // Downward: keys at the same column belong; a shallower line ends the mapping.
+  let next = view.indexOf("\n", idx);
+  while (next !== -1 && next + 1 < view.length) {
+    const start = next + 1;
+    const info = lineInfo(start);
+    next = info.nl;
+    if (info.blank) continue;
+    if (boundary(info.line)) break;
+    if (info.indent < col) break;
+    if (info.indent === col && !info.dashed) keys.push(start + col);
+  }
+  return keys;
+}
+
+function messageRoleLength(view, text, yaml) {
+  let longest = -1;
+  ROLE_KEY.lastIndex = 0;
+  for (let m = ROLE_KEY.exec(view); m; m = ROLE_KEY.exec(view)) {
+    const idx = m.index;
+    const valueAt = idx + m[0].length;
+    let isSystem = false;
+    if (view[valueAt] === "\"" || view[valueAt] === "'") {
+      const body = measureLiteral(text, valueAt);
+      isSystem = body === "system".length && text.slice(valueAt + 1, valueAt + 1 + body) === "system";
+    } else if (yaml) {
+      SYSTEM_BARE.lastIndex = valueAt;
+      isSystem = SYSTEM_BARE.test(view);
+    }
+    if (!isSystem) continue;
+
+    if (opensEntry(view, idx)) {
+      const open = enclosingBrace(view, idx);
+      if (open !== -1) {
+        const close = matchClose(view, open);
+        if (close !== -1) longest = Math.max(longest, contentInObject(view, text, open, close));
+        continue;
+      }
+    }
+    if (!yaml) continue;
+    const lineStart = view.lastIndexOf("\n", idx - 1) + 1;
+    if (!/^[ \t]*(?:-[ \t]+)*$/.test(view.slice(lineStart, idx))) continue;
+    for (const key of yamlMappingKeys(view, idx, lineStart)) {
+      CONTENT_KEY.lastIndex = key;
+      const c = CONTENT_KEY.exec(view);
+      if (c) longest = Math.max(longest, measureLiteral(text, key + c[0].length - 1));
+    }
+  }
+  return longest;
+}
+
+function systemInstructionPartsLength(view, text) {
+  let longest = -1;
+  SYSTEM_INSTRUCTION_KEY.lastIndex = 0;
+  for (let m = SYSTEM_INSTRUCTION_KEY.exec(view); m; m = SYSTEM_INSTRUCTION_KEY.exec(view)) {
+    const open = m.index + m[0].length - 1;
+    const close = matchClose(view, open);
+    if (close === -1) continue;
+    // `parts` is a key of the systemInstruction object itself; `text` is searched only inside its value.
+    let depth = 0;
+    let expectKey = true;
+    for (let k = open + 1; k < close; k += 1) {
+      const ch = view[k];
+      if (/\s/.test(ch)) continue;
+      if (depth === 0 && expectKey) {
+        PARTS_KEY.lastIndex = k;
+        const p = PARTS_KEY.exec(view);
+        if (p) {
+          const valueOpen = k + p[0].length;
+          const valueClose = matchClose(view, valueOpen);
+          if (valueClose !== -1) {
+            const inside = view.slice(valueOpen, valueClose);
+            TEXT_KEY.lastIndex = 0;
+            for (let t = TEXT_KEY.exec(inside); t; t = TEXT_KEY.exec(inside)) {
+              if (!opensEntry(inside, t.index)) continue;
+              const literal = valueOpen + t.index + t[0].length - 1;
+              longest = Math.max(longest, measureLiteral(text, literal));
+            }
+          }
+        }
+      }
+      expectKey = false;
+      if (OPENERS.includes(ch)) depth += 1;
+      else if (CLOSERS.includes(ch)) depth -= 1;
+      else if (ch === "," && depth === 0) expectKey = true;
+    }
+  }
+  return longest;
+}
+
 function detectInlineSystemPrompt(run, withdrawn) {
   const rules = ["promptsec.prompt-is-versioned-artifact", "promptsec.no-inline-system-prompt"];
 
@@ -453,19 +678,16 @@ function detectInlineSystemPrompt(run, withdrawn) {
     INSTRUCTION_PARAM.lastIndex = 0;
     let longest = -1;
     for (let match = INSTRUCTION_PARAM.exec(view); match; match = INSTRUCTION_PARAM.exec(view)) {
-      const quote = match[2];
-      const start = match.index + match[0].length - 1;
-      let end = start + 1;
-      while (end < read.text.length) {
-        if (read.text[end] === "\\") { end += 2; continue; }
-        if (read.text[end] === quote) break;
-        if (read.text[end] === "\n" && quote !== "`") { end = -1; break; }
-        end += 1;
-      }
-      if (end === -1) continue;
-      longest = Math.max(longest, end - start - 1);
+      const length = measureLiteral(read.text, match.index + match[0].length - 1);
+      longest = Math.max(longest, length);
     }
     if (longest >= INLINE_THRESHOLD) hits.push(`${file} (${longest} chars)`);
+
+    const yaml = [".yml", ".yaml"].includes(extensionOf(file));
+    const role = messageRoleLength(view, read.text, yaml);
+    if (role >= INLINE_THRESHOLD) hits.push(`${file} (${role} chars, message role shape)`);
+    const gemini = systemInstructionPartsLength(view, read.text);
+    if (gemini >= INLINE_THRESHOLD) hits.push(`${file} (${gemini} chars, systemInstruction parts shape)`);
   }
 
   if (hits.length > 0) {
