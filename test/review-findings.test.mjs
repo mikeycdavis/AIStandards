@@ -388,3 +388,112 @@ for (const [label, file, source] of OUTSIDE_THE_CLAIM) {
 test("the working directory is this repository (guards finding 1's setup)", () => {
   assert.ok(fs.existsSync(path.join(REPO, "ai-policy.yml")));
 });
+
+// --- 8. YAML block scalars and the full key boundary (Codex review of PR #95) ------------------------
+//
+// https://github.com/mikeycdavis/AIStandards/pull/95#discussion_r4187231881: lines inside a YAML `|` or
+// `>` block scalar are string data. A `- "system": "..."` (or any `"system": "..."`) inside one was read
+// as a mapping entry and reported as an inline prompt.
+// https://github.com/mikeycdavis/AIStandards/pull/95#discussion_r4187231888: the `(?<!\w-)` boundary
+// rejected only `ascii-` before a name, so `pré-system`, `x--system` and `ésystem` still read as the
+// listed `system` parameter. A listed name must not be the suffix of a longer key. The boundary keeps
+// `--system="..."` (a shell flag) and `obj.system = "..."` (an attribute assignment) firing.
+
+const BLOCK_SCALAR_NOT_FIRING = [
+  ["a literal block scalar embedding a sequence-marker quoted key", "src/p.yaml", `documentation: |\n  - "system": "${LONG}"\n`],
+  ["a folded block scalar embedding a sequence-marker quoted key", "src/p.yaml", `documentation: >\n  - "system": "${LONG}"\n`],
+  ["a block scalar embedding a bare quoted key", "src/p.yaml", `documentation: |\n  "system": "${LONG}"\n`],
+  ["a block scalar embedding an unquoted key", "src/p.yaml", `documentation: |\n  system: "${LONG}"\n`],
+  ["a block scalar with keep and indentation indicators", "src/p.yaml", `documentation: |2+\n    - "system": "${LONG}"\n`],
+  ["a block scalar with a trailing comment on its header", "src/p.yaml", `documentation: | # note\n  - "system": "${LONG}"\n`],
+  ["a block scalar with blank lines inside it", "src/p.yaml", `documentation: |\n  intro\n\n  more\n\n  - "system": "${LONG}"\n`],
+  ["a block scalar deeper than its key, in a nested mapping", "src/p.yaml", `a:\n  documentation: >-\n    text\n      - "system": "${LONG}"\n`],
+  ["a block scalar as a sequence item value", "src/p.yaml", `- documentation: |\n    - "system": "${LONG}"\n`],
+  ["a block scalar with CRLF line endings", "src/p.yaml", `documentation: |\r\n  - "system": "${LONG}"\r\n`],
+  ["a block scalar whose content contains a # that is not a comment", "src/p.yaml", `documentation: |\n  # x\n  - "system": "${LONG}"\n`],
+];
+
+for (const [label, file, source] of BLOCK_SCALAR_NOT_FIRING) {
+  test(`finding 8 control: ${label} is string data, not an inline prompt`, () => {
+    for (const rule of [VERSIONED, NO_INLINE]) {
+      const r = resultFor({ [file]: source }, rule);
+      assert.ok(!["failed", "warning"].includes(r.result), `${rule}: ${r.result}: ${r.message}`);
+      assert.equal(r.result, "skipped");
+    }
+  });
+}
+
+const BLOCK_SCALAR_ENDS_FIRING = [
+  ["a real key right after a block scalar ends by dedent", "src/p.yaml", `documentation: |\n  text\nsystem: "${LONG}"\n`],
+  ["a sequence-marker key right after a block scalar ends by dedent", "src/p.yaml", `a:\n  documentation: |\n    text\n  - "system": "${LONG}"\n`],
+  ["a quoted key after a blank line following a block scalar's dedent", "src/p.yaml", `documentation: |\n  text\n\n"system": "${LONG}"\n`],
+  ["a key after an EMPTY block scalar", "src/p.yaml", `documentation: |\n"system": "${LONG}"\n`],
+  ["a header-looking value in a quoted string does not open a block", "src/p.yaml", `note: "a |"\n"system": "${LONG}"\n`],
+  ["a pipe that is not at the end of the value does not open a block", "src/p.yaml", `note: a | b\n"system": "${LONG}"\n`],
+  ["a block scalar whose last line merely looks like a header does not swallow the next key", "src/p.yaml", `documentation: |
+  see foo: |
+"system": "${LONG}"
+`],
+  ["a pipe after an unclosed quote is not a block header", "src/p.yaml", `note: "a: |
+  "system": "${LONG}"
+`],
+  ["an empty block scalar whose next key sits at the owning key column after a sequence marker", "src/p.yaml", `- documentation: |
+  "system": "${LONG}"
+`],
+  ["a pipe inside a trailing comment is not a block header", "src/p.yaml", `note: a # b: |
+  "system": "${LONG}"
+`],
+  ["a block scalar header in a non-YAML file is not special", "src/a.py", `x = {"a": 1}  # |\nclient.create(system="${LONG}")\n`],
+];
+
+for (const [label, file, source] of BLOCK_SCALAR_ENDS_FIRING) {
+  test(`finding 8: ${label}`, () => {
+    for (const rule of [VERSIONED, NO_INLINE]) {
+      const r = resultFor({ [file]: source }, rule);
+      assert.equal(r.result, rule === VERSIONED ? "failed" : "warning", `${rule}: ${r.result}: ${r.message}`);
+    }
+  });
+}
+
+const PREFIXED_NOT_FIRING = [
+  ["a key whose prefix ends in a non-ASCII letter", "src/p.yaml", `pré-system: "${LONG}"\n`],
+  ["a key with a doubled hyphen", "src/p.yaml", `x--system: "${LONG}"\n`],
+  ["a key with a triple hyphen", "src/p.yaml", `x---system: "${LONG}"\n`],
+  ["a key directly prefixed by a non-ASCII letter", "src/p.yaml", `ésystem: "${LONG}"\n`],
+  ["a key prefixed by a digit and a hyphen", "src/p.yaml", `2-system: "${LONG}"\n`],
+  ["a key prefixed by an underscore and a hyphen", "src/p.yaml", `x_-system: "${LONG}"\n`],
+  ["a key prefixed by a digit", "src/p.yaml", `2system: "${LONG}"\n`],
+  ["a quoted key with a non-ASCII prefix", "src/a.js", call(`  "pré-system": "${LONG}",`)],
+  ["a CJK-prefixed key", "src/p.yaml", `系-system: "${LONG}"\n`],
+  ["a hyphenated key for a longer listed name", "src/p.yaml", `x--instructions: "${LONG}"\n`],
+  ["a dotted-prefix hyphenated key", "src/p.yaml", `a.b-system: "${LONG}"\n`],
+  ["a double-hyphen prefixed key after a sequence marker", "src/p.yaml", `- x--system: "${LONG}"\n`],
+];
+
+for (const [label, file, source] of PREFIXED_NOT_FIRING) {
+  test(`finding 8 control: ${label} is not the listed parameter`, () => {
+    for (const rule of [VERSIONED, NO_INLINE]) {
+      const r = resultFor({ [file]: source }, rule);
+      assert.ok(!["failed", "warning"].includes(r.result), `${rule}: ${r.result}: ${r.message}`);
+      assert.equal(r.result, "skipped");
+    }
+  });
+}
+
+const BOUNDARY_STILL_FIRING = [
+  ["a shell flag that is exactly --system", "src/a.sh", `llm --system="${LONG}" "hi"\n`],
+  ["a shell flag after another flag", "src/a.sh", `llm -m x --system "x" --system="${LONG}"\n`],
+  ["an attribute assignment", "src/a.js", `export const o = {};\no.system = "${LONG}";\n`],
+  ["a this-attribute assignment", "src/a.py", `self.system_prompt = "${LONG}"\n`],
+  ["a key after a non-ASCII value on the previous line", "src/p.yaml", `note: pré\nsystem: "${LONG}"\n`],
+  ["a key after a space-separated non-ASCII word", "src/a.js", call(`  é, system: "${LONG}",`)],
+];
+
+for (const [label, file, source] of BOUNDARY_STILL_FIRING) {
+  test(`finding 8: ${label} still fires`, () => {
+    for (const rule of [VERSIONED, NO_INLINE]) {
+      const r = resultFor({ [file]: source }, rule);
+      assert.equal(r.result, rule === VERSIONED ? "failed" : "warning", `${rule}: ${r.result}: ${r.message}`);
+    }
+  });
+}

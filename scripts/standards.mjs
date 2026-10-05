@@ -426,8 +426,11 @@ function detectFloatingModelAlias(run) {
 // Parameter names that carry model instructions across the common provider SDKs.
 // The name may be quoted, `"system": "..."`: the code-only view keeps a quoted property NAME and
 // blanks every other string, so the optional quote after the name is only ever a key's closing quote.
-// A name directly after `word-` (`x-system: "..."`, a hyphenated key) is a different name, not the parameter.
-const INSTRUCTION_PARAM = /(?<!\w-)\b(system|system_prompt|systemPrompt|instructions|systemInstruction)["']?\s*[:=]\s*(["'`])/g;
+// A listed name is not the suffix of a longer key: it is rejected after any letter (Unicode, so `pré-system`),
+// digit or underscore, with or without a run of hyphens between (`x-system`, `x--system`). A run of
+// hyphens after whitespace, a quote or a bracket is a flag (`--system="..."`), and a dot is an attribute
+// access (`options.system = "..."`); both still name the parameter.
+const INSTRUCTION_PARAM = /(?<![\p{L}\p{N}_]-*)\b(system|system_prompt|systemPrompt|instructions|systemInstruction)["']?\s*[:=]\s*(["'`])/gu;
 const INLINE_THRESHOLD = 200;
 
 function detectInlineSystemPrompt(run, withdrawn) {

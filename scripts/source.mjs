@@ -42,6 +42,56 @@ export function extensionOf(filePath) {
   return dot <= 0 ? "" : base.slice(dot).toLowerCase();
 }
 
+// A YAML block-scalar header ends its line with `|` or `>`, optional chomping (`+`/`-`) and indentation
+// (`1`-`9`) indicators in either order, optionally behind an anchor or tag and a trailing comment, and
+// follows `:` or a `-` sequence marker (or opens the line).
+const BLOCK_HEADER = /(?:^|[:-]\s+)(?:[&!]\S*\s+)*[|>](?:[+-][1-9]?|[1-9][+-]?)?[ \t]*(?:#.*)?$/;
+
+// If the line that ends at `newline` is a block-scalar header, return the offset of the newline that ends
+// the scalar's content (the last non-blank content line); otherwise return `newline`. The content is every
+// following line that is blank or indented at least as deep as the first non-blank line, and that first
+// line must be indented deeper than the node that owns the header (so an empty scalar, `key: |` followed
+// by a dedented key, has no content). It ends by dedent, never by what a line says.
+function yamlBlockScalarEnd(text, newline) {
+  const lineStart = text.lastIndexOf("\n", newline - 1) + 1;
+  const header = text.slice(lineStart, newline).replace(/\r$/, "");
+  if (!BLOCK_HEADER.test(header) || /^\s*#/.test(header)) return newline;
+  // An unclosed quote before the indicator means the `|` sits inside a string, not after a key.
+  const indicator = header.search(/[|>][+\-1-9 \t]*(?:#.*)?$/);
+  const before = header.slice(0, indicator).replace(/\\./g, "");
+  if ((before.match(/"/g) || []).length % 2 || (before.match(/'/g) || []).length % 2) return newline;
+  // A `#` after whitespace before the indicator opens a comment, and the indicator is inside it.
+  if (/\s#/.test(before)) return newline;
+
+  const indentOf = (line) => /^ */.exec(line)[0].length;
+  // The owning node's column: the key's own when the header follows `- key:`, else the line's indentation.
+  const marker = /^ *(?:- +)+(?=[^\s#"'[\]{}|>&!-][^#]*: )/.exec(header);
+  const parent = marker ? marker[0].length : indentOf(header);
+  const explicit = /[1-9]/.exec(header.slice(indicator));
+
+  let contentIndent = explicit ? parent + Number(explicit[0]) : -1;
+  let end = newline;
+  let pos = newline + 1;
+  while (pos <= text.length) {
+    let next = text.indexOf("\n", pos);
+    if (next === -1) next = text.length;
+    const line = text.slice(pos, next).replace(/\r$/, "");
+    if (line.trim() !== "") {
+      const depth = indentOf(line);
+      if (contentIndent === -1) {
+        if (depth <= parent) break;
+        contentIndent = depth;
+      } else if (depth < contentIndent) {
+        break;
+      }
+      end = next;
+    }
+    if (next >= text.length) break;
+    pos = next + 1;
+  }
+  return end;
+}
+
 /**
  * Split source text into the parts a detector may treat as usage, and the parts it must not.
  *
@@ -147,6 +197,20 @@ export function splitSource(text, filePath) {
     if (matched) continue;
 
     const ch = text[i];
+
+    // The lines after a YAML block-scalar header (`key: |`, `- >-`) are string data, however much they
+    // look like keys, sequence items, quotes or comments. The whole extent is one string: kept in the
+    // string and in-place views, blank in the code-only view, so no key inside it is ever recognised.
+    if (isYaml && ch === "\n") {
+      const stop = yamlBlockScalarEnd(text, i);
+      if (stop > i + 1) {
+        strings.push(text.slice(i + 1, stop));
+        inPlace.push(text.slice(i, stop));
+        codeOnly.push(text[i] + blank(text.slice(i + 1, stop)));
+        i = stop;
+        continue;
+      }
+    }
 
     if (syntax.strings.includes(ch)) {
       const quote = ch;
