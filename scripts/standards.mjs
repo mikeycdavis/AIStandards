@@ -424,18 +424,15 @@ function detectFloatingModelAlias(run) {
 }
 
 // Parameter names that carry model instructions across the common provider SDKs.
-const INSTRUCTION_PARAM = /\b(system|system_prompt|systemPrompt|instructions|systemInstruction)\s*[:=]\s*(["'`])/;
+const INSTRUCTION_PARAM = /\b(system|system_prompt|systemPrompt|instructions|systemInstruction)\s*[:=]\s*(["'`])/g;
 const INLINE_THRESHOLD = 200;
 
 function detectInlineSystemPrompt(run, withdrawn) {
   const rules = ["promptsec.prompt-is-versioned-artifact", "promptsec.no-inline-system-prompt"];
-  if (withdrawn) {
-    for (const rule of rules) {
-      run.observe({ rule, unknown: true, message: "The walk was shortened by a framework exclusion, so absence of an inline prompt cannot be established.", evidence: run.surface.frameworkExcludedDirectories });
-    }
-    return;
-  }
 
+  // A shortened walk withdraws a CLEAN result, never a finding: a violation in a file that was
+  // collected is a violation whatever else was excluded. So the files are always scanned, and the
+  // withdrawal applies only when nothing was found.
   const hits = [];
   for (const file of run.files) {
     if (!isCode(file)) continue;
@@ -444,29 +441,39 @@ function detectInlineSystemPrompt(run, withdrawn) {
     const split = splitSource(read.text, file);
     if (!split.usable) continue;
 
-    // Search the ORIGINAL text for the parameter, then confirm the literal by measuring the string
-    // partition. Searching only `code` would lose the literal; searching only `strings` would lose
-    // which parameter it was assigned to.
-    const match = INSTRUCTION_PARAM.exec(read.text);
-    if (!match) continue;
-    const quote = match[2];
-    const start = read.text.indexOf(quote, match.index + match[0].length - 1);
-    if (start === -1) continue;
-    let end = start + 1;
-    while (end < read.text.length) {
-      if (read.text[end] === "\\") { end += 2; continue; }
-      if (read.text[end] === quote) break;
-      if (read.text[end] === "\n" && quote !== "`") { end = -1; break; }
-      end += 1;
+    // Find the parameter in the CODE view of the file (comments, and the bodies of string literals,
+    // blanked in place), so a match that merely sits in a comment or inside a quoted mention is not
+    // an instruction parameter. The view is index-aligned with the original text, which is where the
+    // literal is measured, so the match's own opening quote is the literal's start. EVERY match is
+    // measured, not the first: a short instruction earlier in a file does not describe a long one later.
+    const view = split.codeOnly;
+    INSTRUCTION_PARAM.lastIndex = 0;
+    let longest = -1;
+    for (let match = INSTRUCTION_PARAM.exec(view); match; match = INSTRUCTION_PARAM.exec(view)) {
+      const quote = match[2];
+      const start = match.index + match[0].length - 1;
+      let end = start + 1;
+      while (end < read.text.length) {
+        if (read.text[end] === "\\") { end += 2; continue; }
+        if (read.text[end] === quote) break;
+        if (read.text[end] === "\n" && quote !== "`") { end = -1; break; }
+        end += 1;
+      }
+      if (end === -1) continue;
+      longest = Math.max(longest, end - start - 1);
     }
-    if (end === -1) continue;
-    const literal = read.text.slice(start + 1, end);
-    if (literal.length >= INLINE_THRESHOLD) hits.push(`${file} (${literal.length} chars)`);
+    if (longest >= INLINE_THRESHOLD) hits.push(`${file} (${longest} chars)`);
   }
 
   if (hits.length > 0) {
     for (const rule of rules) {
       run.observe({ rule, violation: true, message: `Instruction literal of ${INLINE_THRESHOLD}+ characters passed inline at a model call site.`, evidence: hits.slice(0, 10) });
+    }
+    return;
+  }
+  if (withdrawn) {
+    for (const rule of rules) {
+      run.observe({ rule, unknown: true, message: "The walk was shortened by a framework exclusion, so absence of an inline prompt cannot be established.", evidence: run.surface.frameworkExcludedDirectories });
     }
     return;
   }
@@ -504,11 +511,9 @@ const OFF_QUOTED_YAML = offQuoted(false);
 
 function detectDisabledSafetyControls(run, withdrawn) {
   const rule = "misuse.safety-controls-not-disabled";
-  if (withdrawn) {
-    run.observe({ rule, unknown: true, message: "The walk was shortened by a framework exclusion, so absence of a disabled safety control cannot be established.", evidence: run.surface.frameworkExcludedDirectories });
-    return;
-  }
 
+  // As for the inline prompt: the files that were collected are always scanned. A shortened walk
+  // withdraws only a clean result.
   const hits = [];
   for (const file of run.files) {
     if (!isCode(file)) continue;
@@ -542,6 +547,10 @@ function detectDisabledSafetyControls(run, withdrawn) {
 
   if (hits.length > 0) {
     run.observe({ rule, violation: true, message: "A model provider safety control is disabled in configuration.", evidence: [...new Set(hits)].slice(0, 10) });
+    return;
+  }
+  if (withdrawn) {
+    run.observe({ rule, unknown: true, message: "The walk was shortened by a framework exclusion, so absence of a disabled safety control cannot be established.", evidence: run.surface.frameworkExcludedDirectories });
     return;
   }
   run.observe({ rule, message: "No recognised disabled-safety literal found. A provider spelling not on the maintained list would not be seen." });
@@ -777,7 +786,14 @@ function main(argv) {
     return EXIT_INVOCATION;
   }
 
-  const target = path.resolve(flags.dir ?? positional[0] ?? ".");
+  // An empty value is not "no value": `--dir=` (an unset variable expanded into the flag) would
+  // otherwise resolve to the working directory and report on a repository nobody named.
+  const named = flags.dir ?? positional[0];
+  if (named === "") {
+    process.stderr.write("standards: the target directory is empty. Name a directory, or omit --dir to use the working directory.\n");
+    return EXIT_INVOCATION;
+  }
+  const target = path.resolve(named ?? ".");
   if (!fs.existsSync(target) || !fs.statSync(target).isDirectory()) {
     process.stderr.write(`standards: ${target} is not a directory\n`);
     return EXIT_INVOCATION;

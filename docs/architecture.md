@@ -141,7 +141,7 @@ registry, or any remote host — including during its own tests.
   (`OFF_QUOTED`, or `OFF_QUOTED_YAML` for `.yml`/`.yaml`, which omits the ternary guard). The quoted
   form is guarded against a union-type member (`"off" | "on"`) and, outside YAML, a ternary
   consequent. Unreadable files are skipped without recording an unknown. A shortened walk withdraws
-  the rule before any file is read.
+  a clean result only; the collected files are still scanned and a violation in one still fails.
 - The walk does not skip `.claude/` or any other untracked directory. Untracked local files present in
   a checkout are part of what `audit` counts and what content-derived detectors read.
 
@@ -275,8 +275,8 @@ An end-to-end `validate` run, naming the real functions:
 7. `runDetectors(run)` (line 518) runs the four descriptive detectors first (they emit findings with
    `rule: null`, because binding an observation to a rule would manufacture a verdict), then the
    five full-assurance judgmental detectors, then the three partial-assurance ones. If the walk was
-   shortened, `withdrawn` (line 534) is true and the content-derived detectors withdraw rather than
-   report clean.
+   shortened, `withdrawn` (line 534) is true and the content-derived detectors withdraw a clean result
+   rather than report it clean; a violation in a collected file still fails.
 8. `assertBindings(catalog, observedIds)` fails the run if a detector observed a rule the catalog
    does not contain.
 9. `checkApplicabilityContradictions(run, resolved)` (line 500) raises
@@ -320,7 +320,7 @@ document cites the rule id in exactly one `### RN` section and carries a marker 
   `test/partial-assurance.test.mjs` fails if any fixture reports a partial result `passed`, and refuses a
   rule in `EVALUATED_RULES` with assurance other than `full` or `partial`.
 - **Withdraw, never report clean — where the detector knows.** When the evidence walk is shortened,
-  content-derived rules are withdrawn to not-evaluated (`CONTENT_DERIVED_RULES`, line 121). The broader
+  content-derived rules are withdrawn to not-evaluated when nothing was found (`CONTENT_DERIVED_RULES`, line 121); a finding in a collected file is never withdrawn. The broader
   evidence-availability architecture — unreadable and truncated files as unknowns — is Phase 3.
 - **Descriptive before judgmental, `rule: null` on the descriptive ones.** `runDetectors()` line 518.
 - **Foreign namespaces are refused, not merely avoided.** `FOREIGN_NAMESPACES` in `catalog.mjs:50`.

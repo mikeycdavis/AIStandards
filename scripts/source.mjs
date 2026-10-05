@@ -50,20 +50,27 @@ export function extensionOf(filePath) {
  *   scan it with the wrong rules. An unknown file is not an empty file.
  *
  *   `withoutComments` is the whole text with every comment blanked to spaces IN PLACE (line breaks
- *   kept), and code, string and regular-expression literals left where they were written. The
- *   partitions lose adjacency: `code` has a hole where each literal was, and `strings` has no
+ *   kept), and code, string and regular-expression literals left where they were written.
+ *
+ *   `codeOnly` is the same in-place view with string and regular-expression literals blanked too
+ *   (a string keeps only its opening delimiter), so an index into it is an index into the original
+ *   text AND is known to sit in a code position. A caller that must confirm a match begins in code,
+ *   not in a comment or a quoted mention, searches this view and measures in the original.
+ *
+ *   The partitions lose adjacency: `code` has a hole where each literal was, and `strings` has no
  *   record of what preceded it. A caller that needs a key and the literal assigned to it to stay
  *   next to each other must search this view, not a concatenation of the partitions.
  */
 export function splitSource(text, filePath) {
   const kind = BY_EXTENSION.get(extensionOf(filePath));
-  if (!kind) return { code: "", comments: "", strings: "", withoutComments: "", usable: false };
+  if (!kind) return { code: "", comments: "", strings: "", withoutComments: "", codeOnly: "", usable: false };
 
   const syntax = SYNTAX[kind];
   const code = [];
   const comments = [];
   const strings = [];
   const inPlace = [];
+  const codeOnly = [];
   const blank = (s) => s.replace(/[^\r\n]/g, " ");
 
   let i = 0;
@@ -90,6 +97,7 @@ export function splitSource(text, filePath) {
         const stop = end === -1 ? n : end + close.length;
         comments.push(text.slice(i, stop));
         inPlace.push(blank(text.slice(i, stop)));
+        codeOnly.push(blank(text.slice(i, stop)));
         i = stop;
         matched = true;
         break;
@@ -103,6 +111,7 @@ export function splitSource(text, filePath) {
         if (end === -1) end = n;
         comments.push(text.slice(i, end));
         inPlace.push(blank(text.slice(i, end)));
+        codeOnly.push(blank(text.slice(i, end)));
         i = end;
         matched = true;
         break;
@@ -125,6 +134,7 @@ export function splitSource(text, filePath) {
       }
       strings.push(text.slice(i, Math.min(j, n)));
       inPlace.push(text.slice(i, Math.min(j, n)));
+      codeOnly.push(text[i] + blank(text.slice(i + 1, Math.min(j, n))));
       i = Math.min(j, n);
       regexAllowed = false;
       continue;
@@ -149,6 +159,7 @@ export function splitSource(text, filePath) {
           while (j < n && /[a-z]/.test(text[j])) j += 1; // flags
           strings.push(text.slice(i, j));
           inPlace.push(text.slice(i, j));
+          codeOnly.push(blank(text.slice(i, j)));
           i = j;
           regexAllowed = false;
           continue;
@@ -158,6 +169,7 @@ export function splitSource(text, filePath) {
 
     code.push(ch);
     inPlace.push(ch);
+    codeOnly.push(ch);
     if (!/\s/.test(ch)) regexAllowed = !/[A-Za-z0-9_$)\]]/.test(ch);
     i += 1;
   }
@@ -167,6 +179,7 @@ export function splitSource(text, filePath) {
     comments: comments.join("\n"),
     strings: strings.join("\n"),
     withoutComments: inPlace.join(""),
+    codeOnly: codeOnly.join(""),
     usable: true,
   };
 }
