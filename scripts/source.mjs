@@ -72,6 +72,7 @@ export function splitSource(text, filePath) {
   const strings = [];
   const inPlace = [];
   const codeOnly = [];
+  const isYaml = [".yml", ".yaml"].includes(extensionOf(filePath));
   const blank = (s) => s.replace(/[^\r\n]/g, " ");
 
   let i = 0;
@@ -96,7 +97,8 @@ export function splitSource(text, filePath) {
   //   - the next non-blank character is `:` (or `=`, not `==`, for the `hash` syntaxes, where TOML
   //     writes `"system" = ...`);
   //   - it opens a mapping entry: the previous code character is `{` or `,`, or, in the `hash`
-  //     syntaxes, the literal begins its line (a YAML or TOML key). A ternary branch `c ? "a" : b`
+  //     syntaxes, the literal begins its line (a YAML or TOML key) or, in YAML only, follows `- `
+  //     sequence markers on its own line (`- "system": ...`, a list of mappings). A ternary branch `c ? "a" : b`
   //     follows `?` and is a value.
   const isQuotedKey = (start, end, quote) => {
     if (quote === "`" || end - start < 3 || text[end - 1] !== quote) return false;
@@ -109,7 +111,8 @@ export function splitSource(text, filePath) {
     if (prev === "{" || prev === ",") return true;
     if (kind !== "hash") return false;
     const lineStart = text.lastIndexOf("\n", start - 1) + 1;
-    return text.slice(lineStart, start).trim() === "";
+    const before = text.slice(lineStart, start);
+    return before.trim() === "" || (isYaml && /^\s*(-\s+)+$/.test(before));
   };
 
   while (i < n) {

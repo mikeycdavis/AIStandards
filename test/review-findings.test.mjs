@@ -304,6 +304,87 @@ test("finding 6: a quoted-key literal after a short one, and after a commented o
   assert.equal(resultFor({ "src/a.js": source }, VERSIONED).result, "failed");
 });
 
+// --- 7. quoted keys in YAML sequences, hyphenated names, and the claim boundary (PR #94 evaluation) --
+//
+// PR #94 kept a quoted key only after `{`, `,` or at the start of a line, so the most common prompt-YAML
+// shape, a list of mappings whose first key follows `- `, was still reported `skipped`. The same pass
+// found the converse: an UNquoted hyphenated key (`x-system: "..."`) fired although its quoted twin does
+// not, because `\b` matches between `-` and `s`.
+
+const SEQUENCE_FIRING = [
+  ["a double-quoted key after a sequence marker", "src/p.yaml", `- "system": "${LONG}"\n`],
+  ["a single-quoted key after a sequence marker", "src/p.yaml", `- 'system': "${LONG}"\n`],
+  ["a quoted key after a sequence marker in a .yml file", "src/p.yml", `- "instructions": '${LONG}'\n`],
+  ["a quoted key after a wide sequence marker", "src/p.yaml", `steps:\n  -   "system": "${LONG}"\n`],
+  ["a quoted key after nested sequence markers", "src/p.yaml", `- - "system": "${LONG}"\n`],
+  ["a spaced quoted key after a sequence marker", "src/p.yaml", `- "system" : "${LONG}"\n`],
+  ["a quoted key after a sequence marker with CRLF line endings", "src/p.yaml", `- "system": "${LONG}"\r\n`],
+  ["a quoted key after a sequence marker, second line of a mapping", "src/p.yaml", `- role: user\n  "system": "${LONG}"\n`],
+  ["an unquoted key after a sequence marker", "src/p.yaml", `- system: "${LONG}"\n`],
+  ["an indented quoted key", "src/p.yaml", `a:\n  "system": "${LONG}"\n`],
+  ["a spaced quoted key in YAML", "src/p.yaml", `"system" : "${LONG}"\n`],
+  ["a JSON key with a newline before the colon", "src/p.json", `{"system"\n: "${LONG}"}\n`],
+  ["a Python keyword argument", "src/a.py", `client.create(model="m", system="${LONG}")\n`],
+  ["a Python keyword argument with spaces and a newline", "src/a.py", `client.create(\n  model="m",\n  system = "${LONG}",\n)\n`],
+  ["a shell flag that is exactly --system", "src/a.sh", `llm --system="${LONG}" "hi"\n`],
+];
+
+for (const [label, file, source] of SEQUENCE_FIRING) {
+  test(`finding 7: ${label} carrying a long instruction is an inline prompt`, () => {
+    for (const rule of [VERSIONED, NO_INLINE]) {
+      const r = resultFor({ [file]: source }, rule);
+      assert.equal(r.result, rule === VERSIONED ? "failed" : "warning", `${rule}: ${r.result}: ${r.message}`);
+    }
+  });
+}
+
+const SEQUENCE_NOT_FIRING = [
+  ["a quoted hyphenated key after a sequence marker", "src/p.yaml", `- "x-system": "${LONG}"\n`],
+  ["an unquoted hyphenated key after a sequence marker", "src/p.yaml", `- x-system: "${LONG}"\n`],
+  ["an unquoted hyphenated key in YAML", "src/p.yaml", `x-system: "${LONG}"\n`],
+  ["an unquoted hyphenated name in a JS ternary", "src/a.js", `export const v = cond ? a-system : "${LONG}";\n`],
+  ["a sequence-marker quoted key in a file that is not YAML", "src/a.py", `- "system": "${LONG}"\n`],
+  ["a sequence item whose value is the word system", "src/p.yaml", `- "role": "system"\n- text: "${SHORT}"\n`],
+  ["a sequence item that only mentions the pair", "src/p.yaml", `- "note system: '${LONG}'"\n`],
+  ["a bare quoted sequence item", "src/p.yaml", `- "system"\n- "${LONG}"\n`],
+  ["a short instruction after a sequence marker", "src/p.yaml", `- "system": "${SHORT}"\n`],
+  ["a sequence marker in a YAML comment", "src/p.yaml", `# - "system": "${LONG}"\nx: 1\n`],
+];
+
+for (const [label, file, source] of SEQUENCE_NOT_FIRING) {
+  test(`finding 7 control: ${label} is not an inline prompt`, () => {
+    for (const rule of [VERSIONED, NO_INLINE]) {
+      const r = resultFor({ [file]: source }, rule);
+      assert.ok(!["failed", "warning"].includes(r.result), `${rule}: ${r.result}: ${r.message}`);
+      assert.equal(r.result, "skipped");
+    }
+  });
+}
+
+// The claim boundary, pinned so that widening it is a deliberate change and not an accident. Each shape
+// is a long literal near the word `system` that the detector does NOT claim: its grammar is a listed
+// parameter NAME, then `:` or `=`, then a quoted literal (Standard 21, "The detector for R1 and R2 finds
+// one shape of one problem"). They report `skipped`, never `passed`.
+const OUTSIDE_THE_CLAIM = [
+  ["a template-literal key (not valid JavaScript)", "src/a.js", call("  `system`: \"" + LONG + "\",")],
+  ["a computed key", "src/a.js", call(`  [\`system\`]: "${LONG}",`)],
+  ["a hyphenated quoted key that is not a listed name", "src/a.js", call(`  "system-prompt": "${LONG}",`)],
+  ["a Python tuple pair", "src/a.py", `dict([("system", "${LONG}")])\n`],
+  ["a LangChain role tuple", "src/a.py", `ChatPromptTemplate.from_messages([("system", "${LONG}")])\n`],
+  ["an OpenAI chat message with role system", "src/a.py", `client.chat.completions.create(messages=[{"role": "system", "content": "${LONG}"}])\n`],
+  ["a message with content before role", "src/a.js", call(`  messages: [{ content: "${LONG}", role: "system" }],`)],
+  ["a Gemini systemInstruction object", "src/a.js", call(`  systemInstruction: { parts: [{ text: "${LONG}" }] },`)],
+  ["a YAML block scalar", "src/p.yaml", `system: |\n  ${LONG}\n`],
+];
+
+for (const [label, file, source] of OUTSIDE_THE_CLAIM) {
+  test(`finding 7 claim boundary: ${label} is not claimed and reports skipped`, () => {
+    for (const rule of [VERSIONED, NO_INLINE]) {
+      assert.equal(resultFor({ [file]: source }, rule).result, "skipped", rule);
+    }
+  });
+}
+
 test("the working directory is this repository (guards finding 1's setup)", () => {
   assert.ok(fs.existsSync(path.join(REPO, "ai-policy.yml")));
 });
