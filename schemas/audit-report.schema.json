@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mikeycdavis/AIStandards/schemas/audit-report.schema.json",
+  "title": "AIStandards audit report",
+  "description": "Evidence discovery. This envelope deliberately has NO status and NO score, and the schema forbids them: audit and validate are separate commands because evidence and a verdict are separate things, and an envelope that could carry both would eventually be read as one.",
+  "type": "object",
+  "required": ["schemaVersion", "standard", "project", "auditedAt", "notAVerdict", "evidenceSurface", "aiSurface", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0" },
+    "standard": {
+      "type": "object",
+      "required": ["id", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "const": "ai" },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "project": { "type": ["string", "null"] },
+    "auditedAt": { "type": "string", "minLength": 1 },
+    "notAVerdict": {
+      "description": "Carried in the machine-readable output as well as the human one, so a consumer parsing JSON cannot mistake evidence for a verdict.",
+      "type": "string",
+      "const": "This is evidence, not a verdict."
+    },
+    "evidenceSurface": {
+      "description": "Every way evidence could have been lost during this run. A consumer that ignores this section is reading findings as if the walk were complete.",
+      "type": "object",
+      "required": ["root", "filesCollected", "excludedDirectories", "frameworkExcludedDirectories", "unreadableFiles"],
+      "additionalProperties": false,
+      "properties": {
+        "root": { "type": "string", "minLength": 1 },
+        "filesCollected": { "type": "integer", "minimum": 0 },
+        "excludedDirectories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "authorizedBy"],
+            "additionalProperties": false,
+            "properties": {
+              "path": { "type": "string" },
+              "authorizedBy": {
+                "description": "not-project-evidence: never project content (.git). framework: this tool's own decision, and the only kind that invalidates completeness.",
+                "type": "string",
+                "enum": ["not-project-evidence", "framework"]
+              }
+            }
+          }
+        },
+        "frameworkExcludedDirectories": { "type": "array", "items": { "type": "string" } },
+        "unreadableFiles": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "aiSurface": {
+      "description": "Descriptive observations. These carry no rule binding, because binding an observation to a rule would manufacture a verdict out of it.",
+      "type": "object",
+      "required": ["manifest", "promptAssets", "toolDefinitions"],
+      "additionalProperties": false,
+      "properties": {
+        "manifest": { "type": ["string", "null"] },
+        "promptAssets": { "type": "array", "items": { "type": "string" } },
+        "toolDefinitions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "severity", "label", "message", "evidence"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "category": { "type": "string", "minLength": 1 },
+          "severity": { "type": "string", "enum": ["error", "warning", "info"] },
+          "label": {
+            "description": "OBSERVED: a file exists at a path with a defined meaning. INFERRED: a naming convention or content pattern matched.",
+            "type": "string",
+            "enum": ["OBSERVED", "INFERRED"]
+          },
+          "message": { "type": "string", "minLength": 1 },
+          "evidence": { "type": "array", "items": { "type": "string" } },
+          "rule": {
+            "description": "Null for descriptive findings. A descriptive finding bound to a rule would be a verdict wearing an observation's clothes.",
+            "type": ["string", "null"]
+          },
+          "standardRef": { "type": ["integer", "null"] },
+          "remediation": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

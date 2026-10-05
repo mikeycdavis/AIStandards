@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mikeycdavis/AIStandards/schemas/validate-report.schema.json",
+  "title": "AIStandards validate report",
+  "description": "The policy-aware verdict envelope. frameworkCoverage and notEvaluable travel BESIDE the verdict and never inside it: a coverage improvement must never be able to look like a compliance improvement, and admitting a blind spot must never be able to look like a compliance failure.",
+  "type": "object",
+  "required": [
+    "schemaVersion", "standard", "standardVersion", "project", "policyPath", "policySource",
+    "status", "score", "summary", "assurance", "denominator", "frameworkCoverage",
+    "notEvaluable", "unestablishedProhibitions", "invariantViolations", "auditedAt", "results"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0" },
+    "standard": {
+      "type": "object",
+      "required": ["id", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "const": "ai" },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "standardVersion": { "type": ["string", "null"] },
+    "project": { "type": ["string", "null"] },
+    "policyPath": {
+      "description": "Absolute path of the policy that governed this run, as resolved. Always under the target.",
+      "type": "string",
+      "minLength": 1
+    },
+    "policySource": {
+      "description": "There is deliberately no third value. Either the caller named the policy or it was the target's default; there is no code path by which this pack's own policy governs someone else's verdict.",
+      "type": "string",
+      "enum": ["explicit", "target-default"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["COMPLIANT", "COMPLIANT_WITH_EXCEPTIONS", "NON_COMPLIANT", "NOT_EVALUATED", "BLOCKED_BY_INVARIANT"]
+    },
+    "score": {
+      "description": "Null when BLOCKED_BY_INVARIANT. Printing a blocked status beside a percentage undercuts the point of the status.",
+      "type": ["number", "null"]
+    },
+    "summary": {
+      "type": "object",
+      "required": ["passed", "failed", "warnings", "skipped"],
+      "additionalProperties": false,
+      "properties": {
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "assurance": {
+      "type": "object",
+      "required": ["automated", "manualReview", "notEvaluated"],
+      "additionalProperties": false,
+      "properties": {
+        "automated": { "type": "integer", "minimum": 0 },
+        "manualReview": { "type": "integer", "minimum": 0 },
+        "notEvaluated": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "denominator": {
+      "type": "object",
+      "required": ["total", "applicable", "scored", "basis"],
+      "additionalProperties": false,
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "applicable": { "type": "integer", "minimum": 0 },
+        "scored": { "type": "integer", "minimum": 0 },
+        "basis": { "type": "string", "minLength": 1 }
+      }
+    },
+    "frameworkCoverage": {
+      "type": "object",
+      "required": ["total", "evaluated", "manualReview", "notEvaluable", "unimplemented"],
+      "additionalProperties": false,
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "evaluated": { "type": "integer", "minimum": 0 },
+        "manualReview": { "type": "integer", "minimum": 0 },
+        "notEvaluable": { "type": "integer", "minimum": 0 },
+        "unimplemented": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "notEvaluable": {
+      "description": "Requirements this framework states and structurally cannot check. Always present, empty when none.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule", "standardRef", "note"],
+        "additionalProperties": false,
+        "properties": {
+          "rule": { "type": "string", "minLength": 1 },
+          "standardRef": { "type": "integer", "minimum": 1 },
+          "note": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "unestablishedProhibitions": {
+      "description": "Forbidden-level rules nobody examined. Always present, empty when none, so a consumer can distinguish 'no prohibition went unexamined' from 'this validator predates the field'.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule", "standardRef", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "rule": { "type": "string", "minLength": 1 },
+          "standardRef": { "type": "integer", "minimum": 1 },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "invariantViolations": {
+      "description": "Structural integrity breaches, not rule results. A non-empty list forces BLOCKED_BY_INVARIANT and a null score.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "message", "evidence"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 },
+          "evidence": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "auditedAt": { "type": "string", "minLength": 1 },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule", "standardRef", "level", "severity", "result", "disposition",
+          "distinction", "assurance", "validationType", "evidence", "message"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "rule": { "type": "string", "minLength": 1 },
+          "standardRef": { "type": "integer", "minimum": 1 },
+          "level": { "type": "string", "enum": ["required", "recommended", "optional", "forbidden"] },
+          "severity": { "type": "string", "enum": ["error", "warning", "info"] },
+          "result": { "type": "string", "enum": ["passed", "failed", "warning", "skipped"] },
+          "disposition": {
+            "type": "string",
+            "enum": ["evaluated", "not-evaluated", "not-applicable", "excepted", "attested"]
+          },
+          "distinction": {
+            "description": "The brief's six-way presentation value. A pure function of (result, disposition, level); it can never carry information the other three do not already hold.",
+            "type": "string",
+            "enum": ["passed", "failed", "warning", "skipped", "not-evaluated", "prohibited-but-unestablished"]
+          },
+          "assurance": { "type": "string", "enum": ["full", "partial", "none"] },
+          "validationType": {
+            "type": "string",
+            "enum": ["structural", "document", "configuration", "code-analysis", "manual-review", "not-evaluable"]
+          },
+          "evidence": { "type": "array", "items": { "type": "string" } },
+          "message": { "type": "string", "minLength": 1 },
+          "remediation": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

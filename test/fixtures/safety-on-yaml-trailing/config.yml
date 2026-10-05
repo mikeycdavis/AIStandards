@@ -1,0 +1,3 @@
+moderation: 'on' # 'off' was used while testing
+temperature: 0.2
+model: "claude-sonnet-4-5-20250929"

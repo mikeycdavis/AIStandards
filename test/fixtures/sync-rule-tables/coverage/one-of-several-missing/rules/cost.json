@@ -1,0 +1,62 @@
+{
+  "$comment": "Coverage fixture catalog for test/sync-rule-tables.test.mjs. Not a real shard. Every root under coverage/ carries this file byte-for-byte; the roots differ only in their standards/ documents.",
+  "rules": [
+    {
+      "id": "cost.fixture-cap-declared",
+      "title": "Fixture: a spend cap is declared",
+      "standard": 95,
+      "category": "cost",
+      "level": "required",
+      "severity": "error",
+      "validationType": "structural",
+      "assurance": "full",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "The only rule for fixture Standard 95, whose rules live in one shard.",
+      "rationale": "Standard 95 therefore requires exactly one block: rules/cost.json.",
+      "remediation": "None; this is a test fixture.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null
+    },
+    {
+      "id": "cost.fixture-cap-enforced",
+      "title": "Fixture: the spend cap is enforced",
+      "standard": 96,
+      "category": "cost",
+      "level": "required",
+      "severity": "error",
+      "validationType": "configuration",
+      "assurance": "partial",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "Fixture Standard 96's rule in rules/cost.json; its other rules are in rules/fairness.json.",
+      "rationale": "Standard 96 spans two shards, so it requires two blocks.",
+      "remediation": "None; this is a test fixture.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null
+    },
+    {
+      "id": "cost.fixture-cap-reported",
+      "title": "Fixture: a rule for a standard with no document",
+      "standard": 99,
+      "category": "cost",
+      "level": "recommended",
+      "severity": "warning",
+      "validationType": "document",
+      "assurance": "partial",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "Belongs to fixture Standard 99, which no root under coverage/ writes.",
+      "rationale": "A rule citing an unwritten standard is permitted under the phased plan and requires no block.",
+      "remediation": "None; this is a test fixture.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null
+    }
+  ]
+}

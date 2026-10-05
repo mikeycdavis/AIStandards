@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mikeycdavis/AIStandards/schemas/ai-policy.schema.json",
+  "title": "AI Policy",
+  "description": "The policy a project declares to select which AI standards apply to it and at what level. Nothing in this file asserts compliance; what a project actually meets comes from a validation run. Note the filename: AIStandards reads ai-policy.yml, not project-policy.yml, because EngineeringStandards' policy schema is closed and pins its own standardVersion, so one file cannot satisfy both packs.",
+  "type": "object",
+  "required": ["standardVersion"],
+  "additionalProperties": false,
+  "properties": {
+    "standardVersion": {
+      "description": "The AIStandards framework version this policy is written against. A verdict is refused when this disagrees with the framework's VERSION, because a verdict that misstates which rules produced it is a false green.",
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "project": {
+      "description": "The project this policy governs. Reported in the verdict so a consumer can see which repository was evaluated.",
+      "type": "string",
+      "minLength": 1
+    },
+    "rules": {
+      "description": "Every rule the project adopts, and at what level. A rule omitted here is not off — it is undeclared, and the verdict reports how many were left undeclared.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/ruleId" },
+      "additionalProperties": { "$ref": "#/$defs/ruleSetting" }
+    },
+    "applicability": {
+      "description": "Rules whose SUBJECT does not exist in this project. This is a claim about the project, not about the rule, and it stops being true the moment the project gains the capability — which is what revisitWhen is for. Not-applicable and exception are different mechanisms and never substitute for each other.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/ruleId" },
+      "additionalProperties": { "$ref": "#/$defs/applicabilityDeclaration" }
+    }
+  },
+  "$defs": {
+    "ruleId": {
+      "description": "Canonical rule identity: category.kebab-case-name. camelCase spellings are rejected by construction.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9]+(-[a-z0-9]+)*)+$"
+    },
+    "level": {
+      "type": "string",
+      "enum": ["required", "recommended", "optional", "forbidden"]
+    },
+    "ruleSetting": {
+      "type": "object",
+      "required": ["level"],
+      "additionalProperties": false,
+      "properties": {
+        "level": { "$ref": "#/$defs/level" },
+        "note": { "type": "string", "minLength": 1 }
+      }
+    },
+    "applicabilityDeclaration": {
+      "type": "object",
+      "required": ["status", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["applicable", "not-applicable"]
+        },
+        "reason": {
+          "description": "Why the rule's subject does not exist here. An entry without one is indistinguishable from a rule somebody forgot.",
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewedAt": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "revisitWhen": {
+          "description": "The change that would make this declaration false.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

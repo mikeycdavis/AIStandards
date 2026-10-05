@@ -1,0 +1,30 @@
+standardVersion: "0.1.0"
+project: "inline-system-prompt"
+
+rules:
+  lifecycle.manifest-exists:
+    level: required
+  lifecycle.manifest-valid:
+    level: required
+  lifecycle.manifest-not-scaffold:
+    level: required
+  lifecycle.model-version-pinned:
+    level: required
+  gate.tool-permission-manifest:
+    level: required
+  gate.actions-classified:
+    level: required
+  promptsec.prompt-is-versioned-artifact:
+    level: required
+  promptsec.no-inline-system-prompt:
+    level: recommended
+  promptsec.no-secrets-in-context:
+    level: forbidden
+  promptsec.template-injection-guarded:
+    level: required
+  misuse.safety-controls-not-disabled:
+    level: forbidden
+  privacy.no-credentials-in-prompts:
+    level: forbidden
+  eval.plan-exists:
+    level: required

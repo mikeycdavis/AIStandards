@@ -1,0 +1,62 @@
+{
+  "$comment": "Coverage fixture catalog for test/sync-rule-tables.test.mjs. Not a real shard. Every root under coverage/ carries this file byte-for-byte; the roots differ only in their standards/ documents.",
+  "rules": [
+    {
+      "id": "fairness.fixture-parity-measured",
+      "title": "Fixture: outcome parity is measured",
+      "standard": 96,
+      "category": "fairness",
+      "level": "recommended",
+      "severity": "warning",
+      "validationType": "document",
+      "assurance": "partial",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "One of two rules fixture Standard 96 holds in rules/fairness.json.",
+      "rationale": "A missing fairness block for Standard 96 must name both uncovered rule ids.",
+      "remediation": "None; this is a test fixture.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null
+    },
+    {
+      "id": "fairness.fixture-parity-published",
+      "title": "Fixture: parity results are published",
+      "standard": 96,
+      "category": "fairness",
+      "level": "optional",
+      "severity": "info",
+      "validationType": "manual-review",
+      "assurance": "none",
+      "nonExemptible": true,
+      "introducedIn": "0.1.0",
+      "description": "The second rule fixture Standard 96 holds in rules/fairness.json.",
+      "rationale": "A missing fairness block for Standard 96 must name both uncovered rule ids.",
+      "remediation": "None; this is a test fixture.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null
+    },
+    {
+      "id": "fairness.fixture-audit-scheduled",
+      "title": "Fixture: a fairness audit is scheduled",
+      "standard": 97,
+      "category": "fairness",
+      "level": "required",
+      "severity": "error",
+      "validationType": "document",
+      "assurance": "partial",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "The only rule for fixture Standard 97, whose rules live in one shard.",
+      "rationale": "Standard 97 therefore requires exactly one block: rules/fairness.json.",
+      "remediation": "None; this is a test fixture.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null
+    }
+  ]
+}

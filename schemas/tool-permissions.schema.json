@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mikeycdavis/AIStandards/schemas/tool-permissions.schema.json",
+  "title": "Tool Permission Manifest",
+  "description": "The declaration an approval gate fires on. A tool absent from this file is a tool nothing gates, which is why gate.actions-classified checks the manifest's tool list against this one rather than trusting either alone.",
+  "type": "object",
+  "required": ["tools"],
+  "additionalProperties": false,
+  "properties": {
+    "$scaffold": { "type": "boolean" },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "impact"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "impact": {
+            "description": "none: no effect outside the process. reversible: the system can undo it. irreversible: it cannot be undone. externally-visible: someone outside the organisation can see it. A tool can warrant two; declare the stricter.",
+            "type": "string",
+            "enum": ["none", "reversible", "irreversible", "externally-visible"]
+          },
+          "requiresApproval": { "type": "boolean" },
+          "scope": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

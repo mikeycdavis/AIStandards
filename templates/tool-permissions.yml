@@ -1,0 +1,22 @@
+$scaffold: true
+# This file is a TEMPLATE, not evidence. It declares no tools, because a classification is a
+# judgement a person makes about a specific tool, and there is no placeholder value for one.
+#
+# When the manifest (ai-system.yml) declares tools, add one entry per tool and delete the
+# `$scaffold` line. A tool the manifest declares and this file does not classify is reported.
+#
+# Each entry has this shape (shown as a comment so that no classification is made for you):
+#
+#   tools:
+#     - name: the tool's name exactly as the manifest declares it
+#       impact: one of none, reversible, irreversible, externally-visible
+#       requiresApproval: true or false   (optional)
+#       scope: what the tool may touch    (optional)
+#
+# The four impact values:
+#   none                no effect outside the process
+#   reversible          the system can undo it
+#   irreversible        it cannot be undone
+#   externally-visible  someone outside the organisation can see it
+# A tool can warrant two; declare the stricter.
+tools: []

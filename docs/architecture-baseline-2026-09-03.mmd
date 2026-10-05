@@ -1,0 +1,22 @@
+flowchart TB
+    subgraph inputs["Governing inputs (present)"]
+        brief["artifacts/prompts/<br/>original_prompt.md<br/><i>design brief, 2770 bytes</i>"]
+        readme["README.md<br/><i>13 bytes, title only</i>"]
+    end
+
+    subgraph absent["Implementation (absent at baseline)"]
+        cli["scripts/ CLI<br/><i>not present</i>"]
+        rules["rules/ catalog<br/><i>not present</i>"]
+        stds["standards/ documents<br/><i>not present</i>"]
+        tests["test/ suite<br/><i>not present</i>"]
+    end
+
+    brief -.->|"specifies, not yet realised"| cli
+    brief -.->|"specifies, not yet realised"| rules
+    brief -.->|"specifies, not yet realised"| stds
+    brief -.->|"specifies, not yet realised"| tests
+
+    classDef present fill:#dff0d8,stroke:#3c763d,color:#1b3a1f
+    classDef missing fill:#f5f5f5,stroke:#999,stroke-dasharray:4 3,color:#555
+    class brief,readme present
+    class cli,rules,stds,tests missing

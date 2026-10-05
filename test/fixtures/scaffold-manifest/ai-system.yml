@@ -1,0 +1,7 @@
+$scaffold: true
+system:
+  name: "REPLACE-ME"
+  purpose: "REPLACE-ME"
+models:
+  - id: "REPLACE-ME"
+    provider: "REPLACE-ME"

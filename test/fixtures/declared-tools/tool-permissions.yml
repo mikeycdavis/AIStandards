@@ -1,0 +1,7 @@
+tools:
+  - name: "send_email"
+    impact: externally-visible
+    requiresApproval: true
+  - name: "refund_order"
+    impact: irreversible
+    requiresApproval: true

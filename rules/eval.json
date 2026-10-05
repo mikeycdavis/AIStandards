@@ -1,0 +1,126 @@
+{
+  "$comment": "Evaluation of generative systems, Standard 17. The namespace is `eval.` and not `evaluation.` because MachineLearningStandards already owns `evaluation.*`; a repository governed by both packs would otherwise carry two similarly-named ids meaning different things. No Phase 1 detector binds here — these rules report not-evaluated until Phase 3.",
+  "rules": [
+    {
+      "id": "eval.plan-exists",
+      "title": "An evaluation plan is written before results are claimed",
+      "standard": 17,
+      "category": "eval",
+      "level": "required",
+      "severity": "error",
+      "validationType": "document",
+      "assurance": "none",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "An evaluation plan states what is measured, on what data, against what bar, before any result is reported.",
+      "rationale": "A plan written after the numbers is a description of the numbers. The bar moves to wherever the system already is, and nothing has been evaluated.",
+      "remediation": "Write an evaluation plan and commit it before running the suite.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null,
+      "crosswalk": [
+        {
+          "pack": "MachineLearningStandards",
+          "rule": "evaluation.metric-selection-justified",
+          "relationship": "defers-to",
+          "note": "MachineLearningStandards Standard 12 owns choosing and justifying the primary metric, and recording it before the reported evaluation, for the evaluations it reaches; its model comparison is Standard 19. This rule adds the plan's data and bar and the generative-system framing: rubric and judge protocols, and non-numeric outputs. It does not restate ML's requirements. Whether Standard 12 reaches a hosted model the project did not train is not stated by that pack."
+        }
+      ]
+    },
+    {
+      "id": "eval.suite-executable",
+      "title": "The evaluation suite can actually be run",
+      "standard": 17,
+      "category": "eval",
+      "level": "required",
+      "severity": "error",
+      "validationType": "structural",
+      "assurance": "none",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "The repository exposes an entrypoint that runs the evaluation suite.",
+      "rationale": "An evaluation nobody can re-run is a claim, not a measurement, and it decays the moment the model or the prompt changes.",
+      "remediation": "Add an eval entrypoint and reference it from the manifest.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null
+    },
+    {
+      "id": "eval.regression-baseline-recorded",
+      "title": "A regression baseline is recorded",
+      "standard": 17,
+      "category": "eval",
+      "level": "required",
+      "severity": "error",
+      "validationType": "document",
+      "assurance": "none",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "A committed baseline records what the prior model and prompt version scored.",
+      "rationale": "Without a baseline, a regression is indistinguishable from a system that was always this bad, and both look like a passing run.",
+      "remediation": "Commit the baseline artifact the suite produces.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null
+    },
+    {
+      "id": "eval.no-test-set-tuning",
+      "title": "The held-out set is never tuned against",
+      "standard": 17,
+      "category": "eval",
+      "level": "forbidden",
+      "severity": "error",
+      "validationType": "code-analysis",
+      "assurance": "none",
+      "nonExemptible": true,
+      "introducedIn": "0.1.0",
+      "description": "Prompts, models and configuration are not selected by their score on the held-out evaluation set.",
+      "rationale": "A held-out set tuned against stops being held out, and every number computed on it afterwards overstates the system.",
+      "remediation": "Tune on a development split and reserve the held-out set for a single final measurement.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null,
+      "$exemptibilityNote": "An exception here would be an approval to report a number known to be wrong.",
+      "crosswalk": [
+        {
+          "pack": "MachineLearningStandards",
+          "rule": "split.no-test-set-tuning",
+          "relationship": "defers-to",
+          "note": "MachineLearningStandards Standards 14 P1 and 5 P1 forbid any model choice made in light of the final test set, by automated search or by repeated human inspection, for the work they reach. Their texts do not name prompts, and whether that rule reaches prompt or configuration selection for a hosted model is not stated there. This rule states the prohibition for prompts, models and configuration selected against a generative held-out set."
+        }
+      ]
+    },
+    {
+      "id": "eval.no-fabricated-results",
+      "title": "No evaluation result is reported that was not produced by a run",
+      "standard": 17,
+      "category": "eval",
+      "level": "forbidden",
+      "severity": "error",
+      "validationType": "manual-review",
+      "assurance": "none",
+      "nonExemptible": true,
+      "introducedIn": "0.1.0",
+      "description": "Every reported evaluation number traces to an artifact produced by an actual run.",
+      "rationale": "A fabricated number is worse than no number, because it is acted on.",
+      "remediation": "Link every reported metric to the run artifact that produced it.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null,
+      "$exemptibilityNote": "There is no legitimate reason to report a result that did not happen.",
+      "crosswalk": [
+        {
+          "pack": "EngineeringStandards",
+          "rule": "testing.no-fabricated-results",
+          "relationship": "precedent",
+          "note": "EngineeringStandards prohibits fabricated test results for software tests. This is the evaluation-artifact form for AI systems. AIStandards is canonical here and mints its own id."
+        }
+      ]
+    }
+  ]
+}

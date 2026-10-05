@@ -1,0 +1,41 @@
+sequenceDiagram
+    autonumber
+    actor Caller as Caller (CI, StandardsEnforcer, developer)
+    participant CLI as standards.mjs
+    participant Pol as policy.mjs
+    participant Cat as catalog.mjs
+    participant Det as detectors (in standards.mjs)
+    participant Comp as compliance.mjs
+
+    Caller->>CLI: validate <target> --json
+    CLI->>Cat: loadCatalog(rules/)
+    Cat-->>CLI: 46 rules, or throw CatalogError
+    CLI->>Pol: resolvePolicyPath(target, --policy)
+    Note over Pol: Resolved against the TARGET.<br/>The pack root is never a fallback.
+    Pol-->>CLI: {path, source: explicit | target-default}
+    CLI->>Pol: loadPolicy + assertVersionIdentity
+
+    alt policy missing, malformed, or version-mismatched
+        Pol--xCLI: PolicyError
+        CLI-->>Caller: exit 2, NO envelope
+        Note over Caller: A configuration failure is not<br/>a compliance failure. Never a pass.
+    end
+
+    Pol-->>CLI: resolved rule set (applicability applied)
+    CLI->>Det: createRun(target) then runDetectors
+    Note over Det: Descriptive detectors first (rule: null),<br/>judgmental after. A shortened walk<br/>withdraws content-derived rules.
+    Det-->>CLI: observations[], findings[], invariantViolations[]
+    CLI->>CLI: assertBindings(catalog, observed rule ids)
+    CLI->>CLI: checkApplicabilityContradictions(run, resolved)
+
+    alt an invariant broke
+        CLI->>Comp: evaluate(... invariantViolations)
+        Comp-->>CLI: BLOCKED_BY_INVARIANT, score null
+        CLI-->>Caller: exit 3
+    else normal path
+        CLI->>Comp: evaluate + envelope
+        Note over Comp: Per rule: violation fails; unknown is<br/>not-evaluated; a clean result from an<br/>assurance-partial rule is not-evaluated,<br/>never passed; only a clean full check passes.
+        Note over Comp: distinction() derived per result.<br/>forbidden branch tested BEFORE<br/>the general not-evaluated branch.
+        Comp-->>CLI: envelope with top-level status
+        CLI-->>Caller: JSON + exit 0 / 1
+    end

@@ -1,0 +1,156 @@
+{
+  "$comment": "Approval gates, Standard 45. AIStandards owns the canonical AI-facing approval rules. EngineeringStandards' ai.destructive-approval and ai.propose-execute are recorded as crosswalks: precedent, not authority, and never re-minted here.",
+  "rules": [
+    {
+      "id": "gate.tool-permission-manifest",
+      "title": "Tools a model may invoke are declared in a permission manifest",
+      "standard": 45,
+      "category": "gate",
+      "level": "required",
+      "severity": "error",
+      "validationType": "structural",
+      "assurance": "full",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "A system whose model may invoke tools carries a tool-permissions.yml declaring them.",
+      "rationale": "An approval gate can only fire on an action someone enumerated. A tool nobody declared is a tool nothing gates.",
+      "remediation": "Add tool-permissions.yml declaring every tool the model may invoke.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null,
+      "$assuranceNote": "Conditional on the manifest declaring tools. Full within that condition; the condition itself is only as good as the manifest.",
+      "crosswalk": [
+        {
+          "pack": "EngineeringStandards",
+          "rule": "ai.propose-execute",
+          "relationship": "precedent",
+          "note": "EngineeringStandards separates proposing from executing for application capabilities. This rule is the AI-system form: the enumeration a model-initiated gate needs. AIStandards is canonical for AI systems; the foreign id is never minted here."
+        }
+      ]
+    },
+    {
+      "id": "gate.actions-classified",
+      "title": "Every declared tool carries an impact class",
+      "standard": 45,
+      "category": "gate",
+      "level": "required",
+      "severity": "error",
+      "validationType": "structural",
+      "assurance": "full",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "Every tool in the permission manifest declares an impact class of none, reversible, irreversible or externally-visible.",
+      "rationale": "Systems that skip this step do not avoid classifying their actions. They classify them implicitly, at the moment of the first incident, in a postmortem.",
+      "remediation": "Add an impact field to each tool in tool-permissions.yml.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null,
+      "$assuranceNote": "Checks that every declared tool carries a class. It cannot check that the class is right: a project labelling delete_all as reversible passes this and fails the requirement a human reads.",
+      "crosswalk": [
+        {
+          "pack": "EngineeringStandards",
+          "rule": "ai.destructive-approval",
+          "relationship": "precedent",
+          "note": "EngineeringStandards requires approval for destructive capability invocation. AIStandards owns the canonical AI-facing form and mints its own ids; the crosswalk records the semantic mapping only."
+        }
+      ]
+    },
+    {
+      "id": "gate.irreversible-approval",
+      "title": "An irreversible action requires a recorded human approval",
+      "standard": 45,
+      "category": "gate",
+      "level": "required",
+      "severity": "error",
+      "validationType": "manual-review",
+      "assurance": "none",
+      "nonExemptible": true,
+      "introducedIn": "0.1.0",
+      "description": "An action classed irreversible does not take effect until a human with authority has approved that specific invocation, recorded with identity, time and the arguments approved.",
+      "rationale": "A standing approval for a capability is a permission grant, which is a different thing. An approval that does not name the arguments cannot be checked against what ran.",
+      "remediation": "Record per-invocation approvals with approver identity, timestamp and approved arguments.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null,
+      "$exemptibilityNote": "The qualifier that bounds this requirement — irreversible — is internal to it. A project with no irreversible actions is out of scope, which is a different mechanism from an exception and produces a different verdict. There is no third case for an exception to occupy.",
+      "crosswalk": [
+        {
+          "pack": "EngineeringStandards",
+          "rule": "ai.destructive-approval",
+          "relationship": "precedent",
+          "note": "Semantic mapping only."
+        }
+      ]
+    },
+    {
+      "id": "gate.argument-scoped-classification",
+      "title": "Impact is assessed against the arguments, not the tool name",
+      "standard": 45,
+      "category": "gate",
+      "level": "required",
+      "severity": "error",
+      "validationType": "manual-review",
+      "assurance": "none",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "The system evaluates impact class against the concrete arguments of a proposed invocation and escalates where the arguments warrant it.",
+      "rationale": "update_record is reversible; update_record with a filter matching every row is not. A gate that fires on the tool name and not the argument shape is a gate that has already been walked through.",
+      "remediation": "Classify at proposal time against arguments, and show the escalation to the approver.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null
+    },
+    {
+      "id": "gate.no-self-approval",
+      "title": "A system never supplies the approval its own action requires",
+      "standard": 45,
+      "category": "gate",
+      "level": "forbidden",
+      "severity": "error",
+      "validationType": "manual-review",
+      "assurance": "none",
+      "nonExemptible": true,
+      "introducedIn": "0.1.0",
+      "description": "An AI system does not generate, infer, default or auto-populate the approval its own action requires.",
+      "rationale": "An agent blocked by an approval gate, mid-task, with a pending_approval field it can write to, is presented with a one-token path to a completed task.",
+      "remediation": "Write approval records through a system the agent holds no credential for.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null,
+      "$exemptibilityNote": "No situation satisfies this rule's precondition and legitimately escapes it. A system that cannot take gated actions is out of scope rather than exempt.",
+      "crosswalk": [
+        {
+          "pack": "EngineeringStandards",
+          "rule": "ai.no-safety-bypass",
+          "relationship": "precedent",
+          "note": "EngineeringStandards prohibits manufacturing the evidence a rule requires. AIStandards owns the canonical AI-facing safety-integrity requirement and mints its own id."
+        }
+      ]
+    },
+    {
+      "id": "gate.fail-closed",
+      "title": "A gate fails closed",
+      "standard": 45,
+      "category": "gate",
+      "level": "forbidden",
+      "severity": "error",
+      "validationType": "manual-review",
+      "assurance": "none",
+      "nonExemptible": true,
+      "introducedIn": "0.1.0",
+      "description": "Where the approval mechanism is unavailable, times out, or returns an indeterminate result, the action does not proceed.",
+      "rationale": "A gate that permits the action when the approval service is down is a gate that is strongest when nothing is wrong.",
+      "remediation": "Refuse and report on an unavailable approval path; never record the action as approved.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null,
+      "$exemptibilityNote": "The bounding qualifier — unavailable — is internal to the requirement."
+    }
+  ]
+}

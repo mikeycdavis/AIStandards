@@ -1,0 +1,83 @@
+flowchart TB
+    subgraph govern["Governing inputs (never generated)"]
+        brief["artifacts/prompts/<br/>original_prompt.md"]
+        spec["artifacts/prompts/<br/>ai-standards-spec.md"]
+        boundary["artifacts/<br/>boundary-review.json"]
+        foreign["artifacts/foreign-<br/>namespace-inventory.json"]
+    end
+
+    subgraph gates["Review gates and corpus tooling (exit 0/1/2)"]
+        fidelity["fidelity.mjs<br/>verbatim bytes"]
+        inventory["inventory.mjs<br/>catalog review checks"]
+        specmod["spec.mjs<br/>spec + prompt parser"]
+        sections["standards-sections.mjs<br/>ten-section conformance"]
+        sync["sync-rule-tables.mjs<br/>tables + coverage"]
+        nstest["test/namespace.test.mjs<br/>no full-id collision"]
+    end
+
+    subgraph corpus["Normative corpus"]
+        stds["standards/*.md<br/>13 of 53 written"]
+        rules["rules/*.json<br/>8 shards, 46 rules"]
+        schemas["schemas/*.json<br/>5 schemas"]
+    end
+
+    subgraph engine["Evaluation engine"]
+        cli["standards.mjs<br/>audit · validate"]
+        catalog["catalog.mjs<br/>load + invariants"]
+        policy["policy.mjs<br/>target-relative resolve"]
+        compliance["compliance.mjs<br/>evaluate · envelope · distinction<br/>partial clean = not-evaluated"]
+    end
+
+    subgraph parsers["Dependency-free parsers"]
+        yaml["yaml.mjs"]
+        jsonschema["jsonschema.mjs"]
+        source["source.mjs<br/>use/mention split,<br/>comments blanked in place"]
+        scaffolding["scaffolding.mjs"]
+    end
+
+    subgraph out["Outputs"]
+        auditrep["audit report<br/>evidence, no verdict"]
+        valrep["validate report<br/>status + distinction[]"]
+    end
+
+    target[("Target repository<br/>+ ai-policy.yml")]
+
+    brief -->|"byte compare"| fidelity
+    spec --> specmod
+    specmod --> inventory
+    specmod --> sections
+    boundary --> inventory
+    spec -->|"claims an<br/>implementing file"| stds
+    stds --> inventory
+    stds -->|"headings, H1,<br/>Source line"| sections
+    rules --> inventory
+    foreign -->|"recorded foreign ids"| nstest
+    catalog --> nstest
+
+    rules --> catalog
+    catalog --> sync
+    sync -->|"rewrites generated<br/>blocks only"| stds
+    schemas --> policy
+    schemas --> cli
+    catalog --> cli
+    target -->|"file walk,<br/>512 KB cap"| cli
+    target -->|"ai-policy.yml"| policy
+    policy --> cli
+    yaml --> policy
+    yaml --> cli
+    jsonschema --> policy
+    source --> cli
+    scaffolding --> cli
+    cli -->|"observations +<br/>rule assurance"| compliance
+    cli -->|"audit"| auditrep
+    compliance -->|"validate"| valrep
+
+    classDef input fill:#f4f0e6,stroke:#8a7d5a,color:#2b2b2b
+    classDef gate fill:#e6eef4,stroke:#4a6f8a,color:#2b2b2b
+    classDef code fill:#eaf0e6,stroke:#5a7d4a,color:#2b2b2b
+    classDef output fill:#f4e6ea,stroke:#8a4a5f,color:#2b2b2b
+
+    class brief,spec,boundary,foreign input
+    class fidelity,inventory,specmod,sections,sync,nstest gate
+    class cli,catalog,policy,compliance,yaml,jsonschema,source,scaffolding,stds,rules,schemas code
+    class auditrep,valrep output

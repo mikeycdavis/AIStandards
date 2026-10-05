@@ -1,0 +1,25 @@
+{
+  "name": "ai-standards",
+  "version": "0.1.0",
+  "description": "Numbered AI engineering standards, and the audit and validate commands that check a repository against them.",
+  "type": "module",
+  "bin": {
+    "standards": "scripts/standards.mjs"
+  },
+  "scripts": {
+    "test": "node scripts/test.mjs",
+    "audit": "node scripts/standards.mjs audit .",
+    "validate": "node scripts/standards.mjs validate .",
+    "fidelity": "node scripts/fidelity.mjs",
+    "inventory": "node scripts/inventory.mjs",
+    "catalog-sync": "node scripts/sync-rule-tables.mjs",
+    "catalog-sync:check": "node scripts/sync-rule-tables.mjs --check",
+    "sections": "node scripts/standards-sections.mjs",
+    "init": "node scripts/init.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}

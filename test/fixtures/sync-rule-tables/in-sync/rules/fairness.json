@@ -1,0 +1,43 @@
+{
+  "$comment": "Fixture catalog for test/sync-rule-tables.test.mjs. Not a real shard.",
+  "rules": [
+    {
+      "id": "fairness.fixture-cohort-report",
+      "title": "Fixture: a rule for a standard with no document",
+      "standard": 94,
+      "category": "fairness",
+      "level": "recommended",
+      "severity": "warning",
+      "validationType": "document",
+      "assurance": "partial",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "Belongs to fixture Standard 94, which has no document in this root. It cited Standard 90 until the coverage check made a Standard 90 rule in a shard doc 90 names no block for an error; the same-standard, other-shard exclusion is now shown by coverage/permitted's Standard 96.",
+      "rationale": "A rule citing an unwritten standard requires no block, and must never appear in any table here.",
+      "remediation": "None; this is a test fixture.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null
+    },
+    {
+      "id": "fairness.fixture-disparity-threshold",
+      "title": "Fixture: a disparity threshold is set",
+      "standard": 91,
+      "category": "fairness",
+      "level": "required",
+      "severity": "error",
+      "validationType": "configuration",
+      "assurance": "partial",
+      "nonExemptible": false,
+      "introducedIn": "0.1.0",
+      "description": "Fixture rule cited by R1 of fixture Standard 91, in that document's second generated block.",
+      "rationale": "Exercises a document carrying two blocks from two shards.",
+      "remediation": "None; this is a test fixture.",
+      "aliases": [],
+      "deprecatedIn": null,
+      "supersededBy": null,
+      "removedIn": null
+    }
+  ]
+}
