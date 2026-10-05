@@ -216,6 +216,94 @@ test("finding 5 control: the unmodified manifest still passes lifecycle.manifest
   assert.equal(resultFor({}, "lifecycle.manifest-valid", { manifest }).result, "passed");
 });
 
+// --- 6. quoted instruction keys (Codex P2 on PR #93, discussion_r4186553274) ---------------------
+//
+// The code-only view blanks the body of every string literal, which also blanked a QUOTED property
+// name: `{"system": "..."}` stopped matching the instruction parameter. Only the key position may be
+// preserved; a string that merely mentions the pair, or any string used as a value, stays blanked.
+
+const KEYED_FIRING = [
+  ["a double-quoted JS key", "src/a.js", call(`  "system": "${LONG}",`)],
+  ["a single-quoted JS key", "src/a.js", call(`  'system': "${LONG}",`)],
+  ["a quoted key with a single-quoted value", "src/a.js", call(`  "systemPrompt": '${LONG}',`)],
+  ["a quoted key after other properties", "src/a.js", call(`  "model": "m", "max_tokens": 5, "instructions" : "${LONG}"`)],
+  ["a Python dict with a double-quoted key", "src/a.py", `client.create(**{"system": "${LONG}"})
+`],
+  ["a Python dict with a single-quoted key", "src/a.py", `client.create(**{'system': "${LONG}"})
+`],
+  ["a multi-line Python dict", "src/a.py", `payload = {
+    "model": "m",
+    "system": "${LONG}",
+}
+`],
+  ["a JSON file", "src/prompt.json", `{"model": "m", "system": "${LONG}"}
+`],
+  ["a pretty-printed JSON file", "src/prompt.json", `{
+  "model": "m",
+  "system": "${LONG}"
+}
+`],
+  ["a quoted key in YAML", "src/prompt.yaml", `"system": "${LONG}"\n`],
+  ["a quoted key in TOML", "src/prompt.toml", `"system" = "${LONG}"\n`],
+];
+
+for (const [label, file, source] of KEYED_FIRING) {
+  test(`finding 6: ${label} carrying a long instruction is an inline prompt`, () => {
+    for (const rule of [VERSIONED, NO_INLINE]) {
+      const r = resultFor({ [file]: source }, rule);
+      // The versioned-artifact rule is a requirement and fails; the no-inline rule is advisory and warns.
+      assert.equal(r.result, rule === VERSIONED ? "failed" : "warning", `${rule}: ${r.result}: ${r.message}`);
+      assert.ok(r.evidence.some((e) => e.startsWith(`${file} (`)), JSON.stringify(r.evidence));
+    }
+  });
+}
+
+const KEYED_NOT_FIRING = [
+  ["a short quoted-key instruction", "src/a.js", call(`  "system": "${SHORT}",`)],
+  ["a short quoted-key instruction in a JSON file", "src/p.json", `{"system": "${SHORT}"}
+`],
+  ["a quoted key one character under the threshold", "src/a.js", call(`  "system": "${"x".repeat(199)}",`)],
+  ["a // comment quoting the pair", "src/a.js", call(`  // "system": "${LONG}",
+  model: "m",`)],
+  ["a /* block */ comment quoting the pair", "src/a.js", call(`  /* "system": "${LONG}" */
+  model: "m",`)],
+  ["a Python # comment quoting the pair", "src/a.py", `# {"system": "${LONG}"}
+x = 1
+`],
+  ["a single-quoted string quoting the pair", "src/a.js", `export const docs = '{"system": "${"x".repeat(250)}"}';
+`],
+  ["a double-quoted string quoting the pair", "src/a.js", `export const docs = "{\\"system\\": \\"${"x".repeat(250)}\\"}";
+`],
+  ["a template string quoting the pair", "src/a.js", "export const docs = `{\"system\": \"" + "x".repeat(250) + "\"}`;\n"],
+  ["a Python string quoting the pair", "src/a.py", `docs = '{"system": "${"x".repeat(250)}"}'
+`],
+  ["a key that only ends in the parameter name", "src/a.js", call(`  "x_system": "${LONG}",`)],
+  ["a hyphenated key that ends in the parameter name", "src/a.js", call(`  "x-system": "${LONG}",`)],
+  ["a key whose text merely contains the pair", "src/a.js", call(`  "note system: '${LONG}'": 1,`)],
+  ["a ternary whose branch is the parameter name", "src/a.js", `export const v = cond ? "system" : "${LONG}";
+`],
+  ["a ternary branch that starts its own line", "src/a.js", `export const v = cond ?\n  "system"\n  : "${LONG}";\n`],
+  ["a value that is the word system", "src/a.js", call(`  "role": "system", "text": "${SHORT}"`)],
+  ["a JSON file that only mentions the pair in a value", "src/p.json", `{"note": "\\"system\\": \\"${"x".repeat(250)}\\""}
+`],
+];
+
+for (const [label, file, source] of KEYED_NOT_FIRING) {
+  test(`finding 6 control: ${label} is not an inline prompt`, () => {
+    for (const rule of [VERSIONED, NO_INLINE]) {
+      const r = resultFor({ [file]: source }, rule);
+      assert.ok(!["failed", "warning"].includes(r.result), `${rule}: ${r.result}: ${r.message}`);
+      assert.equal(r.result, "skipped");
+    }
+  });
+}
+
+test("finding 6: a quoted-key literal after a short one, and after a commented one, is still measured", () => {
+  const source = call(`  "system": "${SHORT}",`) + `// "system": "${LONG}"
+` + call(`  'system': "${LONG}",`);
+  assert.equal(resultFor({ "src/a.js": source }, VERSIONED).result, "failed");
+});
+
 test("the working directory is this repository (guards finding 1's setup)", () => {
   assert.ok(fs.existsSync(path.join(REPO, "ai-policy.yml")));
 });

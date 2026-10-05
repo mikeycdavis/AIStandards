@@ -53,7 +53,8 @@ export function extensionOf(filePath) {
  *   kept), and code, string and regular-expression literals left where they were written.
  *
  *   `codeOnly` is the same in-place view with string and regular-expression literals blanked too
- *   (a string keeps only its opening delimiter), so an index into it is an index into the original
+ *   (a string keeps only its opening delimiter; a string literal in property-NAME position, such as
+ *   `"system"` in `{"system": "..."}`, is kept whole), so an index into it is an index into the original
  *   text AND is known to sit in a code position. A caller that must confirm a match begins in code,
  *   not in a comment or a quoted mention, searches this view and measures in the original.
  *
@@ -86,6 +87,29 @@ export function splitSource(text, filePath) {
       if (!/\s/.test(ch)) return ch;
     }
     return "";
+  };
+
+  // A string literal in KEY position keeps its text in the code-only view: `{"system": "..."}`. Three
+  // things must all hold, so that only a property NAME is preserved and never a value or a mention:
+  //   - the literal is terminated by its own quote and its body is a plain identifier, so a key whose
+  //     text merely contains `system: '...'` stays blanked and `x-system` never reads as `system`;
+  //   - the next non-blank character is `:` (or `=`, not `==`, for the `hash` syntaxes, where TOML
+  //     writes `"system" = ...`);
+  //   - it opens a mapping entry: the previous code character is `{` or `,`, or, in the `hash`
+  //     syntaxes, the literal begins its line (a YAML or TOML key). A ternary branch `c ? "a" : b`
+  //     follows `?` and is a value.
+  const isQuotedKey = (start, end, quote) => {
+    if (quote === "`" || end - start < 3 || text[end - 1] !== quote) return false;
+    if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(text.slice(start + 1, end - 1))) return false;
+    let k = end;
+    while (k < n && /[ \t\r\n]/.test(text[k])) k += 1;
+    const separator = text[k] === ":" || (kind === "hash" && text[k] === "=" && text[k + 1] !== "=");
+    if (!separator) return false;
+    const prev = lastSignificant();
+    if (prev === "{" || prev === ",") return true;
+    if (kind !== "hash") return false;
+    const lineStart = text.lastIndexOf("\n", start - 1) + 1;
+    return text.slice(lineStart, start).trim() === "";
   };
 
   while (i < n) {
@@ -134,7 +158,7 @@ export function splitSource(text, filePath) {
       }
       strings.push(text.slice(i, Math.min(j, n)));
       inPlace.push(text.slice(i, Math.min(j, n)));
-      codeOnly.push(text[i] + blank(text.slice(i + 1, Math.min(j, n))));
+      codeOnly.push(isQuotedKey(i, j, quote) ? text.slice(i, j) : text[i] + blank(text.slice(i + 1, Math.min(j, n))));
       i = Math.min(j, n);
       regexAllowed = false;
       continue;

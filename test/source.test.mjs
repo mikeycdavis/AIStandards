@@ -78,3 +78,29 @@ test("extensionOf handles both separators and dotfiles", () => {
   assert.equal(extensionOf(".gitignore"), "", "a dotfile has no extension");
   assert.equal(extensionOf("noext"), "");
 });
+
+test("codeOnly keeps a quoted property NAME and blanks every other string", () => {
+  const view = (text, file) => splitSource(text, file).codeOnly;
+  // A blanked string keeps only its opening delimiter; its body and closing quote become spaces.
+  const blank = (quote, length) => quote + " ".repeat(length - 1);
+  assert.equal(view('f({"system": "abc"})', "a.js"), `f({"system": ${blank('"', 5)}})`);
+  assert.equal(view("f({'system': 'abc'})", "a.py"), `f({'system': ${blank("'", 5)}})`);
+  assert.equal(view('{"a": 1, "b": "x"}', "a.json"), `{"a": 1, "b": ${blank('"', 3)}}`);
+  // values, mentions, ternary branches and non-identifier keys are blanked
+  assert.equal(view('f("system")', "a.js"), `f(${blank('"', 8)})`);
+  assert.equal(view('x = c ? "system" : "abc"', "a.js"), `x = c ? ${blank('"', 8)} : ${blank('"', 5)}`);
+  assert.equal(view('{"a": "system", "b": 1}', "a.js"), `{"a": ${blank('"', 8)}, "b": 1}`);
+  assert.equal(view('{"x-y": 1}', "a.json"), `{${blank('"', 5)}: 1}`);
+  assert.equal(view('// {"system": 1}', "a.js"), " ".repeat(16));
+  assert.equal(view('"system": "abc"', "a.yaml"), `"system": ${blank('"', 5)}`);
+  // a string that is not followed by a key separator is an array element or an operand, not a key
+  assert.equal(view('["a", "system"]', "a.js"), `[${blank('"', 3)}, ${blank('"', 8)}]`);
+  assert.equal(view('"system" == 1', "a.py"), `${blank('"', 8)} == 1`);
+  assert.equal(view('{"system" = 1}', "a.js"), `{${blank('"', 8)} = 1}`);
+  // a TOML key may use `=`
+  assert.equal(view('"system" = 1', "a.toml"), '"system" = 1');
+  // an unterminated key and a template literal are never keys
+  assert.equal(view('{"system\n: 1}', "a.js"), `{${blank('"', 7)}\n: 1}`);
+  assert.equal(view("{`system`: 1}", "a.js"), `{${blank("`", 8)}: 1}`);
+  assert.equal(view('c ? "a" : "b"', "a.py"), `c ? ${blank('"', 3)} : ${blank('"', 3)}`);
+});
