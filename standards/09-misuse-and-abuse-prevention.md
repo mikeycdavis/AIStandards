@@ -325,9 +325,9 @@ The level records the authored strength of R3; it is not a way of making the rul
 **R2's `forbidden` level has two observed effects.** When the detector confirms a violation, the
 result is `failed` and the status `NON_COMPLIANT`. When the rule is withdrawn, the result is `skipped`
 with disposition `not-evaluated`, the distinction is `prohibited-but-unestablished`, and the rule is
-listed in `unestablishedProhibitions`. That is this repository's own result for it: `test/validate.test.mjs`
-asserts the result, the disposition and the withdrawal message, and the distinction follows from
-`distinction()` in `scripts/compliance.mjs`.
+listed in `unestablishedProhibitions`. A withdrawal replaces only a clean result: a violation in a
+file that was collected is still `failed`. `test/validate.test.mjs` asserts that this repository's own
+result is never `passed`, and the distinction follows from `distinction()` in `scripts/compliance.mjs`.
 
 **R5 is `not-evaluable` rather than `manual-review`, and the line between them is R1.** A human reading
 the repository can establish which controls are named and configured; that is R1. A human reading the
@@ -376,8 +376,11 @@ What the existing suite asserts about R2, stated precisely because it is narrowe
   `passed` in any fixture**, and that `test/fixtures/q13-synthetic-env-block-none/` — a synthetic input
   whose `.env` sets `SAFETY_SETTINGS=BLOCK_NONE` in a file type the detector does not read — reports this
   rule `prohibited-but-unestablished` and the project `NOT_EVALUATED`, where it had reported `COMPLIANT`.
-- **The self-walk is withdrawn, not passed.** `test/validate.test.mjs` asserts that this repository's
-  own result for the rule is `skipped` / `not-evaluated`, with the framework-exclusion message.
+- **The self-walk is never passed.** `test/validate.test.mjs` asserts that this repository's own result
+  for the rule is not `passed`: either `skipped` / `not-evaluated` with the framework-exclusion message, or
+  `failed` on evidence that is a collected file and never one inside `test/fixtures`. Since the PR #92
+  review repair it is `failed`, because this repository's own detector list and tests spell the
+  recognised literals inside string literals, which the detector reads as configuration by design.
 - **A false not-applicable declaration blocks.** `test/validate.test.mjs` asserts
   `BLOCKED_BY_INVARIANT` for `applicability-contradiction/`, whose policy declares the rule
   not-applicable and whose `src/config.js` sets `BLOCK_NONE`.
@@ -551,7 +554,7 @@ Stated as separate lists so that a proposal is not read as a capability.
 | Mechanism | What it does | Where |
 | --- | --- | --- |
 | `detectDisabledSafetyControls` | Examines R2's rule, as described exactly below | `scripts/standards.mjs`, lines 423–493 |
-| Withdrawal on a framework exclusion | Withdraws R2's rule, without scanning, when the walk was shortened by a framework exclusion | `SKIP` and `CONTENT_DERIVED_RULES`, lines 54–58 and 121–125; the `withdrawn` flag, line 534 |
+| Withdrawal on a framework exclusion | Withdraws R2's rule to unknown, after scanning the collected files and only when none violates, when the walk was shortened by a framework exclusion | `SKIP` and `CONTENT_DERIVED_RULES`, lines 54–58 and 121–125; the `withdrawn` flag, line 534 |
 | Contradicted applicability | Blocks the verdict when R2's rule is declared not-applicable and the detector observes a violation | `checkApplicabilityContradictions()`, lines 500–514 |
 | Reporting of R2's clean result | Because the rule declares `assurance: partial`, a clean observation reports `skipped` / `not-evaluated`, distinction `prohibited-but-unestablished`, never `passed`, and keeps an applicable project from `COMPLIANT`; a recognised literal still fails. Since the 2026-09-14 Q13 correction | `evaluateRule()` in `scripts/compliance.mjs`; `test/partial-assurance.test.mjs` |
 | Reporting of unexamined `manual-review` rules | R1, R3 and R4 report `skipped` / `not-evaluated`, never `passed`, and keep an applicable project from `COMPLIANT` | `evaluateRule()` and `evaluate()` in `scripts/compliance.mjs` |
@@ -606,10 +609,12 @@ removed, and every line number below was updated with them.*
    guards are asserted by `test/safety-detector.test.mjs`. A hyphenated `content-filter` is not a
    recognised key.
 6. **Withdrawal.** When the walk was shortened by a framework exclusion — in this release, only a
-   `test/fixtures` directory at the target's root — the rule is observed as unknown **without any file
-   being scanned** (lines 452–455), so a disabling literal elsewhere in the repository is not reported
-   either. The result is `skipped` / `not-evaluated`, the distinction `prohibited-but-unestablished`,
-   and the status cannot reach `COMPLIANT`.
+   `test/fixtures` directory at the target's root — the collected files are still scanned, and a
+   disabling literal in any of them is reported as a violation. Only when none is found is the rule
+   observed as unknown, because a search that did not cover the repository cannot say it is clean (until
+   the PR #92 review repair the unknown was recorded without scanning, which hid a real finding). The
+   clean-but-shortened result is `skipped` / `not-evaluated`, the distinction
+   `prohibited-but-unestablished`, and the status cannot reach `COMPLIANT`.
 7. **Everything else is not established.** When no hit is found and the rule was not withdrawn, the
    detector records an observation with neither a violation nor an unknown (line 492), and
    `evaluateRule()` in `scripts/compliance.mjs` reports that as `skipped` / `not-evaluated`, distinction

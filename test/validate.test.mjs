@@ -98,19 +98,35 @@ test("this repository's own verdict is honest about its own state", () => {
   assert.equal(resultFor(json, "lifecycle.manifest-exists").result, "failed");
 });
 
-test("this repository's content-derived rules are WITHDRAWN, not passed, when the walk is shortened", () => {
+test("this repository's content-derived rules are never PASSED while the walk is shortened", () => {
   // test/fixtures is framework-excluded from the self-walk, and the fixtures contain deliberate
   // violations. A search that did not cover the repository must not report the repository clean.
+  //
+  // A shortened walk withdraws a CLEAN result; it does not suppress a finding in a file that was
+  // collected (PR #92 review finding 2). So a rule is either withdrawn, or it carries a finding whose
+  // evidence is a collected file and never one inside the excluded directory. This repository's own
+  // detector list and tests spell the recognised literals (BLOCK_NONE, `moderation: "off"`) inside
+  // string literals, which the safety detector reads as configuration by design, so that rule
+  // reports a finding here. Nothing about it may be `passed`.
   const { json } = validate(REPO);
-  for (const rule of [
-    "promptsec.prompt-is-versioned-artifact",
-    "promptsec.no-inline-system-prompt",
-    "misuse.safety-controls-not-disabled",
-  ]) {
+  const withdrawnRules = ["promptsec.prompt-is-versioned-artifact", "promptsec.no-inline-system-prompt"];
+  for (const rule of withdrawnRules) {
     const result = resultFor(json, rule);
     assert.equal(result.result, "skipped", `${rule} must be withdrawn`);
     assert.equal(result.disposition, "not-evaluated");
     assert.match(result.message, /shortened by a framework exclusion/);
+  }
+  const safety = resultFor(json, "misuse.safety-controls-not-disabled");
+  assert.notEqual(safety.result, "passed");
+  if (safety.result === "skipped") {
+    assert.equal(safety.disposition, "not-evaluated");
+    assert.match(safety.message, /shortened by a framework exclusion/);
+  } else {
+    assert.equal(safety.result, "failed");
+    assert.ok(safety.evidence.length > 0);
+    for (const entry of safety.evidence) {
+      assert.ok(!entry.startsWith("test/fixtures/"), `an excluded file was read: ${entry}`);
+    }
   }
 });
 

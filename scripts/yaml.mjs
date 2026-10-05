@@ -190,6 +190,10 @@ export function parseYaml(text) {
           const memberLine = lines[cursor];
           const memberPair = splitKey(memberLine.body.trimStart(), memberLine.lineNo);
           if (!memberPair) break;
+          if (Object.prototype.hasOwnProperty.call(item, memberPair.key)) {
+            // The same refusal parseMapping makes: a repeated member silently keeps the last value.
+            throw new YamlError(`duplicate key ${JSON.stringify(memberPair.key)}`, memberLine.lineNo);
+          }
           cursor += 1;
           item[memberPair.key] = memberPair.rest.trim() === ""
             ? (cursor < lines.length && lines[cursor].indent > memberIndent
