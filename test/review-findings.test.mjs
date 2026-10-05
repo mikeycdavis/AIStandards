@@ -365,15 +365,15 @@ for (const [label, file, source] of SEQUENCE_NOT_FIRING) {
 // is a long literal near the word `system` that the detector does NOT claim: its grammar is a listed
 // parameter NAME, then `:` or `=`, then a quoted literal (Standard 21, "The detector for R1 and R2 finds
 // one shape of one problem"). They report `skipped`, never `passed`.
+// The message-role shapes (`{"role": "system", "content": "..."}` and Gemini `systemInstruction` with `parts`)
+// were pinned here until they became their own detection shape; their firing cases and the controls that
+// bound them are in message-role-shapes.test.mjs.
 const OUTSIDE_THE_CLAIM = [
   ["a template-literal key (not valid JavaScript)", "src/a.js", call("  `system`: \"" + LONG + "\",")],
   ["a computed key", "src/a.js", call(`  [\`system\`]: "${LONG}",`)],
   ["a hyphenated quoted key that is not a listed name", "src/a.js", call(`  "system-prompt": "${LONG}",`)],
   ["a Python tuple pair", "src/a.py", `dict([("system", "${LONG}")])\n`],
   ["a LangChain role tuple", "src/a.py", `ChatPromptTemplate.from_messages([("system", "${LONG}")])\n`],
-  ["an OpenAI chat message with role system", "src/a.py", `client.chat.completions.create(messages=[{"role": "system", "content": "${LONG}"}])\n`],
-  ["a message with content before role", "src/a.js", call(`  messages: [{ content: "${LONG}", role: "system" }],`)],
-  ["a Gemini systemInstruction object", "src/a.js", call(`  systemInstruction: { parts: [{ text: "${LONG}" }] },`)],
   ["a YAML block scalar", "src/p.yaml", `system: |\n  ${LONG}\n`],
 ];
 

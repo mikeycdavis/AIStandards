@@ -207,15 +207,31 @@ Phase 3.**
 
 | Requirement | Rule | State |
 | --- | --- | --- |
-| R1 | `promptsec.prompt-is-versioned-artifact` | **Evaluated, partially.** Recognises a long literal at a known instruction parameter. A match fails; a clean result reports `skipped` / `not-evaluated`, never `passed` |
+| R1 | `promptsec.prompt-is-versioned-artifact` | **Evaluated, partially.** Recognises a long literal at a known instruction parameter, in a system-role message, or in a Gemini `systemInstruction`'s `parts`. A match fails; a clean result reports `skipped` / `not-evaluated`, never `passed` |
 | R2 | `promptsec.no-inline-system-prompt` | **Evaluated, partially.** Same detection, warning severity; a clean result reports `not-evaluated`, never `passed` |
 | R3 | `promptsec.threat-model-exists` | **Not evaluated in this release.** Reported unevaluated, never passed. Phase 3 |
 | R4 | `promptsec.no-secrets-in-context` | **Not evaluated in this release.** `forbidden` and unexamined, so it reports `prohibited-but-unestablished` and caps the verdict rather than passing quietly |
 | R5 | `promptsec.template-injection-guarded` | **`not-evaluable`.** No detector, and none is planned |
 
-**The detector for R1 and R2 finds one shape of one problem.** It matches an instruction parameter
-followed by a long literal. It does not follow variables, does not resolve concatenation, does not
-read templates, and does not know whether a file-backed prompt is *reviewed* — only that it is a
+**The detector for R1 and R2 finds three shapes of one problem, each with its own name in the
+evidence.** Each is a quoted literal of 200 or more characters, found by a different grammar:
+
+- *The parameter shape* matches an instruction parameter name (`system`, `system_prompt`,
+  `systemPrompt`, `instructions`, `systemInstruction`), then `:` or `=`, then the literal.
+- *The message role shape* matches a message object whose `role` is the quoted word `system` (a bare
+  `system` in YAML) and whose `content` is the literal, in either key order, in JavaScript, JSON,
+  Python dict and YAML list-of-messages forms. The `content` must be a key of the same object or
+  mapping as the role. A role used as a value (`const role = "system"`), a role other than `system`,
+  an object with a role and no `content`, and a short content do not match.
+- *The `systemInstruction` parts shape* matches the Gemini object form, `systemInstruction` or
+  `system_instruction` holding an object whose `parts` contain a `text` literal. Text outside the
+  `parts`, and a user turn's `parts`, do not match.
+
+It does not follow variables, does not resolve concatenation, does not read templates or
+template-literal content, does not read a message whose `content` is an array of typed parts, does not
+treat the `developer` role as the system role, does not read keyword-argument constructors
+(`ChatMessage(role="system", ...)`), TOML tables, YAML block scalars or a block-style YAML
+`systemInstruction`, and does not know whether a file-backed prompt is *reviewed* — only that it is a
 file. A system that assembles its prompt from three fragments is not flagged by this check and may satisfy
 nothing the standard actually asks for.
 

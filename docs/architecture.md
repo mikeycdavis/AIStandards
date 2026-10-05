@@ -134,6 +134,14 @@ registry, or any remote host — including during its own tests.
   (260), `detectMissingToolPermissions` (278), `detectUndeclaredTool` (300). Judgmental, partial
   assurance: `detectFloatingModelAlias` (344, a maintained list `FLOATING_ALIAS` of moving-alias
   shapes), `detectInlineSystemPrompt` (375) and `detectDisabledSafetyControls` (450).
+- **`detectInlineSystemPrompt`** measures a quoted literal of 200+ characters (`INLINE_THRESHOLD`) in three
+  detection shapes, each named in its evidence string: the parameter shape (`INSTRUCTION_PARAM`, a listed
+  name then `:` or `=`), the message role shape (`messageRoleLength`: an object or YAML mapping whose
+  `role` is `system` and whose own `content` is the literal) and the `systemInstruction` parts shape
+  (`systemInstructionPartsLength`: a `text` literal inside the `parts` of a `systemInstruction`). All three
+  search the `codeOnly` view for keys and measure the literal in the original text. Variables, template
+  and concatenated content, typed-part arrays, the `developer` role and keyword-argument constructors are
+  not claimed.
 - **`detectDisabledSafetyControls`** searches each code or configuration file's text with comments
   blanked in place (`withoutComments` from `splitSource()`), only when the file names a key in
   `SAFETY_KEY`. It fires on a `DISABLED_SAFETY` literal (`BLOCK_NONE`, `OFF`) or on the off-pattern: a

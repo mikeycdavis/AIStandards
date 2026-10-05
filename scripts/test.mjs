@@ -33,6 +33,7 @@ const FILES = [
   "audit.test.mjs",
   "safety-detector.test.mjs",
   "review-findings.test.mjs",
+  "message-role-shapes.test.mjs",
   "partial-assurance.test.mjs",
   "manifest-module.test.mjs",
   "toolperms-module.test.mjs",
