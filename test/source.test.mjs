@@ -104,3 +104,21 @@ test("codeOnly keeps a quoted property NAME and blanks every other string", () =
   assert.equal(view("{`system`: 1}", "a.js"), `{${blank("`", 8)}: 1}`);
   assert.equal(view('c ? "a" : "b"', "a.py"), `c ? ${blank('"', 3)} : ${blank('"', 3)}`);
 });
+
+test("codeOnly keeps a quoted key after YAML sequence markers, in YAML files only", () => {
+  const view = (text, file) => splitSource(text, file).codeOnly;
+  const blank = (quote, length) => quote + " ".repeat(length - 1);
+  assert.equal(view('- "system": "abc"', "a.yaml"), `- "system": ${blank('"', 5)}`);
+  assert.equal(view("- 'system': 'abc'", "a.yml"), `- 'system': ${blank("'", 5)}`);
+  assert.equal(view('- - "system": "abc"', "a.yaml"), `- - "system": ${blank('"', 5)}`);
+  assert.equal(view('  -   "system" : "abc"', "a.yaml"), `  -   "system" : ${blank('"', 5)}`);
+  // only a YAML file has sequences of mappings: the same line in Python, TOML or shell is not a key
+  assert.equal(view('- "system": "abc"', "a.py"), `- ${blank('"', 8)}: ${blank('"', 5)}`);
+  assert.equal(view('- "system": "abc"', "a.toml"), `- ${blank('"', 8)}: ${blank('"', 5)}`);
+  // a dash glued to the literal is not a sequence marker
+  assert.equal(view('-"system": "abc"', "a.yaml"), `-${blank('"', 8)}: ${blank('"', 5)}`);
+  // a value after the marker, a mention, and text between the marker and the literal are not keys
+  assert.equal(view('- "system"', "a.yaml"), `- ${blank('"', 8)}`);
+  assert.equal(view('- a "system": 1', "a.yaml"), `- a ${blank('"', 8)}: 1`);
+  assert.equal(view('x - "system": 1', "a.yaml"), `x - ${blank('"', 8)}: 1`);
+});
