@@ -424,7 +424,9 @@ function detectFloatingModelAlias(run) {
 }
 
 // Parameter names that carry model instructions across the common provider SDKs.
-const INSTRUCTION_PARAM = /\b(system|system_prompt|systemPrompt|instructions|systemInstruction)\s*[:=]\s*(["'`])/g;
+// The name may be quoted, `"system": "..."`: the code-only view keeps a quoted property NAME and
+// blanks every other string, so the optional quote after the name is only ever a key's closing quote.
+const INSTRUCTION_PARAM = /\b(system|system_prompt|systemPrompt|instructions|systemInstruction)["']?\s*[:=]\s*(["'`])/g;
 const INLINE_THRESHOLD = 200;
 
 function detectInlineSystemPrompt(run, withdrawn) {
