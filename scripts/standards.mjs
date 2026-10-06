@@ -511,6 +511,7 @@ function enclosingBrace(view, idx) {
 // In YAML there is no ternary: a `?` that begins a line (after any `- ` markers) or follows `{`, `[` or `,`
 // is the explicit-key indicator, `? system\n: "..."`, and the word after it IS a key (Codex review of
 // PR #98). A `?` after other text in YAML stays a plain-scalar character, which is not a key either.
+const SAME_LINE_KEY = /[^\s:]+[ \t]*:/y;
 function followsTernaryMark(view, idx, yaml = false) {
   let k = idx - 1;
   while (k >= 0 && /\s/.test(view[k])) k -= 1;
@@ -519,7 +520,13 @@ function followsTernaryMark(view, idx, yaml = false) {
   // The indicator must be separated from the key by whitespace: `?system` is a plain key named `?system`.
   if (!/\s/.test(view[k + 1])) return true;
   const lineStart = view.lastIndexOf("\n", k - 1) + 1;
-  if (/^[ \t]*(?:-[ \t]+)*$/.test(view.slice(lineStart, k))) return false;
+  if (/^[ \t]*(?:-[ \t]+)*$/.test(view.slice(lineStart, k))) {
+    // Block form: a name whose `:` is on the same line (`? system: "..."`) is an inline mapping used as
+    // the complex KEY, so the literal is inside a key and not the entry's value. Only a name whose colon
+    // starts a later line (`? system` then `: "..."`) is the explicit key (Codex review of PR #103).
+    SAME_LINE_KEY.lastIndex = idx;
+    return SAME_LINE_KEY.test(view);
+  }
   let p = k - 1;
   while (p >= 0 && /\s/.test(view[p])) p -= 1;
   return !(p >= 0 && "{[,".includes(view[p]));
