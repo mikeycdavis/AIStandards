@@ -508,10 +508,21 @@ function enclosingBrace(view, idx) {
 // True when the code character before `idx` is the `?` of a ternary: in `ok ? system : "..."` the word is
 // an operand and the colon is the ternary's, so the word is not a key. (A quoted name in operand position
 // is already blanked in the view, so only a bare name reaches this check.)
-function followsTernaryMark(view, idx) {
+// In YAML there is no ternary: a `?` that begins a line (after any `- ` markers) or follows `{`, `[` or `,`
+// is the explicit-key indicator, `? system\n: "..."`, and the word after it IS a key (Codex review of
+// PR #98). A `?` after other text in YAML stays a plain-scalar character, which is not a key either.
+function followsTernaryMark(view, idx, yaml = false) {
   let k = idx - 1;
   while (k >= 0 && /\s/.test(view[k])) k -= 1;
-  return k >= 0 && view[k] === "?";
+  if (k < 0 || view[k] !== "?") return false;
+  if (!yaml) return true;
+  // The indicator must be separated from the key by whitespace: `?system` is a plain key named `?system`.
+  if (!/\s/.test(view[k + 1])) return true;
+  const lineStart = view.lastIndexOf("\n", k - 1) + 1;
+  if (/^[ \t]*(?:-[ \t]+)*$/.test(view.slice(lineStart, k))) return false;
+  let p = k - 1;
+  while (p >= 0 && /\s/.test(view[p])) p -= 1;
+  return !(p >= 0 && "{[,".includes(view[p]));
 }
 
 // True when the role literal that ends just before `after` is the WHOLE value: what follows must close the
@@ -528,11 +539,13 @@ function closesEntry(view, after, yaml) {
 }
 
 // True when the key at `idx` opens a mapping entry in a braced object: the previous code character is
-// `{` or `,`.
-function opensEntry(view, idx) {
+// `{` or `,`; in YAML also `[`, since a flow sequence's item may be an implicit single-pair mapping,
+// `[systemInstruction: {...}]` (Codex review of PR #98). In code `[` opens an array or a TypeScript tuple
+// type, whose `name: type` elements are labels and not keys.
+function opensEntry(view, idx, yaml = false) {
   for (let k = idx - 1; k >= 0; k -= 1) {
     if (/\s/.test(view[k])) continue;
-    return view[k] === "{" || view[k] === ",";
+    return view[k] === "{" || view[k] === "," || (yaml && view[k] === "[");
   }
   return false;
 }
@@ -647,7 +660,7 @@ function messageRoleLength(view, text, yaml) {
 // `=` assignment or keyword argument is not constrained.
 function isInstructionKey(view, match, yaml) {
   if (/=[ \t\r\n]*\{$/.test(match[0])) return true;
-  if (opensEntry(view, match.index)) return true;
+  if (opensEntry(view, match.index, yaml)) return true;
   if (!yaml) return false;
   const lineStart = view.lastIndexOf("\n", match.index - 1) + 1;
   return /^[ \t]*(?:-[ \t]+)*$/.test(view.slice(lineStart, match.index));
@@ -677,7 +690,7 @@ function systemInstructionPartsLength(view, text, yaml) {
             const inside = view.slice(valueOpen, valueClose);
             TEXT_KEY.lastIndex = 0;
             for (let t = TEXT_KEY.exec(inside); t; t = TEXT_KEY.exec(inside)) {
-              if (!opensEntry(inside, t.index)) continue;
+              if (!opensEntry(inside, t.index, yaml)) continue;
               const literal = valueOpen + t.index + t[0].length - 1;
               longest = Math.max(longest, measureLiteral(text, literal));
             }
@@ -713,16 +726,16 @@ function detectInlineSystemPrompt(run, withdrawn) {
     // literal is measured, so the match's own opening quote is the literal's start. EVERY match is
     // measured, not the first: a short instruction earlier in a file does not describe a long one later.
     const view = split.codeOnly;
+    const yaml = [".yml", ".yaml"].includes(extensionOf(file));
     INSTRUCTION_PARAM.lastIndex = 0;
     let longest = -1;
     for (let match = INSTRUCTION_PARAM.exec(view); match; match = INSTRUCTION_PARAM.exec(view)) {
-      if (followsTernaryMark(view, match.index)) continue;
+      if (followsTernaryMark(view, match.index, yaml)) continue;
       const length = measureLiteral(read.text, match.index + match[0].length - 1);
       longest = Math.max(longest, length);
     }
     if (longest >= INLINE_THRESHOLD) hits.push(`${file} (${longest} chars)`);
 
-    const yaml = [".yml", ".yaml"].includes(extensionOf(file));
     const role = messageRoleLength(view, read.text, yaml);
     if (role >= INLINE_THRESHOLD) hits.push(`${file} (${role} chars, message role shape)`);
     const gemini = systemInstructionPartsLength(view, read.text, yaml);
