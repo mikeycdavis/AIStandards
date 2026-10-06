@@ -64,8 +64,10 @@ function yamlBlockScalarEnd(text, newline) {
   if (/\s#/.test(before)) return newline;
 
   const indentOf = (line) => /^ */.exec(line)[0].length;
-  // The owning node's column: the key's own when the header follows `- key:`, else the line's indentation.
-  const marker = /^ *(?:- +)+(?=[^\s#"'[\]{}|>&!-][^#]*: )/.exec(header);
+  // The owning node's column: the key's own when the header follows `- key:` (the key may be quoted; that
+  // is what makes an explicit indentation indicator count from the key and not from the dash), else the
+  // line's indentation.
+  const marker = /^ *(?:- +)+(?=(?:"(?:[^"\\]|\\.)*"|'(?:[^']|'')*')[ \t]*: |[^\s#"'[\]{}|>&!-][^#]*: )/.exec(header);
   const parent = marker ? marker[0].length : indentOf(header);
   const explicit = /[1-9]/.exec(header.slice(indicator));
 

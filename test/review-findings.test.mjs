@@ -411,6 +411,10 @@ const BLOCK_SCALAR_NOT_FIRING = [
   ["a block scalar as a sequence item value", "src/p.yaml", `- documentation: |\n    - "system": "${LONG}"\n`],
   ["a block scalar with CRLF line endings", "src/p.yaml", `documentation: |\r\n  - "system": "${LONG}"\r\n`],
   ["a block scalar whose content contains a # that is not a comment", "src/p.yaml", `documentation: |\n  # x\n  - "system": "${LONG}"\n`],
+  ["a quoted sequence key's indented scalar holding a sibling-looking key", "src/p.yaml", `- "documentation": |2\n    system: "${LONG}"\n`],
+  ["a single-quoted sequence key's indented scalar holding a sibling-looking key", "src/p.yaml", `- 'documentation': |2\n    system: "${LONG}"\n`],
+  ["a nested quoted sequence key's indented scalar holding a sibling-looking key", "src/p.yaml", `- - "documentation": |2\n      system: "${LONG}"\n`],
+  ["a quoted sequence key's indented scalar holding a quoted key", "src/p.yaml", `- "documentation": |2\n    "system": "${LONG}"\n`],
 ];
 
 for (const [label, file, source] of BLOCK_SCALAR_NOT_FIRING) {
@@ -444,6 +448,15 @@ const BLOCK_SCALAR_ENDS_FIRING = [
   "system": "${LONG}"
 `],
   ["a block scalar header in a non-YAML file is not special", "src/a.py", `x = {"a": 1}  # |\nclient.create(system="${LONG}")\n`],
+  // Codex review of PR #96: an explicit indentation indicator counts from the column of the OWNING key,
+  // and a quoted key behind a sequence marker owns the scalar just as an unquoted one does
+  ["a sibling after an indented block scalar of a double-quoted sequence key (Codex review of PR #96)", "src/p.yaml", `- "documentation": |2\n    text\n  system: "${LONG}"\n`],
+  ["a sibling after an indented block scalar of a single-quoted sequence key", "src/p.yaml", `- 'documentation': |2\n    text\n  system: "${LONG}"\n`],
+  ["a sibling after an indented block scalar of an unquoted sequence key", "src/p.yaml", `- documentation: |2\n    text\n  system: "${LONG}"\n`],
+  ["a sibling after an indented block scalar of a nested quoted sequence key", "src/p.yaml", `- - "documentation": |2\n      text\n    system: "${LONG}"\n`],
+  ["a sibling after an indented block scalar of a quoted key containing a colon", "src/p.yaml", `- "a: b": |2\n    text\n  system: "${LONG}"\n`],
+  ["a sibling after an indented block scalar of a quoted key with an escaped quote", "src/p.yaml", `- "a\\"b": |2\n    text\n  system: "${LONG}"\n`],
+  ["a sibling after an indented block scalar of a quoted key with the indicators reversed", "src/p.yaml", `- "documentation": |+2\n    text\n  system: "${LONG}"\n`],
 ];
 
 for (const [label, file, source] of BLOCK_SCALAR_ENDS_FIRING) {
