@@ -516,6 +516,8 @@ function followsTernaryMark(view, idx, yaml = false) {
   while (k >= 0 && /\s/.test(view[k])) k -= 1;
   if (k < 0 || view[k] !== "?") return false;
   if (!yaml) return true;
+  // The indicator must be separated from the key by whitespace: `?system` is a plain key named `?system`.
+  if (!/\s/.test(view[k + 1])) return true;
   const lineStart = view.lastIndexOf("\n", k - 1) + 1;
   if (/^[ \t]*(?:-[ \t]+)*$/.test(view.slice(lineStart, k))) return false;
   let p = k - 1;

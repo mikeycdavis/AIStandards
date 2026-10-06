@@ -337,6 +337,13 @@ const YAML_KEY_FIRING = [
   ["a YAML explicit key inside a sequence item", "src/p.yaml", `- ? system_prompt\n  : "${LONG}"\n`, ""],
   ["a YAML explicit key, indented under a parent", "src/p.yml", `llm:\n  ? instructions\n  : '${LONG}'\n`, ""],
   ["a YAML explicit key in a flow mapping", "src/p.yaml", `{? system : "${LONG}"}\n`, ""],
+  ["a YAML explicit key separated by a tab", "src/p.yaml", `?	system
+: "${LONG}"
+`, ""],
+  ["a YAML explicit key whose name is on the next line", "src/p.yaml", `?
+  system
+: "${LONG}"
+`, ""],
   ["a YAML explicit key after a comma in a flow mapping", "src/p.yaml", `{a: 1, ? system : "${LONG}"}\n`, ""],
 ];
 const YAML_SEQ_FIRING = [
@@ -352,6 +359,15 @@ const YAML_KEY_NOT_FIRING = [
   ["a YAML explicit key whose literal is short", "src/p.yaml", `? system\n: "${SHORT}"\n`],
   ["a JS ternary on its own lines", "src/a.js", `const x = ok\n  ? system\n  : "${LONG}";\n`],
   ["a JS ternary after a statement start", "src/a.js", `cond\n? system : "${LONG}";\n`],
+  // Codex review of PR #103: a block or flow explicit-key indicator needs separation, so `?system` is a plain key
+  ["a YAML plain key that starts with a question mark", "src/p.yaml", `?system: "${LONG}"
+`],
+  ["a YAML plain key with a question mark after a sequence marker", "src/p.yaml", `- ?system_prompt: "${LONG}"
+`],
+  ["a YAML plain key with a question mark in a flow mapping", "src/p.yaml", `{?system: "${LONG}"}
+`],
+  ["a YAML plain key with a question mark after a comma", "src/p.yaml", `{a: 1, ?instructions: "${LONG}"}
+`],
   ["a JS array does not open an entry", "src/a.js", `const x = [systemInstruction: { parts: [{ text: "${LONG}" }] }];\n`],
   ["a YAML flow sequence whose entry is not a systemInstruction", "src/p.yaml", `config: [other: {parts: [{text: "${LONG}"}]}]\n`],
 ];
