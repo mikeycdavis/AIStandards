@@ -505,6 +505,28 @@ function enclosingBrace(view, idx) {
   return -1;
 }
 
+// True when the code character before `idx` is the `?` of a ternary: in `ok ? system : "..."` the word is
+// an operand and the colon is the ternary's, so the word is not a key. (A quoted name in operand position
+// is already blanked in the view, so only a bare name reaches this check.)
+function followsTernaryMark(view, idx) {
+  let k = idx - 1;
+  while (k >= 0 && /\s/.test(view[k])) k -= 1;
+  return k >= 0 && view[k] === "?";
+}
+
+// True when the role literal that ends just before `after` is the WHOLE value: what follows must close the
+// entry, so `"system" + "-admin"`, `"system".toUpperCase()`, `"system" || x` and `"system" ? a : b` do not
+// name the system role. In braced code the entry ends at `,` or `}`, after an optional TypeScript
+// `as const`; in YAML it ends at the line, or at `,` or `}` in flow style. Comments are blanked in the
+// view, so a trailing comment is whitespace here.
+const CLOSES_ENTRY_CODE = /\s*(?:as[ \t\r\n]+const\s*)?[,}]/y;
+const CLOSES_ENTRY_YAML = /[ \t]*(?:\r?\n|$|[,}])/y;
+function closesEntry(view, after, yaml) {
+  const re = yaml ? CLOSES_ENTRY_YAML : CLOSES_ENTRY_CODE;
+  re.lastIndex = after;
+  return re.test(view);
+}
+
 // True when the key at `idx` opens a mapping entry in a braced object: the previous code character is
 // `{` or `,`.
 function opensEntry(view, idx) {
@@ -592,7 +614,8 @@ function messageRoleLength(view, text, yaml) {
     let isSystem = false;
     if (view[valueAt] === "\"" || view[valueAt] === "'") {
       const body = measureLiteral(text, valueAt);
-      isSystem = body === "system".length && text.slice(valueAt + 1, valueAt + 1 + body) === "system";
+      isSystem = body === "system".length && text.slice(valueAt + 1, valueAt + 1 + body) === "system"
+        && closesEntry(view, valueAt + body + 2, yaml);
     } else if (yaml) {
       SYSTEM_BARE.lastIndex = valueAt;
       isSystem = SYSTEM_BARE.test(view);
@@ -619,10 +642,22 @@ function messageRoleLength(view, text, yaml) {
   return longest;
 }
 
-function systemInstructionPartsLength(view, text) {
+// After the name, a `:` makes it a mapping KEY only where an entry can open: after `{` or `,` (or, in YAML,
+// at the start of a line after any `- ` markers). Anywhere else the colon is a ternary's or a label's. An
+// `=` assignment or keyword argument is not constrained.
+function isInstructionKey(view, match, yaml) {
+  if (/=[ \t\r\n]*\{$/.test(match[0])) return true;
+  if (opensEntry(view, match.index)) return true;
+  if (!yaml) return false;
+  const lineStart = view.lastIndexOf("\n", match.index - 1) + 1;
+  return /^[ \t]*(?:-[ \t]+)*$/.test(view.slice(lineStart, match.index));
+}
+
+function systemInstructionPartsLength(view, text, yaml) {
   let longest = -1;
   SYSTEM_INSTRUCTION_KEY.lastIndex = 0;
   for (let m = SYSTEM_INSTRUCTION_KEY.exec(view); m; m = SYSTEM_INSTRUCTION_KEY.exec(view)) {
+    if (!isInstructionKey(view, m, yaml)) continue;
     const open = m.index + m[0].length - 1;
     const close = matchClose(view, open);
     if (close === -1) continue;
@@ -681,6 +716,7 @@ function detectInlineSystemPrompt(run, withdrawn) {
     INSTRUCTION_PARAM.lastIndex = 0;
     let longest = -1;
     for (let match = INSTRUCTION_PARAM.exec(view); match; match = INSTRUCTION_PARAM.exec(view)) {
+      if (followsTernaryMark(view, match.index)) continue;
       const length = measureLiteral(read.text, match.index + match[0].length - 1);
       longest = Math.max(longest, length);
     }
@@ -689,7 +725,7 @@ function detectInlineSystemPrompt(run, withdrawn) {
     const yaml = [".yml", ".yaml"].includes(extensionOf(file));
     const role = messageRoleLength(view, read.text, yaml);
     if (role >= INLINE_THRESHOLD) hits.push(`${file} (${role} chars, message role shape)`);
-    const gemini = systemInstructionPartsLength(view, read.text);
+    const gemini = systemInstructionPartsLength(view, read.text, yaml);
     if (gemini >= INLINE_THRESHOLD) hits.push(`${file} (${gemini} chars, systemInstruction parts shape)`);
   }
 

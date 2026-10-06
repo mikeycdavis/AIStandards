@@ -80,6 +80,11 @@ const ROLE_FIRING = [
   ["a YAML list with CRLF line endings", "src/p.yaml", `- role: system\r\n  content: "${LONG}"\r\n`],
   ["a YAML list with another key between", "src/p.yaml", `- role: system\n  name: s\n  content: "${LONG}"\n`],
   ["a YAML flow mapping in a list", "src/p.yaml", `- {role: system, content: "${LONG}"}\n`],
+  ["a TypeScript const assertion after content-first order", "src/a.ts", call(`  messages: [{ content: "${LONG}", role: "system" as const }],`)],
+  ["a role followed by a newline and the closing brace", "src/a.js", call(`  messages: [{ content: "${LONG}", role: "system"\n  }],`)],
+  ["a comment between the role literal and the comma", "src/a.js", call(`  messages: [{ role: "system" /* the role */, content: "${LONG}" }],`)],
+  ["a YAML quoted role with a trailing comment", "src/p.yaml", `- role: "system" # the role\n  content: "${LONG}"\n`],
+  ["a Python dict whose role literal ends the entry", "src/a.py", `messages = [{"role": "system"  # x\n, "content": "${LONG}"}]\n`],
   ["exactly the threshold", "src/a.js", call(`  messages: [{ role: "system", content: "${at(200)}" }],`)],
 ];
 
@@ -102,6 +107,10 @@ const GEMINI_FIRING = [
   ["a multi-line object", "src/a.js", call(`  systemInstruction: {\n    parts: [\n      { text: "${LONG}" },\n    ],\n  },`)],
   ["the second of two parts", "src/a.js", call(`  systemInstruction: { parts: [{ text: "${SHORT}" }, { text: "${LONG}" }] },`)],
   ["a YAML flow mapping", "src/p.yaml", `systemInstruction: {parts: [{text: "${LONG}"}]}\n`],
+  ["a key after a ternary value in the same object", "src/a.js", call(`  k: ok ? 1 : 2, systemInstruction: { parts: [{ text: "${LONG}" }] },`)],
+  ["a quoted key after a ternary value", "src/a.js", call(`  k: ok ? 1 : 2, "systemInstruction": { parts: [{ text: "${LONG}" }] },`)],
+  ["a ternary that holds a real systemInstruction object", "src/a.js", call(`  config: ok ? { systemInstruction: { parts: [{ text: "${LONG}" }] } } : {},`)],
+  ["a JavaScript assignment", "src/a.js", `const systemInstruction = { parts: [{ text: "${LONG}" }] };\n`],
   ["exactly the threshold", "src/a.js", call(`  systemInstruction: { parts: [{ text: "${at(200)}" }] },`)],
 ];
 
@@ -128,6 +137,20 @@ const NOT_FIRING = [
   ["a YAML user message", "src/p.yaml", `- role: user\n  content: "${LONG}"\n`],
   ["a YAML message whose role merely starts with system", "src/p.yaml", `- role: system-admin\n  content: "${LONG}"\n`],
   ["a quoted role that merely starts with system", "src/a.js", call(`  messages: [{ role: "systems", content: "${LONG}" }],`)],
+  // Codex review of PR #97: the role literal must END the value; a composed value is not the word `system`
+  ["a role composed by concatenating a literal (Codex review of PR #97)", "src/a.js", call(`  messages: [{ role: "system" + "-admin", content: "${LONG}" }],`)],
+  ["a role composed with content first", "src/a.js", call(`  messages: [{ content: "${LONG}", role: "system" + "-admin" }],`)],
+  ["a role concatenated with a variable", "src/a.js", call(`  messages: [{ role: "system" + suffix, content: "${LONG}" }],`)],
+  ["a role concatenated across a line break", "src/a.js", call(`  messages: [{ role: "system"\n    + "-admin", content: "${LONG}" }],`)],
+  ["a role with a method call on the literal", "src/a.js", call(`  messages: [{ role: "system".toUpperCase(), content: "${LONG}" }],`)],
+  ["a role with an index on the literal", "src/a.js", call(`  messages: [{ role: "system"[0], content: "${LONG}" }],`)],
+  ["a role that is a logical expression", "src/a.js", call(`  messages: [{ role: "system" || other, content: "${LONG}" }],`)],
+  ["a role that is a nullish expression", "src/a.js", call(`  messages: [{ role: "system" ?? other, content: "${LONG}" }],`)],
+  ["a role that is a ternary condition", "src/a.js", call(`  messages: [{ role: "system" ? a : b, content: "${LONG}" }],`)],
+  ["a role that is a TypeScript as-expression to another type", "src/a.ts", call(`  messages: [{ role: "system" as Role, content: "${LONG}" }],`)],
+  ["a role composed in a single-quoted dict", "src/a.py", `messages = [{'role': 'system' + '-admin', 'content': '${LONG}'}]\n`],
+  ["a Python conditional role", "src/a.py", `messages = [{"role": "system" if admin else "user", "content": "${LONG}"}]\n`],
+  ["a YAML flow role followed by trailing text", "src/p.yaml", `- {role: "system" x, content: "${LONG}"}\n`],
   // short content, at and below the boundary
   ["content one character under the threshold", "src/a.js", call(`  messages: [{ role: "system", content: "${at(199)}" }],`)],
   ["short content, content first", "src/a.js", call(`  messages: [{ content: "${SHORT}", role: "system" }],`)],
@@ -176,6 +199,20 @@ content: "${LONG}"
 role: system
 `],
   ["a systemInstruction whose parts is nested under another key", "src/a.js", call(`  systemInstruction: { other: { parts: [{ text: "${LONG}" }] } },`)],
+  // Codex review of PR #97: a ternary operand is not a mapping key
+  ["a systemInstruction identifier as a ternary operand (Codex review of PR #97)", "src/a.js", `const x = ok ? systemInstruction : { parts: [{ text: "${LONG}" }] };\n`],
+  ["a ternary operand inside a call", "src/a.js", `call(ok ? systemInstruction : { parts: [{ text: "${LONG}" }] });\n`],
+  ["a snake-case ternary operand", "src/a.js", `const x = ok ? system_instruction : { parts: [{ text: "${LONG}" }] };\n`],
+  ["a quoted ternary operand", "src/a.js", `const x = ok ? "systemInstruction" : { parts: [{ text: "${LONG}" }] };\n`],
+  ["a ternary operand after an operator", "src/a.js", `const x = ok ? !systemInstruction : { parts: [{ text: "${LONG}" }] };\n`],
+  ["a ternary operand on its own line", "src/a.js", `const x = ok\n  ? systemInstruction\n  : { parts: [{ text: "${LONG}" }] };\n`],
+  ["a YAML plain scalar that contains the ternary text", "src/p.yaml", `note: ok ? systemInstruction : {parts: [{text: "${LONG}"}]}\n`],
+  ["a labelled block", "src/a.js", `systemInstruction: { parts: [{ text: "${LONG}" }] }\n`],
+  // The same ternary-operand class in the parameter shape (found re-checking the neighbouring grammar)
+  ["a parameter name as a ternary operand", "src/a.js", `const x = ok ? system : "${LONG}";\n`],
+  ["an instructions name as a ternary operand", "src/a.js", `const x = ok ? instructions : "${LONG}";\n`],
+  ["a systemInstruction name as a ternary operand with a literal alternative", "src/a.js", `const x = ok ? systemInstruction : "${LONG}";\n`],
+  ["a parameter name as a ternary operand on its own line", "src/a.js", `const x = ok\n  ? system_prompt\n  : "${LONG}";\n`],
   ["a systemInstruction text in a ternary inside parts", "src/a.js", call(`  systemInstruction: { parts: [{ k: cond ? text : "${LONG}" }] },`)],
   ["a prefixed systemInstruction name", "src/a.js", call(`  my_systemInstruction: { parts: [{ text: "${LONG}" }] },`)],
   ["a prefixed system_instruction name in Python", "src/a.py", `m = Model(my_system_instruction={"parts": [{"text": "${LONG}"}]})
@@ -273,3 +310,19 @@ test("a short message earlier in a file does not describe a long one later", () 
   const source = call(`  messages: [{ role: "system", content: "${SHORT}" }],`) + `// { role: "system", content: "${LONG}" }\n` + call(`  messages: [{ role: "system", content: "${LONG}" }],`);
   assert.equal(resultFor({ "src/a.js": source }, VERSIONED).result, "failed");
 });
+
+// The parameter shape must keep firing where the name really is a key, next to the ternary cases above.
+const PARAM_STILL_FIRING = [
+  ["a key after a ternary value in the same object", "src/a.js", call(`  k: ok ? 1 : 2, system: "${LONG}",`)],
+  ["a key inside an object held by a ternary branch", "src/a.js", `const x = ok ? { system: "${LONG}" } : {};\n`],
+  ["a quoted key after a ternary value", "src/a.js", call(`  k: ok ? 1 : 2, "system": "${LONG}",`)],
+  ["an assignment after a ternary statement", "src/a.js", `const k = ok ? 1 : 2;\nconst system = "${LONG}";\n`],
+];
+
+for (const [label, file, source] of PARAM_STILL_FIRING) {
+  test(`parameter shape beside a ternary: ${label} still reports`, () => {
+    const r = resultFor({ [file]: source }, VERSIONED);
+    assert.equal(r.result, "failed", `${r.result}: ${r.message}`);
+    assert.deepEqual(r.evidence, [`${file} (${LONG.length} chars)`]);
+  });
+}
