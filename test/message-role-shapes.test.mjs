@@ -326,3 +326,57 @@ for (const [label, file, source] of PARAM_STILL_FIRING) {
     assert.deepEqual(r.evidence, [`${file} (${LONG.length} chars)`]);
   });
 }
+
+// Codex review of PR #98, two P2 findings. Both are YAML spellings of a key that the ternary guard and the
+// entry-opening check of that revision discarded, so a long literal the parent revision detected reported
+// `skipped` instead of `failed`.
+const YAML_KEY_FIRING = [
+  // P2 scripts/standards.mjs:719, "Preserve YAML explicit mapping keys": `?` at the start of a YAML line is
+  // the explicit-key indicator, not a ternary's `?`.
+  ["a YAML explicit mapping key", "src/p.yaml", `? system\n: "${LONG}"\n`, ""],
+  ["a YAML explicit key inside a sequence item", "src/p.yaml", `- ? system_prompt\n  : "${LONG}"\n`, ""],
+  ["a YAML explicit key, indented under a parent", "src/p.yml", `llm:\n  ? instructions\n  : '${LONG}'\n`, ""],
+  ["a YAML explicit key in a flow mapping", "src/p.yaml", `{? system : "${LONG}"}\n`, ""],
+  ["a YAML explicit key after a comma in a flow mapping", "src/p.yaml", `{a: 1, ? system : "${LONG}"}\n`, ""],
+];
+const YAML_SEQ_FIRING = [
+  // P2 scripts/standards.mjs:653, "Accept YAML flow-sequence mapping entries": an implicit single-pair
+  // mapping may be the first item of a flow sequence, so `[` opens an entry in YAML.
+  ["a systemInstruction as the first entry of a YAML flow sequence", "src/p.yaml", `config: [systemInstruction: {parts: [{text: "${LONG}"}]}]\n`],
+  ["a snake-case system_instruction in a YAML flow sequence", "src/p.yml", `config: [system_instruction: {parts: [{text: "${LONG}"}]}]\n`],
+  ["a systemInstruction after another entry of a YAML flow sequence", "src/p.yaml", `config: [a: 1, systemInstruction: {parts: [{text: "${LONG}"}]}]\n`],
+  ["a text entry first in the parts flow sequence", "src/p.yaml", `systemInstruction: {parts: [text: "${LONG}"]}\n`],
+];
+const YAML_KEY_NOT_FIRING = [
+  ["a YAML plain scalar with a ternary mark", "src/p.yaml", `note: ok ? system : "${LONG}"\n`],
+  ["a YAML explicit key whose literal is short", "src/p.yaml", `? system\n: "${SHORT}"\n`],
+  ["a JS ternary on its own lines", "src/a.js", `const x = ok\n  ? system\n  : "${LONG}";\n`],
+  ["a JS ternary after a statement start", "src/a.js", `cond\n? system : "${LONG}";\n`],
+  ["a JS array does not open an entry", "src/a.js", `const x = [systemInstruction: { parts: [{ text: "${LONG}" }] }];\n`],
+  ["a YAML flow sequence whose entry is not a systemInstruction", "src/p.yaml", `config: [other: {parts: [{text: "${LONG}"}]}]\n`],
+];
+
+for (const [label, file, source] of YAML_KEY_FIRING) {
+  test(`explicit YAML key: ${label} reports`, () => {
+    for (const rule of [VERSIONED, NO_INLINE]) {
+      const r = resultFor({ [file]: source }, rule);
+      assert.equal(r.result, rule === VERSIONED ? "failed" : "warning", `${rule} ${r.result}: ${r.message}`);
+      assert.ok(r.evidence.some((e) => e.startsWith(`${file} (${LONG.length} chars`)), JSON.stringify(r.evidence));
+    }
+  });
+}
+for (const [label, file, source] of YAML_SEQ_FIRING) {
+  test(`YAML flow sequence entry: ${label} reports`, () => {
+    for (const rule of [VERSIONED, NO_INLINE]) {
+      const r = resultFor({ [file]: source }, rule);
+      assert.equal(r.result, rule === VERSIONED ? "failed" : "warning", `${rule} ${r.result}: ${r.message}`);
+      assert.deepEqual(r.evidence, [`${file} (${LONG.length} chars, systemInstruction parts shape)`]);
+    }
+  });
+}
+for (const [label, file, source] of YAML_KEY_NOT_FIRING) {
+  test(`YAML key forms: ${label} does not report`, () => {
+    const r = resultFor({ [file]: source }, VERSIONED);
+    assert.notEqual(r.result, "failed", `${r.result}: ${JSON.stringify(r.evidence)}`);
+  });
+}
