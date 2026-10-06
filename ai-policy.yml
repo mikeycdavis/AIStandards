@@ -12,7 +12,8 @@
 #     below, as are the five Standard 8 rules added to the lifecycle shard and the four Standard 9
 #     rules added to the misuse shard on 2026-09-14. The five privacy rules, listed since Phase 1,
 #     are stated by Standard 13 from 2026-09-14, and the four agent rules by Standard 23 the same
-#     day. The nine reserved namespaces that have no
+#     day; on 2026-10-05 two of them (no-self-modification, retrieved-content-not-instruction) moved to
+#     Standard 51. The nine reserved namespaces that have no
 #     shard have nothing to list.
 #
 # The filename matters: AIStandards reads ai-policy.yml, never project-policy.yml. Two closed

@@ -179,7 +179,9 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
 - `scripts/sync-rule-tables.mjs` (writes the generated tables; `--check` is read-only; refuses a
   written standard missing a block for a shard that holds its rules) and
   `scripts/standards-sections.mjs` (read-only document conformance), both 2026-09-14
-- **16 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 45**
+- **17 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 45, 51**
+  (51 added 2026-10-05 by the ST-42 assignment: it states `agent.no-self-modification` and
+  `agent.retrieved-content-not-instruction`, which Standard 23 stated until then)
 - `templates/` (twelve templates and `index.json`), `scripts/manifest.mjs`, `scripts/toolperms.mjs` and
   `scripts/init.mjs`, all 2026-09-19 — see the sixth batch below
 
@@ -465,7 +467,7 @@ the coordinator's inference from the plan, the schemas and Standard 17, and the 
   bytes, so a target inherits the checkout's line endings; no `.gitattributes` was added (Q8). Coverage is
   still declared, not measured. The human report's closing NOTE prints on a refused run too.
 
-**Deliberately not built, and asserted absent by test:** the remaining 37 standards, shards for
+**Deliberately not built, and asserted absent by test:** the remaining 36 standards, shards for
 the nine reserved namespaces that have none, `artifacts/standards-source-inventory.json`, attestations,
 containers, CI workflows, the adapter, and Phase 3's detectors. `test/no-phase-creep.test.mjs` fails if any of them appears early.
 
@@ -571,12 +573,13 @@ governance until a sign-off exists.
    R2's meanings table and adding an explanatory note under R6 on status and score, on the owner's
    instruction that aligning the wording with implemented R6 is in scope. No bolded requirement changed.
    The wording is authored and, like the rest of Standard 5, has no owner approval.
-10. **Where Standard 23's rules and neighbours belong** — Q15 to Q18: whether
-   `agent.retrieved-content-not-instruction` belongs to item 23 and whether its `code-analysis` type can
-   stand beside Standard 21 R5's `not-evaluable` one; whether the two `forbidden` agent rules are item
-   51's; who states a sandboxing requirement, given Standard 45 attributes it to item 23; and whether
-   R4 reaches tool output beyond fetched content. Each changes a rule's `standard` field or validation
-   type, or another standard's text.
+10. **Where Standard 23's rules and neighbours belong** — Q15 to Q18. **Q16 was answered on 2026-10-05**
+   (ST-42, #87): the two `forbidden` agent rules are item 51's, and Standard 51 now states them, with
+   Standard 23's R3 and R4 left as pointers; the standard-field half of Q15 went with it. Still open:
+   whether `agent.retrieved-content-not-instruction`'s `code-analysis` type can stand beside Standard 21
+   R5's `not-evaluable` one; who states a sandboxing requirement, given Standard 45 attributes it to
+   item 23; and whether Standard 51 R2 reaches tool output beyond fetched content (Q18). Each changes a
+   validation type or another standard's text.
 11. **Where Standard 17's rules belong, and whether to state an evaluation baseline outside
    MachineLearningStandards** — Q19 to Q22: whether the two `forbidden` eval rules are item 50's; whether
    `eval.regression-baseline-recorded` belongs to item 20; whether `eval.no-test-set-tuning` can stay
@@ -616,7 +619,7 @@ without that pack's maintainers or an owner decision to author on its ground. Q7
 question that changes an already-written standard's wording. Q9 to Q12 and Q15 to Q21 are also open
 (see §8).
 
-Completing the adoption slice does not complete Phase 2: 37 standards, nine missing shards and the
+Completing the adoption slice does not complete Phase 2: 36 standards, nine missing shards and the
 source inventory remain.
 
 ## 10 · Invariants — do not break these
