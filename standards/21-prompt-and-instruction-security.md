@@ -188,8 +188,9 @@ signal and nothing enforces it.
 ## Relationship to other standards and ADRs
 
 [Standard 1](01-ai-system-manifest.md) holds the prompt declarations this standard's evidence refers
-to. Standard 23, Agent Execution Security *(Phase 2)* owns retrieved content acquiring
-instruction authority, which is R5's most dangerous instance and is a rule of its own there.
+to. [Standard 51](51-agent-and-tool-execution-prohibitions.md), Agent and Tool Execution Prohibitions, owns retrieved content acquiring
+instruction authority, which is R5's most dangerous instance and is its R2, a rule of its own there.
+It was stated under Standard 23 until the owner assigned it to 51 on 2026-10-05.
 [Standard 45](45-approval-gates.md) is what stands between a successful injection and an effect in
 the world — this standard reduces the chance of the first, and that one bounds the consequence.
 [Standard 5](05-verdict-vocabulary.md) governs how R5's `not-evaluable` status is reported: beside

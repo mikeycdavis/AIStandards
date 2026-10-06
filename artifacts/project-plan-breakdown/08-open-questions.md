@@ -225,7 +225,7 @@ a property test over every fixture, was not mutation-tested; and the worked exam
 `q13-synthetic-no-config/`, 100 for `q13-synthetic-full-only/`) matches `validate --json` output. Like
 the rest of Standard 5's authored content, the wording has no owner approval.
 
-### Q15 — Does `agent.retrieved-content-not-instruction` belong to item 23?
+### Q15 — Does `agent.retrieved-content-not-instruction` belong to item 23? — **partly resolved 2026-10-05: no, it is item 51's; the validation-type question stays open**
 
 The rule cites standard 23. Its subject overlaps Standard 21 R3 and R5 and Standard 11 R6, and its source
 of retrieved content is item 24's title, Retrieval and Context Supply Chain. Standard 21's Relationship
@@ -235,13 +235,25 @@ explains the difference as a structural half and a behavioural half and does not
 types can stand. **Not resolved here, because the answer changes a rule's `standard` field or validation
 type.** **Impact if unanswered:** none while no detector binds either rule.
 
-### Q16 — Are the two forbidden agent rules item 51's prohibitions?
+**Partly resolved 2026-10-05.** The owner assigned the rule to Standard 51 (ST-42, #87), so it no longer
+belongs to item 23, and Standard 21's Relationship section now names Standard 51. **The validation-type
+half is unchanged and still open**: whether the rule's `code-analysis` type and Standard 21 R5's
+`not-evaluable` type can both be right on shared ground. It now concerns Standard 51 R2.
+
+### Q16 — Are the two forbidden agent rules item 51's prohibitions? — **resolved 2026-10-05: yes**
 
 Item 51, Agent and Tool Execution Prohibitions, is the authored negative face of `tool, agent, and
 retrieval security`. `agent.no-self-modification` and `agent.retrieved-content-not-instruction` are
 `forbidden`, were minted in Phase 1 and cite standard 23. The parallel for privacy is Q12.
 **Impact if unanswered:** none on the wording of any written standard today. Item 51's document, when
 written, will have to say.
+
+**Resolved 2026-10-05.** The owner decided that `agent.no-self-modification` and
+`agent.retrieved-content-not-instruction` are Standard 51's (ST-42, #87). Their `standard` field is now 51,
+`standards/51-agent-and-tool-execution-prohibitions.md` states them as R1 and R2, Standard 23's R3 and R4
+are relocation pointers, and the specification claims the document for item 51. Rule text, ids, levels,
+severities, validation types and exemptibility did not change. The decision covers the assignment, not
+the wording of the readings that moved with it, which remain authored and without owner approval.
 
 ### Q17 — Who states a sandboxing requirement?
 
@@ -250,10 +262,10 @@ concerns it, the brief does not mention it, and Standard 23 records the gap rath
 requirement. Either item 23 gains authored normative content or Standard 45's attribution changes.
 **Impact if unanswered:** no written standard requires execution isolation for an agent.
 
-### Q18 — Should Standard 23 R4 reach tool output other than fetched content?
+### Q18 — Should Standard 51 R2 (formerly Standard 23 R4) reach tool output other than fetched content?
 
 `agent.retrieved-content-not-instruction` names a retrieval index, a web page and a user document.
-Standard 23 reads a tool returning fetched content as within those sources and other tool output, and
+Standard 51 reads a tool returning fetched content as within those sources and other tool output, and
 the user's own message, as outside them. Whether they should be inside is item 22's and Standard 21's
 ground. **Impact if unanswered:** none while no detector binds the rule.
 

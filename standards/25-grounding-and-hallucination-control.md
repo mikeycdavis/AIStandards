@@ -71,7 +71,7 @@ It also does not cover the **presentation** of generated content. Marking genera
 does not take it for verified fact is UIUXDesignStandards' subject, recorded as an adjacency below, and
 nothing here restates it. And it does not cover prompt injection through retrieved content, which
 [Standard 21](21-prompt-and-instruction-security.md) and
-[Standard 23](23-agent-execution-security.md) govern: a passage that tells the model what to do is a
+[Standard 51](51-agent-and-tool-execution-prohibitions.md) govern: a passage that tells the model what to do is a
 security matter, and a passage that is wrong is a grounding one.
 
 **Boundary posture O — owned outright, after a correction.** The plan crosswalked this item to
@@ -262,7 +262,7 @@ Three reasons, stated so a reader can disagree with any one of them:
    ([Standard 7](07-boundary-with-adjacent-standards.md) R3 names `honesty.no-fabricated-capability-claim`
    as a later-phase id) and has no shard. This standard mints no id; naming one is for the item that
    owns capability claims or for a later decision, and it needs an owner's ruling on which item owns it,
-   as the open questions Q10, Q12, Q15, Q16, Q19 and Q20 record for other placements. No such question
+   as the open questions Q10, Q12, Q15, Q19 and Q20 record for other placements (Q16 was answered on 2026-10-05). No such question
    is recorded for this item, because nothing here needs one answered.
 
 **Severity.** R1 to R5 are `manual-review` obligations in this release. R5's inference-time property
@@ -371,7 +371,7 @@ judge model's recording lives (R7) and where non-numeric results are handled (R8
 restates it, and R3's checker-as-model case points at it.
 
 [Standard 21](21-prompt-and-instruction-security.md) and
-[Standard 23](23-agent-execution-security.md) govern content that tells the model what to do. A
+[Standard 51](51-agent-and-tool-execution-prohibitions.md) govern content that tells the model what to do. A
 retrieved passage that is *wrong* is this standard's subject; one that *instructs* is theirs, and a
 passage can be both.
 

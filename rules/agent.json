@@ -1,5 +1,5 @@
 {
-  "$comment": "Agent execution security, stated by standards/23-agent-execution-security.md (R1–R4). No detector binds here: step-budget-bounded and least-privilege-declared report skipped / not-evaluated; retrieved-content-not-instruction reports prohibited-but-unestablished; no-self-modification is not-evaluable, reports prohibited-but-unestablished and is listed beside the verdict in notEvaluable. Whether retrieved-content-not-instruction belongs here, and whether the two forbidden rules are item 51's, is open as Q15 and Q16. The namespace is `agent.` — note MathematicsStandards owns agent.explainable-findings and agent.refusal-on-invariant, which are its own; no id here collides with them.",
+  "$comment": "Agent execution security, stated by standards/23-agent-execution-security.md (step-budget-bounded, least-privilege-declared) and standards/51-agent-and-tool-execution-prohibitions.md (no-self-modification, retrieved-content-not-instruction); the two forbidden rules were assigned to standard 51 by owner decision of 2026-10-05 (ST-42, #87), which answers Q16 and the standard-field half of Q15. No detector binds here: step-budget-bounded and least-privilege-declared report skipped / not-evaluated; retrieved-content-not-instruction reports prohibited-but-unestablished; no-self-modification is not-evaluable, reports prohibited-but-unestablished and is listed beside the verdict in notEvaluable. The namespace is `agent.` — note MathematicsStandards owns agent.explainable-findings and agent.refusal-on-invariant, which are its own; no id here collides with them.",
   "rules": [
     {
       "id": "agent.step-budget-bounded",
@@ -42,7 +42,7 @@
     {
       "id": "agent.no-self-modification",
       "title": "An agent does not modify its own instructions or permissions",
-      "standard": 23,
+      "standard": 51,
       "category": "agent",
       "level": "forbidden",
       "severity": "error",
@@ -62,7 +62,7 @@
     {
       "id": "agent.retrieved-content-not-instruction",
       "title": "Retrieved content never acquires instruction authority",
-      "standard": 23,
+      "standard": 51,
       "category": "agent",
       "level": "forbidden",
       "severity": "error",

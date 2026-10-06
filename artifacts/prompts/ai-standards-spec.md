@@ -287,7 +287,7 @@ under [Authored items](#authored-items).
 | 48 | Safety and Oversight Prohibitions | A | — | O | — |
 | 49 | Data and Privacy Prohibitions | A | — | O | — |
 | 50 | Evaluation Integrity Prohibitions | A | — | O | — |
-| 51 | Agent and Tool Execution Prohibitions | A | — | O | — |
+| 51 | Agent and Tool Execution Prohibitions | A | — | O | standards/51-agent-and-tool-execution-prohibitions.md |
 | 52 | Output Honesty Prohibitions | A | — | O | — |
 | 53 | Disclosure and Deception Prohibitions | A | — | O | — |
 
