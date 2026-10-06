@@ -356,6 +356,18 @@ const YAML_SEQ_FIRING = [
 ];
 const YAML_KEY_NOT_FIRING = [
   ["a YAML plain scalar with a ternary mark", "src/p.yaml", `note: ok ? system : "${LONG}"\n`],
+  // Codex review of PR #103: in block form `? system: "..."` the mapping on the line is itself the complex key
+  ["a block explicit key that is an inline mapping", "src/p.yaml", `? system: "${LONG}"
+`],
+  ["a block explicit key that is an inline mapping, after a sequence marker", "src/p.yaml", `- ? system_prompt: "${LONG}"
+`],
+  ["a block explicit key that is an inline mapping, indented", "src/p.yml", `llm:
+  ? instructions: '${LONG}'
+`],
+  ["a block explicit key that is an inline mapping with a space before the colon", "src/p.yaml", `? system : "${LONG}"
+`],
+  ["a block explicit key that is an inline mapping with a quoted name", "src/p.yaml", `? "system": "${LONG}"
+`],
   ["a YAML explicit key whose literal is short", "src/p.yaml", `? system\n: "${SHORT}"\n`],
   ["a JS ternary on its own lines", "src/a.js", `const x = ok\n  ? system\n  : "${LONG}";\n`],
   ["a JS ternary after a statement start", "src/a.js", `cond\n? system : "${LONG}";\n`],
