@@ -21,7 +21,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { validate, fixture, resultFor, REPO } from "./helpers.mjs";
-import { PROBES, LONG, PARAMETER_NAMES, THRESHOLD } from "./lexical-contract-probes.mjs";
+import { PROBES, EXTENSIONS, LONG, PARAMETER_NAMES, THRESHOLD } from "./lexical-contract-probes.mjs";
 
 const VERSIONED = "promptsec.prompt-is-versioned-artifact";
 const NO_INLINE = "promptsec.no-inline-system-prompt";
@@ -36,7 +36,7 @@ function parseList(text) {
     // | id | class | result | form | pinned by |
     if (cells.length >= 7 && /^L[CNXH]-\d+$/.test(cells[1])) {
       const [file, label] = cells[5].replace(/`/g, "").split(" :: ");
-      entries.push({ id: cells[1], cls: cells[2], expect: cells[3], pin: [file, label] });
+      entries.push({ id: cells[1], cls: cells[2], expect: cells[3], form: cells[4], pin: [file, label] });
     }
   }
   return entries;
@@ -64,12 +64,76 @@ function runProbe(p) {
 
 const listed = parseList(doc);
 
+// | id | class | result | extension | syntax | pinned by |   (the "Scanned file types" table)
+function parseExtensions(text) {
+  const entries = [];
+  for (const line of text.split("\n")) {
+    const cells = line.split("|").map((c) => c.trim());
+    if (cells.length >= 8 && /^LF-\d+$/.test(cells[1])) {
+      const [file, label] = cells[6].replace(/`/g, "").split(" :: ");
+      entries.push({ id: cells[1], cls: cells[2], expect: cells[3], ext: cells[4].replace(/`/g, ""), syntax: cells[5].replace(/`/g, ""), pin: [file, label] });
+    }
+  }
+  return entries;
+}
+
+// The extension table the detector itself uses, read from scripts/source.mjs.
+function detectorExtensions() {
+  const src = fs.readFileSync(path.join(REPO, "scripts", "source.mjs"), "utf8");
+  const body = src.match(/const BY_EXTENSION = new Map\(Object\.entries\(\{([\s\S]*?)\}\)\);/);
+  assert.ok(body, "source.mjs must still declare BY_EXTENSION");
+  return [...body[1].matchAll(/"(\.[a-z0-9]+)":\s*"([a-z]+)"/g)].map((m) => [m[1], m[2]]);
+}
+const listedExtensions = parseExtensions(doc);
+
 test("the document enumerates exactly the probe table: same ids, classes, results and pins, in order", () => {
   assert.ok(listed.length > 0, "docs/lexical-contract.md must enumerate the frozen forms");
   const fromDoc = listed.map((e) => `${e.id}|${e.cls}|${e.expect}|${e.pin.join(" :: ")}`);
   const fromProbes = PROBES.map((p) => `${p.id}|${p.cls}|${p.expect}|${p.pin.join(" :: ")}`);
   assert.deepEqual(fromDoc, fromProbes);
   assert.equal(new Set(PROBES.map((p) => p.id)).size, PROBES.length, "probe ids must be unique");
+});
+
+test("each documented form text is the probe's own description, row by row", () => {
+  assert.equal(listed.length, PROBES.length);
+  for (const [i, p] of PROBES.entries()) {
+    assert.equal(listed[i].id, p.id);
+    assert.equal(listed[i].form, p.desc, `${p.id}: the Form column must equal the probe description`);
+  }
+});
+
+test("the document lists every file type the detector scans: the same extensions and syntax classes as scripts/source.mjs", () => {
+  const pairs = (rows) => rows.map(([e, syntax]) => `${e} ${syntax}`).sort();
+  const detector = pairs(detectorExtensions());
+  assert.ok(detector.length > 0, "BY_EXTENSION must be readable");
+  assert.equal(new Set(detector).size, detector.length, "BY_EXTENSION must not repeat an extension");
+  assert.deepEqual(
+    pairs(listedExtensions.map((e) => [e.ext, e.syntax])),
+    detector,
+    "docs/lexical-contract.md must name every extension of BY_EXTENSION with its syntax class",
+  );
+  assert.deepEqual(
+    pairs(EXTENSIONS.map((e) => [e.ext, e.syntax])),
+    detector,
+    "the extension probe table must cover every extension of BY_EXTENSION",
+  );
+});
+
+test("the document enumerates exactly the extension probe table: same ids, classes, results and pins, in order", () => {
+  const key = (e) => `${e.id}|${e.cls}|${e.expect}|${e.ext}|${e.syntax}|${e.pin.join(" :: ")}`;
+  assert.deepEqual(listedExtensions.map(key), EXTENSIONS.map(key));
+  assert.equal(new Set(EXTENSIONS.map((e) => e.id)).size, EXTENSIONS.length, "extension probe ids must be unique");
+});
+
+test("the document states the count of scanned file types and it matches the list", () => {
+  const m = doc.match(/Scanned file types: (\d+) \((\d+) source-code, (\d+) structural, (\d+) held pending ST-49\)/);
+  assert.ok(m, "the document must state `Scanned file types: N (a source-code, b structural, c held pending ST-49)`");
+  const count = (cls) => EXTENSIONS.filter((e) => e.cls === cls).length;
+  assert.deepEqual(m.slice(1).map(Number), [EXTENSIONS.length, count("source"), count("structural"), count("held")]);
+});
+
+test("the enumeration of file types has no open-ended tail", () => {
+  assert.ok(!/\betc\b|and so on|and more|and others/i.test(doc), "the document must not end any list with an open tail");
 });
 
 test("the document states the count of frozen forms and it matches the list", () => {
@@ -120,6 +184,27 @@ for (const p of PROBES) {
     assert.ok(fs.existsSync(full), `${file} must exist`);
     assert.ok(fs.readFileSync(full, "utf8").includes(label), `${file} must still contain "${label}"`);
   });
+}
+
+for (const e of EXTENSIONS) {
+  if (e.cls === "source") {
+    test(`${e.id} (${e.ext}, ${e.syntax}): a file of this type is scanned and the parameter shape fires`, () => {
+      const r = runProbe(e);
+      assert.equal(r.versioned.result, "failed", `${VERSIONED}: ${r.versioned.result}`);
+      assert.equal(r.noInline.result, "warning", `${NO_INLINE}: ${r.noInline.result}`);
+      for (const x of [r.versioned, r.noInline]) assert.ok(x.evidence.some((v) => v.startsWith(`${e.file} (`)), JSON.stringify(x.evidence));
+    });
+  } else if (e.cls === "held") {
+    test(`${e.id} (${e.ext}): the held TOML type is exercised by LH-01`, () => {
+      const lh = PROBES.find((p) => p.id === "LH-01");
+      assert.ok(lh && lh.file.endsWith(e.ext) && lh.expect === "fires");
+    });
+  } else {
+    test(`${e.id} (${e.ext}): a structural type stays outside the frozen forms`, () => {
+      assert.equal(e.expect, "not-frozen");
+      assert.ok(!PROBES.some((p) => p.file && p.file.endsWith(e.ext) && p.cls !== "held"), `${e.ext} must not be frozen by a lexical probe`);
+    });
+  }
 }
 
 test("the detector's instruction-parameter names and threshold are the ones the document freezes", () => {

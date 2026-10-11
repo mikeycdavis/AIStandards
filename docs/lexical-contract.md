@@ -8,10 +8,13 @@ does not replace the detector paragraph of Standard 21 (`standards/21-prompt-and
 
 ## Scope
 
-- **In the frozen list:** forms in source-code files (JS/TS, Python, shell) for the inline-prompt rules R1
-  and R2 of Standard 21 (`promptsec.prompt-is-versioned-artifact`, `promptsec.no-inline-system-prompt`):
-  the *parameter shape*, the *message role shape* and the *systemInstruction parts shape*, each with the
-  named non-claims and boundary controls that bound it.
+- **In the frozen list:** forms in the 30 source-code file types named under "Scanned file types" below (every
+  language the detector treats as code except YAML, JSON and TOML) for the inline-prompt rules R1 and R2 of
+  Standard 21 (`promptsec.prompt-is-versioned-artifact`, `promptsec.no-inline-system-prompt`): the *parameter
+  shape*, the *message role shape* and the *systemInstruction parts shape*, each with the named non-claims
+  and boundary controls that bound it. The forms below are written in JS/TS, Python and shell; the detector
+  applies the same three shapes to every listed source-code file type, selecting only the comment and string
+  syntax by extension, and no language-specific form beyond those three shapes is claimed for the others.
 - **Held lexical pending ST-49 (#111):** TOML forms and the forms of Standard 9
   (`misuse.safety-controls-not-disabled`). They stay on the lexical layer and move only through the
   separate ST-49 owner decision. They are listed so that the decision has an exact inventory to act on.
@@ -23,6 +26,8 @@ Instruction parameter names: `system`, `system_prompt`, `systemPrompt`, `instruc
 Threshold: 200 characters.
 
 Frozen forms: 67 (20 claimed, 17 non-claims, 17 boundary controls, 13 held pending ST-49).
+
+Scanned file types: 34 (30 source-code, 3 structural, 1 held pending ST-49).
 
 ## The stop-extension rule
 
@@ -44,8 +49,10 @@ this list records (the test will show it), a repair that restores the recorded c
 documentation. Nothing else.
 
 **What the test enforces.** Every row below is run through the real detector and must produce the recorded
-result; the rows must equal the probe table in `test/lexical-contract-probes.mjs` (id, class, result and
-pin, in order); the listed parameter names and the threshold must equal the detector's; each cited pinning
+result; the rows must equal the probe table in `test/lexical-contract-probes.mjs` (id, class, result, pin and
+the Form text against the probe's description, in order); the file types below must be exactly the
+extensions of `BY_EXTENSION` in `scripts/source.mjs`, with its syntax class for each, and every source-code
+type must fire on its probe; the listed parameter names and the threshold must equal the detector's; each cited pinning
 test must still exist. The test cannot see a form that nobody listed: a detector change that claims a new
 shape and adds neither a row nor a probe is stopped by review, which is what this rule asks reviewers to do.
 
@@ -149,6 +156,58 @@ TOML and Standard 9. Not moved, not extended; the ST-49 decision is the only way
 | LH-11 | held | s9-fires | Standard 9: an `off` literal followed by a fallback operand evaluates to off and fails | `test/safety-detector.test.mjs :: safety-off-or-fallback-js` |
 | LH-12 | held | s9-fires | Standard 9: a YAML quoted off value on the moderation key, followed by other lines, fails (YAML-file form of Standard 9, held with it) | `test/safety-detector.test.mjs :: safety-off-yaml-trailing` |
 | LH-13 | held | s9-clear | Standard 9: the YAML file with the control on does not fire | `test/safety-detector.test.mjs :: safety-on-yaml-trailing` |
+
+## Scanned file types
+
+The detector applies the three shapes to a file only when `isCode` in `scripts/source.mjs` accepts its
+extension, and that table is closed: the 34 extensions below are all of them, and no other file type is
+scanned (a `.txt` or `.md` file is reported `skipped`). The syntax column is the comment and string syntax
+class `source.mjs` assigns: `c` is `//`, `/* */` and the quotes `"` `'` `` ` ``; `hash` is `#` and `"` `'`;
+`sql` is `--`, `/* */` and `'`; `none` has no comments.
+
+- `source` types are frozen with the forms in this list. The probe writes a file of that extension with a
+  `system="..."` literal of 288 characters and requires both promptsec rules to fire naming the file.
+- `structural` types (YAML and JSON) are scanned today and are deliberately not frozen: the structural
+  parser (FE-30, #109) owns them and may change their result without the lexical stop-extension decision.
+  There is no lexical probe for them.
+- `held` is TOML, held lexical pending ST-49 (#111); `LH-01` and `LH-02` below are its probes.
+
+| Id | Class | Result | Extension | Syntax | Pinned by |
+| --- | --- | --- | --- | --- | --- |
+| LF-01 | source | fires | `.js` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-01"` |
+| LF-02 | source | fires | `.mjs` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-02"` |
+| LF-03 | source | fires | `.cjs` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-03"` |
+| LF-04 | source | fires | `.jsx` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-04"` |
+| LF-05 | source | fires | `.ts` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-05"` |
+| LF-06 | source | fires | `.mts` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-06"` |
+| LF-07 | source | fires | `.cts` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-07"` |
+| LF-08 | source | fires | `.tsx` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-08"` |
+| LF-09 | source | fires | `.java` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-09"` |
+| LF-10 | source | fires | `.c` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-10"` |
+| LF-11 | source | fires | `.h` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-11"` |
+| LF-12 | source | fires | `.cc` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-12"` |
+| LF-13 | source | fires | `.cpp` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-13"` |
+| LF-14 | source | fires | `.hpp` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-14"` |
+| LF-15 | source | fires | `.cs` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-15"` |
+| LF-16 | source | fires | `.go` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-16"` |
+| LF-17 | source | fires | `.rs` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-17"` |
+| LF-18 | source | fires | `.swift` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-18"` |
+| LF-19 | source | fires | `.kt` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-19"` |
+| LF-20 | source | fires | `.scala` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-20"` |
+| LF-21 | source | fires | `.php` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-21"` |
+| LF-22 | source | fires | `.py` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-22"` |
+| LF-23 | source | fires | `.rb` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-23"` |
+| LF-24 | source | fires | `.sh` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-24"` |
+| LF-25 | source | fires | `.bash` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-25"` |
+| LF-26 | source | fires | `.zsh` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-26"` |
+| LF-27 | source | fires | `.r` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-27"` |
+| LF-28 | source | fires | `.pl` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-28"` |
+| LF-29 | source | fires | `.ps1` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-29"` |
+| LF-30 | source | fires | `.sql` | `sql` | `test/lexical-contract-probes.mjs :: id: "LF-30"` |
+| LF-31 | structural | not-frozen | `.yml` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-31"` |
+| LF-32 | structural | not-frozen | `.yaml` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-32"` |
+| LF-33 | structural | not-frozen | `.json` | `none` | `test/lexical-contract-probes.mjs :: id: "LF-33"` |
+| LF-34 | held | fires | `.toml` | `hash` | `test/lexical-contract-probes.mjs :: id: "LH-01"` |
 
 ## Relationship to other documents
 

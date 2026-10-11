@@ -110,3 +110,41 @@ export const PROBES = [
   { id: "LH-12", cls: "held", expect: "s9-fires", desc: "Standard 9: a YAML quoted off value on the moderation key, followed by other lines, fails (YAML-file form of Standard 9, held with it)", fixture: "safety-off-yaml-trailing", evidenceFile: "config.yml", pin: [SD, "safety-off-yaml-trailing"] },
   { id: "LH-13", cls: "held", expect: "s9-clear", desc: "Standard 9: the YAML file with the control on does not fire", fixture: "safety-on-yaml-trailing", pin: [SD, "safety-on-yaml-trailing"] },
 ];
+
+// ---- Scanned file types -------------------------------------------------------------------------------
+// The detector applies the three shapes to every file whose extension scripts/source.mjs `isCode` accepts
+// (its BY_EXTENSION table). docs/lexical-contract.md lists every one of them, with no open-ended tail, and
+// lexical-contract.test.mjs requires the document, this table and BY_EXTENSION to name the same set.
+//   cls     source      a source-code file type: frozen with the forms above (probe: the parameter shape fires)
+//           structural  YAML/JSON: owned by the structural parser (FE-30); scanned today, deliberately not frozen
+//           held        TOML: held lexical pending ST-49 (#111); exercised by the LH-01 probe
+//   syntax  the comment/string syntax class source.mjs assigns to the extension
+const ext = (n, cls, e, syntax) => {
+  const id = `LF-${String(n).padStart(2, "0")}`;
+  const row = { id, cls, ext: e, syntax, expect: cls === "structural" ? "not-frozen" : "fires" };
+  if (cls === "source") {
+    row.file = `src/ext-probe${e}`;
+    row.source = `x(system="${LONG}")\n`;
+    row.pin = [PR, `id: "${id}"`];
+  } else if (cls === "held") {
+    row.pin = [PR, 'id: "LH-01"'];
+  } else {
+    row.pin = [PR, `id: "${id}"`];
+  }
+  return row;
+};
+const SOURCE_EXTENSIONS = [
+  [".js", "c"], [".mjs", "c"], [".cjs", "c"], [".jsx", "c"], [".ts", "c"], [".mts", "c"], [".cts", "c"], [".tsx", "c"],
+  [".java", "c"], [".c", "c"], [".h", "c"], [".cc", "c"], [".cpp", "c"], [".hpp", "c"], [".cs", "c"], [".go", "c"],
+  [".rs", "c"], [".swift", "c"], [".kt", "c"], [".scala", "c"], [".php", "c"],
+  [".py", "hash"], [".rb", "hash"], [".sh", "hash"], [".bash", "hash"], [".zsh", "hash"],
+  [".r", "hash"], [".pl", "hash"], [".ps1", "hash"],
+  [".sql", "sql"],
+];
+const OTHER_EXTENSIONS = [
+  [".yml", "structural", "hash"], [".yaml", "structural", "hash"], [".json", "structural", "none"], [".toml", "held", "hash"],
+];
+export const EXTENSIONS = [
+  ...SOURCE_EXTENSIONS.map(([e, syntax], i) => ext(i + 1, "source", e, syntax)),
+  ...OTHER_EXTENSIONS.map(([e, cls, syntax], i) => ext(SOURCE_EXTENSIONS.length + i + 1, cls, e, syntax)),
+];
