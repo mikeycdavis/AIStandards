@@ -7,7 +7,9 @@
 //      table in lexical-contract-probes.mjs, so a form added to either side without the other fails;
 //   2. runs every probe through the real CLI and requires the classification the list records, so a form
 //      that changes classification fails;
-//   3. requires each entry's cited pinning test to still exist in the cited file, so a pin cannot rot;
+//   3. requires each entry's cited pinning test to still exist in the cited file, so a pin cannot rot; for
+//      the scanned-file-type rows (LF-nn) the cited name must be the title of a test this file actually
+//      registered, so a citation that was never a test, or went stale, fails;
 //   4. requires the detector's parameter-name list and threshold to be the ones the document states, so a
 //      regex patch that adds a parameter name fails here and needs the owner decision the document demands;
 //   5. requires the stop-extension rule and its stated reasons to remain in the document.
@@ -19,9 +21,20 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
 import { validate, fixture, resultFor, REPO } from "./helpers.mjs";
-import { PROBES, LONG, PARAMETER_NAMES, THRESHOLD } from "./lexical-contract-probes.mjs";
+import { PROBES, EXTENSIONS, LONG, PARAMETER_NAMES, THRESHOLD, extensionTestName } from "./lexical-contract-probes.mjs";
+
+// Every test this file registers for an extension row goes through reg(), which records its title. The
+// extension rows' citations are checked against this list, not against the text of a file: the titles are
+// generated from a template, so no literal title (and no `id: "LF-01"`) exists in any source file to find.
+const THIS_FILE = "test/lexical-contract.test.mjs";
+const registered = [];
+const reg = (title, fn) => {
+  registered.push(title);
+  test(title, fn);
+};
 
 const VERSIONED = "promptsec.prompt-is-versioned-artifact";
 const NO_INLINE = "promptsec.no-inline-system-prompt";
@@ -36,7 +49,7 @@ function parseList(text) {
     // | id | class | result | form | pinned by |
     if (cells.length >= 7 && /^L[CNXH]-\d+$/.test(cells[1])) {
       const [file, label] = cells[5].replace(/`/g, "").split(" :: ");
-      entries.push({ id: cells[1], cls: cells[2], expect: cells[3], pin: [file, label] });
+      entries.push({ id: cells[1], cls: cells[2], expect: cells[3], form: cells[4], pin: [file, label] });
     }
   }
   return entries;
@@ -64,12 +77,127 @@ function runProbe(p) {
 
 const listed = parseList(doc);
 
+// | id | class | result | extension | syntax | pinned by |   (the "Scanned file types" table)
+function parseExtensions(text) {
+  const entries = [];
+  for (const line of text.split("\n")) {
+    const cells = line.split("|").map((c) => c.trim());
+    if (cells.length >= 8 && /^LF-\d+$/.test(cells[1])) {
+      const [file, label] = cells[6].replace(/`/g, "").split(" :: ");
+      entries.push({ id: cells[1], cls: cells[2], expect: cells[3], ext: cells[4].replace(/`/g, ""), syntax: cells[5].replace(/`/g, ""), pin: [file, label] });
+    }
+  }
+  return entries;
+}
+
+// Reads the BY_EXTENSION table out of scripts/source.mjs text. Structural, not a character-class guess:
+// the object body is split into entries, and EVERY entry must be exactly `"<.ext>": "<syntax>"` with any
+// non-empty extension that has no quote, comma or whitespace in it (so `.c++`, `.d.ts`, `.h-x` all count).
+// An entry that does not fit throws, so a key the parser cannot read fails the suite instead of being
+// silently left out of the every-scanned-type comparison.
+function parseByExtension(src) {
+  const body = src.match(/const BY_EXTENSION = new Map\(Object\.entries\(\{([\s\S]*?)\}\)\);/);
+  assert.ok(body, "source.mjs must still declare BY_EXTENSION");
+  const entries = [];
+  for (const raw of body[1].split(",")) {
+    const entry = raw.trim();
+    if (entry === "") continue;
+    const m = /^"(\.[^"\s,]+)"\s*:\s*"([a-z]+)"$/.exec(entry);
+    assert.ok(m, `BY_EXTENSION entry cannot be parsed, so it would be missing from the comparison: ${JSON.stringify(entry)}`);
+    entries.push([m[1], m[2]]);
+  }
+  return entries;
+}
+
+// The extension table the detector itself uses, read from scripts/source.mjs.
+function detectorExtensions() {
+  return parseByExtension(fs.readFileSync(path.join(REPO, "scripts", "source.mjs"), "utf8"));
+}
+const listedExtensions = parseExtensions(doc);
+
 test("the document enumerates exactly the probe table: same ids, classes, results and pins, in order", () => {
   assert.ok(listed.length > 0, "docs/lexical-contract.md must enumerate the frozen forms");
   const fromDoc = listed.map((e) => `${e.id}|${e.cls}|${e.expect}|${e.pin.join(" :: ")}`);
   const fromProbes = PROBES.map((p) => `${p.id}|${p.cls}|${p.expect}|${p.pin.join(" :: ")}`);
   assert.deepEqual(fromDoc, fromProbes);
   assert.equal(new Set(PROBES.map((p) => p.id)).size, PROBES.length, "probe ids must be unique");
+});
+
+test("each documented form text is the probe's own description, row by row", () => {
+  assert.equal(listed.length, PROBES.length);
+  for (const [i, p] of PROBES.entries()) {
+    assert.equal(listed[i].id, p.id);
+    assert.equal(listed[i].form, p.desc, `${p.id}: the Form column must equal the probe description`);
+  }
+});
+
+test("the document lists every file type the detector scans: the same extensions and syntax classes as scripts/source.mjs", () => {
+  const pairs = (rows) => rows.map(([e, syntax]) => `${e} ${syntax}`).sort();
+  const detector = pairs(detectorExtensions());
+  assert.ok(detector.length > 0, "BY_EXTENSION must be readable");
+  assert.equal(new Set(detector).size, detector.length, "BY_EXTENSION must not repeat an extension");
+  assert.deepEqual(
+    pairs(listedExtensions.map((e) => [e.ext, e.syntax])),
+    detector,
+    "docs/lexical-contract.md must name every extension of BY_EXTENSION with its syntax class",
+  );
+  assert.deepEqual(
+    pairs(EXTENSIONS.map((e) => [e.ext, e.syntax])),
+    detector,
+    "the extension probe table must cover every extension of BY_EXTENSION",
+  );
+});
+
+test("the BY_EXTENSION reader is structural: a symbol-bearing key is read, and an unreadable entry fails", () => {
+  const wrap = (inner) => `const BY_EXTENSION = new Map(Object.entries({${inner}}));`;
+  assert.deepEqual(
+    parseByExtension(wrap('".c++": "c", ".d.ts": "c",\n  ".sql": "sql",')),
+    [[".c++", "c"], [".d.ts", "c"], [".sql", "sql"]],
+  );
+  assert.throws(() => parseByExtension(wrap("\".c++\": 'c'")), /cannot be parsed/);
+  assert.throws(() => parseByExtension(wrap('".js": "c", [".x"]: "c"')), /cannot be parsed/);
+  assert.throws(() => parseByExtension(wrap('".js": "c", ".ok": "C1"')), /cannot be parsed/);
+});
+
+test("every key the reader finds is one the detector really scans, spelled as the detector spells it", async () => {
+  const { isCode, extensionOf } = await import(pathToFileURL(path.join(REPO, "scripts", "source.mjs")).href);
+  for (const [ext] of detectorExtensions()) {
+    assert.equal(extensionOf(`x${ext}`), ext, `${ext}: extensionOf must return the key unchanged`);
+    assert.ok(isCode(`x${ext}`), `${ext}: isCode must accept the key`);
+  }
+});
+
+test("the document enumerates exactly the extension probe table: same ids, classes, results and pins, in order", () => {
+  const key = (e) => `${e.id}|${e.cls}|${e.expect}|${e.ext}|${e.syntax}|${e.pin.join(" :: ")}`;
+  assert.deepEqual(listedExtensions.map(key), EXTENSIONS.map(key));
+  assert.equal(new Set(EXTENSIONS.map((e) => e.id)).size, EXTENSIONS.length, "extension probe ids must be unique");
+});
+
+test("every scanned-file-type citation (LF-nn) names a test this file registers, so a doctored or stale citation fails", () => {
+  assert.equal(registered.length, EXTENSIONS.length, "one registered test per extension row");
+  assert.equal(new Set(registered).size, registered.length, "registered extension test titles must be unique");
+  assert.equal(path.relative(REPO, fileURLToPath(import.meta.url)).split(path.sep).join("/"), THIS_FILE, "THIS_FILE must be this file");
+  assert.ok(listedExtensions.length > 0);
+  for (const [source, rows] of [["document", listedExtensions], ["probe table", EXTENSIONS]]) {
+    for (const e of rows) {
+      const [file, label] = e.pin;
+      assert.equal(file, THIS_FILE, `${e.id} (${source}): cites ${file}, but the extension tests are registered in ${THIS_FILE}`);
+      assert.ok(fs.existsSync(path.join(REPO, file)), `${file} must exist`);
+      assert.ok(registered.includes(label), `${e.id} (${source}): cites a test that is not registered: "${label}"`);
+      assert.ok(label.startsWith(`${e.id} (${e.ext}`), `${e.id} (${source}): the cited test is not the one for ${e.id} ${e.ext}: "${label}"`);
+    }
+  }
+});
+
+test("the document states the count of scanned file types and it matches the list", () => {
+  const m = doc.match(/Scanned file types: (\d+) \((\d+) source-code, (\d+) structural, (\d+) held pending ST-49\)/);
+  assert.ok(m, "the document must state `Scanned file types: N (a source-code, b structural, c held pending ST-49)`");
+  const count = (cls) => EXTENSIONS.filter((e) => e.cls === cls).length;
+  assert.deepEqual(m.slice(1).map(Number), [EXTENSIONS.length, count("source"), count("structural"), count("held")]);
+});
+
+test("the enumeration of file types has no open-ended tail", () => {
+  assert.ok(!/\betc\b|and so on|and more|and others/i.test(doc), "the document must not end any list with an open tail");
 });
 
 test("the document states the count of frozen forms and it matches the list", () => {
@@ -120,6 +248,31 @@ for (const p of PROBES) {
     assert.ok(fs.existsSync(full), `${file} must exist`);
     assert.ok(fs.readFileSync(full, "utf8").includes(label), `${file} must still contain "${label}"`);
   });
+}
+
+for (const e of EXTENSIONS) {
+  if (e.cls === "source") {
+    reg(extensionTestName(e), () => {
+      assert.deepEqual(e.shapes.map((x) => x.shape), ["parameter", "message role", "systemInstruction parts"]);
+      for (const shape of e.shapes) {
+        const r = runProbe({ file: shape.file, source: shape.source });
+        const at = `${e.ext} ${shape.shape}`;
+        assert.equal(r.versioned.result, "failed", `${at}: ${VERSIONED}: ${r.versioned.result}`);
+        assert.equal(r.noInline.result, "warning", `${at}: ${NO_INLINE}: ${r.noInline.result}`);
+        for (const x of [r.versioned, r.noInline]) assert.ok(x.evidence.some((v) => v.startsWith(`${e.file} (`)), `${at}: ${JSON.stringify(x.evidence)}`);
+      }
+    });
+  } else if (e.cls === "held") {
+    reg(extensionTestName(e), () => {
+      const lh = PROBES.find((p) => p.id === "LH-01");
+      assert.ok(lh && lh.file.endsWith(e.ext) && lh.expect === "fires");
+    });
+  } else {
+    reg(extensionTestName(e), () => {
+      assert.equal(e.expect, "not-frozen");
+      assert.ok(!PROBES.some((p) => p.file && p.file.endsWith(e.ext) && p.cls !== "held"), `${e.ext} must not be frozen by a lexical probe`);
+    });
+  }
 }
 
 test("the detector's instruction-parameter names and threshold are the ones the document freezes", () => {

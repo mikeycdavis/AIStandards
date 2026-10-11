@@ -25,6 +25,7 @@ const RF = "test/review-findings.test.mjs";
 const MR = "test/message-role-shapes.test.mjs";
 const SD = "test/safety-detector.test.mjs";
 const PR = "test/lexical-contract-probes.mjs";
+const TF = "test/lexical-contract.test.mjs";
 
 // Standard 21 names five instruction parameters and a 200-character threshold.
 export const PARAMETER_NAMES = ["system", "system_prompt", "systemPrompt", "instructions", "systemInstruction"];
@@ -109,4 +110,61 @@ export const PROBES = [
   { id: "LH-11", cls: "held", expect: "s9-fires", desc: "Standard 9: an `off` literal followed by a fallback operand evaluates to off and fails", fixture: "safety-off-or-fallback-js", evidenceFile: "src/cfg.js", pin: [SD, "safety-off-or-fallback-js"] },
   { id: "LH-12", cls: "held", expect: "s9-fires", desc: "Standard 9: a YAML quoted off value on the moderation key, followed by other lines, fails (YAML-file form of Standard 9, held with it)", fixture: "safety-off-yaml-trailing", evidenceFile: "config.yml", pin: [SD, "safety-off-yaml-trailing"] },
   { id: "LH-13", cls: "held", expect: "s9-clear", desc: "Standard 9: the YAML file with the control on does not fire", fixture: "safety-on-yaml-trailing", pin: [SD, "safety-on-yaml-trailing"] },
+];
+
+// ---- Scanned file types -------------------------------------------------------------------------------
+// The detector applies the three shapes to every file whose extension scripts/source.mjs `isCode` accepts
+// (its BY_EXTENSION table). docs/lexical-contract.md lists every one of them, with no open-ended tail, and
+// lexical-contract.test.mjs requires the document, this table and BY_EXTENSION to name the same set.
+//   cls     source      a source-code file type: frozen with the forms above (probe: the parameter shape fires)
+//           structural  YAML/JSON: owned by the structural parser (FE-30); scanned today, deliberately not frozen
+//           held        TOML: held lexical pending ST-49 (#111); exercised by the LH-01 probe
+//   syntax  the comment/string syntax class source.mjs assigns to the extension
+// The title of the test that lexical-contract.test.mjs registers for an extension row. The title is built
+// here, once, and the test file registers its tests through this same function, so a citation in the document
+// is not a string that happens to sit in some file: it is the name of a test that exists. The test file checks
+// every cited name against the names it actually registered, so a doctored or stale citation fails.
+export const extensionTestName = (r) =>
+  r.cls === "source"
+    ? `${r.id} (${r.ext}, ${r.syntax}): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire`
+    : r.cls === "held"
+      ? `${r.id} (${r.ext}): the held TOML type is exercised by LH-01`
+      : `${r.id} (${r.ext}): a structural type stays outside the frozen forms`;
+const probeSource = (id) => {
+  const p = PROBES.find((x) => x.id === id);
+  if (!p || p.cls !== "claimed" || p.expect !== "fires") throw new Error(`${id} must stay a claimed, firing probe`);
+  return p.source;
+};
+const ext = (n, cls, e, syntax) => {
+  const id = `LF-${String(n).padStart(2, "0")}`;
+  const row = { id, cls, ext: e, syntax, expect: cls === "structural" ? "not-frozen" : "fires" };
+  if (cls === "source") {
+    row.file = `src/ext-probe${e}`;
+    // The three frozen shapes, each taken from the contract's own claimed probe (never re-invented here),
+    // so an extension-specific regression in any one shape fails that extension's row.
+    row.shapes = [
+      { shape: "parameter", file: row.file, source: `x(system="${LONG}")
+` },
+      { shape: "message role", file: row.file, source: probeSource("LC-12") },
+      { shape: "systemInstruction parts", file: row.file, source: probeSource("LC-19") },
+    ];
+    row.source = row.shapes[0].source;
+  }
+  row.pin = [TF, extensionTestName(row)];
+  return row;
+};
+const SOURCE_EXTENSIONS = [
+  [".js", "c"], [".mjs", "c"], [".cjs", "c"], [".jsx", "c"], [".ts", "c"], [".mts", "c"], [".cts", "c"], [".tsx", "c"],
+  [".java", "c"], [".c", "c"], [".h", "c"], [".cc", "c"], [".cpp", "c"], [".hpp", "c"], [".cs", "c"], [".go", "c"],
+  [".rs", "c"], [".swift", "c"], [".kt", "c"], [".scala", "c"], [".php", "c"],
+  [".py", "hash"], [".rb", "hash"], [".sh", "hash"], [".bash", "hash"], [".zsh", "hash"],
+  [".r", "hash"], [".pl", "hash"], [".ps1", "hash"],
+  [".sql", "sql"],
+];
+const OTHER_EXTENSIONS = [
+  [".yml", "structural", "hash"], [".yaml", "structural", "hash"], [".json", "structural", "none"], [".toml", "held", "hash"],
+];
+export const EXTENSIONS = [
+  ...SOURCE_EXTENSIONS.map(([e, syntax], i) => ext(i + 1, "source", e, syntax)),
+  ...OTHER_EXTENSIONS.map(([e, cls, syntax], i) => ext(SOURCE_EXTENSIONS.length + i + 1, cls, e, syntax)),
 ];

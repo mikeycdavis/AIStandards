@@ -8,10 +8,13 @@ does not replace the detector paragraph of Standard 21 (`standards/21-prompt-and
 
 ## Scope
 
-- **In the frozen list:** forms in source-code files (JS/TS, Python, shell) for the inline-prompt rules R1
-  and R2 of Standard 21 (`promptsec.prompt-is-versioned-artifact`, `promptsec.no-inline-system-prompt`):
-  the *parameter shape*, the *message role shape* and the *systemInstruction parts shape*, each with the
-  named non-claims and boundary controls that bound it.
+- **In the frozen list:** forms in the 30 source-code file types named under "Scanned file types" below (every
+  language the detector treats as code except YAML, JSON and TOML) for the inline-prompt rules R1 and R2 of
+  Standard 21 (`promptsec.prompt-is-versioned-artifact`, `promptsec.no-inline-system-prompt`): the *parameter
+  shape*, the *message role shape* and the *systemInstruction parts shape*, each with the named non-claims
+  and boundary controls that bound it. The forms below are written in JS/TS, Python and shell; the detector
+  applies the same three shapes to every listed source-code file type, selecting only the comment and string
+  syntax by extension, and no language-specific form beyond those three shapes is claimed for the others.
 - **Held lexical pending ST-49 (#111):** TOML forms and the forms of Standard 9
   (`misuse.safety-controls-not-disabled`). They stay on the lexical layer and move only through the
   separate ST-49 owner decision. They are listed so that the decision has an exact inventory to act on.
@@ -23,6 +26,8 @@ Instruction parameter names: `system`, `system_prompt`, `systemPrompt`, `instruc
 Threshold: 200 characters.
 
 Frozen forms: 67 (20 claimed, 17 non-claims, 17 boundary controls, 13 held pending ST-49).
+
+Scanned file types: 34 (30 source-code, 3 structural, 1 held pending ST-49).
 
 ## The stop-extension rule
 
@@ -44,8 +49,10 @@ this list records (the test will show it), a repair that restores the recorded c
 documentation. Nothing else.
 
 **What the test enforces.** Every row below is run through the real detector and must produce the recorded
-result; the rows must equal the probe table in `test/lexical-contract-probes.mjs` (id, class, result and
-pin, in order); the listed parameter names and the threshold must equal the detector's; each cited pinning
+result; the rows must equal the probe table in `test/lexical-contract-probes.mjs` (id, class, result, pin and
+the Form text against the probe's description, in order); the file types below must be exactly the
+extensions of `BY_EXTENSION` in `scripts/source.mjs`, with its syntax class for each, and every source-code
+type must fire on its probe; the listed parameter names and the threshold must equal the detector's; each cited pinning
 test must still exist. The test cannot see a form that nobody listed: a detector change that claims a new
 shape and adds neither a row nor a probe is stopped by review, which is what this rule asks reviewers to do.
 
@@ -149,6 +156,64 @@ TOML and Standard 9. Not moved, not extended; the ST-49 decision is the only way
 | LH-11 | held | s9-fires | Standard 9: an `off` literal followed by a fallback operand evaluates to off and fails | `test/safety-detector.test.mjs :: safety-off-or-fallback-js` |
 | LH-12 | held | s9-fires | Standard 9: a YAML quoted off value on the moderation key, followed by other lines, fails (YAML-file form of Standard 9, held with it) | `test/safety-detector.test.mjs :: safety-off-yaml-trailing` |
 | LH-13 | held | s9-clear | Standard 9: the YAML file with the control on does not fire | `test/safety-detector.test.mjs :: safety-on-yaml-trailing` |
+
+## Scanned file types
+
+The detector applies the three shapes to a file only when `isCode` in `scripts/source.mjs` accepts its
+extension, and that table is closed: the 34 extensions below are all of them, and no other file type is
+scanned (a `.txt` or `.md` file is reported `skipped`). The syntax column is the comment and string syntax
+class `source.mjs` assigns: `c` is `//`, `/* */` and the quotes `"` `'` `` ` ``; `hash` is `#` and `"` `'`;
+`sql` is `--`, `/* */` and `'`; `none` has no comments.
+
+- `source` types are frozen with the forms in this list. For each, the test writes three files of that extension,
+  one per frozen shape: the parameter shape (`system="..."`), the message role shape (claimed probe LC-12) and the
+  systemInstruction parts shape (claimed probe LC-19), each with a literal of at least the threshold, and requires
+  both promptsec rules to fire naming the file for every one of them.
+- `structural` types (YAML and JSON) are scanned today and are deliberately not frozen: the structural
+  parser (FE-30, #109) owns them and may change their result without the lexical stop-extension decision.
+  There is no lexical probe for them.
+- `held` is TOML, held lexical pending ST-49 (#111); `LH-01` and `LH-02` below are its probes.
+
+The Pinned by column cites, for each row, the title of the test that `test/lexical-contract.test.mjs`
+registers for it (`LF-nn (.ext, syntax): ...`). That file records the titles it registers and fails when a
+cited title is not one of them, so a citation that was never a test, or went stale, cannot pass.
+
+| Id | Class | Result | Extension | Syntax | Pinned by |
+| --- | --- | --- | --- | --- | --- |
+| LF-01 | source | fires | `.js` | `c` | `test/lexical-contract.test.mjs :: LF-01 (.js, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-02 | source | fires | `.mjs` | `c` | `test/lexical-contract.test.mjs :: LF-02 (.mjs, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-03 | source | fires | `.cjs` | `c` | `test/lexical-contract.test.mjs :: LF-03 (.cjs, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-04 | source | fires | `.jsx` | `c` | `test/lexical-contract.test.mjs :: LF-04 (.jsx, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-05 | source | fires | `.ts` | `c` | `test/lexical-contract.test.mjs :: LF-05 (.ts, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-06 | source | fires | `.mts` | `c` | `test/lexical-contract.test.mjs :: LF-06 (.mts, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-07 | source | fires | `.cts` | `c` | `test/lexical-contract.test.mjs :: LF-07 (.cts, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-08 | source | fires | `.tsx` | `c` | `test/lexical-contract.test.mjs :: LF-08 (.tsx, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-09 | source | fires | `.java` | `c` | `test/lexical-contract.test.mjs :: LF-09 (.java, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-10 | source | fires | `.c` | `c` | `test/lexical-contract.test.mjs :: LF-10 (.c, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-11 | source | fires | `.h` | `c` | `test/lexical-contract.test.mjs :: LF-11 (.h, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-12 | source | fires | `.cc` | `c` | `test/lexical-contract.test.mjs :: LF-12 (.cc, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-13 | source | fires | `.cpp` | `c` | `test/lexical-contract.test.mjs :: LF-13 (.cpp, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-14 | source | fires | `.hpp` | `c` | `test/lexical-contract.test.mjs :: LF-14 (.hpp, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-15 | source | fires | `.cs` | `c` | `test/lexical-contract.test.mjs :: LF-15 (.cs, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-16 | source | fires | `.go` | `c` | `test/lexical-contract.test.mjs :: LF-16 (.go, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-17 | source | fires | `.rs` | `c` | `test/lexical-contract.test.mjs :: LF-17 (.rs, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-18 | source | fires | `.swift` | `c` | `test/lexical-contract.test.mjs :: LF-18 (.swift, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-19 | source | fires | `.kt` | `c` | `test/lexical-contract.test.mjs :: LF-19 (.kt, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-20 | source | fires | `.scala` | `c` | `test/lexical-contract.test.mjs :: LF-20 (.scala, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-21 | source | fires | `.php` | `c` | `test/lexical-contract.test.mjs :: LF-21 (.php, c): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-22 | source | fires | `.py` | `hash` | `test/lexical-contract.test.mjs :: LF-22 (.py, hash): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-23 | source | fires | `.rb` | `hash` | `test/lexical-contract.test.mjs :: LF-23 (.rb, hash): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-24 | source | fires | `.sh` | `hash` | `test/lexical-contract.test.mjs :: LF-24 (.sh, hash): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-25 | source | fires | `.bash` | `hash` | `test/lexical-contract.test.mjs :: LF-25 (.bash, hash): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-26 | source | fires | `.zsh` | `hash` | `test/lexical-contract.test.mjs :: LF-26 (.zsh, hash): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-27 | source | fires | `.r` | `hash` | `test/lexical-contract.test.mjs :: LF-27 (.r, hash): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-28 | source | fires | `.pl` | `hash` | `test/lexical-contract.test.mjs :: LF-28 (.pl, hash): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-29 | source | fires | `.ps1` | `hash` | `test/lexical-contract.test.mjs :: LF-29 (.ps1, hash): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-30 | source | fires | `.sql` | `sql` | `test/lexical-contract.test.mjs :: LF-30 (.sql, sql): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire` |
+| LF-31 | structural | not-frozen | `.yml` | `hash` | `test/lexical-contract.test.mjs :: LF-31 (.yml): a structural type stays outside the frozen forms` |
+| LF-32 | structural | not-frozen | `.yaml` | `hash` | `test/lexical-contract.test.mjs :: LF-32 (.yaml): a structural type stays outside the frozen forms` |
+| LF-33 | structural | not-frozen | `.json` | `none` | `test/lexical-contract.test.mjs :: LF-33 (.json): a structural type stays outside the frozen forms` |
+| LF-34 | held | fires | `.toml` | `hash` | `test/lexical-contract.test.mjs :: LF-34 (.toml): the held TOML type is exercised by LH-01` |
 
 ## Relationship to other documents
 
