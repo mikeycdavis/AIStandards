@@ -172,42 +172,46 @@ class `source.mjs` assigns: `c` is `//`, `/* */` and the quotes `"` `'` `` ` ``;
   There is no lexical probe for them.
 - `held` is TOML, held lexical pending ST-49 (#111); `LH-01` and `LH-02` below are its probes.
 
+The Pinned by column cites, for each row, the title of the test that `test/lexical-contract.test.mjs`
+registers for it (`LF-nn (.ext, syntax): ...`). That file records the titles it registers and fails when a
+cited title is not one of them, so a citation that was never a test, or went stale, cannot pass.
+
 | Id | Class | Result | Extension | Syntax | Pinned by |
 | --- | --- | --- | --- | --- | --- |
-| LF-01 | source | fires | `.js` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-01"` |
-| LF-02 | source | fires | `.mjs` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-02"` |
-| LF-03 | source | fires | `.cjs` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-03"` |
-| LF-04 | source | fires | `.jsx` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-04"` |
-| LF-05 | source | fires | `.ts` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-05"` |
-| LF-06 | source | fires | `.mts` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-06"` |
-| LF-07 | source | fires | `.cts` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-07"` |
-| LF-08 | source | fires | `.tsx` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-08"` |
-| LF-09 | source | fires | `.java` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-09"` |
-| LF-10 | source | fires | `.c` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-10"` |
-| LF-11 | source | fires | `.h` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-11"` |
-| LF-12 | source | fires | `.cc` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-12"` |
-| LF-13 | source | fires | `.cpp` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-13"` |
-| LF-14 | source | fires | `.hpp` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-14"` |
-| LF-15 | source | fires | `.cs` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-15"` |
-| LF-16 | source | fires | `.go` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-16"` |
-| LF-17 | source | fires | `.rs` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-17"` |
-| LF-18 | source | fires | `.swift` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-18"` |
-| LF-19 | source | fires | `.kt` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-19"` |
-| LF-20 | source | fires | `.scala` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-20"` |
-| LF-21 | source | fires | `.php` | `c` | `test/lexical-contract-probes.mjs :: id: "LF-21"` |
-| LF-22 | source | fires | `.py` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-22"` |
-| LF-23 | source | fires | `.rb` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-23"` |
-| LF-24 | source | fires | `.sh` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-24"` |
-| LF-25 | source | fires | `.bash` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-25"` |
-| LF-26 | source | fires | `.zsh` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-26"` |
-| LF-27 | source | fires | `.r` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-27"` |
-| LF-28 | source | fires | `.pl` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-28"` |
-| LF-29 | source | fires | `.ps1` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-29"` |
-| LF-30 | source | fires | `.sql` | `sql` | `test/lexical-contract-probes.mjs :: id: "LF-30"` |
-| LF-31 | structural | not-frozen | `.yml` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-31"` |
-| LF-32 | structural | not-frozen | `.yaml` | `hash` | `test/lexical-contract-probes.mjs :: id: "LF-32"` |
-| LF-33 | structural | not-frozen | `.json` | `none` | `test/lexical-contract-probes.mjs :: id: "LF-33"` |
-| LF-34 | held | fires | `.toml` | `hash` | `test/lexical-contract-probes.mjs :: id: "LH-01"` |
+| LF-01 | source | fires | `.js` | `c` | `test/lexical-contract.test.mjs :: LF-01 (.js, c): a file of this type is scanned and the parameter shape fires` |
+| LF-02 | source | fires | `.mjs` | `c` | `test/lexical-contract.test.mjs :: LF-02 (.mjs, c): a file of this type is scanned and the parameter shape fires` |
+| LF-03 | source | fires | `.cjs` | `c` | `test/lexical-contract.test.mjs :: LF-03 (.cjs, c): a file of this type is scanned and the parameter shape fires` |
+| LF-04 | source | fires | `.jsx` | `c` | `test/lexical-contract.test.mjs :: LF-04 (.jsx, c): a file of this type is scanned and the parameter shape fires` |
+| LF-05 | source | fires | `.ts` | `c` | `test/lexical-contract.test.mjs :: LF-05 (.ts, c): a file of this type is scanned and the parameter shape fires` |
+| LF-06 | source | fires | `.mts` | `c` | `test/lexical-contract.test.mjs :: LF-06 (.mts, c): a file of this type is scanned and the parameter shape fires` |
+| LF-07 | source | fires | `.cts` | `c` | `test/lexical-contract.test.mjs :: LF-07 (.cts, c): a file of this type is scanned and the parameter shape fires` |
+| LF-08 | source | fires | `.tsx` | `c` | `test/lexical-contract.test.mjs :: LF-08 (.tsx, c): a file of this type is scanned and the parameter shape fires` |
+| LF-09 | source | fires | `.java` | `c` | `test/lexical-contract.test.mjs :: LF-09 (.java, c): a file of this type is scanned and the parameter shape fires` |
+| LF-10 | source | fires | `.c` | `c` | `test/lexical-contract.test.mjs :: LF-10 (.c, c): a file of this type is scanned and the parameter shape fires` |
+| LF-11 | source | fires | `.h` | `c` | `test/lexical-contract.test.mjs :: LF-11 (.h, c): a file of this type is scanned and the parameter shape fires` |
+| LF-12 | source | fires | `.cc` | `c` | `test/lexical-contract.test.mjs :: LF-12 (.cc, c): a file of this type is scanned and the parameter shape fires` |
+| LF-13 | source | fires | `.cpp` | `c` | `test/lexical-contract.test.mjs :: LF-13 (.cpp, c): a file of this type is scanned and the parameter shape fires` |
+| LF-14 | source | fires | `.hpp` | `c` | `test/lexical-contract.test.mjs :: LF-14 (.hpp, c): a file of this type is scanned and the parameter shape fires` |
+| LF-15 | source | fires | `.cs` | `c` | `test/lexical-contract.test.mjs :: LF-15 (.cs, c): a file of this type is scanned and the parameter shape fires` |
+| LF-16 | source | fires | `.go` | `c` | `test/lexical-contract.test.mjs :: LF-16 (.go, c): a file of this type is scanned and the parameter shape fires` |
+| LF-17 | source | fires | `.rs` | `c` | `test/lexical-contract.test.mjs :: LF-17 (.rs, c): a file of this type is scanned and the parameter shape fires` |
+| LF-18 | source | fires | `.swift` | `c` | `test/lexical-contract.test.mjs :: LF-18 (.swift, c): a file of this type is scanned and the parameter shape fires` |
+| LF-19 | source | fires | `.kt` | `c` | `test/lexical-contract.test.mjs :: LF-19 (.kt, c): a file of this type is scanned and the parameter shape fires` |
+| LF-20 | source | fires | `.scala` | `c` | `test/lexical-contract.test.mjs :: LF-20 (.scala, c): a file of this type is scanned and the parameter shape fires` |
+| LF-21 | source | fires | `.php` | `c` | `test/lexical-contract.test.mjs :: LF-21 (.php, c): a file of this type is scanned and the parameter shape fires` |
+| LF-22 | source | fires | `.py` | `hash` | `test/lexical-contract.test.mjs :: LF-22 (.py, hash): a file of this type is scanned and the parameter shape fires` |
+| LF-23 | source | fires | `.rb` | `hash` | `test/lexical-contract.test.mjs :: LF-23 (.rb, hash): a file of this type is scanned and the parameter shape fires` |
+| LF-24 | source | fires | `.sh` | `hash` | `test/lexical-contract.test.mjs :: LF-24 (.sh, hash): a file of this type is scanned and the parameter shape fires` |
+| LF-25 | source | fires | `.bash` | `hash` | `test/lexical-contract.test.mjs :: LF-25 (.bash, hash): a file of this type is scanned and the parameter shape fires` |
+| LF-26 | source | fires | `.zsh` | `hash` | `test/lexical-contract.test.mjs :: LF-26 (.zsh, hash): a file of this type is scanned and the parameter shape fires` |
+| LF-27 | source | fires | `.r` | `hash` | `test/lexical-contract.test.mjs :: LF-27 (.r, hash): a file of this type is scanned and the parameter shape fires` |
+| LF-28 | source | fires | `.pl` | `hash` | `test/lexical-contract.test.mjs :: LF-28 (.pl, hash): a file of this type is scanned and the parameter shape fires` |
+| LF-29 | source | fires | `.ps1` | `hash` | `test/lexical-contract.test.mjs :: LF-29 (.ps1, hash): a file of this type is scanned and the parameter shape fires` |
+| LF-30 | source | fires | `.sql` | `sql` | `test/lexical-contract.test.mjs :: LF-30 (.sql, sql): a file of this type is scanned and the parameter shape fires` |
+| LF-31 | structural | not-frozen | `.yml` | `hash` | `test/lexical-contract.test.mjs :: LF-31 (.yml): a structural type stays outside the frozen forms` |
+| LF-32 | structural | not-frozen | `.yaml` | `hash` | `test/lexical-contract.test.mjs :: LF-32 (.yaml): a structural type stays outside the frozen forms` |
+| LF-33 | structural | not-frozen | `.json` | `none` | `test/lexical-contract.test.mjs :: LF-33 (.json): a structural type stays outside the frozen forms` |
+| LF-34 | held | fires | `.toml` | `hash` | `test/lexical-contract.test.mjs :: LF-34 (.toml): the held TOML type is exercised by LH-01` |
 
 ## Relationship to other documents
 

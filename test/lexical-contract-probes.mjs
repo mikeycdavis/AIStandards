@@ -25,6 +25,7 @@ const RF = "test/review-findings.test.mjs";
 const MR = "test/message-role-shapes.test.mjs";
 const SD = "test/safety-detector.test.mjs";
 const PR = "test/lexical-contract-probes.mjs";
+const TF = "test/lexical-contract.test.mjs";
 
 // Standard 21 names five instruction parameters and a 200-character threshold.
 export const PARAMETER_NAMES = ["system", "system_prompt", "systemPrompt", "instructions", "systemInstruction"];
@@ -119,18 +120,25 @@ export const PROBES = [
 //           structural  YAML/JSON: owned by the structural parser (FE-30); scanned today, deliberately not frozen
 //           held        TOML: held lexical pending ST-49 (#111); exercised by the LH-01 probe
 //   syntax  the comment/string syntax class source.mjs assigns to the extension
+// The title of the test that lexical-contract.test.mjs registers for an extension row. The title is built
+// here, once, and the test file registers its tests through this same function, so a citation in the document
+// is not a string that happens to sit in some file: it is the name of a test that exists. The test file checks
+// every cited name against the names it actually registered, so a doctored or stale citation fails.
+export const extensionTestName = (r) =>
+  r.cls === "source"
+    ? `${r.id} (${r.ext}, ${r.syntax}): a file of this type is scanned and the parameter shape fires`
+    : r.cls === "held"
+      ? `${r.id} (${r.ext}): the held TOML type is exercised by LH-01`
+      : `${r.id} (${r.ext}): a structural type stays outside the frozen forms`;
 const ext = (n, cls, e, syntax) => {
   const id = `LF-${String(n).padStart(2, "0")}`;
   const row = { id, cls, ext: e, syntax, expect: cls === "structural" ? "not-frozen" : "fires" };
   if (cls === "source") {
     row.file = `src/ext-probe${e}`;
-    row.source = `x(system="${LONG}")\n`;
-    row.pin = [PR, `id: "${id}"`];
-  } else if (cls === "held") {
-    row.pin = [PR, 'id: "LH-01"'];
-  } else {
-    row.pin = [PR, `id: "${id}"`];
+    row.source = `x(system="${LONG}")
+`;
   }
+  row.pin = [TF, extensionTestName(row)];
   return row;
 };
 const SOURCE_EXTENSIONS = [

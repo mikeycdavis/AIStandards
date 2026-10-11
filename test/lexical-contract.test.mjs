@@ -7,7 +7,9 @@
 //      table in lexical-contract-probes.mjs, so a form added to either side without the other fails;
 //   2. runs every probe through the real CLI and requires the classification the list records, so a form
 //      that changes classification fails;
-//   3. requires each entry's cited pinning test to still exist in the cited file, so a pin cannot rot;
+//   3. requires each entry's cited pinning test to still exist in the cited file, so a pin cannot rot; for
+//      the scanned-file-type rows (LF-nn) the cited name must be the title of a test this file actually
+//      registered, so a citation that was never a test, or went stale, fails;
 //   4. requires the detector's parameter-name list and threshold to be the ones the document states, so a
 //      regex patch that adds a parameter name fails here and needs the owner decision the document demands;
 //   5. requires the stop-extension rule and its stated reasons to remain in the document.
@@ -19,9 +21,20 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
+import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { validate, fixture, resultFor, REPO } from "./helpers.mjs";
-import { PROBES, EXTENSIONS, LONG, PARAMETER_NAMES, THRESHOLD } from "./lexical-contract-probes.mjs";
+import { PROBES, EXTENSIONS, LONG, PARAMETER_NAMES, THRESHOLD, extensionTestName } from "./lexical-contract-probes.mjs";
+
+// Every test this file registers for an extension row goes through reg(), which records its title. The
+// extension rows' citations are checked against this list, not against the text of a file: the titles are
+// generated from a template, so no literal title (and no `id: "LF-01"`) exists in any source file to find.
+const THIS_FILE = "test/lexical-contract.test.mjs";
+const registered = [];
+const reg = (title, fn) => {
+  registered.push(title);
+  test(title, fn);
+};
 
 const VERSIONED = "promptsec.prompt-is-versioned-artifact";
 const NO_INLINE = "promptsec.no-inline-system-prompt";
@@ -125,6 +138,22 @@ test("the document enumerates exactly the extension probe table: same ids, class
   assert.equal(new Set(EXTENSIONS.map((e) => e.id)).size, EXTENSIONS.length, "extension probe ids must be unique");
 });
 
+test("every scanned-file-type citation (LF-nn) names a test this file registers, so a doctored or stale citation fails", () => {
+  assert.equal(registered.length, EXTENSIONS.length, "one registered test per extension row");
+  assert.equal(new Set(registered).size, registered.length, "registered extension test titles must be unique");
+  assert.equal(path.relative(REPO, fileURLToPath(import.meta.url)).split(path.sep).join("/"), THIS_FILE, "THIS_FILE must be this file");
+  assert.ok(listedExtensions.length > 0);
+  for (const [source, rows] of [["document", listedExtensions], ["probe table", EXTENSIONS]]) {
+    for (const e of rows) {
+      const [file, label] = e.pin;
+      assert.equal(file, THIS_FILE, `${e.id} (${source}): cites ${file}, but the extension tests are registered in ${THIS_FILE}`);
+      assert.ok(fs.existsSync(path.join(REPO, file)), `${file} must exist`);
+      assert.ok(registered.includes(label), `${e.id} (${source}): cites a test that is not registered: "${label}"`);
+      assert.ok(label.startsWith(`${e.id} (${e.ext}`), `${e.id} (${source}): the cited test is not the one for ${e.id} ${e.ext}: "${label}"`);
+    }
+  }
+});
+
 test("the document states the count of scanned file types and it matches the list", () => {
   const m = doc.match(/Scanned file types: (\d+) \((\d+) source-code, (\d+) structural, (\d+) held pending ST-49\)/);
   assert.ok(m, "the document must state `Scanned file types: N (a source-code, b structural, c held pending ST-49)`");
@@ -188,19 +217,19 @@ for (const p of PROBES) {
 
 for (const e of EXTENSIONS) {
   if (e.cls === "source") {
-    test(`${e.id} (${e.ext}, ${e.syntax}): a file of this type is scanned and the parameter shape fires`, () => {
+    reg(extensionTestName(e), () => {
       const r = runProbe(e);
       assert.equal(r.versioned.result, "failed", `${VERSIONED}: ${r.versioned.result}`);
       assert.equal(r.noInline.result, "warning", `${NO_INLINE}: ${r.noInline.result}`);
       for (const x of [r.versioned, r.noInline]) assert.ok(x.evidence.some((v) => v.startsWith(`${e.file} (`)), JSON.stringify(x.evidence));
     });
   } else if (e.cls === "held") {
-    test(`${e.id} (${e.ext}): the held TOML type is exercised by LH-01`, () => {
+    reg(extensionTestName(e), () => {
       const lh = PROBES.find((p) => p.id === "LH-01");
       assert.ok(lh && lh.file.endsWith(e.ext) && lh.expect === "fires");
     });
   } else {
-    test(`${e.id} (${e.ext}): a structural type stays outside the frozen forms`, () => {
+    reg(extensionTestName(e), () => {
       assert.equal(e.expect, "not-frozen");
       assert.ok(!PROBES.some((p) => p.file && p.file.endsWith(e.ext) && p.cls !== "held"), `${e.ext} must not be frozen by a lexical probe`);
     });
