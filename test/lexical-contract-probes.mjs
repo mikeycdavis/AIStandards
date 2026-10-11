@@ -126,17 +126,29 @@ export const PROBES = [
 // every cited name against the names it actually registered, so a doctored or stale citation fails.
 export const extensionTestName = (r) =>
   r.cls === "source"
-    ? `${r.id} (${r.ext}, ${r.syntax}): a file of this type is scanned and the parameter shape fires`
+    ? `${r.id} (${r.ext}, ${r.syntax}): a file of this type is scanned and all three shapes (parameter, message role, systemInstruction parts) fire`
     : r.cls === "held"
       ? `${r.id} (${r.ext}): the held TOML type is exercised by LH-01`
       : `${r.id} (${r.ext}): a structural type stays outside the frozen forms`;
+const probeSource = (id) => {
+  const p = PROBES.find((x) => x.id === id);
+  if (!p || p.cls !== "claimed" || p.expect !== "fires") throw new Error(`${id} must stay a claimed, firing probe`);
+  return p.source;
+};
 const ext = (n, cls, e, syntax) => {
   const id = `LF-${String(n).padStart(2, "0")}`;
   const row = { id, cls, ext: e, syntax, expect: cls === "structural" ? "not-frozen" : "fires" };
   if (cls === "source") {
     row.file = `src/ext-probe${e}`;
-    row.source = `x(system="${LONG}")
-`;
+    // The three frozen shapes, each taken from the contract's own claimed probe (never re-invented here),
+    // so an extension-specific regression in any one shape fails that extension's row.
+    row.shapes = [
+      { shape: "parameter", file: row.file, source: `x(system="${LONG}")
+` },
+      { shape: "message role", file: row.file, source: probeSource("LC-12") },
+      { shape: "systemInstruction parts", file: row.file, source: probeSource("LC-19") },
+    ];
+    row.source = row.shapes[0].source;
   }
   row.pin = [TF, extensionTestName(row)];
   return row;

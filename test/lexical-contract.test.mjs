@@ -253,10 +253,14 @@ for (const p of PROBES) {
 for (const e of EXTENSIONS) {
   if (e.cls === "source") {
     reg(extensionTestName(e), () => {
-      const r = runProbe(e);
-      assert.equal(r.versioned.result, "failed", `${VERSIONED}: ${r.versioned.result}`);
-      assert.equal(r.noInline.result, "warning", `${NO_INLINE}: ${r.noInline.result}`);
-      for (const x of [r.versioned, r.noInline]) assert.ok(x.evidence.some((v) => v.startsWith(`${e.file} (`)), JSON.stringify(x.evidence));
+      assert.deepEqual(e.shapes.map((x) => x.shape), ["parameter", "message role", "systemInstruction parts"]);
+      for (const shape of e.shapes) {
+        const r = runProbe({ file: shape.file, source: shape.source });
+        const at = `${e.ext} ${shape.shape}`;
+        assert.equal(r.versioned.result, "failed", `${at}: ${VERSIONED}: ${r.versioned.result}`);
+        assert.equal(r.noInline.result, "warning", `${at}: ${NO_INLINE}: ${r.noInline.result}`);
+        for (const x of [r.versioned, r.noInline]) assert.ok(x.evidence.some((v) => v.startsWith(`${e.file} (`)), `${at}: ${JSON.stringify(x.evidence)}`);
+      }
     });
   } else if (e.cls === "held") {
     reg(extensionTestName(e), () => {
