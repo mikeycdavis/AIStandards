@@ -31,14 +31,10 @@ most likely way to go wrong here.
 (`git log --grep "Q13"`), because the safety-detector repair and the Q13 correction had changed
 behaviour it described, not only its line counts. Earlier regenerations: 2026-09-14 against the tree
 committed with Standard 09, and 2026-09-06 against `70832f4`, which had replaced a hand-scanned version.
-**It was not regenerated for the 2026-09-15 commit** (`git log --grep "Standard 17"`) **nor for the
-adoption slice of 2026-09-19** (`git log --grep "adoption"`), and it is now stale in these places: it counts
-13 of 53 standards; its account of `evaluateRule()` says a narrow clean search no longer counts toward the
-score, when it earns no credit but stays in the scored denominator; its gaps table lists Q14 as open; and,
-most materially, it describes no `init` command, no `templates/`, no `scripts/manifest.mjs` or
-`scripts/toolperms.mjs`, and predates the change that makes the four rules reading a scaffold report
-not-evaluated. Regenerate it with `/codebase-docs` rather than patching those lines; it is the first thing
-the next session should do if it needs the architecture to be true. `docs/architecture.mmd` and `docs/validate-flow.mmd`
+**It was regenerated again on 2026-10-11** by the `codebase-docs` skill against the ST-57 integration with
+`develop` 5ecd226, and now describes `init`, `templates/`, `manifest.mjs`, `toolperms.mjs`, the `--strict` audit flag,
+the lexical-contract freeze and the structural reader with its vendored YAML parser. Its provenance paragraph names
+what that generation did not re-read (the corpus-tooling modules, whose behaviour is carried from 2026-09-14). Regenerate it with `/codebase-docs` rather than patching lines. `docs/architecture.mmd` and `docs/validate-flow.mmd`
 are its canonical diagram sources; the fenced blocks inside the document are byte-identical copies,
 verified programmatically. No SVG is rendered — that would require a build-time download, and this
 repository has no dependencies. **Do not hand-patch the architecture document; regenerate it.**
