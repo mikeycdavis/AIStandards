@@ -21,7 +21,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
 import { validate, fixture, resultFor, REPO } from "./helpers.mjs";
 import { PROBES, EXTENSIONS, LONG, PARAMETER_NAMES, THRESHOLD, extensionTestName } from "./lexical-contract-probes.mjs";
@@ -90,12 +90,28 @@ function parseExtensions(text) {
   return entries;
 }
 
-// The extension table the detector itself uses, read from scripts/source.mjs.
-function detectorExtensions() {
-  const src = fs.readFileSync(path.join(REPO, "scripts", "source.mjs"), "utf8");
+// Reads the BY_EXTENSION table out of scripts/source.mjs text. Structural, not a character-class guess:
+// the object body is split into entries, and EVERY entry must be exactly `"<.ext>": "<syntax>"` with any
+// non-empty extension that has no quote, comma or whitespace in it (so `.c++`, `.d.ts`, `.h-x` all count).
+// An entry that does not fit throws, so a key the parser cannot read fails the suite instead of being
+// silently left out of the every-scanned-type comparison.
+function parseByExtension(src) {
   const body = src.match(/const BY_EXTENSION = new Map\(Object\.entries\(\{([\s\S]*?)\}\)\);/);
   assert.ok(body, "source.mjs must still declare BY_EXTENSION");
-  return [...body[1].matchAll(/"(\.[a-z0-9]+)":\s*"([a-z]+)"/g)].map((m) => [m[1], m[2]]);
+  const entries = [];
+  for (const raw of body[1].split(",")) {
+    const entry = raw.trim();
+    if (entry === "") continue;
+    const m = /^"(\.[^"\s,]+)"\s*:\s*"([a-z]+)"$/.exec(entry);
+    assert.ok(m, `BY_EXTENSION entry cannot be parsed, so it would be missing from the comparison: ${JSON.stringify(entry)}`);
+    entries.push([m[1], m[2]]);
+  }
+  return entries;
+}
+
+// The extension table the detector itself uses, read from scripts/source.mjs.
+function detectorExtensions() {
+  return parseByExtension(fs.readFileSync(path.join(REPO, "scripts", "source.mjs"), "utf8"));
 }
 const listedExtensions = parseExtensions(doc);
 
@@ -130,6 +146,25 @@ test("the document lists every file type the detector scans: the same extensions
     detector,
     "the extension probe table must cover every extension of BY_EXTENSION",
   );
+});
+
+test("the BY_EXTENSION reader is structural: a symbol-bearing key is read, and an unreadable entry fails", () => {
+  const wrap = (inner) => `const BY_EXTENSION = new Map(Object.entries({${inner}}));`;
+  assert.deepEqual(
+    parseByExtension(wrap('".c++": "c", ".d.ts": "c",\n  ".sql": "sql",')),
+    [[".c++", "c"], [".d.ts", "c"], [".sql", "sql"]],
+  );
+  assert.throws(() => parseByExtension(wrap("\".c++\": 'c'")), /cannot be parsed/);
+  assert.throws(() => parseByExtension(wrap('".js": "c", [".x"]: "c"')), /cannot be parsed/);
+  assert.throws(() => parseByExtension(wrap('".js": "c", ".ok": "C1"')), /cannot be parsed/);
+});
+
+test("every key the reader finds is one the detector really scans, spelled as the detector spells it", async () => {
+  const { isCode, extensionOf } = await import(pathToFileURL(path.join(REPO, "scripts", "source.mjs")).href);
+  for (const [ext] of detectorExtensions()) {
+    assert.equal(extensionOf(`x${ext}`), ext, `${ext}: extensionOf must return the key unchanged`);
+    assert.ok(isCode(`x${ext}`), `${ext}: isCode must accept the key`);
+  }
 });
 
 test("the document enumerates exactly the extension probe table: same ids, classes, results and pins, in order", () => {
