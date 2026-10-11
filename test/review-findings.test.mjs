@@ -429,7 +429,6 @@ for (const [label, file, source] of BLOCK_SCALAR_NOT_FIRING) {
 
 const BLOCK_SCALAR_ENDS_FIRING = [
   ["a real key right after a block scalar ends by dedent", "src/p.yaml", `documentation: |\n  text\nsystem: "${LONG}"\n`],
-  ["a sequence-marker key right after a block scalar ends by dedent", "src/p.yaml", `a:\n  documentation: |\n    text\n  - "system": "${LONG}"\n`],
   ["a quoted key after a blank line following a block scalar's dedent", "src/p.yaml", `documentation: |\n  text\n\n"system": "${LONG}"\n`],
   ["a key after an EMPTY block scalar", "src/p.yaml", `documentation: |\n"system": "${LONG}"\n`],
   ["a header-looking value in a quoted string does not open a block", "src/p.yaml", `note: "a |"\n"system": "${LONG}"\n`],
@@ -438,13 +437,7 @@ const BLOCK_SCALAR_ENDS_FIRING = [
   see foo: |
 "system": "${LONG}"
 `],
-  ["a pipe after an unclosed quote is not a block header", "src/p.yaml", `note: "a: |
-  "system": "${LONG}"
-`],
   ["an empty block scalar whose next key sits at the owning key column after a sequence marker", "src/p.yaml", `- documentation: |
-  "system": "${LONG}"
-`],
-  ["a pipe inside a trailing comment is not a block header", "src/p.yaml", `note: a # b: |
   "system": "${LONG}"
 `],
   ["a block scalar header in a non-YAML file is not special", "src/a.py", `x = {"a": 1}  # |\nclient.create(system="${LONG}")\n`],
@@ -464,6 +457,34 @@ for (const [label, file, source] of BLOCK_SCALAR_ENDS_FIRING) {
     for (const rule of [VERSIONED, NO_INLINE]) {
       const r = resultFor({ [file]: source }, rule);
       assert.equal(r.result, rule === VERSIONED ? "failed" : "warning", `${rule}: ${r.result}: ${r.message}`);
+    }
+  });
+}
+
+// ST-57 (#119), decision D. These three cases fired lexically, and the YAML in each is not valid YAML:
+// a `- "system"` entry directly inside a mapping, a quoted scalar that never closes, and a plain scalar
+// whose `: |` sits in a trailing comment that the line then continues past. A structural reader
+// refuses them, and a refused YAML file is file-scoped unknown with NO lexical fallback, so the
+// finding they used to produce is withdrawn rather than kept. They are NOT among the cases of the
+// owner's named regression ledger; they are recorded here and in the ST-57 pull request for ST-59
+// (#121), which owns migrating YAML fixtures, to give each a valid-YAML counterpart that keeps the
+// block-scalar boundary under test.
+const BLOCK_SCALAR_ENDS_NOW_UNPARSEABLE = [
+  ["a sequence-marker key right after a block scalar ends by dedent", "src/p.yaml", `a:\n  documentation: |\n    text\n  - "system": "${LONG}"\n`],
+  ["a pipe after an unclosed quote is not a block header", "src/p.yaml", `note: "a: |
+  "system": "${LONG}"
+`],
+  ["a pipe inside a trailing comment is not a block header", "src/p.yaml", `note: a # b: |
+  "system": "${LONG}"
+`],
+];
+
+for (const [label, file, source] of BLOCK_SCALAR_ENDS_NOW_UNPARSEABLE) {
+  test(`finding 8 (now unparseable, so unknown): ${label}`, () => {
+    for (const rule of [VERSIONED, NO_INLINE]) {
+      const r = resultFor({ [file]: source }, rule);
+      assert.equal(r.result, "skipped", `${rule}: ${r.result}: ${r.message}`);
+      assert.equal(r.disposition, "not-evaluated", `${rule}: an unparseable file is unknown, never a pass`);
     }
   });
 }

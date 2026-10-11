@@ -4,10 +4,59 @@
   "title": "AIStandards audit report",
   "description": "Evidence discovery. This envelope deliberately has NO status and NO score, and the schema forbids them: audit and validate are separate commands because evidence and a verdict are separate things, and an envelope that could carry both would eventually be read as one.",
   "type": "object",
-  "required": ["schemaVersion", "standard", "project", "auditedAt", "notAVerdict", "evidenceSurface", "aiSurface", "findings"],
+  "required": ["schemaVersion", "standard", "project", "auditedAt", "notAVerdict", "evidenceSurface", "structuralSurface", "aiSurface", "findings"],
   "additionalProperties": false,
+  "$defs": {
+    "unparseableFile": {
+      "type": "object",
+      "required": ["file", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "reason": {
+          "type": "string",
+          "enum": ["read-failure", "truncated", "utf-16", "invalid-utf-8", "control-character", "lone-cr", "syntax", "empty-document", "undefined-alias", "parser-exception"]
+        },
+        "code": { "description": "The parser's own error code, or the name of an undefined alias. Only a plain identifier is carried.", "type": "string", "maxLength": 64 },
+        "documentIndex": { "type": "integer", "minimum": 0 },
+        "offset": { "description": "UTF-16 code-unit offset into the text after any byte order mark.", "type": "integer", "minimum": 0 },
+        "line": { "type": "integer", "minimum": 1 },
+        "column": { "description": "Unicode code points from the start of the line, 1-based.", "type": "integer", "minimum": 1 }
+      }
+    },
+    "referenceEvidence": {
+      "type": "object",
+      "required": ["total", "listed", "omitted"],
+      "additionalProperties": false,
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "listed": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "required": ["file", "documentIndex", "offset", "line", "column"],
+            "additionalProperties": false,
+            "properties": {
+              "file": { "type": "string", "minLength": 1 },
+              "documentIndex": { "type": "integer", "minimum": 0 },
+              "name": { "description": "The alias name. Absent for a merge key.", "type": "string" },
+              "offset": { "type": "integer", "minimum": 0 },
+              "line": { "type": "integer", "minimum": 1 },
+              "column": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "omitted": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
   "properties": {
-    "schemaVersion": { "type": "string", "const": "1.0" },
+    "schemaVersion": {
+      "description": "1.1 is additive over 1.0: evidenceSurface.unparseableFiles and structuralSurface. Nothing was removed or retyped. The validate report is a different envelope and keeps its own version.",
+      "type": "string",
+      "const": "1.1"
+    },
     "standard": {
       "type": "object",
       "required": ["id", "version"],
@@ -27,7 +76,7 @@
     "evidenceSurface": {
       "description": "Every way evidence could have been lost during this run. A consumer that ignores this section is reading findings as if the walk were complete.",
       "type": "object",
-      "required": ["root", "filesCollected", "excludedDirectories", "frameworkExcludedDirectories", "unreadableFiles"],
+      "required": ["root", "filesCollected", "excludedDirectories", "frameworkExcludedDirectories", "unreadableFiles", "unparseableFiles"],
       "additionalProperties": false,
       "properties": {
         "root": { "type": "string", "minLength": 1 },
@@ -49,7 +98,30 @@
           }
         },
         "frameworkExcludedDirectories": { "type": "array", "items": { "type": "string" } },
-        "unreadableFiles": { "type": "array", "items": { "type": "string" } }
+        "unreadableFiles": { "type": "array", "items": { "type": "string" } },
+        "unparseableFiles": {
+          "description": "YAML and JSON files the structural reader could not read. Each is file-scoped unknown for every rule that reads structured files: never a pass, never a finding, and never scanned lexically instead. `total` is exact; `files` lists at most 50 and `omitted` counts the rest. The entries carry a reason and a position, never file text.",
+          "type": "object",
+          "required": ["total", "files", "omitted"],
+          "additionalProperties": false,
+          "properties": {
+            "total": { "type": "integer", "minimum": 0 },
+            "files": { "type": "array", "maxItems": 50, "items": { "$ref": "#/$defs/unparseableFile" } },
+            "omitted": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "structuralSurface": {
+      "description": "What the structural reader saw. Aliases and merge keys are PARSED and deliberately NOT followed: a role or content supplied through one stays a non-claim, and these lists are the evidence that it was present.",
+      "type": "object",
+      "required": ["scope", "filesParsed", "aliasesNotFollowed", "mergeKeysNotApplied"],
+      "additionalProperties": false,
+      "properties": {
+        "scope": { "type": "array", "items": { "type": "string", "enum": [".yml", ".yaml", ".json"] } },
+        "filesParsed": { "type": "integer", "minimum": 0 },
+        "aliasesNotFollowed": { "$ref": "#/$defs/referenceEvidence" },
+        "mergeKeysNotApplied": { "$ref": "#/$defs/referenceEvidence" }
       }
     },
     "aiSurface": {

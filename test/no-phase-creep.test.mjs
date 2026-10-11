@@ -5,7 +5,11 @@
 // the checks it is an escape from. These tests fail if a later phase's feature appears early, so
 // the deferral is enforced rather than merely intended.
 //
-// They also enforce the zero-dependency decision structurally.
+// They also enforce invariant 4 structurally. Invariant 4, as amended by decision A of the structural
+// parser bundle (ST-57, #119), reads: no install-time or environment-resolved third-party dependency;
+// vendored parser code is reviewed repository content whose identity, hashes and licence are pinned.
+// The pinning is asserted in vendor-yaml.test.mjs. What is asserted here is the part that must stay
+// absolute: nothing is resolved at install time or from the environment.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -16,27 +20,52 @@ import { REPO, cli, validate, fixture } from "./helpers.mjs";
 const read = (rel) => fs.readFileSync(path.join(REPO, rel), "utf8");
 const exists = (rel) => fs.existsSync(path.join(REPO, rel));
 
-test("no third-party dependency is declared, and there is no lockfile", () => {
-  const pkg = JSON.parse(read("package.json"));
-  assert.ok(!("dependencies" in pkg), "there must be no dependencies key at all");
-  assert.ok(!("devDependencies" in pkg), "there must be no devDependencies key at all");
-  for (const lock of ["package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml"]) {
-    assert.ok(!exists(lock), `${lock} must not exist`);
+function filesUnder(dir) {
+  const out = [];
+  for (const entry of fs.readdirSync(path.join(REPO, dir), { withFileTypes: true })) {
+    if (entry.name === ".git" || entry.name === "node_modules") continue;
+    const rel = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) out.push(...filesUnder(rel));
+    else out.push(rel);
   }
-  assert.ok(!exists("node_modules"), "node_modules must not exist");
+  return out;
+}
+
+const DEPENDENCY_KEYS = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies", "bundledDependencies", "bundleDependencies", "workspaces", "overrides", "resolutions"];
+const LIFECYCLE = ["preinstall", "install", "postinstall", "prepare", "prepublish", "prepublishOnly", "prepack", "postpack"];
+const LOCKFILES = ["package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb", "bun.lock"];
+
+test("invariant 4: no dependency key of any kind is declared, and no install step exists", () => {
+  const pkg = JSON.parse(read("package.json"));
+  for (const key of DEPENDENCY_KEYS) assert.ok(!(key in pkg), `package.json must have no ${key} key`);
+  for (const name of LIFECYCLE) assert.ok(!(name in (pkg.scripts ?? {})), `package.json must have no ${name} script`);
 });
 
-test("every runtime import is a node: builtin or a local module", () => {
+test("invariant 4: no lockfile, no installed modules and no registry configuration anywhere in the repository", () => {
+  const all = filesUnder(".");
+  const offenders = all.filter((f) => LOCKFILES.includes(path.basename(f)) || path.basename(f) === ".npmrc" || path.basename(f) === ".yarnrc" || path.basename(f) === ".yarnrc.yml");
+  assert.deepEqual(offenders, [], "a lockfile or registry configuration resolves dependencies from the environment");
+  assert.ok(!exists("node_modules"), "node_modules must not exist");
+  assert.ok(!exists("vendor"), "vendored code lives under scripts/vendor, which the pinned archive includes; a repository-root vendor/ would not be");
+});
+
+test("invariant 4: every runtime import under scripts/ is a node: builtin or a local module", () => {
   const offenders = [];
-  for (const file of fs.readdirSync(path.join(REPO, "scripts")).filter((f) => f.endsWith(".mjs"))) {
-    const text = read(path.join("scripts", file));
-    for (const m of text.matchAll(/(?:^|\n)\s*import[^;]*?from\s+["']([^"']+)["']/g)) {
+  for (const file of filesUnder("scripts").filter((f) => /\.(mjs|js|cjs)$/.test(f))) {
+    const text = read(file);
+    for (const m of text.matchAll(/(?:^|\n)\s*(?:import|export)[^;'"]*?from\s*["']([^"']+)["']/g)) {
       const spec = m[1];
       if (spec.startsWith("node:") || spec.startsWith(".") || spec.startsWith("/")) continue;
-      offenders.push(`scripts/${file}: ${spec}`);
+      offenders.push(`${file}: ${spec}`);
+    }
+    for (const m of text.matchAll(/\bimport\s*\(\s*["']([^"']+)["']/g)) {
+      if (!m[1].startsWith("node:") && !m[1].startsWith(".")) offenders.push(`${file}: dynamic ${m[1]}`);
+    }
+    for (const m of text.matchAll(/\brequire\s*\(\s*["']([^"']+)["']/g)) {
+      if (!m[1].startsWith("node:") && !m[1].startsWith(".")) offenders.push(`${file}: require ${m[1]}`);
     }
   }
-  assert.deepEqual(offenders, [], "a bare import specifier is a third-party dependency");
+  assert.deepEqual(offenders, [], "a bare import specifier is a third-party dependency resolved from the environment");
 });
 
 test("init exists, but only ever runs against an explicitly selected target", () => {

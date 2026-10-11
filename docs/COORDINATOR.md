@@ -37,7 +37,9 @@ nothing has been pushed** (OBSERVED 2026-10-03). Ask the owner first, every time
 2. Never weaken a test, policy, standard or evidence requirement to make a gate pass.
 3. Never invent historical intent, results, approvals, reviewers, model capabilities or compliance
    evidence. Preserve uncertainty explicitly.
-4. Zero third-party dependencies, no lockfile. A test enforces it.
+4. No install-time or environment-resolved third-party dependency, and no lockfile. Vendored parser
+   code is reviewed repository content whose version, hashes and licence are pinned
+   (`scripts/vendor/yaml.vendor.json`). A test enforces both halves.
 5. Crosswalks are semantic, never id reuse. `fidelity`, `inventory` and `attestations` have no write path.
 6. The suite runs at `--test-concurrency=1`; the fidelity, inventory and sync suites rewrite real files.
 7. A check that could not run is never a pass. **Scaffolding is not evidence** for any rule that reads it.

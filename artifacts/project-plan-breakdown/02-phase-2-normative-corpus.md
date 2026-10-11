@@ -43,10 +43,13 @@ boundary posture in it is a unilateral judgment; no maintainer of any adjacent p
 any of them. Catalog numbering is *technically* frozen by `artifacts/prompts/ai-standards-spec.md`
 and is separately *not* maintainer-approved governance. Report both, never one.
 
-**Zero third-party dependencies, enforced by a test.** `package.json` has no `dependencies` key and
-there is no lockfile. `test/no-phase-creep.test.mjs` asserts this. Do not `npm install` anything, do
-not add a formatter, do not add a mermaid renderer. If you need to parse something, extend
-`scripts/yaml.mjs` or `scripts/jsonschema.mjs`.
+**No install-time or environment-resolved third-party dependency, enforced by a test.** `package.json`
+has no dependency key of any kind and there is no lockfile. `test/no-phase-creep.test.mjs` asserts this.
+The one third-party parser, `yaml`, is vendored under `scripts/vendor/` as reviewed repository content
+whose version, hashes and licence are pinned (`test/vendor-yaml.test.mjs`). Do not `npm install`
+anything, do not add a formatter, do not add a mermaid renderer. If you need to parse a policy or
+manifest, extend `scripts/yaml.mjs` or `scripts/jsonschema.mjs`; the vendored parser is for the
+structural reader (`scripts/structural.mjs`) only.
 
 **`--test-concurrency=1` is mandatory and already set in `scripts/test.mjs`.** The mutation suites
 corrupt a real shared file, assert the check fails, and restore it. Running them in parallel
