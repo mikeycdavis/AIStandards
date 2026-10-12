@@ -342,6 +342,36 @@ test("YAML: tags and anchors keep their source spelling and offset in flow colle
   }
 });
 
+test("YAML: a verbatim tag containing commas is one token, in block and flow context, alone and with anchors", () => {
+  const long = "!<tag:yaml.org,2002:str>";
+  const cases = [
+    [`a: ${long} 1\n`, [["1", long, null]]],
+    [`a: [${long} 1]\n`, [["1", long, null]]],
+    [`a: [ ${long} 1, 2 ]\n`, [["1", long, null]]],
+    [`a: {k: ${long} v}\n`, [["v", long, null]]],
+    [`a: &x ${long} 1\n`, [["1", long, "x"]]],
+    [`a: [&x ${long} 1, *x]\n`, [["1", long, "x"]]],
+    [`a: {k: &y !<tag:a,b> v}\n`, [["v", "!<tag:a,b>", "y"]]],
+    [`a: [!<tag:a,b> 1, !!str 2, ${long} 3]\n`, [["1", "!<tag:a,b>", null], ["2", "!!str", null], ["3", long, null]]],
+    ["a: [!<!local> 1]\n", [["1", "!<!local>", null]]],
+  ];
+  for (const [text, expected] of cases) {
+    const r = parseStructuralText("t.yml", text, "yaml");
+    assert.equal(r.ok, true, text);
+    const seen = [];
+    walk(root(r), (n) => {
+      if (n.tag === undefined && n.anchor === undefined) return;
+      seen.push([n.value, n.tag?.source ?? null, n.anchor?.name ?? null]);
+      if (n.tag) {
+        assert.equal(n.tag.resolved, undefined, `${text}: the written spelling is recovered, not flagged resolved`);
+        assert.equal(text.slice(n.tag.offset, n.tag.offset + n.tag.source.length), n.tag.source, `${text}: offset points at the spelling`);
+      }
+      if (n.anchor) assert.equal(text.slice(n.anchor.offset, n.anchor.offset + 1 + n.anchor.name.length), `&${n.anchor.name}`, `${text}: anchor`);
+    });
+    assert.deepEqual(seen, expected, text);
+  }
+});
+
 test("YAML: a tag whose spelling cannot be recovered is flagged resolved, never reported as written", () => {
   // A comment between the tag and its node hides the spelling from a backwards read.
   const r = parseStructuralText("t.yml", "a: !!str # note\n  1\n", "yaml");
@@ -350,6 +380,13 @@ test("YAML: a tag whose spelling cannot be recovered is flagged resolved, never 
   assert.equal(tag.resolved, true);
   assert.equal(tag.offset, null);
   assert.equal(tag.source, "tag:yaml.org,2002:str");
+  // A comment that ends in `>` after a verbatim tag is not part of the tag, and hides its spelling.
+  const hidden = parseStructuralText("t.yml", "a: !<t> # x>\n  1\n", "yaml");
+  let hiddenTag;
+  walk(root(hidden), (n) => { if (n.tag) hiddenTag = n.tag; });
+  assert.equal(hiddenTag.resolved, true);
+  assert.equal(hiddenTag.offset, null);
+  assert.ok(!hiddenTag.source.includes("#"), "the comment is not folded into the tag");
   const written = parseStructuralText("t.yml", "a: [!!str 1]\n", "yaml");
   walk(root(written), (n) => { if (n.tag) assert.equal(n.tag.resolved, undefined, "a recovered spelling is not flagged"); });
 });

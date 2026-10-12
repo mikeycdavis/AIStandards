@@ -100,6 +100,8 @@ test(".gitattributes is scoped to the vendored tree and decides nothing about th
 // file inside the vendored tree. A dynamic import or require whose argument is not a string literal
 // cannot be checked, so it is itself an offender, as is `createRequire` (a require by another name).
 
+const REGEX_KEYWORDS = new Set(["return", "typeof", "case", "do", "else", "in", "of", "void", "delete", "throw", "new", "yield", "await", "instanceof"]);
+
 function stripComments(source) {
   // Scans `source` as code from `start`. Inside a template literal's `${ ... }` the scan recurses, so an
   // interpolation is CODE (its imports are found, nested templates and comments inside it are handled)
@@ -119,6 +121,47 @@ function stripComments(source) {
         while (i < n && !(source[i] === "*" && source[i + 1] === "/")) i += 1;
         i += 2;
         out += " ";
+      } else if (c === "/") {
+        // Regex literal or division? A slash after an identifier, number, `)` or `]` is division; after a
+        // keyword such as `return`, after an operator or opener (`( , = : ? ! & | ; [ {`), after `}` or at
+        // the start of an expression it is a regex. The only genuinely ambiguous case is `}` (a block
+        // end or an object literal end), and every ambiguity is resolved toward DETECTING: a regex body
+        // is not blanked (it is copied through, never rescanned, so braces and quotes inside it can neither
+        // end an interpolation nor open a string). A mis-read costs a false positive, never a missed
+        // import.
+        const before = out.trimEnd();
+        const last = before[before.length - 1];
+        let regex;
+        if (last === undefined) regex = true;
+        else if (")]".includes(last)) regex = false;
+        else if (/[\w$]/.test(last)) regex = REGEX_KEYWORDS.has(/[\w$]+$/.exec(before)[0]);
+        else regex = true;
+        let j = i + 1;
+        let closed = false;
+        if (regex) {
+          let inClass = false;
+          while (j < n && source[j] !== "\n") {
+            const ch = source[j];
+            if (ch === "\\") {
+              j += 2;
+              continue;
+            }
+            if (ch === "[") inClass = true;
+            else if (ch === "]") inClass = false;
+            else if (ch === "/" && !inClass) {
+              closed = true;
+              break;
+            }
+            j += 1;
+          }
+        }
+        if (regex && closed) {
+          out += source.slice(i, j + 1);
+          i = j + 1;
+        } else {
+          out += c;
+          i += 1;
+        }
       } else if (c === "`") {
         out += c;
         i += 1;
@@ -247,6 +290,22 @@ test("the import guard itself: each way of naming a module outside the tree is a
       "dynamic import inside a nested template": "const x = `a${`b${import(\"package\")}`}`;\n",
       "import after braces and a string inside an interpolation": "const x = `${ ({ a: \"}\" }).a + (await import(\"package\")) }`;\n",
       "import after a comment inside an interpolation": "const x = `${ /* } */ import(\"package\") }`;\n",
+      "regex containing a brace after an opener": "const x = `${ /}/.test(x) ? import(\"package\") : 1 }`;\n",
+      "regex after a comma": "const x = `${ f(/}/, import(\"package\")) }`;\n",
+      "regex after an equals sign": "const x = `${ (y = /}/, import(\"package\")) }`;\n",
+      "regex after return": "const x = `${ (() => { return /}/.test(a) && import(\"package\"); })() }`;\n",
+      "regex after a keyword at the top of an interpolation": "const x = `${ typeof /}/ === \"x\" && import(\"package\") }`;\n",
+      "regex after the void keyword": "const x = `${ void /}/, import(\"package\") }`;\n",
+      "regex after a question mark": "const x = `${ ok ? /}/ : import(\"package\") }`;\n",
+      "regex after a colon": "const x = `${ ok ? 1 : /}/.test(a) && import(\"package\") }`;\n",
+      "regex with a quote in a class": "const x = `${ /[\"']/.test(a) && import(\"package\") }`;\n",
+      "regex with a slash and a brace inside a class": "const x = `${ /[/]}/.test(a) && import(\"package\") }`;\n",
+      "regex with an escaped slash and a brace": "const x = `${ /a\\/}/.test(a) && import(\"package\") }`;\n",
+      "regex at top level hiding a quote": "const re = /[\"']/; import \"package\";\n",
+      "division after an identifier": "const x = `${ a / b + import(\"package\") }`;\n",
+      "division after a parenthesis": "const x = `${ (a) / 2 / 3 + import(\"package\") }`;\n",
+      "division after a bracket": "const x = `${ y[0] / 2 + import(\"package\") }`;\n",
+      "an import call written inside a regex body is reported (fail toward detecting)": "const x = /import(\"package\")/;\n",
       "outside the tree via an interpolation": "const x = `${import(\"../../" + outsideName + "\")}`;\n",
     };
     for (const [label, text] of Object.entries(must)) {
@@ -265,6 +324,9 @@ test("the import guard itself: each way of naming a module outside the tree is a
       "a relative dynamic import inside an interpolation": "export const p = `${import(\"./ok.js\")}`;\n",
       "a comment mentioning a package inside an interpolation": "export const s = `${ /* import(\"package\") */ 1 }`;\n",
       "a line comment mentioning a package inside an interpolation": "export const s = `${ // import(\"package\")\n 1 }`;\n",
+      "a regex with braces and quotes and no import": "export const s = `${ /[\"'{}]/.test(a) ? 1 : 2 }`;\n",
+      "a regex literal containing a slash in a class": "export const r = /[/]x/;\nexport const q = 1;\n",
+      "division with braces nearby": "export const s = `${ ({ a: 4 }).a / 2 }`;\n",
       "a nested template with only text": "export const s = `a${`b${1}c`}d`;\n",
     };
     for (const [label, text] of Object.entries(may)) {

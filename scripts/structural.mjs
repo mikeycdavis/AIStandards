@@ -385,7 +385,16 @@ function propsBefore(text, start, anchorName, hasTag) {
     // `[a,!t b]`). Flow indicators cannot occur inside an anchor name or a tag, so a flow indicator
     // ends the word as a blank does.
     let begin = end;
-    while (begin > 0 && !isWs(text[begin - 1]) && !FLOW_INDICATORS.includes(text[begin - 1])) begin -= 1;
+    // A verbatim tag `!<...>` is one token: it may contain a comma (`!<tag:yaml.org,2002:str>`), which is
+    // not a flow indicator there. It is recognised whole before the delimiter-aware scan below.
+    if (text[end - 1] === ">") {
+      let j = end - 2;
+      while (j >= 1 && !isWs(text[j]) && text[j] !== "<" && text[j] !== ">") j -= 1;
+      if (j >= 1 && text[j] === "<" && text[j - 1] === "!") begin = j - 1;
+    }
+    if (begin === end) {
+      while (begin > 0 && !isWs(text[begin - 1]) && !FLOW_INDICATORS.includes(text[begin - 1])) begin -= 1;
+    }
     if (begin === end) break;
     const word = text.slice(begin, end);
     if (word[0] === "&" && anchorName !== null && anchor === null && word === `&${anchorName}`) {
