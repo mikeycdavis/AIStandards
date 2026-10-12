@@ -45,7 +45,9 @@ nothing has been pushed** (OBSERVED 2026-10-03). Ask the owner first, every time
 7. A check that could not run is never a pass. **Scaffolding is not evidence** for any rule that reads it.
 8. This repository's own verdict is `NON_COMPLIANT` 0 (OBSERVED). That is a result, not a target: neither
    preserve it nor chase `COMPLIANT`.
-9. No `.gitattributes` (Q8). Do not hand-patch `docs/architecture.md`; regenerate it.
+9. No repository-wide line-ending policy (Q8 is open). The only `.gitattributes` pins `scripts/vendor/**` to LF so the
+   vendored parser's hashes do not depend on a checkout; it decides nothing about any other file. Do not hand-patch
+   `docs/architecture.md`; regenerate it.
 
 ## 3 · Where state lives
 

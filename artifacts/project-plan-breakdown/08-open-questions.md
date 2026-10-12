@@ -86,8 +86,9 @@ authoritative, Standard 02 R2 loses the word "propose" and gains the distinction
 
 ### Q8 — Should the repository pin line endings with a `.gitattributes`?
 
-`core.autocrlf` is `true` and no `.gitattributes` exists, so committed bytes are LF and working-tree
-bytes CRLF. `scripts/fidelity.mjs` declares a CRLF→LF normalization on both sides and reports raw-byte
+`core.autocrlf` is `true` and no repository-wide `.gitattributes` exists (the one file, added by ST-57, pins only
+`scripts/vendor/**` to LF so the vendored parser's recorded hashes do not depend on a checkout, and is not an
+answer to this question), so committed bytes are LF and working-tree bytes CRLF. `scripts/fidelity.mjs` declares a CRLF→LF normalization on both sides and reports raw-byte
 matches separately, so nothing currently breaks. Adding one would rewrite every file's line endings
 in a single commit, which is why it has not been done as a side effect of other work.
 **Impact if unanswered:** none today. It becomes real in Phase 5, where `ci-context` sets

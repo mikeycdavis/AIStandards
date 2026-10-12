@@ -635,4 +635,4 @@ These are recorded rather than guessed at, per the brief's requirement to preser
 | Untracked local files | The walk has no exclusion for `.claude/` or other untracked directories, so `audit`'s file count depends on what a checkout holds beyond its tracked files |
 | The vendored tree is audited | `collectFiles` reads `scripts/vendor/**`, so the pack's own audit counts its 76 files and scans the `.js` lexically; no finding results at this commit |
 | Node floor | `engines` declares `>=18`; only the versions `docs/HANDOFF.md` §3 records and the ST-57 integration (18.20.8, 24.15.0) have been executed |
-| `core.autocrlf` | `true` on the development host. `.gitattributes` now pins only `scripts/vendor/**` to LF; other files remain CRLF in a Windows working tree and LF in the index. Harmless for `fidelity.mjs`, which normalizes both sides |
+| `core.autocrlf` | `true` on the development host. `.gitattributes` exists only to pin `scripts/vendor/**` to LF (it does not answer Q8, the repository-wide policy, which stays open); other files remain CRLF in a Windows working tree and LF in the index. Harmless for `fidelity.mjs`, which normalizes both sides |

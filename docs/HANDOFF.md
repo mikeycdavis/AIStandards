@@ -544,8 +544,9 @@ governance until a sign-off exists.
    unapproved, and its own reasoning does not reach the word "propose". Standard 11's R7 was scoped
    narrowly rather than propagating it, so the two standards currently differ on adjacent ground.
    This is the only open question that changes the wording of an already-written standard.
-5. **Whether to pin line endings with a `.gitattributes`** — Q8. `core.autocrlf` is `true` and no
-   `.gitattributes` exists. Nothing breaks today; it becomes real in Phase 5, where the container
+5. **Whether to pin line endings repository-wide with a `.gitattributes`** — Q8. `core.autocrlf` is `true`. The one
+   `.gitattributes` that exists (ST-57) pins only `scripts/vendor/**` to LF so vendored hashes are checkout-independent;
+   it is not an answer to Q8. Nothing breaks today; it becomes real in Phase 5, where the container
    materialises its clone with `core.autocrlf=false`.
 6. **Whether the substantive authored content of Standards 08, 09, 13, 17 and 23 stands.** Each discloses every
    authored element in its Additions section — for 08, that safety cases are not graded by risk
