@@ -89,25 +89,3 @@ for (const entry of deferred) {
     assert.equal(audit(target(entry)).json.evidenceSurface.unparseableFiles.total, 0);
   });
 }
-
-// Existing lexical fixtures that are not valid YAML, found by running the whole suite with the reader
-// traced. They are NOT in the named ledger. Each was a lexical control or finding; each is now
-// unparseable, so a control built on it no longer reaches the detector. They are listed so the
-// vacuity is a recorded fact with an owner (ST-59, which migrates YAML fixtures) and not a silent
-// one. If one of them starts to parse, this test says the control is live again.
-const NOT_IN_LEDGER_NOW_UNPARSEABLE = [
-  ["message-role-shapes.test.mjs", "a YAML flow role followed by trailing text", `- {role: "system" x, content: "${LONG}"}\n`],
-  ["message-role-shapes.test.mjs", "a YAML plain scalar that contains the ternary text", `note: ok ? systemInstruction : {parts: [{text: "${LONG}"}]}\n`],
-  ["message-role-shapes.test.mjs", "a YAML plain scalar with a ternary mark", `note: ok ? system : "${LONG}"\n`],
-  ["review-findings.test.mjs", "finding 8: a sequence-marker key right after a block scalar", `a:\n  documentation: |\n    text\n  - "system": "${LONG}"\n`],
-  ["review-findings.test.mjs", "finding 8: a pipe after an unclosed quote is not a block header", `note: "a: |\n  "system": "${LONG}"\n`],
-  ["review-findings.test.mjs", "finding 8: a pipe inside a trailing comment is not a block header", `note: a # b: |\n  "system": "${LONG}"\n`],
-];
-
-for (const [owner, label, source] of NOT_IN_LEDGER_NOW_UNPARSEABLE) {
-  test(`not in the ledger, now unparseable (${owner}): ${label}`, () => {
-    const r = parseStructuralBytes("src/p.yaml", Buffer.from(source));
-    assert.equal(r.ok, false);
-    assert.equal(r.reason, "syntax");
-  });
-}

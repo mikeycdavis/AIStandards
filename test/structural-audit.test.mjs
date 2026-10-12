@@ -216,3 +216,33 @@ test("the report is deterministic across runs (no filesystem ordering leaks into
   const strip = (j) => JSON.stringify({ ...j, auditedAt: "t", evidenceSurface: { ...j.evidenceSurface, root: "r" } });
   assert.equal(strip(audit(dir).json), strip(audit(dir).json));
 });
+
+// Manifest and tool-permission files are in structural scope (decision F has no exemption for them). A
+// broken one is therefore BOTH invalid for its own rules (judged by manifest.mjs / toolperms.mjs, which
+// these tests do not touch) AND an unparseable file for the inline-prompt rules. The outcome pinned
+// here is the approved file-scoped unknown: listed in unparseableFiles with a reason and a position,
+// the two inline rules not evaluated for the right reason (the file could not be read), and NOT the
+// partial-assurance "ran over a declared partial scope and found nothing" result, which would claim a
+// search that never happened.
+for (const [label, name, text] of [
+  ["an unparseable manifest (`system: [unclosed`)", "ai-system.yml", "system: [unclosed\n"],
+  ["an unparseable tool-permission file (`tools: [`)", "tool-permissions.yml", "tools: [\n"],
+]) {
+  test(`manifest scope: ${label} is file-scoped unknown for the inline-prompt rules, not a partial result`, () => {
+    const dir = target({ [name]: text });
+    const { json } = audit(dir);
+    const entry = json.evidenceSurface.unparseableFiles.files.find((f) => f.file === name);
+    assert.ok(entry, `${name} must be listed in unparseableFiles`);
+    assert.equal(entry.reason, "syntax");
+    assert.equal(typeof entry.line, "number");
+    const report = validate(dir).json;
+    for (const rule of [NO_INLINE, VERSIONED]) {
+      const r = ruleIn(report, rule);
+      assert.equal(r.result, "skipped", rule);
+      assert.equal(r.disposition, "not-evaluated", rule);
+      assert.match(r.message, /could not be read structurally/, `${rule}: ${r.message}`);
+      assert.doesNotMatch(r.message, /declared partial scope|Not established/, `${rule}: must not read as a partial search that found nothing`);
+      assert.ok(r.evidence.some((e) => e.startsWith(`${name} (syntax`) || e === `${name} (syntax)`), `${rule}: evidence names the file: ${JSON.stringify(r.evidence)}`);
+    }
+  });
+}
