@@ -184,7 +184,7 @@ refusal as a value. It is a reader, not a detector; it decides nothing about any
   trailing commas, duplicates preserved, depth not a stack hazard.
 - **YAML** is parsed by the vendored library with `uniqueKeys: false`; the adapter converts its nodes,
   recovers where each `&anchor` and `!tag` was written by reading backwards from the node (checked
-  against the name the parser reported, across flow indicators such as `[!!str 1]`, and verbatim `!<...>` tags (which may contain commas) as one token; a tag whose spelling cannot be recovered is flagged `resolved: true`), never dereferences an alias, records `<<` without applying it,
+  against the name the parser reported, across flow indicators such as `[!!str 1]`, and verbatim `!<...>` tags (which may contain commas) as one token; a tag whose spelling cannot be recovered is flagged `resolved: true`), never dereferences an alias, records a merge key (`<<` plain and untagged, or any `<<` whose resolved tag is the merge tag) without applying it,
   reads every document independently and refuses an alias whose anchor was not defined earlier in the
   same document. Every scalar is its decoded **string**; the schema's coerced value is never used.
 - **Failure values**, from `FAILURE_REASONS`: `read-failure`, `truncated`, `utf-16`, `invalid-utf-8`,

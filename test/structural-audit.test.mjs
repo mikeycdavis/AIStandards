@@ -211,6 +211,16 @@ test("C: aliases and merge keys are reported as present and not followed, with p
   assert.deepEqual(validateSchema(json, AUDIT_SCHEMA), []);
 });
 
+test("C: explicitly tagged merge keys are reported as merge keys not applied", () => {
+  const dir = target({
+    "a.yml": "base: &b\n  k: 1\nu:\n  !!merge <<: *b\nv:\n  !<tag:yaml.org,2002:merge> <<: *b\nw:\n  \"<<\": *b\n",
+  });
+  const { json } = audit(dir);
+  assert.equal(json.structuralSurface.mergeKeysNotApplied.total, 2);
+  assert.deepEqual(json.structuralSurface.mergeKeysNotApplied.listed.map((m) => m.line), [4, 6]);
+  assert.deepEqual(validateSchema(json, AUDIT_SCHEMA), []);
+});
+
 test("the report is deterministic across runs (no filesystem ordering leaks into it)", () => {
   const dir = target({ "z.yml": "a: [\n", "a.json": "{", "m.yml": "k: *x\n" });
   const strip = (j) => JSON.stringify({ ...j, auditedAt: "t", evidenceSurface: { ...j.evidenceSurface, root: "r" } });

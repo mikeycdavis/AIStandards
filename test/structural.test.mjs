@@ -286,6 +286,32 @@ test("YAML: merge keys are recorded, not applied", () => {
   assert.equal(r.merges.length, 1);
 });
 
+// A merge key is `<<` written plain and untagged, or `<<` whose RESOLVED tag is the merge tag, as the
+// library resolves it. An explicit merge tag counts however it is spelled; a different tag does not.
+test("YAML: explicitly tagged merge keys are merge keys, and other tags and quoting are not", () => {
+  const doc = (key) => `b: &base {x: 1}\nu:\n  ${key}: *base\n`;
+  const cases = [
+    ["<<", true],
+    ["!!merge <<", true],
+    ["!<tag:yaml.org,2002:merge> <<", true],
+    ["&k !!merge <<", true],
+    ["\"<<\"", false],
+    ["'<<'", false],
+    ["!!str <<", false],
+    ["!local <<", false],
+    ["<<x", false],
+  ];
+  for (const [key, expected] of cases) {
+    const r = parseStructuralText("t.yml", doc(key), "yaml");
+    assert.equal(r.ok, true, key);
+    const u = root(r).pairs[1].value;
+    assert.equal(u.pairs[0].merge, expected, key);
+    assert.equal(r.merges.length, expected ? 1 : 0, `${key}: the merges list agrees`);
+  }
+  const flow = parseStructuralText("t.yml", "b: &base {x: 1}\nu: {!!merge <<: *base}\n", "yaml");
+  assert.equal(flow.merges.length, 1, "flow form");
+});
+
 test("YAML: a quoted << is an ordinary key, not a merge key", () => {
   const r = yaml("\"<<\": *a\nx: &a 1\n");
   assert.equal(r.ok, false, "alias before its anchor is undefined");
@@ -298,7 +324,7 @@ test("YAML: anchors and tags carry the position where they were written", () => 
   const r = parseStructuralText("t.yml", text, "yaml");
   const [a, k] = root(r).pairs;
   assert.deepEqual(a.value.anchor, { name: "x", offset: 3 });
-  assert.deepEqual(a.value.tag, { source: "!!str", offset: 6 });
+  assert.deepEqual(a.value.tag, { source: "!!str", offset: 6, name: "tag:yaml.org,2002:str" });
   assert.equal(text.slice(a.value.anchor.offset, a.value.anchor.offset + 2), "&x");
   assert.deepEqual(k.key.anchor, { name: "k", offset: 16 });
   assert.equal(k.value.anchor.name, "y");

@@ -25,7 +25,7 @@
 //   node = { kind: "map" | "seq" | "scalar" | "alias",
 //            range: { start, end },                 UTF-16 offsets into `text`, end exclusive
 //            anchor?: { name, offset },             YAML only; offset of the `&` (null if not recovered)
-//            tag?: { source, offset, resolved? },   YAML only; the tag as written (resolved: true = spelling not recovered)
+//            tag?: { source, offset, name, resolved? }, YAML only; the tag as written, and its resolved `name`
 //            // map:    pairs: [{ key, value, merge, range }]  every occurrence, in source order
 //            // seq:    items: [node | null]
 //            // scalar: value (decoded string), length (code points), style, jsonType? }
@@ -373,6 +373,7 @@ const isWs = (c) => c === " " || c === "\t" || c === "\n" || c === "\r";
 // the name the parser reported. A property that cannot be matched keeps its name and has offset null:
 // absent evidence is stated, not guessed.
 const FLOW_INDICATORS = "[]{},";
+const MERGE_TAG = "tag:yaml.org,2002:merge";
 
 function propsBefore(text, start, anchorName, hasTag) {
   let anchor = null;
@@ -467,15 +468,19 @@ function readYaml(file, text, index) {
       if (tag || hasTag) tagCount += 1;
       const withProps = (node) => {
         if (anchor) node.anchor = anchor;
-        if (tag) node.tag = tag;
-        else if (hasTag) node.tag = { source: n.tag, offset: null, resolved: true }; // spelling not recovered: the parser's resolved tag, flagged
+        if (tag) node.tag = { ...tag, name: n.tag }; // `name` is the parser's resolved tag, whatever the spelling
+        else if (hasTag) node.tag = { source: n.tag, offset: null, resolved: true, name: n.tag }; // spelling not recovered: the parser's resolved tag, flagged
         return node;
       };
       if (isMap(n)) {
         const node = withProps({ kind: "map", range: { start, end }, pairs: [] });
         for (const p of n.items) {
           const key = convert(p.key);
-          const merge = key !== null && key.kind === "scalar" && key.style === "plain" && key.value === "<<" && key.tag === undefined;
+          // A merge key is `<<` written plain with no tag, or `<<` whose RESOLVED tag is the merge tag
+          // (`!!merge <<` and `!<tag:yaml.org,2002:merge> <<` resolve to it). A quoted "<<", `!!str <<`
+          // and a local tag are ordinary keys, as the library resolves them.
+          const merge = key !== null && key.kind === "scalar" && key.value === "<<"
+            && ((key.style === "plain" && key.tag === undefined) || key.tag?.name === MERGE_TAG);
           const value = convert(p.value);
           if (merge) merges.push({ documentIndex: d, offset: key.range.start });
           const rs = key ? key.range.start : value ? value.range.start : start;

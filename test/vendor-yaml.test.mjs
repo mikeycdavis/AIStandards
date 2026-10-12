@@ -102,6 +102,24 @@ test(".gitattributes is scoped to the vendored tree and decides nothing about th
 
 const REGEX_KEYWORDS = new Set(["return", "typeof", "case", "do", "else", "in", "of", "void", "delete", "throw", "new", "yield", "await", "instanceof"]);
 
+// Whether the `)` that ends `before` closes the head of `if`, `while`, `for` or `with`: the statement
+// after it begins an expression, so a slash there starts a regex, not a division. An unmatched `)` is
+// ambiguous and is also read as a regex (toward detecting).
+function closesControlHead(before) {
+  let depth = 0;
+  for (let k = before.length - 1; k >= 0; k -= 1) {
+    if (before[k] === ")") depth += 1;
+    else if (before[k] === "(") {
+      depth -= 1;
+      if (depth === 0) {
+        const head = /([A-Za-z_$][\w$]*)\s*$/.exec(before.slice(0, k));
+        return head !== null && ["if", "while", "for", "with"].includes(head[1]);
+      }
+    }
+  }
+  return true;
+}
+
 function stripComments(source) {
   // Scans `source` as code from `start`. Inside a template literal's `${ ... }` the scan recurses, so an
   // interpolation is CODE (its imports are found, nested templates and comments inside it are handled)
@@ -133,7 +151,8 @@ function stripComments(source) {
         const last = before[before.length - 1];
         let regex;
         if (last === undefined) regex = true;
-        else if (")]".includes(last)) regex = false;
+        else if (last === ")") regex = closesControlHead(before);
+        else if (last === "]") regex = false;
         else if (/[\w$]/.test(last)) regex = REGEX_KEYWORDS.has(/[\w$]+$/.exec(before)[0]);
         else regex = true;
         let j = i + 1;
@@ -296,6 +315,12 @@ test("the import guard itself: each way of naming a module outside the tree is a
       "regex after return": "const x = `${ (() => { return /}/.test(a) && import(\"package\"); })() }`;\n",
       "regex after a keyword at the top of an interpolation": "const x = `${ typeof /}/ === \"x\" && import(\"package\") }`;\n",
       "regex after the void keyword": "const x = `${ void /}/, import(\"package\") }`;\n",
+      "regex after the head of an if statement": "const x = `${ (() => { if (x) /}/.test(y); })(), import(\"package\") }`;\n",
+      "regex after the head of a while statement": "const x = `${ (() => { while (x) /}/.test(y); })(), import(\"package\") }`;\n",
+      "regex after the head of a for statement": "const x = `${ (() => { for (;;) /}/.test(y); })(), import(\"package\") }`;\n",
+      "regex after the head of a with statement": "const x = `${ (() => { with (o) /}/.test(y); })(), import(\"package\") }`;\n",
+      "regex after a nested control head": "const x = `${ (() => { if ((a) && f(b)) /}/.test(y); })(), import(\"package\") }`;\n",
+      "regex after an unmatched parenthesis (ambiguous, so read as a regex)": "const x = `${ a) /}/.test(b) && import(\"package\") }`;\n",
       "regex after a question mark": "const x = `${ ok ? /}/ : import(\"package\") }`;\n",
       "regex after a colon": "const x = `${ ok ? 1 : /}/.test(a) && import(\"package\") }`;\n",
       "regex with a quote in a class": "const x = `${ /[\"']/.test(a) && import(\"package\") }`;\n",
@@ -324,6 +349,9 @@ test("the import guard itself: each way of naming a module outside the tree is a
       "a relative dynamic import inside an interpolation": "export const p = `${import(\"./ok.js\")}`;\n",
       "a comment mentioning a package inside an interpolation": "export const s = `${ /* import(\"package\") */ 1 }`;\n",
       "a line comment mentioning a package inside an interpolation": "export const s = `${ // import(\"package\")\n 1 }`;\n",
+      "division after a parenthesised expression": "export const s = `${ (a) / 2 }`;\n",
+      "division after a call, twice": "export const s = `${ f(x) / y / z }`;\n",
+      "division after a call that is an argument of if": "export const s = `${ (() => { if (f(x) / y) return 1; return 2; })() }`;\n",
       "a regex with braces and quotes and no import": "export const s = `${ /[\"'{}]/.test(a) ? 1 : 2 }`;\n",
       "a regex literal containing a slash in a class": "export const r = /[/]x/;\nexport const q = 1;\n",
       "division with braces nearby": "export const s = `${ ({ a: 4 }).a / 2 }`;\n",
