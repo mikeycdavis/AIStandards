@@ -101,40 +101,74 @@ test(".gitattributes is scoped to the vendored tree and decides nothing about th
 // cannot be checked, so it is itself an offender, as is `createRequire` (a require by another name).
 
 function stripComments(source) {
-  let out = "";
-  let i = 0;
-  const n = source.length;
-  while (i < n) {
-    const c = source[i];
-    const d = source[i + 1];
-    if (c === "/" && d === "/") {
-      while (i < n && source[i] !== "\n") i += 1;
-    } else if (c === "/" && d === "*") {
-      i += 2;
-      while (i < n && !(source[i] === "*" && source[i + 1] === "/")) i += 1;
-      i += 2;
-      out += " ";
-    } else if (c === "'" || c === "\"" || c === "`") {
-      // A string is kept only where it can be a module specifier (after `from`, `import` or
-      // `import(` / `require(`); any other string is blanked so text inside it is never read as code.
-      const quote = c;
-      const keep = /(?:\bfrom|\bimport|\b(?:import|require)\s*\()\s*$/.test(out);
-      out += c;
-      i += 1;
-      while (i < n && source[i] !== quote) {
-        const escaped = source[i] === "\\";
-        const piece = escaped ? source.slice(i, i + 2) : source[i];
-        out += keep ? piece : " ".repeat(piece.length);
-        i += piece.length;
+  // Scans `source` as code from `start`. Inside a template literal's `${ ... }` the scan recurses, so an
+  // interpolation is CODE (its imports are found, nested templates and comments inside it are handled)
+  // and only the literal text segments of a template are blanked.
+  function scan(start, inInterpolation) {
+    let out = "";
+    let i = start;
+    let depth = 0;
+    const n = source.length;
+    while (i < n) {
+      const c = source[i];
+      const d = source[i + 1];
+      if (c === "/" && d === "/") {
+        while (i < n && source[i] !== "\n") i += 1;
+      } else if (c === "/" && d === "*") {
+        i += 2;
+        while (i < n && !(source[i] === "*" && source[i + 1] === "/")) i += 1;
+        i += 2;
+        out += " ";
+      } else if (c === "`") {
+        out += c;
+        i += 1;
+        while (i < n && source[i] !== "`") {
+          if (source[i] === "\\") {
+            out += "  ";
+            i += 2;
+          } else if (source[i] === "$" && source[i + 1] === "{") {
+            out += "${";
+            const inner = scan(i + 2, true);
+            out += inner.out;
+            i = inner.next;
+            out += "}";
+          } else {
+            out += " ";
+            i += 1;
+          }
+        }
+        if (i < n) out += "`";
+        i += 1;
+      } else if (c === "'" || c === "\"") {
+        // A string is kept only where it can be a module specifier (after `from`, `import` or
+        // `import(` / `require(`); any other string is blanked so text inside it is never read as code.
+        const keep = /(?:\bfrom|\bimport|\b(?:import|require)\s*\()\s*$/.test(out);
+        out += c;
+        i += 1;
+        while (i < n && source[i] !== c) {
+          const piece = source[i] === "\\" ? source.slice(i, i + 2) : source[i];
+          out += keep ? piece : " ".repeat(piece.length);
+          i += piece.length;
+        }
+        if (i < n) out += source[i];
+        i += 1;
+      } else if (inInterpolation && c === "{") {
+        depth += 1;
+        out += c;
+        i += 1;
+      } else if (inInterpolation && c === "}") {
+        if (depth === 0) return { out, next: i + 1 };
+        depth -= 1;
+        out += c;
+        i += 1;
+      } else {
+        out += c;
+        i += 1;
       }
-      if (i < n) out += source[i];
-      i += 1;
-    } else {
-      out += c;
-      i += 1;
     }
+    return { out, next: i };
   }
-  return out;
+  return scan(0, false).out;
 }
 
 /** Every module specifier a JavaScript source names, and every reference it makes that cannot be read. */
@@ -207,6 +241,13 @@ test("the import guard itself: each way of naming a module outside the tree is a
       "relative import of a file that does not exist": "import \"./missing.js\";\n",
       "a node: builtin": "import fs from \"node:fs\";\n",
       "a mention hidden by a comment on the same line": "import \"package\"; // ./ok.js\n",
+      "dynamic import inside a template interpolation": "const x = `${import(\"package\")}`;\n",
+      "require inside a template interpolation": "const x = `a${require(\"package\")}b`;\n",
+      "non-literal dynamic import inside an interpolation": "const x = `${import(name)}`;\n",
+      "dynamic import inside a nested template": "const x = `a${`b${import(\"package\")}`}`;\n",
+      "import after braces and a string inside an interpolation": "const x = `${ ({ a: \"}\" }).a + (await import(\"package\")) }`;\n",
+      "import after a comment inside an interpolation": "const x = `${ /* } */ import(\"package\") }`;\n",
+      "outside the tree via an interpolation": "const x = `${import(\"../../" + outsideName + "\")}`;\n",
     };
     for (const [label, text] of Object.entries(must)) {
       fs.writeFileSync(path.join(tree, "browser", "bad.js"), text);
@@ -220,6 +261,11 @@ test("the import guard itself: each way of naming a module outside the tree is a
       "a mention in a block comment": "/* import \"package\"; import x from \"package\"; require(\"package\") */\nexport const a = 1;\n",
       "a mention in a line comment": "// import \"package\";\nexport const a = 1;\n",
       "the word import inside a string": "export const s = \"import 'package' from here\";\n",
+      "the word import inside template literal text": "export const s = `import \"package\"; require(\"x\")`;\n",
+      "a relative dynamic import inside an interpolation": "export const p = `${import(\"./ok.js\")}`;\n",
+      "a comment mentioning a package inside an interpolation": "export const s = `${ /* import(\"package\") */ 1 }`;\n",
+      "a line comment mentioning a package inside an interpolation": "export const s = `${ // import(\"package\")\n 1 }`;\n",
+      "a nested template with only text": "export const s = `a${`b${1}c`}d`;\n",
     };
     for (const [label, text] of Object.entries(may)) {
       fs.writeFileSync(path.join(tree, "browser", "good.js"), text);

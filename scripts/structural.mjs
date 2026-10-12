@@ -25,7 +25,7 @@
 //   node = { kind: "map" | "seq" | "scalar" | "alias",
 //            range: { start, end },                 UTF-16 offsets into `text`, end exclusive
 //            anchor?: { name, offset },             YAML only; offset of the `&` (null if not recovered)
-//            tag?: { source, offset },              YAML only; the tag as written
+//            tag?: { source, offset, resolved? },   YAML only; the tag as written (resolved: true = spelling not recovered)
 //            // map:    pairs: [{ key, value, merge, range }]  every occurrence, in source order
 //            // seq:    items: [node | null]
 //            // scalar: value (decoded string), length (code points), style, jsonType? }
@@ -372,6 +372,8 @@ const isWs = (c) => c === " " || c === "\t" || c === "\n" || c === "\r";
 // the evidence, so it is recovered by reading backwards from the node's start and checked against
 // the name the parser reported. A property that cannot be matched keeps its name and has offset null:
 // absent evidence is stated, not guessed.
+const FLOW_INDICATORS = "[]{},";
+
 function propsBefore(text, start, anchorName, hasTag) {
   let anchor = null;
   let tag = null;
@@ -379,8 +381,11 @@ function propsBefore(text, start, anchorName, hasTag) {
   for (let guard = 0; guard < 8 && (anchorName !== null && anchor === null || hasTag && tag === null); guard += 1) {
     let end = pos;
     while (end > 0 && isWs(text[end - 1])) end -= 1;
+    // A property can directly follow a flow indicator with no blank between (`[!!str 1]`, `{k: &a 1}`,
+    // `[a,!t b]`). Flow indicators cannot occur inside an anchor name or a tag, so a flow indicator
+    // ends the word as a blank does.
     let begin = end;
-    while (begin > 0 && !isWs(text[begin - 1])) begin -= 1;
+    while (begin > 0 && !isWs(text[begin - 1]) && !FLOW_INDICATORS.includes(text[begin - 1])) begin -= 1;
     if (begin === end) break;
     const word = text.slice(begin, end);
     if (word[0] === "&" && anchorName !== null && anchor === null && word === `&${anchorName}`) {
@@ -454,7 +459,7 @@ function readYaml(file, text, index) {
       const withProps = (node) => {
         if (anchor) node.anchor = anchor;
         if (tag) node.tag = tag;
-        else if (hasTag) node.tag = { source: n.tag, offset: null };
+        else if (hasTag) node.tag = { source: n.tag, offset: null, resolved: true }; // spelling not recovered: the parser's resolved tag, flagged
         return node;
       };
       if (isMap(n)) {

@@ -306,6 +306,66 @@ test("YAML: anchors and tags carry the position where they were written", () => 
   assert.equal(r.counts.anchors, 3);
 });
 
+// The tag and anchor are reported as WRITTEN (source spelling and offset), not as resolved, in block and
+// in flow context alike. A property that directly follows a flow indicator has no blank before it.
+test("YAML: tags and anchors keep their source spelling and offset in flow collections", () => {
+  const cases = [
+    ["a: [!!str 1]\n", [["1", "!!str", null]]],
+    ["a: {b: !!str 1}\n", [["1", "!!str", null]]],
+    ["a: [ !!str 1, !local x ]\n", [["1", "!!str", null], ["x", "!local", null]]],
+    ["a: [!!str 1,!local x]\n", [["1", "!!str", null], ["x", "!local", null]]],
+    ["a: [[!!str 1], {k: &a !!str v}]\n", [["1", "!!str", null], ["v", "!!str", "a"]]],
+    ["a: [&x !!str 1, *x]\n", [["1", "!!str", "x"]]],
+    ["a: &a !!str 1\n", [["1", "!!str", "a"]]],
+    ["a: !<tag:x> 1\n", [["1", "!<tag:x>", null]]],
+    ["a: [!<tag:x> 1]\n", [["1", "!<tag:x>", null]]],
+    ["a: {!!str k: !<tag:y> v}\n", [["k", "!!str", null], ["v", "!<tag:y>", null]]],
+  ];
+  for (const [text, expected] of cases) {
+    const r = parseStructuralText("t.yml", text, "yaml");
+    assert.equal(r.ok, true, text);
+    const seen = [];
+    walk(root(r), (n) => {
+      if (n.tag === undefined && n.anchor === undefined) return;
+      seen.push([n.value, n.tag?.source ?? null, n.anchor?.name ?? null]);
+      if (n.tag) {
+        assert.notEqual(n.tag.offset, null, `${text}: tag offset recovered`);
+        assert.equal(text.slice(n.tag.offset, n.tag.offset + n.tag.source.length), n.tag.source, `${text}: offset points at the spelling`);
+      }
+      if (n.anchor) {
+        assert.notEqual(n.anchor.offset, null, `${text}: anchor offset recovered`);
+        assert.equal(text.slice(n.anchor.offset, n.anchor.offset + 1 + n.anchor.name.length), `&${n.anchor.name}`, `${text}: anchor offset`);
+      }
+    });
+    const tagged = seen.filter((x) => x[1] !== null || x[2] !== null);
+    assert.deepEqual(tagged.map(([v, t, a]) => [v, t, a]), expected.map(([v, t, a]) => [v, t, a]), text);
+  }
+});
+
+test("YAML: a tag whose spelling cannot be recovered is flagged resolved, never reported as written", () => {
+  // A comment between the tag and its node hides the spelling from a backwards read.
+  const r = parseStructuralText("t.yml", "a: !!str # note\n  1\n", "yaml");
+  let tag;
+  walk(root(r), (n) => { if (n.tag) tag = n.tag; });
+  assert.equal(tag.resolved, true);
+  assert.equal(tag.offset, null);
+  assert.equal(tag.source, "tag:yaml.org,2002:str");
+  const written = parseStructuralText("t.yml", "a: [!!str 1]\n", "yaml");
+  walk(root(written), (n) => { if (n.tag) assert.equal(n.tag.resolved, undefined, "a recovered spelling is not flagged"); });
+});
+
+test("YAML: the same tag has the same source spelling in block and flow form", () => {
+  const block = parseStructuralText("t.yml", "a: !!str 1\n", "yaml");
+  const flow = parseStructuralText("t.yml", "a: [!!str 1]\n", "yaml");
+  const tagOf = (r) => {
+    let found;
+    walk(root(r), (n) => { if (n.tag) found = n.tag.source; });
+    return found;
+  };
+  assert.equal(tagOf(block), "!!str");
+  assert.equal(tagOf(flow), "!!str");
+});
+
 test("YAML: a tagged or anchored scalar is its decoded scalar value", () => {
   const r = yaml("a: &x !!str 123\nb: !custom plain text\nc: !!binary aGk=\n");
   assert.deepEqual(pairs(root(r)), [["a", "123"], ["b", "plain text"], ["c", "aGk="]]);

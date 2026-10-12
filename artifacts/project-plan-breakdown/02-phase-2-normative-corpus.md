@@ -55,12 +55,14 @@ structural reader (`scripts/structural.mjs`) only.
 corrupt a real shared file, assert the check fails, and restore it. Running them in parallel
 corrupts the run and produces failures unrelated to your change. Do not "optimise" this away.
 
-**`core.autocrlf` is `true` on this machine and there is no `.gitattributes`.** Committed bytes are
-LF; working-tree bytes are CRLF. `scripts/fidelity.mjs` declares a single normalization (CRLF→LF on
-both sides) and reports raw-byte matches separately, so this is currently harmless. Do **not** add a
-`.gitattributes` as a side effect of other work — it rewrites every file's line endings in one
-commit and buries whatever you were actually doing. It is recorded as an open item in
-`08-open-questions.md`.
+**`core.autocrlf` is `true` on this machine and there is no repository-wide line-ending policy.** Committed
+bytes are LF; working-tree bytes are CRLF. `scripts/fidelity.mjs` declares a single normalization (CRLF→LF on
+both sides) and reports raw-byte matches separately, so this is currently harmless. The one
+`.gitattributes` that exists (ST-57) pins only `scripts/vendor/**` to LF and decides nothing about any other
+file. Do **not** add a repository-wide `.gitattributes` as a side effect of other work — it rewrites every
+file's line endings in one commit and buries whatever you were actually doing. It is recorded as an open
+item (Q8) in `08-open-questions.md`. (The `init` note further down, "No `.gitattributes` was added", is a
+dated record of that slice and is left as written.)
 
 ---
 

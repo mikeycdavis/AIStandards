@@ -94,11 +94,14 @@ There is no install step. Clone and run.
 git had no copy. There is now a safety net; keep it by committing each slice rather than accumulating
 another untracked tree.
 
-**`core.autocrlf` is `true` and there is no `.gitattributes`.** Committed bytes are LF, working-tree
-bytes are CRLF, and a clone on another platform will differ from this one at the byte level. The
+**`core.autocrlf` is `true` and there is no repository-wide line-ending policy.** Committed bytes are LF,
+working-tree bytes are CRLF, and a clone on another platform will differ from this one at the byte level. The
 fidelity gate is unaffected because it normalizes CRLF→LF on both sides and declares that it does.
-Adding a `.gitattributes` would rewrite the line endings of every file, so it is left as a deliberate
-open item rather than done in passing.
+The one `.gitattributes` that exists (added by ST-57) is `scripts/vendor/** text eol=lf` and covers only the
+vendored parser tree, so its recorded hashes do not depend on a checkout; it decides nothing about any other
+file. A repository-wide `.gitattributes` would rewrite the line endings of every file, so it is left as a
+deliberate open item (Q8) rather than done in passing. (The `init` note near the end of this section, "no
+`.gitattributes` was added", is a dated record of that slice and is left as written.)
 
 **`.claude/` is untracked local tooling state, and a clean `git status` in one checkout is not
 portable evidence.** The development checkout holds `.claude/settings.local.json`, and `git
