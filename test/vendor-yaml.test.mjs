@@ -233,6 +233,325 @@ function stripComments(source, keepStrings = false) {
   return scan(0, false).out;
 }
 
+// --- A token stream and a balanced-delimiter argument extractor ------------------------------------
+//
+// Call arguments are never matched with a regular expression over text: a `;`, `,` or `)` inside a
+// string, a nested function body or a template would end a pattern early. `tokenize` reads the source
+// as identifiers (escapes decoded), string / template / regex literals, numbers and single-character
+// punctuators, with comments dropped. A template literal is one token; each `${ ... }` interpolation
+// follows it as a synthetic `( ... )` group, so the delimiters stay balanced and the code inside is
+// scanned like any other. `callArguments` finds the matching `)` of a call by counting (), [] and {}
+// and splits the arguments at top-level commas. Anything unbalanced, unterminated or mismatched is
+// reported, never skipped: the callers fail toward detecting.
+const ID_START = /[\p{ID_Start}$_]/u;
+const ID_PART = /[\p{ID_Continue}$‌‍]/u;
+const SIMPLE_ESCAPES = { n: "\n", t: "\t", r: "\r", b: "\b", f: "\f", v: "\v", 0: "\0" };
+
+// Decodes the escape that starts at source[i] === "\\"; returns the value and the next offset.
+function decodeEscape(source, i) {
+  const c = source[i + 1];
+  if (c === "u") {
+    if (source[i + 2] === "{") {
+      const end = source.indexOf("}", i + 3);
+      const hex = end === -1 ? "" : source.slice(i + 3, end);
+      if (/^[0-9a-fA-F]+$/.test(hex) && parseInt(hex, 16) <= 0x10ffff) return { value: String.fromCodePoint(parseInt(hex, 16)), next: end + 1 };
+    } else if (/^[0-9a-fA-F]{4}$/.test(source.slice(i + 2, i + 6))) {
+      return { value: String.fromCharCode(parseInt(source.slice(i + 2, i + 6), 16)), next: i + 6 };
+    }
+  } else if (c === "x" && /^[0-9a-fA-F]{2}$/.test(source.slice(i + 2, i + 4))) {
+    return { value: String.fromCharCode(parseInt(source.slice(i + 2, i + 4), 16)), next: i + 4 };
+  } else if (c === "\r" && source[i + 2] === "\n") {
+    return { value: "", next: i + 3 };
+  } else if (c === "\n" || c === "\r" || c === " " || c === " ") {
+    return { value: "", next: i + 2 };
+  }
+  if (c === undefined) return { value: "", next: i + 1 };
+  return { value: SIMPLE_ESCAPES[c] ?? c, next: i + 2 };
+}
+
+export function tokenize(source) {
+  const toks = [];
+  const n = source.length;
+  const parens = [];
+  let lastCloseControl = false;
+  let i = 0;
+  let ok = true;
+
+  function lex(untilBrace) {
+    let depth = 0;
+    while (i < n) {
+      const c = source[i];
+      const d = source[i + 1];
+      if (/\s/.test(c)) {
+        i += 1;
+        continue;
+      }
+      if (c === "/" && d === "/") {
+        while (i < n && source[i] !== "\n") i += 1;
+        continue;
+      }
+      if (c === "/" && d === "*") {
+        const end = source.indexOf("*/", i + 2);
+        if (end === -1) {
+          ok = false;
+          i = n;
+          return false;
+        }
+        i = end + 2;
+        continue;
+      }
+      const s = i;
+      const cp = String.fromCodePoint(source.codePointAt(i));
+      if (ID_START.test(cp) || (c === "\\" && d === "u")) {
+        let name = "";
+        while (i < n) {
+          if (source[i] === "\\" && source[i + 1] === "u") {
+            const r = decodeEscape(source, i);
+            name += r.value;
+            i = r.next;
+            continue;
+          }
+          const ch = String.fromCodePoint(source.codePointAt(i));
+          if (!(ID_START.test(ch) || ID_PART.test(ch))) break;
+          name += ch;
+          i += ch.length;
+        }
+        toks.push({ t: "id", v: name, s, e: i });
+        continue;
+      }
+      if (/[0-9]/.test(c) || (c === "." && /[0-9]/.test(d ?? ""))) {
+        while (i < n && /[\w.]/.test(source[i])) i += 1;
+        toks.push({ t: "num", v: source.slice(s, i), s, e: i });
+        continue;
+      }
+      if (c === "'" || c === "\"") {
+        i += 1;
+        let value = "";
+        let closed = false;
+        while (i < n) {
+          const ch = source[i];
+          if (ch === c) {
+            closed = true;
+            i += 1;
+            break;
+          }
+          if (ch === "\n") break;
+          if (ch === "\\") {
+            const r = decodeEscape(source, i);
+            value += r.value;
+            i = r.next;
+          } else {
+            value += ch;
+            i += 1;
+          }
+        }
+        if (!closed) {
+          ok = false;
+          return false;
+        }
+        toks.push({ t: "str", v: value, s, e: i });
+        continue;
+      }
+      if (c === "`") {
+        i += 1;
+        const tok = { t: "str", v: "", s, e: s };
+        toks.push(tok);
+        let closed = false;
+        while (i < n) {
+          const ch = source[i];
+          if (ch === "`") {
+            closed = true;
+            i += 1;
+            break;
+          }
+          if (ch === "\\") {
+            const r = decodeEscape(source, i);
+            tok.v += r.value;
+            i = r.next;
+          } else if (ch === "$" && source[i + 1] === "{") {
+            tok.t = "tmpl";
+            i += 2;
+            toks.push({ t: "punct", v: "(", s: i, e: i, syn: true });
+            lex(true); // an interpolation that never closes has already cleared `ok`
+            toks.push({ t: "punct", v: ")", s: i, e: i, syn: true });
+            lastCloseControl = false;
+          } else {
+            tok.v += ch;
+            i += 1;
+          }
+        }
+        if (!closed) {
+          ok = false;
+          return false;
+        }
+        tok.e = i;
+        continue;
+      }
+      if (c === "/") {
+        const p = toks[toks.length - 1];
+        let regex = true;
+        if (p) {
+          if (p.t === "punct") regex = p.v === ")" ? lastCloseControl : p.v !== "]";
+          else if (p.t === "id") regex = REGEX_KEYWORDS.has(p.v);
+          else regex = false;
+        }
+        if (regex) {
+          let j = i + 1;
+          let inClass = false;
+          let closed = false;
+          while (j < n && source[j] !== "\n") {
+            const ch = source[j];
+            if (ch === "\\") {
+              j += 2;
+              continue;
+            }
+            if (ch === "[") inClass = true;
+            else if (ch === "]") inClass = false;
+            else if (ch === "/" && !inClass) {
+              closed = true;
+              break;
+            }
+            j += 1;
+          }
+          if (closed) {
+            const bodyEnd = j;
+            j += 1;
+            while (j < n && /[\w$]/.test(source[j])) j += 1;
+            i = j;
+            toks.push({ t: "regex", v: source.slice(s, j), s, e: j });
+            // A regex body is also read as code, toward detecting: its tokens follow the literal, flagged so
+            // that stray delimiters inside it cannot unbalance an enclosing call.
+            const inner = tokenize(source.slice(s + 1, bodyEnd));
+            for (const t of inner.tokens) toks.push({ ...t, s: t.s + s + 1, e: t.e + s + 1, inRegex: true });
+            continue;
+          }
+        }
+      }
+      i += 1;
+      if (c === "(") {
+        const p = toks[toks.length - 1];
+        parens.push(Boolean(p && p.t === "id" && ["if", "while", "for", "with"].includes(p.v)));
+      } else if (c === ")") {
+        lastCloseControl = parens.length > 0 ? parens.pop() : true;
+      } else if (c === "{") {
+        depth += 1;
+      } else if (c === "}") {
+        if (untilBrace && depth === 0) return true;
+        if (depth > 0) depth -= 1;
+      }
+      toks.push({ t: "punct", v: c, s, e: i });
+    }
+    if (untilBrace) ok = false;
+    return !untilBrace;
+  }
+
+  lex(false);
+  return { tokens: toks, ok };
+}
+
+const CLOSERS = { "(": ")", "[": "]", "{": "}" };
+
+// The arguments of the call whose `(` is tokens[open]: an array of token arrays split at top-level
+// commas, or null when the delimiters do not balance. A trailing comma adds no argument.
+export function callArguments(tokens, open) {
+  const stack = [];
+  const args = [[]];
+  for (let k = open + 1; k < tokens.length; k += 1) {
+    const tk = tokens[k];
+    if (tk.inRegex) {
+      args[args.length - 1].push(tk);
+      continue;
+    }
+    if (tk.t === "punct") {
+      if (CLOSERS[tk.v]) {
+        stack.push(CLOSERS[tk.v]);
+      } else if (tk.v === ")" || tk.v === "]" || tk.v === "}") {
+        if (stack.length === 0) {
+          if (tk.v !== ")") return null;
+          if (args.length > 1 && args[args.length - 1].length === 0) args.pop();
+          if (args.length === 1 && args[0].length === 0) args.pop();
+          return args;
+        }
+        if (stack.pop() !== tk.v) return null;
+      } else if (tk.v === "," && stack.length === 0) {
+        args.push([]);
+        continue;
+      }
+    }
+    args[args.length - 1].push(tk);
+  }
+  return null;
+}
+
+// The callee of the call whose `(` is tokens[open]: `name(...)`, `obj.name(...)` or `obj["name"](...)`.
+function calleeAt(tokens, open) {
+  const p = tokens[open - 1];
+  if (!p || tokens[open].syn) return null;
+  const objectAt = (k) => (tokens[k] && tokens[k].t === "id" ? tokens[k].v : null);
+  if (p.t === "id") {
+    const dot = tokens[open - 2];
+    const member = Boolean(dot && dot.t === "punct" && dot.v === ".");
+    return { name: p.v, member, object: member ? objectAt(open - 3) : null };
+  }
+  if (p.t === "punct" && p.v === "]") {
+    const key = tokens[open - 2];
+    const bracket = tokens[open - 3];
+    if (key && key.t === "str" && bracket && bracket.t === "punct" && bracket.v === "[") return { name: key.v, member: true, object: objectAt(open - 4) };
+  }
+  return null;
+}
+
+// Calls that set a property by name. `set` is only the Reflect one: Map.set and friends are everywhere.
+function isKeyedCall(callee) {
+  if (["assign", "defineProperty", "defineProperties", "setAttribute", "setAttributeNS"].includes(callee.name)) return true;
+  return callee.name === "set" && callee.member && callee.object === "Reflect";
+}
+
+// Resource property names an argument names: the argument itself being the literal name (setAttribute,
+// Reflect.set, defineProperty), or a key of an object literal anywhere inside it, however deeply nested:
+// `{ src: u }`, `{ "src": u }`, `{ src }`, `{ src() {} }`, `{ get src() {} }`, `{ ["src"]: u }`.
+function resourceKeysIn(arg, isNameArgument) {
+  const hits = [];
+  if (isNameArgument && arg.length === 1 && arg[0].t === "str" && RESOURCE_PROPS.includes(arg[0].v)) hits.push(arg[0].v);
+  for (let k = 0; k < arg.length; k += 1) {
+    const tk = arg[k];
+    if ((tk.t !== "id" && tk.t !== "str") || !RESOURCE_PROPS.includes(tk.v)) continue;
+    const before = arg[k - 1];
+    const after = arg[k + 1];
+    const bv = before ? before.v : null;
+    const computed = bv === "[" && after && after.v === "]";
+    const open = bv === "{" || bv === "," || bv === "*" || (before && before.t === "id" && ["get", "set", "async", "static"].includes(bv)) || computed;
+    if (!open) continue;
+    const next = computed ? arg[k + 2] : after;
+    if (next && next.t === "punct" && [":", ",", "}", "("].includes(next.v)) hits.push(tk.v);
+  }
+  return hits;
+}
+
+/** Problems with property-setting calls in a source: unreadable structure, and resource names set. */
+export function keyedCallProblems(source) {
+  const { tokens, ok } = tokenize(source);
+  const problems = [];
+  if (!ok) problems.push("unparseable source (unterminated string, template, regex or comment)");
+  for (let k = 0; k < tokens.length; k += 1) {
+    if (tokens[k].t !== "punct" || tokens[k].v !== "(") continue;
+    const callee = calleeAt(tokens, k);
+    if (!callee || !isKeyedCall(callee)) continue;
+    const args = callArguments(tokens, k);
+    if (args === null) {
+      problems.push(`unparseable call: ${callee.name} at offset ${tokens[k].s}`);
+      continue;
+    }
+    // Which argument holds the property name: setAttribute(name, v), setAttributeNS(ns, name, v),
+    // Reflect.set(o, name, v), defineProperty(o, name, d). Object keys are checked in every argument.
+    const nameAt = { setAttribute: 0, setAttributeNS: 1, set: 1, defineProperty: 1 }[callee.name];
+    args.forEach((arg, index) => {
+      for (const key of resourceKeysIn(arg, index === nameAt)) problems.push(`${callee.name} sets ${key}`);
+    });
+  }
+  return problems;
+}
+
 /** Every module specifier a JavaScript source names, and every reference it makes that cannot be read. */
 export function moduleReferences(source) {
   const code = stripComments(source);
@@ -240,11 +559,28 @@ export function moduleReferences(source) {
   const unreadable = [];
   for (const m of code.matchAll(/\bimport\s*(?:[^;'"()]*?\bfrom\s*)?(['"])([^'"]+)\1/g)) specifiers.push({ form: "import", specifier: m[2] });
   for (const m of code.matchAll(/\bexport\s*(?:\*(?:\s*as\s+[\w$]+)?|\{[^}]*\})\s*from\s*(['"])([^'"]+)\1/g)) specifiers.push({ form: "export-from", specifier: m[2] });
-  for (const m of code.matchAll(/\bimport\s*\(\s*(['"])([^'"]+)\1\s*[,)]/g)) specifiers.push({ form: "dynamic-import", specifier: m[2] });
-  for (const m of code.matchAll(/\brequire\s*\(\s*(['"])([^'"]+)\1\s*\)/g)) specifiers.push({ form: "require", specifier: m[2] });
-  for (const m of code.matchAll(/\bimport\s*\(\s*(?!['"])/g)) unreadable.push({ form: "dynamic-import", specifier: `non-literal at offset ${m.index}` });
-  for (const m of code.matchAll(/\brequire\s*\(\s*(?!['"])/g)) unreadable.push({ form: "require", specifier: `non-literal at offset ${m.index}` });
-  for (const m of code.matchAll(/\bcreateRequire\b/g)) unreadable.push({ form: "createRequire", specifier: `at offset ${m.index}` });
+  // Dynamic import() and require() are read from the token stream: the first argument must be one string
+  // literal, whatever follows it (further arguments, a trailing comma, nested calls, `;` inside a string).
+  const { tokens, ok } = tokenize(source);
+  if (!ok) unreadable.push({ form: "source", specifier: "unparseable (unterminated string, template, regex or comment)" });
+  for (let k = 0; k < tokens.length; k += 1) {
+    const tk = tokens[k];
+    if (tk.t === "id" && tk.v === "createRequire") unreadable.push({ form: "createRequire", specifier: `at offset ${tk.s}` });
+    if (tk.t !== "punct" || tk.v !== "(") continue;
+    const callee = calleeAt(tokens, k);
+    if (!callee) continue;
+    const dynamicImport = callee.name === "import" && !callee.member;
+    if (!dynamicImport && callee.name !== "require") continue;
+    const form = dynamicImport ? "dynamic-import" : "require";
+    const args = callArguments(tokens, k);
+    if (args === null) {
+      unreadable.push({ form, specifier: `unparseable call at offset ${tokens[k].s}` });
+    } else if (args.length > 0 && args[0].length === 1 && args[0][0].t === "str") {
+      specifiers.push({ form, specifier: args[0][0].v });
+    } else {
+      unreadable.push({ form, specifier: `non-literal at offset ${tokens[k].s}` });
+    }
+  }
   return { specifiers, unreadable };
 }
 
@@ -298,6 +634,25 @@ test("the import guard itself: each way of naming a module outside the tree is a
       "dynamic import outside the tree": `export const p = import("../../${outsideName}");\n`,
       "dynamic import with a non-literal argument": "const n = \"pack\" + \"age\";\nexport const p = import(n);\n",
       "require of a package": "const x = require(\"package\");\n",
+      "require with a second argument": "const x = require(\"package\", {});\n",
+      "require with a trailing comma": "const x = require(\"package\",);\n",
+      "require with a spaced trailing comma": "const x = require(\"package\" , );\n",
+      "require across lines with a trailing comma": "const x = require(\n  \"package\",\n);\n",
+      "dynamic import with options": "export const p = import(\"package\", { with: { type: \"json\" } });\n",
+      "dynamic import with a trailing comma": "export const p = import(\"package\",);\n",
+      "comments around the argument": "const x = require(/* a, b */ \"package\" /* ) */);\n",
+      "escaped callee name": "const x = \\u0072equire(\"package\");\n",
+      "escaped specifier": "const x = require(\"\\u0070ackage\");\n",
+      "require inside an interpolation with a trailing comma": "export const s = `${require(\"package\",)}`;\n",
+      "require in an arrow body": "export const f = (a, b) => require(\"package\", a);\n",
+      "an unbalanced require call": "const x = require(\"package\"\n",
+      "a mismatched closer in a call": "const x = require(\"package\", ];\n",
+      "an unterminated string": "const x = \"never closed;\n",
+      "a specifier with a paren in it": "const x = require(\"pack)age\");\n",
+      "a first argument that is not alone": "const x = require(\"pack\", \"age\" + y);\n",
+      "an empty require": "const x = require();\n",
+      "a literal followed by an operator, in require": "export const x = require(\"./ok.js\" + y);\n",
+      "a literal followed by an operator, in import": "export const p = import(\"./ok.js\" + y);\n",
       "require with a non-literal argument": "const x = require(name);\n",
       "createRequire": "export const r = createRequire(import.meta.url);\n",
       "relative import of a file that does not exist": "import \"./missing.js\";\n",
@@ -356,6 +711,13 @@ test("the import guard itself: each way of naming a module outside the tree is a
       "a regex literal containing a slash in a class": "export const r = /[/]x/;\nexport const q = 1;\n",
       "division with braces nearby": "export const s = `${ ({ a: 4 }).a / 2 }`;\n",
       "a nested template with only text": "export const s = `a${`b${1}c`}d`;\n",
+      "require of a file in the tree with a trailing comma": "export const x = require(\"./ok.js\",);\n",
+      "require of a file in the tree with extra arguments": "export const x = require(\"./ok.js\", \";\", \")\");\n",
+      "dynamic import with options, relative": "export const p = import(\"./ok.js\", { with: { type: \"json\" } });\n",
+      "an escaped relative specifier": "export const x = require(\"\\x2e/ok.js\");\n",
+      "a semicolon and parens in strings of an ordinary call": "f(\"x;\", \")\", \",\");\nexport const a = 1;\n",
+      "an ordinary call that merely contains the word require in a string": "f(\"require('package')\");\nexport const a = 1;\n",
+      "a regex containing a closing brace and a paren": "export const r = /[})]/.test(a);\n",
     };
     for (const [label, text] of Object.entries(may)) {
       fs.writeFileSync(path.join(tree, "browser", "good.js"), text);
@@ -365,6 +727,32 @@ test("the import guard itself: each way of naming a module outside the tree is a
     fs.rmSync(tree, { recursive: true, force: true });
     fs.rmSync(path.join(os.tmpdir(), `${path.basename(tree)}-outside.js`), { force: true });
   }
+});
+
+test("the call-argument extractor splits only at top-level commas and fails on unbalanced delimiters", () => {
+  const argCount = (src) => {
+    const { tokens } = tokenize(src);
+    const open = tokens.findIndex((t) => t.t === "punct" && t.v === "(" && !t.syn);
+    const args = callArguments(tokens, open);
+    return args === null ? null : args.length;
+  };
+  assert.equal(argCount("f()"), 0);
+  assert.equal(argCount("f(a)"), 1);
+  assert.equal(argCount("f(a,)"), 1);
+  assert.equal(argCount("f(a, b)"), 2);
+  assert.equal(argCount('f(a, [b, c], { d: ",", e: g(h, i) }, `x${y, z}`,)'), 4);
+  assert.equal(argCount('f("a)", ";", \'b,c\')'), 3);
+  assert.equal(argCount("f(a /* , */, b // ,\n)"), 2);
+  assert.equal(argCount("f(x => { a(); b(); }, y)"), 2);
+  assert.equal(argCount("f(a, /[,)]/, b)"), 3);
+  assert.equal(argCount("f(a, b"), null);
+  assert.equal(argCount("f(a, [b)"), null);
+  assert.equal(argCount("f(a, {b: 1)"), null);
+  assert.equal(tokenize('"open').ok, false);
+  assert.equal(tokenize("`open").ok, false);
+  assert.equal(tokenize("/* open").ok, false);
+  assert.equal(tokenize("`a${ b").ok, false);
+  assert.equal(tokenize('const a = 1; // done\n"x" + `y${1}`').ok, true);
 });
 
 const bs_q = (word) => JSON.stringify(word);
@@ -449,11 +837,15 @@ const COMPOUND = "(?:\\*\\*|<<|>>>?|&&|\\|\\||\\?\\?|[-+*/%&|^])?";
 //   bracket        el["src"] = u, el[`src`] = u        covered (string view: quotes/backticks, decoded escapes)
 //   destructuring  ({ k: el.src } = o), [el.src] = a   covered when the target is last in its pattern
 //                  ({ src: el.src, other } = o)        NOT covered when more elements follow the target
-//   Object.assign  Object.assign(el, { src: u })       covered: the call holds a resource key (quoted, bare
-//                  or shorthand) before the next `;`
-//   defineProperty Object.defineProperty(el, "src", d)  covered, as is defineProperties and
-//                  Reflect.defineProperty              Reflect.set(el, "src", u)
-//   setAttribute   el.setAttribute("src", u), NS form  covered when the name is a literal
+//   calls          Object.assign(el, { src: u }), defineProperty(ies), Reflect.set, Reflect.defineProperty,
+//                  setAttribute(NS): read from a token stream, never a regex over text. The arguments are
+//                  split at top-level commas by a balanced-delimiter scan (strings, templates, nested
+//                  functions and comments cannot end a call early). A resource name is an offender when
+//                  an argument IS the literal name, or when it is a key (bare, quoted, shorthand, method,
+//                  accessor or computed-literal) of an object literal at any depth in any argument. An
+//                  unbalanced call or an unterminated literal is itself an offender ("unparseable").
+//                  The same reader parses require() and import() (first argument one literal; the rest,
+//                  trailing commas included, are read and ignored).
 //   NOT covered:   a name assembled at run time (setAttribute(name, u), o[k] = u, Reflect.set(el, k, u)),
 //                  a spread (Object.assign(el, props)), a Proxy or setter that forwards, and an assignment
 //                  through an alias whose name is not a resource property. These are what the pinned
@@ -463,14 +855,6 @@ const ASSIGNMENT_FORMS = [
   ["bracket notation", new RegExp(`\\[\\s*(['"\`])(?:${RES})\\1\\s*\\]\\s*${COMPOUND}=(?!=)`), "text"],
   ["destructuring target (dot)", new RegExp(`\\.\\s*(?:${RES})\\s*[}\\]]\\s*=(?!=)`), "code"],
   ["destructuring target (bracket)", new RegExp(`\\[\\s*(['"\`])(?:${RES})\\1\\s*\\]\\s*[}\\]]\\s*=(?!=)`), "text"],
-  ["setAttribute", new RegExp(`\\bsetAttribute(?:NS)?\\s*\\(\\s*(?:[^,;)]*,\\s*)?(['"\`])(?:${RES})\\1`), "text"],
-  [
-    "Object.assign / defineProperty / Reflect.set",
-    new RegExp(
-      `(?:Object\\s*\\.\\s*(?:assign|defineProperty|defineProperties)|Reflect\\s*\\.\\s*(?:set|defineProperty))\\s*\\([^;]*?(?:(['"\`])(?:${RES})\\1|(?<![\\w$.])(?:${RES})\\s*(?::|[,}]))`,
-    ),
-    "text",
-  ],
 ];
 
 function ambientOffenders(source) {
@@ -483,6 +867,7 @@ function ambientOffenders(source) {
     if (new RegExp(`(?<![\\w$])${name}(?![\\w$])`).test(code)) offenders.push(`identifier ${name}`);
   }
   if (/(?<![\w$.])document\s*(?:\?\.|\.|\[)/.test(code)) offenders.push("document used as an object");
+  for (const problem of keyedCallProblems(source)) offenders.push(`resource property assignment: ${problem}`);
   for (const [label, re, view] of ASSIGNMENT_FORMS) {
     if (re.test(view === "text" ? text : code)) offenders.push(`resource property assignment: ${label}`);
   }
@@ -536,6 +921,37 @@ g.fetch(url);",
     "constructor reaching Function": "(() => {}).constructor(" + bs_q("return this") + ")();",
     "computed constructor": "(() => {})[" + bs_q("constructor") + "](src);",
     "a property named like a primitive": "const o = { fetch: 1 };",
+    "semicolon in a string before the key": "Object.assign(el, { note: \";\", src: url });",
+    "semicolon in a nested function body before the key": "Object.assign(el, { f() { return 1; }, src: url });",
+    "paren in a string before the key": "Object.assign(el, { note: \")\", src: url });",
+    "comma in a string before a quoted key": "Object.assign(el, { note: \",\", \"src\": url });",
+    "semicolon in a template before the key": "Object.assign(el, { note: `;`, src: url });",
+    "comments between arguments": "Object.assign(el, /* ; , ) */ { src: u } /* , */);",
+    "trailing comma": "Object.assign(el, { src: u },);",
+    "extra arguments before the object": "Object.assign(el, a, b, { src: u });",
+    "key in a nested object": "Object.assign(el, { style: { src: u } });",
+    "arrow function before the key": "Object.assign(el, { f: () => { x(); y(); }, href: u });",
+    "multi-line call": "Object.assign(\n  el,\n  {\n    id: 1,\n    src: u,\n  },\n);",
+    "Reflect.set with a trailing comma": "Reflect.set(el, \"src\", u,);",
+    "setAttribute with a trailing comma": "el.setAttribute(\"src\", u,);",
+    "setAttribute across lines": "el.setAttribute(\n  \"src\",\n  u\n);",
+    "setAttribute with a semicolon in the value": "el.setAttribute(\"src\", \";\");",
+    "computed callee name": "Object[\"assign\"](el, { src: u });",
+    "escaped callee name": "Object.\\u0061ssign(el, { src: u });",
+    "escaped bare key": "Object.assign(el, { \\u0073rc: u });",
+    "escaped quoted key": "Object.assign(el, { \"\\u0073rc\": u });",
+    "accessor key": "Object.defineProperties(el, { x: { get src() { return 1; } } });",
+    "computed literal key": "Object.assign(el, { [\"src\"]: u });",
+    "method key": "Object.assign(el, { src() {} });",
+    "defineProperty with a semicolon in the descriptor": "Object.defineProperty(el, \"src\", { value: \";\" });",
+    "an unbalanced call": "Object.assign(el, { src: u };",
+    "a mismatched closer": "Object.assign(el, { a: 1 ]);",
+    "an unterminated string": "Object.assign(el, \"never closed);",
+    "a stray bracket closes the call early": "Object.assign(el, a ]);",
+    "a stray brace closes the call early": "Object.assign(el, a };",
+    "an unterminated string with no call": "const s = 1; \"never closed",
+    "an unterminated template with no call": "const s = 1; `never closed",
+    "an unterminated block comment with no call": "const s = 1; /* never closed",
     "bracket src assignment": "element[\"src\"] = url;",
     "bracket action assignment": "form[\"action\"] = url;",
     "template-literal key assignment": "element[`src`] = url;",
@@ -614,6 +1030,13 @@ g.fetch(url);",
       ["Object.defineProperty", `Object.defineProperty(el, "${prop}", d);`],
       ["Reflect.set", `Reflect.set(el, "${prop}", u);`],
       ["setAttribute", `el.setAttribute("${prop}", u);`],
+      ["Object.assign after a semicolon in a string", `Object.assign(el, { note: ";", ${prop}: u });`],
+      ["Object.assign after a nested function body", `Object.assign(el, { f() { return 1; }, ${prop}: u });`],
+      ["Object.assign with a trailing comma", `Object.assign(el, { ${prop}: u },);`],
+      ["Reflect.set with a trailing comma", `Reflect.set(el, "${prop}", u,);`],
+      ["setAttribute across lines", `el.setAttribute(\n"${prop}",\nu\n);`],
+      ["setAttributeNS", `el.setAttributeNS(null, "${prop}", u);`],
+      ["a nested key", `Object.assign(el, { style: { ${prop}: u } });`],
     ]) {
       assert.notDeepEqual(ambientOffenders(src), [], `${form}: ${prop}`);
     }
@@ -648,6 +1071,20 @@ const n = obj?.constructor?.name;",
     "src word in a comment assignment": "// el[\"src\"] = url\nconst a = 1;",
     "src as a plain string value": "const kind = \"src\";",
     "a src read": "const s = node.src;",
+    "semicolon in a string, harmless key": "Object.assign(el, { note: \";\", id: 1 });",
+    "nested function body, harmless key": "Object.assign(el, { f() { return 1; }, id: 1 });",
+    "resource word as a value": "Object.assign(el, { text: \"src\" });",
+    "resource word as a variable value": "Object.assign(el, { label: src });",
+    "resource word in an array": "Object.assign(el, [a, src]);",
+    "resource word as the spread source": "Object.assign(el, src);",
+    "setAttribute of a harmless name with the resource word as value": "el.setAttribute(\"id\", \"src\");",
+    "Reflect.set of a harmless name with the resource word as value": "Reflect.set(el, \"id\", \"src\");",
+    "resource key inside a comment in the call": "Object.assign(el, { /* src: 1 */ id: 1 });",
+    "resource key inside a string in the call": "Object.assign(el, { text: \"Object.assign(x, { src: 1 })\" });",
+    "Map.set with the resource word as the value": "cache.set(key, \"src\");",
+    "Map.set with the resource word": "map.set(\"src\", 1);",
+    "a resource key in a plain object, no call": "const o = { src: 1 };",
+    "a multi-line harmless call": "Object.assign(\n  el,\n  {\n    id: 1,\n  },\n);",
     "a data read": "const d = node.data;",
     "a string that merely contains a name": "const s = " + bs_q("fetch_count") + ";",
   };
