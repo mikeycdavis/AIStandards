@@ -385,8 +385,10 @@ const bs_q = (word) => JSON.stringify(word);
 //     serviceWorker, Request, Response, postMessage, BroadcastChannel, MessageChannel, opener;
 //   * the DOM entry points that LOAD a resource without a network API: the Image and Audio constructors,
 //     the HTML{Image,Script,IFrame,Link,Embed,Object,Source,Media}Element constructors, createElement(NS),
-//     appendChild, insertAdjacentHTML, innerHTML, outerHTML, srcdoc, and assignment to `.src`, `.href`,
-//     `.action`, `.data`, `.poster`; and a bare `document` used as an object (`document.`, `document[`);
+//     appendChild, insertAdjacentHTML, innerHTML, outerHTML, srcdoc, and ASSIGNMENT to `src`, `href`,
+//     `action`, `data`, `poster`, `formAction`, `srcset` by dot, bracket, destructuring, Object.assign,
+//     defineProperty, Reflect.set or setAttribute (see ASSIGNMENT_FORMS for what is and is not covered);
+//     and a bare `document` used as an object (`document.`, `document[`);
 //   * every route to the global object or a loader, so aliasing cannot hide a primitive: globalThis,
 //     window, self, global, frames, navigator, location, process, Deno, Bun, require, createRequire,
 //     child_process;
@@ -436,6 +438,41 @@ function ambientViews(source) {
   };
 }
 
+// Property names that make an element fetch a resource when set. An assignment to any of them, in any
+// of the spellings below, is an offender. A READ (`node.src`), a comparison (`===`) and a bare string
+// "src" are not.
+const RESOURCE_PROPS = ["src", "href", "action", "data", "poster", "formAction", "srcset"];
+const RES = RESOURCE_PROPS.join("|");
+const COMPOUND = "(?:\\*\\*|<<|>>>?|&&|\\|\\||\\?\\?|[-+*/%&|^])?";
+// WAYS A PROPERTY IS ASSIGNED IN JS, and what is covered:
+//   dot            el.src = u, el.src += u             covered (code view)
+//   bracket        el["src"] = u, el[`src`] = u        covered (string view: quotes/backticks, decoded escapes)
+//   destructuring  ({ k: el.src } = o), [el.src] = a   covered when the target is last in its pattern
+//                  ({ src: el.src, other } = o)        NOT covered when more elements follow the target
+//   Object.assign  Object.assign(el, { src: u })       covered: the call holds a resource key (quoted, bare
+//                  or shorthand) before the next `;`
+//   defineProperty Object.defineProperty(el, "src", d)  covered, as is defineProperties and
+//                  Reflect.defineProperty              Reflect.set(el, "src", u)
+//   setAttribute   el.setAttribute("src", u), NS form  covered when the name is a literal
+//   NOT covered:   a name assembled at run time (setAttribute(name, u), o[k] = u, Reflect.set(el, k, u)),
+//                  a spread (Object.assign(el, props)), a Proxy or setter that forwards, and an assignment
+//                  through an alias whose name is not a resource property. These are what the pinned
+//                  hashes and the human re-read are for.
+const ASSIGNMENT_FORMS = [
+  ["dot notation", new RegExp(`\\.\\s*(?:${RES})\\s*${COMPOUND}=(?!=)`), "code"],
+  ["bracket notation", new RegExp(`\\[\\s*(['"\`])(?:${RES})\\1\\s*\\]\\s*${COMPOUND}=(?!=)`), "text"],
+  ["destructuring target (dot)", new RegExp(`\\.\\s*(?:${RES})\\s*[}\\]]\\s*=(?!=)`), "code"],
+  ["destructuring target (bracket)", new RegExp(`\\[\\s*(['"\`])(?:${RES})\\1\\s*\\]\\s*[}\\]]\\s*=(?!=)`), "text"],
+  ["setAttribute", new RegExp(`\\bsetAttribute(?:NS)?\\s*\\(\\s*(?:[^,;)]*,\\s*)?(['"\`])(?:${RES})\\1`), "text"],
+  [
+    "Object.assign / defineProperty / Reflect.set",
+    new RegExp(
+      `(?:Object\\s*\\.\\s*(?:assign|defineProperty|defineProperties)|Reflect\\s*\\.\\s*(?:set|defineProperty))\\s*\\([^;]*?(?:(['"\`])(?:${RES})\\1|(?<![\\w$.])(?:${RES})\\s*(?::|[,}]))`,
+    ),
+    "text",
+  ],
+];
+
 function ambientOffenders(source) {
   const offenders = [];
   const { code, text } = ambientViews(source);
@@ -446,7 +483,9 @@ function ambientOffenders(source) {
     if (new RegExp(`(?<![\\w$])${name}(?![\\w$])`).test(code)) offenders.push(`identifier ${name}`);
   }
   if (/(?<![\w$.])document\s*(?:\?\.|\.|\[)/.test(code)) offenders.push("document used as an object");
-  if (/\.\s*(?:src|href|action|data|poster|formAction)\s*=(?!=)/.test(code)) offenders.push("resource property assignment");
+  for (const [label, re, view] of ASSIGNMENT_FORMS) {
+    if (re.test(view === "text" ? text : code)) offenders.push(`resource property assignment: ${label}`);
+  }
   if (/\.constructor\s*\(/.test(code) || /\[\s*['"`]constructor['"`]\s*\]/.test(text)) offenders.push("constructor call (reaches Function)");
   const named = new Set(all);
   for (const m of text.matchAll(/(['"`])([A-Za-z_$][\w$]*)\1/g)) {
@@ -497,6 +536,29 @@ g.fetch(url);",
     "constructor reaching Function": "(() => {}).constructor(" + bs_q("return this") + ")();",
     "computed constructor": "(() => {})[" + bs_q("constructor") + "](src);",
     "a property named like a primitive": "const o = { fetch: 1 };",
+    "bracket src assignment": "element[\"src\"] = url;",
+    "bracket action assignment": "form[\"action\"] = url;",
+    "template-literal key assignment": "element[`src`] = url;",
+    "single-quoted bracket key": "el['href'] = url;",
+    "escaped bracket key": "el[\"\\u0073rc\"] = url;",
+    "hex-escaped bracket key": "el[\"\\x73rc\"] = url;",
+    "compound dot assignment": "el.src += suffix;",
+    "compound bracket assignment": "el[\"src\"] ||= url;",
+    "Object.assign with a src key": "Object.assign(el, { src: u });",
+    "Object.assign with a quoted key": "Object.assign(el, { \"href\": u });",
+    "Object.assign with a shorthand key": "Object.assign(el, { src });",
+    "Object.assign across lines": "Object.assign(el, {\n  id: 1,\n  src: u,\n});",
+    "setAttribute src": "el.setAttribute(\"src\", u);",
+    "setAttribute href single quotes": "el.setAttribute('href', u);",
+    "setAttributeNS": "el.setAttributeNS(null, \"src\", u);",
+    "Reflect.set": "Reflect.set(el, \"src\", u);",
+    "Object.defineProperty": "Object.defineProperty(el, \"src\", { value: u });",
+    "Reflect.defineProperty": "Reflect.defineProperty(el, \"href\", { value: u });",
+    "Object.defineProperties": "Object.defineProperties(el, { src: { value: u } });",
+    "destructuring target, dot": "({ k: el.src } = o);",
+    "destructuring target, array": "[el.src] = list;",
+    "destructuring target, bracket": "({ k: el[\"src\"] } = o);",
+    "escaped setAttribute name": "el.setAttribute(\"\\u0073rc\", u);",
     "Image constructor with a src assignment": "const i = new Image(); i.src = url;",
     "Audio constructor": "const a = new Audio(url);",
     "script element created": "const e = document.createElement(\"script\");",
@@ -538,6 +600,26 @@ g.fetch(url);",
     assert.notDeepEqual(ambientOffenders(`export const v = ${escaped};`), [], `escaped identifier: ${name}`);
     assert.notDeepEqual(ambientOffenders(`export const v = o["${escaped}"];`), [], `escaped string key: ${name}`);
   }
+  // Every resource property, in every assignment spelling, against an independent literal list.
+  for (const prop of ["src", "href", "action", "data", "poster", "formAction", "srcset"]) {
+    const esc = String.fromCharCode(92) + "u" + prop.charCodeAt(0).toString(16).padStart(4, "0") + prop.slice(1);
+    for (const [form, src] of [
+      ["dot", `el.${prop} = u;`],
+      ["compound", `el.${prop} += u;`],
+      ["bracket", `el["${prop}"] = u;`],
+      ["template key", `el[\`${prop}\`] = u;`],
+      ["escaped bracket", `el["${esc}"] = u;`],
+      ["destructuring", `({ k: el.${prop} } = o);`],
+      ["Object.assign", `Object.assign(el, { ${prop}: u });`],
+      ["Object.defineProperty", `Object.defineProperty(el, "${prop}", d);`],
+      ["Reflect.set", `Reflect.set(el, "${prop}", u);`],
+      ["setAttribute", `el.setAttribute("${prop}", u);`],
+    ]) {
+      assert.notDeepEqual(ambientOffenders(src), [], `${form}: ${prop}`);
+    }
+    // the same property READ or compared is not an assignment
+    assert.deepEqual(ambientOffenders(`const v = el.${prop}; if (el["${prop}"] === v) {}`), [], `read: ${prop}`);
+  }
   const may = {
     "a comment mentioning fetch": "// fetch(url) and new WebSocket(url)\
 const a = 1;",
@@ -555,6 +637,16 @@ const n = obj?.constructor?.name;",
     "an escape inside a comment": "// \\u0066etch(url)\nconst a = 1;",
     "an escape inside a string that is not a name": "const s = \"\\u0066etching words\";",
     "an equality test on src": "if (node.src === other) {}",
+    "setAttribute of a harmless name": "el.setAttribute(\"id\", u);",
+    "Object.assign of harmless keys": "Object.assign(token, { type, source, end });",
+    "Object.assign then a later src read": "Object.assign(a, b);\nconst s = node.src;",
+    "bracket read": "const s = el[\"src\"];",
+    "bracket comparison": "if (el[\"src\"] === x) {}",
+    "bracket inequality": "if (el[\"src\"] !== x) {}",
+    "Reflect.get of src": "const s = Reflect.get(el, \"src\");",
+    "Reflect.set of a harmless key": "Reflect.set(el, \"id\", u);",
+    "src word in a comment assignment": "// el[\"src\"] = url\nconst a = 1;",
+    "src as a plain string value": "const kind = \"src\";",
     "a src read": "const s = node.src;",
     "a data read": "const d = node.data;",
     "a string that merely contains a name": "const s = " + bs_q("fetch_count") + ";",
