@@ -120,7 +120,7 @@ function closesControlHead(before) {
   return true;
 }
 
-function stripComments(source) {
+function stripComments(source, keepStrings = false) {
   // Scans `source` as code from `start`. Inside a template literal's `${ ... }` the scan recurses, so an
   // interpolation is CODE (its imports are found, nested templates and comments inside it are handled)
   // and only the literal text segments of a template are blanked.
@@ -195,7 +195,7 @@ function stripComments(source) {
             i = inner.next;
             out += "}";
           } else {
-            out += " ";
+            out += keepStrings ? source[i] : " ";
             i += 1;
           }
         }
@@ -204,7 +204,7 @@ function stripComments(source) {
       } else if (c === "'" || c === "\"") {
         // A string is kept only where it can be a module specifier (after `from`, `import` or
         // `import(` / `require(`); any other string is blanked so text inside it is never read as code.
-        const keep = /(?:\bfrom|\bimport|\b(?:import|require)\s*\()\s*$/.test(out);
+        const keep = keepStrings || /(?:\bfrom|\bimport|\b(?:import|require)\s*\()\s*$/.test(out);
         out += c;
         i += 1;
         while (i < n && source[i] !== c) {
@@ -367,15 +367,117 @@ test("the import guard itself: each way of naming a module outside the tree is a
   }
 });
 
-test("the vendored tree performs no network, process or filesystem access of its own", () => {
+const bs_q = (word) => JSON.stringify(word);
+
+// --- The ambient-access guard -------------------------------------------------------------------
+//
+// The vendored tree must not be able to reach the network, a process, a filesystem or dynamic code.
+// Rather than list the primitives a parser might happen to call, it bans (a) every network-capable
+// browser primitive, (b) every way of obtaining the global object or a loader (so an alias such as
+// `const g = globalThis; g.fetch(u)`, `window.fetch`, `self["WebSocket"]` or `(0, fetch)(u)` cannot hide
+// a primitive), and (c) code-from-string. The scan is over CODE: comments are removed and string text is
+// blanked, so a word in a comment or a string does not trip it. Reads are fail-toward-detecting:
+//   * a banned identifier is flagged wherever it appears, including as a property name;
+//   * a string literal that is EXACTLY a banned primitive name (`"fetch"`, as in `Reflect.get(o, "fetch")`
+//     or `o["fetch"]`) is flagged, because a computed member reaches the primitive by name;
+//   * template-literal interpolations are code (as in the import guard).
+// What it does not do: it does not evaluate expressions, so a primitive name assembled at run time
+// (`"fe" + "tch"`) used on an object that is not one of the banned global objects is not seen; reaching
+// such an object needs one of the banned names, which is what the guard keys on. `this` at the top level
+// of an ES module is undefined, so it is not a route to the global object in this tree.
+const NETWORK_PRIMITIVES = [
+  "fetch", "XMLHttpRequest", "WebSocket", "WebSocketStream", "EventSource", "WebTransport",
+  "RTCPeerConnection", "RTCDataChannel", "importScripts", "Worker", "SharedWorker", "sendBeacon",
+  "serviceWorker", "Request", "Response",
+];
+const AMBIENT_OBJECTS = ["globalThis", "window", "self", "global", "frames", "navigator", "location", "process", "Deno", "Bun"];
+const LOADERS_AND_CODE = ["require", "createRequire", "child_process", "eval", "Function"];
+
+function ambientOffenders(source) {
   const offenders = [];
-  for (const rel of IDENTITY.files.map((f) => f.path).filter((p) => p.endsWith(".js"))) {
-    const text = fs.readFileSync(path.join(TREE, rel), "utf8");
-    for (const pattern of [/\brequire\s*\(/, /\bchild_process\b/, /\bfetch\s*\(/, /\bXMLHttpRequest\b/, /\bprocess\.(?:env|exit|argv|binding)/, /from\s*['"]node:/, /\beval\s*\(/, /new Function\s*\(/]) {
-      if (pattern.test(text)) offenders.push(`${rel}: ${pattern}`);
-    }
+  const code = stripComments(source);
+  for (const name of [...NETWORK_PRIMITIVES, ...AMBIENT_OBJECTS, ...LOADERS_AND_CODE]) {
+    if (new RegExp(`(?<![\\w$])${name}(?![\\w$])`).test(code)) offenders.push(`identifier ${name}`);
+  }
+  if (/\.constructor\s*\(|\[\s*['"`]constructor['"`]\s*\]\s*\(/.test(code) || /\[\s*['"`]constructor['"`]\s*\]/.test(stripComments(source, true))) {
+    offenders.push("constructor call (reaches Function)");
+  }
+  const named = new Set([...NETWORK_PRIMITIVES, ...AMBIENT_OBJECTS, ...LOADERS_AND_CODE]);
+  for (const m of stripComments(source, true).matchAll(/(['"`])([A-Za-z_$][\w$]*)\1/g)) {
+    if (named.has(m[2])) offenders.push(`string ${m[2]}`);
+  }
+  return offenders;
+}
+
+test("the vendored tree performs no network, process, filesystem or dynamic-code access of its own", () => {
+  const offenders = [];
+  for (const rel of filesUnder(TREE).filter((p) => SCRIPT.test(p))) {
+    for (const o of ambientOffenders(fs.readFileSync(path.join(TREE, rel), "utf8"))) offenders.push(`${rel}: ${o}`);
   }
   assert.deepEqual(offenders, []);
+});
+
+test("the ambient-access guard itself: each network primitive and each way to reach one is an offender", () => {
+  const must = {
+    "fetch call": "fetch(url);",
+    "XMLHttpRequest": "const x = new XMLHttpRequest();",
+    "WebSocket": "const s = new WebSocket(url);",
+    "EventSource": "const s = new EventSource(url);",
+    "sendBeacon": "navigator.sendBeacon(url, data);",
+    "WebTransport": "const t = new WebTransport(url);",
+    "RTCPeerConnection": "const c = new RTCPeerConnection();",
+    "importScripts": "importScripts(url);",
+    "Worker with a URL": "const w = new Worker(url);",
+    "SharedWorker with a URL": "const w = new SharedWorker(url);",
+    "navigator.serviceWorker": "navigator.serviceWorker.register(url);",
+    "Request-based fetch": "const r = new Request(url);",
+    "Response": "const r = new Response(body);",
+    "computed member on globalThis": "globalThis[" + bs_q("fetch") + "](url);",
+    "member on window": "const f = window.fetch;",
+    "computed member on self": "self[" + bs_q("WebSocket") + "];",
+    "alias of the global object": "const g = globalThis;\
+g.fetch(url);",
+    "alias of the global object that never names a primitive": "const g = globalThis;\nexport const k = Object.keys(g);",
+    "comma-operator call": "(0, fetch)(url);",
+    "exact string name used as a key": "Reflect.get(target, " + bs_q("fetch") + ");",
+    "exact template name used as a key": "target[`sendBeacon`](url);",
+    "fetch inside a template interpolation": "const x = `${fetch(url)}`;",
+    "process": "const e = process.env;",
+    "require": "const m = require(name);",
+    "child_process": "const c = child_process;",
+    "eval": "eval(src);",
+    "Function constructor": "const f = new Function(src);",
+    "Function called without new": "Function(" + bs_q("return this") + ")();",
+    "constructor reaching Function": "(() => {}).constructor(" + bs_q("return this") + ")();",
+    "computed constructor": "(() => {})[" + bs_q("constructor") + "](src);",
+    "a property named like a primitive": "const o = { fetch: 1 };",
+    "a regex body naming a primitive (regex bodies are read as code: fail toward detecting)": "const r = /fetch/;",
+  };
+  for (const [label, text] of Object.entries(must)) {
+    assert.notDeepEqual(ambientOffenders(text), [], `must be an offender: ${label}`);
+  }
+  // Every listed name is an offender on its own, as an identifier and as an exact string key, so a name
+  // dropped from a list is noticed whichever other cases would still have fired.
+  // (An independent literal list, not the guard's own, so removing a name from the guard fails here.)
+  for (const name of ["fetch", "XMLHttpRequest", "WebSocket", "WebSocketStream", "EventSource", "WebTransport", "RTCPeerConnection", "RTCDataChannel", "importScripts", "Worker", "SharedWorker", "sendBeacon", "serviceWorker", "Request", "Response", "globalThis", "window", "self", "global", "frames", "navigator", "location", "process", "Deno", "Bun", "require", "createRequire", "child_process", "eval", "Function"]) {
+    assert.notDeepEqual(ambientOffenders(`export const v = ${name};`), [], `identifier: ${name}`);
+    assert.notDeepEqual(ambientOffenders(`export const v = o[${JSON.stringify(name)}];`), [], `string key: ${name}`);
+  }
+  const may = {
+    "a comment mentioning fetch": "// fetch(url) and new WebSocket(url)\
+const a = 1;",
+    "a block comment": "/* globalThis.fetch, process.env */ const a = 1;",
+    "text inside a string": "const s = " + bs_q("this does not fetch or use a WebSocket") + ";",
+    "text inside template literal text": "const s = `fetch and globalThis and process`;",
+    "an identifier that merely contains a primitive name": "const prefetch = 1, fetchLike = 2, Workers = 3, RequestLike = 4, selfish = 5;",
+    "a constructor reference that is not called": "const C = coll.constructor;\
+const n = obj?.constructor?.name;",
+    "an ordinary division": "const r = a.length / 2 / b;",
+    "a string that merely contains a name": "const s = " + bs_q("fetch_count") + ";",
+  };
+  for (const [label, text] of Object.entries(may)) {
+    assert.deepEqual(ambientOffenders(text), [], `must be accepted: ${label}`);
+  }
 });
 
 test("the reader imports the vendored parser by a relative path, and the strict manifest parser does not", () => {
