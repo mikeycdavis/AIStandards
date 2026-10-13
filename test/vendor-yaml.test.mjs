@@ -28,6 +28,22 @@ function filesUnder(dir, base = dir) {
   return out.sort();
 }
 
+// Every entry of a tree that is not a regular file or a directory, found with lstat so that a link is
+// seen as a link and never followed: symbolic links and junctions, FIFOs, devices, sockets. `io` is an
+// injectable file system (readdirSync + lstatSync), so the same logic runs where links cannot be made.
+function irregularEntries(dir, io = fs, base = dir) {
+  const out = [];
+  for (const name of io.readdirSync(dir).sort()) {
+    const full = path.join(dir, name);
+    const rel = path.relative(base, full).split(path.sep).join("/");
+    const st = io.lstatSync(full);
+    if (st.isSymbolicLink()) out.push(`${rel} (symbolic link or junction)`);
+    else if (st.isDirectory()) out.push(...irregularEntries(full, io, base));
+    else if (!st.isFile()) out.push(`${rel} (special file)`);
+  }
+  return out;
+}
+
 const sha256 = (file) => crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 
 test("the identity pins what was vendored: package, version, licence, source and tarball hashes", () => {
@@ -57,6 +73,77 @@ test("the vendored tree holds exactly the recorded files: nothing added, nothing
   const recorded = IDENTITY.files.map((f) => f.path).sort();
   assert.deepEqual(onDisk, recorded);
   assert.equal(new Set(recorded).size, recorded.length, "a path is recorded twice");
+});
+
+test("the vendored tree and scripts/vendor hold regular files and directories only: no link of any kind, whatever its target", () => {
+  assert.deepEqual(irregularEntries(VENDOR), []);
+});
+
+// An in-memory file system: keys are tree-relative paths, values are "dir", "file", "symlink" or "fifo".
+function fakeIo(root, spec, extra = {}) {
+  const at = (key) => (key === "" ? root : path.join(root, ...key.split("/")));
+  const kinds = new Map(Object.entries(spec).map(([k, v]) => [at(k), v]));
+  kinds.set(root, "dir");
+  const stat = (kind) => ({
+    isFile: () => kind === "file",
+    isDirectory: () => kind === "dir",
+    isSymbolicLink: () => kind === "symlink",
+  });
+  return {
+    at,
+    readdirSync: (d) => [...kinds.keys()].filter((k) => path.dirname(k) === d && k !== d).map((k) => path.basename(k)),
+    lstatSync: (f) => stat(kinds.get(f)),
+    existsSync: (f) => kinds.has(f) || (extra.exists ?? []).includes(f),
+    readFileSync: (f) => (extra.files ?? {})[f] ?? "",
+    realpathSync: (f) => {
+      if ((extra.throwOn ?? []).includes(f)) throw new Error("EACCES");
+      return (extra.real ?? {})[f] ?? f;
+    },
+  };
+}
+
+test("the link guard itself (injected file system): every entry kind that is not a file or a directory is an offender", () => {
+  const root = path.join(os.tmpdir(), "aistd-fake-tree");
+  const clean = fakeIo(root, { browser: "dir", "browser/a.js": "file", "browser/sub": "dir", "browser/sub/b.js": "file" });
+  assert.deepEqual(irregularEntries(root, clean), []);
+  const cases = {
+    "a symbolic link to a file": { browser: "dir", "browser/a.js": "symlink" },
+    "a symbolic link to a directory": { browser: "dir", "browser/sub": "symlink" },
+    "a link at the top of the tree": { link: "symlink" },
+    "a link nested three levels down": { a: "dir", "a/b": "dir", "a/b/c": "dir", "a/b/c/d.js": "symlink" },
+    "a FIFO, device or socket": { browser: "dir", "browser/pipe": "fifo" },
+  };
+  for (const [label, spec] of Object.entries(cases)) {
+    const found = irregularEntries(root, fakeIo(root, spec));
+    assert.notDeepEqual(found, [], `must be an offender: ${label}`);
+    assert.match(found[0], label.includes("FIFO") ? /special file/ : /symbolic link/, label);
+  }
+});
+
+test("real links are caught as entries and as import targets (skipped, and reported, where links cannot be created)", (t) => {
+  const tree = fs.mkdtempSync(path.join(os.tmpdir(), "aistd-vendor-link-"));
+  const outside = `${tree}-outside.js`;
+  try {
+    fs.mkdirSync(path.join(tree, "browser"));
+    fs.writeFileSync(path.join(tree, "browser", "ok.js"), "export const ok = 1;\n");
+    fs.writeFileSync(outside, "export const outside = 1;\n");
+    try {
+      fs.symlinkSync(outside, path.join(tree, "browser", "link.js"));
+      fs.symlinkSync(path.join(tree, "browser", "ok.js"), path.join(tree, "browser", "inner.js"));
+    } catch (e) {
+      t.skip(`symbolic links cannot be created here (${e.code}); the injected file system tests run the same logic`);
+      return;
+    }
+    const found = irregularEntries(tree);
+    assert.ok(found.some((e) => e.startsWith("browser/link.js")), "a link to a file outside the tree");
+    assert.ok(found.some((e) => e.startsWith("browser/inner.js")), "a link whose target is inside the tree is an offender regardless of its target");
+    fs.writeFileSync(path.join(tree, "browser", "good.js"), 'import "./link.js";\n');
+    assert.notDeepEqual(importOffenders(tree, ["browser/good.js"]), [], "an import that lands on an outside file through a link");
+    assert.notDeepEqual(importOffenders(tree, ["browser/link.js"]), [], "a source file that is itself a link out of the tree");
+  } finally {
+    fs.rmSync(tree, { recursive: true, force: true });
+    fs.rmSync(outside, { force: true });
+  }
 });
 
 test("scripts/vendor holds only the yaml tree and its identity (a second vendored package needs its own decision)", () => {
@@ -584,20 +671,56 @@ export function moduleReferences(source) {
   return { specifiers, unreadable };
 }
 
-/** Offenders in a set of files under `treeDir`: anything that is not a relative path to a file inside it. */
-export function importOffenders(treeDir, relFiles) {
+/**
+ * Offenders in a set of files under `treeDir`: anything that is not a plain relative path to a file that
+ * really lives inside it. Containment is decided on REAL paths with path.relative (never a string prefix:
+ * case-insensitive file systems, a sibling sharing a prefix and links all defeat that), so a link inside
+ * the tree whose target is outside it is an offender here as well as in the link scan. A relative specifier
+ * is a URL to Node, so one holding `\`, `%`, `?` or `#` is rejected outright; an absolute path, a drive-
+ * relative one (`C:x`), a UNC one and a `file:` URL do not start with `.` and are non-relative offenders.
+ * `io` is an injectable file system.
+ */
+export function importOffenders(treeDir, relFiles, io = fs) {
   const offenders = [];
+  const real = (p) => (io.realpathSync.native ?? io.realpathSync)(p);
+  let realTree;
+  try {
+    realTree = real(treeDir);
+  } catch {
+    return [`${treeDir}: the tree cannot be resolved`];
+  }
+  const inside = (p) => {
+    const rel = path.relative(realTree, p);
+    return rel !== "" && rel.split(path.sep)[0] !== ".." && !path.isAbsolute(rel);
+  };
   for (const rel of relFiles) {
-    const dir = path.dirname(path.join(treeDir, rel));
-    const { specifiers, unreadable } = moduleReferences(fs.readFileSync(path.join(treeDir, rel), "utf8"));
+    const full = path.join(treeDir, rel);
+    try {
+      if (!inside(real(full))) offenders.push(`${rel}: is, or links to, a file outside the tree`);
+    } catch {
+      offenders.push(`${rel}: cannot be resolved`);
+      continue;
+    }
+    const dir = path.dirname(full);
+    const { specifiers, unreadable } = moduleReferences(io.readFileSync(full, "utf8"));
     for (const u of unreadable) offenders.push(`${rel}: ${u.form} ${u.specifier}`);
     for (const { form, specifier } of specifiers) {
       if (!specifier.startsWith(".")) {
         offenders.push(`${rel}: ${form} ${specifier}`);
         continue;
       }
+      if (/[\\%?#]/.test(specifier)) {
+        offenders.push(`${rel}: ${form} ${specifier} is not a plain relative path`);
+        continue;
+      }
       const target = path.resolve(dir, specifier);
-      if (!target.startsWith(treeDir + path.sep) || !fs.existsSync(target)) offenders.push(`${rel}: ${form} ${specifier} does not resolve inside the tree`);
+      let landed = false;
+      try {
+        landed = io.existsSync(target) && inside(real(target));
+      } catch {
+        landed = false;
+      }
+      if (!landed) offenders.push(`${rel}: ${form} ${specifier} does not resolve inside the tree`);
     }
   }
   return offenders;
@@ -753,6 +876,49 @@ test("the call-argument extractor splits only at top-level commas and fails on u
   assert.equal(tokenize("/* open").ok, false);
   assert.equal(tokenize("`a${ b").ok, false);
   assert.equal(tokenize('const a = 1; // done\n"x" + `y${1}`').ok, true);
+});
+
+test("the containment check works on real paths (injected file system): links, prefixes, dot-dot, URLs and drive forms", () => {
+  const root = path.join(os.tmpdir(), "aistd-contain", "Tree");
+  const sibling = `${root}-evil`;
+  const make = (src, extra = {}) => {
+    const f = { [path.join(root, "browser", "a.js")]: src };
+    const io = fakeIo(root, { browser: "dir", "browser/a.js": "file", "browser/ok.js": "file" }, {
+      files: f,
+      exists: [path.join(sibling, "x.js"), path.join(root, "..", "outside.js"), ...(extra.exists ?? [])],
+      real: extra.real ?? {},
+      throwOn: extra.throwOn ?? [],
+    });
+    return importOffenders(root, ["browser/a.js"], io);
+  };
+  assert.deepEqual(make('import "./ok.js";\n'), []);
+  assert.deepEqual(make('import "../browser/ok.js";\n'), []);
+  // a link inside the tree whose real path is outside it
+  const linked = path.join(root, "browser", "ok.js");
+  assert.notDeepEqual(make('import "./ok.js";\n', { real: { [linked]: path.join(os.tmpdir(), "elsewhere.js") } }), []);
+  // a sibling directory that shares the tree's name as a prefix
+  assert.notDeepEqual(make('import "./ok.js";\n', { real: { [linked]: path.join(sibling, "x.js") } }), []);
+  // the importing file is itself a link out of the tree
+  assert.notDeepEqual(make('export const a = 1;\n', { real: { [path.join(root, "browser", "a.js")]: path.join(sibling, "x.js") } }), []);
+  // a target that exists but whose real path cannot be read
+  assert.notDeepEqual(make('import "./ok.js";\n', { throwOn: [linked] }), []);
+  // dot-dot out of the tree
+  assert.notDeepEqual(make('import "../../outside.js";\n'), []);
+  assert.notDeepEqual(make('import "../../Tree-evil/x.js";\n'), []);
+  // forms that are not plain relative paths
+  for (const spec of ["file:///etc/passwd", "/abs/x.js", "C:x.js", "C:\\x.js", "\\\\host\\share\\x.js", "../", "./ok.js?x=1", "./ok.js#h", "./%2e%2e/outside.js", ".\\ok.js"]) {
+    // the target is made to exist, so only the form of the specifier can reject it
+    const target = path.resolve(path.join(root, "browser"), spec);
+    assert.notDeepEqual(make(`import ${JSON.stringify(spec)};\n`, { exists: [target] }), [], spec);
+  }
+  // a real path on another drive: path.relative answers with an absolute path, which is not inside
+  if (path.sep === "\\") assert.notDeepEqual(make('import "./ok.js";\n', { real: { [linked]: "Z:\\elsewhere\\x.js" } }), []);
+  // a tree that cannot be resolved is an offender, not a pass
+  const io = fakeIo(root, { browser: "dir", "browser/a.js": "file" }, { files: { [path.join(root, "browser", "a.js")]: "" } });
+  io.realpathSync = () => {
+    throw new Error("ENOENT");
+  };
+  assert.notDeepEqual(importOffenders(root, ["browser/a.js"], io), []);
 });
 
 const bs_q = (word) => JSON.stringify(word);
