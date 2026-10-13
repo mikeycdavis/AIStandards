@@ -371,39 +371,85 @@ const bs_q = (word) => JSON.stringify(word);
 
 // --- The ambient-access guard -------------------------------------------------------------------
 //
-// The vendored tree must not be able to reach the network, a process, a filesystem or dynamic code.
-// Rather than list the primitives a parser might happen to call, it bans (a) every network-capable
-// browser primitive, (b) every way of obtaining the global object or a loader (so an alias such as
-// `const g = globalThis; g.fetch(u)`, `window.fetch`, `self["WebSocket"]` or `(0, fetch)(u)` cannot hide
-// a primitive), and (c) code-from-string. The scan is over CODE: comments are removed and string text is
-// blanked, so a word in a comment or a string does not trip it. Reads are fail-toward-detecting:
-//   * a banned identifier is flagged wherever it appears, including as a property name;
-//   * a string literal that is EXACTLY a banned primitive name (`"fetch"`, as in `Reflect.get(o, "fetch")`
-//     or `o["fetch"]`) is flagged, because a computed member reaches the primitive by name;
-//   * template-literal interpolations are code (as in the import guard).
-// What it does not do: it does not evaluate expressions, so a primitive name assembled at run time
-// (`"fe" + "tch"`) used on an object that is not one of the banned global objects is not seen; reaching
-// such an object needs one of the banned names, which is what the guard keys on. `this` at the top level
-// of an ES module is undefined, so it is not a route to the global object in this tree.
+// WHAT THE CONTROL IS. A denylist of primitives cannot be complete, and this one does not claim to be.
+// The control on the vendored tree is the two things together: (1) every file's SHA-256 is pinned in
+// scripts/vendor/yaml.vendor.json, so any change to the tree is a visible change to that file, and
+// (2) this scan, which fails toward detecting, so a refreshed release that reaches for the network, a
+// process, a DOM loader or code-from-string stops the suite until a person has looked. REFRESHING THE
+// HASHES IS THE HUMAN GATE: it requires reading the diff of the vendored tree, and a green suite after a
+// refresh means "no listed primitive appeared", not "the diff is safe".
+//
+// WHAT IT BANS. In code (comments removed, string text blanked, template interpolations scanned as code):
+//   * every network-capable browser primitive: fetch, XMLHttpRequest, WebSocket(Stream), EventSource,
+//     WebTransport, RTCPeerConnection/DataChannel, importScripts, Worker, SharedWorker, sendBeacon,
+//     serviceWorker, Request, Response, postMessage, BroadcastChannel, MessageChannel, opener;
+//   * the DOM entry points that LOAD a resource without a network API: the Image and Audio constructors,
+//     the HTML{Image,Script,IFrame,Link,Embed,Object,Source,Media}Element constructors, createElement(NS),
+//     appendChild, insertAdjacentHTML, innerHTML, outerHTML, srcdoc, and assignment to `.src`, `.href`,
+//     `.action`, `.data`, `.poster`; and a bare `document` used as an object (`document.`, `document[`);
+//   * every route to the global object or a loader, so aliasing cannot hide a primitive: globalThis,
+//     window, self, global, frames, navigator, location, process, Deno, Bun, require, createRequire,
+//     child_process;
+//   * code from a string: eval, Function, a called `.constructor`.
+// A string literal that is EXACTLY one of those names is also flagged (computed members: `o["fetch"]`,
+// `Reflect.get(o, "fetch")`). Identifier and string escapes (`fetch`, `\u{66}etch`, `"\x66etch"`) are
+// decoded before matching. Reads are fail-toward-detecting: a banned identifier is flagged wherever it
+// appears, including as a property name, and a regex body is read as code.
+//
+// WHAT IT LEAVES OUT, AND WHY. `document` as a bare identifier (the vendored parser has a method and
+// variable of that name; only member access on it is flagged), `Option` (the constructor makes an
+// <option> element; it loads nothing), `DOMParser`/`XMLSerializer` (parse and serialise in memory),
+// `URL` and `import.meta.url` (a read-only string; no I/O), `Blob` (in-memory), `parent` and `top`
+// (ordinary identifiers in a parser). It does not evaluate expressions: a name assembled at run time
+// (`"fe" + "tch"`) is only seen if the object it is read from is one of the banned names. `this` at the top
+// level of an ES module is undefined, so it is not a route to the global object here.
 const NETWORK_PRIMITIVES = [
   "fetch", "XMLHttpRequest", "WebSocket", "WebSocketStream", "EventSource", "WebTransport",
   "RTCPeerConnection", "RTCDataChannel", "importScripts", "Worker", "SharedWorker", "sendBeacon",
-  "serviceWorker", "Request", "Response",
+  "serviceWorker", "Request", "Response", "postMessage", "BroadcastChannel", "MessageChannel", "opener",
+];
+const DOM_LOADERS = [
+  "Image", "Audio", "HTMLImageElement", "HTMLScriptElement", "HTMLIFrameElement", "HTMLLinkElement",
+  "HTMLEmbedElement", "HTMLObjectElement", "HTMLSourceElement", "HTMLMediaElement", "createElement",
+  "createElementNS", "appendChild", "insertAdjacentHTML", "innerHTML", "outerHTML", "srcdoc",
 ];
 const AMBIENT_OBJECTS = ["globalThis", "window", "self", "global", "frames", "navigator", "location", "process", "Deno", "Bun"];
 const LOADERS_AND_CODE = ["require", "createRequire", "child_process", "eval", "Function"];
 
+// Identifier and string escapes: \uXXXX, \u{X...}, \xHH. Applied to code after comments are removed.
+function decodeEscapes(text) {
+  return text
+    .replace(/\\u\{([0-9a-fA-F]+)\}/g, (m, h) => {
+      const cp = parseInt(h, 16);
+      return cp <= 0x10ffff ? String.fromCodePoint(cp) : m;
+    })
+    .replace(/\\u([0-9a-fA-F]{4})/g, (m, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\\x([0-9a-fA-F]{2})/g, (m, h) => String.fromCharCode(parseInt(h, 16)));
+}
+
+// Escapes are decoded in code context: in the code view (identifiers) and in the string view (computed
+// keys). Decoding runs on the comment-stripped text, so a comment can neither smuggle a name in nor out.
+function ambientViews(source) {
+  return {
+    code: decodeEscapes(stripComments(source)),
+    text: decodeEscapes(stripComments(source, true)),
+  };
+}
+
 function ambientOffenders(source) {
   const offenders = [];
-  const code = stripComments(source);
-  for (const name of [...NETWORK_PRIMITIVES, ...AMBIENT_OBJECTS, ...LOADERS_AND_CODE]) {
+  const { code, text } = ambientViews(source);
+  const all = [...NETWORK_PRIMITIVES, ...DOM_LOADERS, ...AMBIENT_OBJECTS, ...LOADERS_AND_CODE];
+  // The code view has string text blanked, but an identifier escape may have been decoded into a name, so
+  // names are matched on it after decoding.
+  for (const name of all) {
     if (new RegExp(`(?<![\\w$])${name}(?![\\w$])`).test(code)) offenders.push(`identifier ${name}`);
   }
-  if (/\.constructor\s*\(|\[\s*['"`]constructor['"`]\s*\]\s*\(/.test(code) || /\[\s*['"`]constructor['"`]\s*\]/.test(stripComments(source, true))) {
-    offenders.push("constructor call (reaches Function)");
-  }
-  const named = new Set([...NETWORK_PRIMITIVES, ...AMBIENT_OBJECTS, ...LOADERS_AND_CODE]);
-  for (const m of stripComments(source, true).matchAll(/(['"`])([A-Za-z_$][\w$]*)\1/g)) {
+  if (/(?<![\w$.])document\s*(?:\?\.|\.|\[)/.test(code)) offenders.push("document used as an object");
+  if (/\.\s*(?:src|href|action|data|poster|formAction)\s*=(?!=)/.test(code)) offenders.push("resource property assignment");
+  if (/\.constructor\s*\(/.test(code) || /\[\s*['"`]constructor['"`]\s*\]/.test(text)) offenders.push("constructor call (reaches Function)");
+  const named = new Set(all);
+  for (const m of text.matchAll(/(['"`])([A-Za-z_$][\w$]*)\1/g)) {
     if (named.has(m[2])) offenders.push(`string ${m[2]}`);
   }
   return offenders;
@@ -451,6 +497,32 @@ g.fetch(url);",
     "constructor reaching Function": "(() => {}).constructor(" + bs_q("return this") + ")();",
     "computed constructor": "(() => {})[" + bs_q("constructor") + "](src);",
     "a property named like a primitive": "const o = { fetch: 1 };",
+    "Image constructor with a src assignment": "const i = new Image(); i.src = url;",
+    "Audio constructor": "const a = new Audio(url);",
+    "script element created": "const e = document.createElement(\"script\");",
+    "createElement with a computed receiver": "const e = d.createElement(tag);",
+    "iframe via the element constructor": "const f = new HTMLIFrameElement();",
+    "HTMLScriptElement": "const f = HTMLScriptElement;",
+    "appendChild of a loader": "host.appendChild(node);",
+    "innerHTML": "el.innerHTML = markup;",
+    "srcdoc": "frame.srcdoc = markup;",
+    "document used as an object": "const b = document.body;",
+    "document used with a computed member": "const b = document[\"body\"];",
+    "document with optional chaining": "const b = document?.body;",
+    "src assignment on any receiver": "node.src = url;",
+    "href assignment on any receiver": "node.href = url;",
+    "postMessage": "target.postMessage(data, \"*\");",
+    "BroadcastChannel": "const c = new BroadcastChannel(name);",
+    "escaped identifier fetch": "\\u0066etch(url);",
+    "escaped identifier, braced code point": "\\u{66}etch(url);",
+    "escaped global object": "\\u0067lobalThis.fetch2;",
+    "escaped global with member": "const f = \\u0067lobalThis.\\u0066etch;",
+    "escaped constructor name": "new \\u0057ebSocket(url);",
+    "escape in the middle of a name": "f\\u0065tch(url);",
+    "escaped computed key": "o[\"\\u0066etch\"](url);",
+    "hex-escaped computed key": "o[\"\\x66etch\"](url);",
+    "escaped name inside an interpolation": "const x = `${\\u0066etch(url)}`;",
+    "escaped DOM loader": "new \\u0049mage();",
     "a regex body naming a primitive (regex bodies are read as code: fail toward detecting)": "const r = /fetch/;",
   };
   for (const [label, text] of Object.entries(must)) {
@@ -459,9 +531,12 @@ g.fetch(url);",
   // Every listed name is an offender on its own, as an identifier and as an exact string key, so a name
   // dropped from a list is noticed whichever other cases would still have fired.
   // (An independent literal list, not the guard's own, so removing a name from the guard fails here.)
-  for (const name of ["fetch", "XMLHttpRequest", "WebSocket", "WebSocketStream", "EventSource", "WebTransport", "RTCPeerConnection", "RTCDataChannel", "importScripts", "Worker", "SharedWorker", "sendBeacon", "serviceWorker", "Request", "Response", "globalThis", "window", "self", "global", "frames", "navigator", "location", "process", "Deno", "Bun", "require", "createRequire", "child_process", "eval", "Function"]) {
+  for (const name of ["fetch", "XMLHttpRequest", "WebSocket", "WebSocketStream", "EventSource", "WebTransport", "RTCPeerConnection", "RTCDataChannel", "importScripts", "Worker", "SharedWorker", "sendBeacon", "serviceWorker", "Request", "Response", "postMessage", "BroadcastChannel", "MessageChannel", "opener", "Image", "Audio", "HTMLImageElement", "HTMLScriptElement", "HTMLIFrameElement", "HTMLLinkElement", "HTMLEmbedElement", "HTMLObjectElement", "HTMLSourceElement", "HTMLMediaElement", "createElement", "createElementNS", "appendChild", "insertAdjacentHTML", "innerHTML", "outerHTML", "srcdoc", "globalThis", "window", "self", "global", "frames", "navigator", "location", "process", "Deno", "Bun", "require", "createRequire", "child_process", "eval", "Function"]) {
     assert.notDeepEqual(ambientOffenders(`export const v = ${name};`), [], `identifier: ${name}`);
     assert.notDeepEqual(ambientOffenders(`export const v = o[${JSON.stringify(name)}];`), [], `string key: ${name}`);
+    const escaped = String.fromCharCode(92) + "u" + name.charCodeAt(0).toString(16).padStart(4, "0") + name.slice(1);
+    assert.notDeepEqual(ambientOffenders(`export const v = ${escaped};`), [], `escaped identifier: ${name}`);
+    assert.notDeepEqual(ambientOffenders(`export const v = o["${escaped}"];`), [], `escaped string key: ${name}`);
   }
   const may = {
     "a comment mentioning fetch": "// fetch(url) and new WebSocket(url)\
@@ -473,6 +548,15 @@ const a = 1;",
     "a constructor reference that is not called": "const C = coll.constructor;\
 const n = obj?.constructor?.name;",
     "an ordinary division": "const r = a.length / 2 / b;",
+    "a method and variable named document": "class P { *document(top) { return top.document; } }\nconst document2 = 1;",
+    "the document word in a string": "const t = \"document\";",
+    "Option, which loads nothing": "const o = new Option();",
+    "import.meta.url, a read-only string": "const u = import.meta.url;",
+    "an escape inside a comment": "// \\u0066etch(url)\nconst a = 1;",
+    "an escape inside a string that is not a name": "const s = \"\\u0066etching words\";",
+    "an equality test on src": "if (node.src === other) {}",
+    "a src read": "const s = node.src;",
+    "a data read": "const d = node.data;",
     "a string that merely contains a name": "const s = " + bs_q("fetch_count") + ";",
   };
   for (const [label, text] of Object.entries(may)) {
