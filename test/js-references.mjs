@@ -502,8 +502,8 @@ function statementSpecifier(tokens, at, isImport) {
 // Members of URL that do not turn a path into a URL: they test, parse a complete URL string, or manage object URLs.
 const URL_STATIC_SAFE = ["canParse", "createObjectURL", "revokeObjectURL", "parse"];
 
-// Whether the `URL` identifier at `k` is the constructor of a `new` expression, in any spelling that keeps the
-// name visible: `new URL(`, `new globalThis.URL(`, `new window.URL(`, `new (URL)(`, `new (self.URL)(`.
+// The index of the `(` that opens the argument list when the `URL` identifier at `k` is the constructor of a
+// `new` expression (otherwise -1), in any spelling that keeps the name visible: `new URL(`, `new globalThis.URL(`, `new window.URL(`, `new (URL)(`, `new (self.URL)(`.
 function isConstructedAt(tokens, k) {
   let start = k;
   let end = k;
@@ -518,7 +518,8 @@ function isConstructedAt(tokens, k) {
     break;
   }
   const before = tokens[start - 1];
-  return Boolean(before && before.t === "id" && before.v === "new" && punctAt(end + 1, "(") && !tokens[end + 1].syn);
+  const isNew = before && before.t === "id" && before.v === "new" && punctAt(end + 1, "(") && !tokens[end + 1].syn;
+  return isNew ? end + 1 : -1;
 }
 
 // Whether the token at `k` is directly called: `x(...)` or `x?.(...)`.
@@ -543,6 +544,7 @@ export function moduleReferences(source) {
   const { tokens, ok } = tokenize(source);
   if (!ok) unreadable.push({ form: "source", specifier: "unparseable (unterminated string, template, regex or comment)" });
   const inClause = new Set();
+  const urlConstructions = new Set();
   for (let k = 0; k < tokens.length; k += 1) {
     const tk = tokens[k];
     if (tk.t === "id" && tk.v === "createRequire") unreadable.push({ form: "createRequire", specifier: `at offset ${tk.s}` });
@@ -566,19 +568,48 @@ export function moduleReferences(source) {
     // clause naming it are not references; `URL.bind(...)`, `.call`, `.apply`, `.prototype` and any other
     // member are, because each can hand back a constructor for a later `new`.
     const staticSafe = tokens[k + 1] && tokens[k + 1].t === "punct" && tokens[k + 1].v === "." && tokens[k + 2] && tokens[k + 2].t === "id" && URL_STATIC_SAFE.includes(tokens[k + 2].v);
-    if (tk.t === "id" && tk.v === "URL" && !inClause.has(k) && !staticSafe && !isConstructedAt(tokens, k)) {
-      unreadable.push({ form: "url", specifier: `reference to URL that is not a literal construction at offset ${tk.s}` });
+    if (tk.t === "id" && tk.v === "URL" && !inClause.has(k) && !staticSafe) {
+      const open = isConstructedAt(tokens, k);
+      if (open === -1) {
+        unreadable.push({ form: "url", specifier: `reference to URL that is not a literal construction at offset ${tk.s}` });
+      } else {
+        // The construction is read as a whole, and only the shape that can be justified is accepted:
+        //   new URL("literal", import.meta.url)   a file next to this one: the literal is checked
+        //   new URL("scheme:...")                 an absolute URL, which names no file of this module
+        //   new URL("scheme:...", anything)       the base is ignored for an absolute literal
+        // Everything else (a variable, member, call or template for the first argument or the base,
+        // concatenation, no arguments, a third argument, a relative literal with another base,
+        // import.meta["url"], an alias of import.meta.url) is unreadable: it cannot be shown to stay here.
+        urlConstructions.add(open);
+        const args = callArguments(tokens, open);
+        const isStr = (a) => a.length === 1 && a[0].t === "str";
+        const absolute = (v) => /^[A-Za-z][A-Za-z0-9+.-]*:/.test(v);
+        const bad = (why) => unreadable.push({ form: "url", specifier: `${why} at offset ${tk.s}` });
+        if (args === null) bad("unparseable construction");
+        else if (args.length === 0 || args.length > 2) bad("construction with no arguments or with extra arguments");
+        else if (!isStr(args[0])) bad("non-literal first argument");
+        else if (args.length === 1) {
+          if (!absolute(args[0][0].v)) bad("relative literal with no base");
+        } else if (args[1].map((t) => t.v).join("") === "import.meta.url") {
+          specifiers.push({ form: "url", specifier: args[0][0].v });
+        } else if (!absolute(args[0][0].v)) {
+          bad("base is not the literal import.meta.url");
+        }
+      }
     }
     if (tk.t !== "punct" || tk.v !== "(" || tk.syn) continue;
     // Any call whose second argument is `import.meta.url` resolves its first argument against this file,
     // whatever the callee is spelled: `new URL(x, import.meta.url)`, `new (URL)(...)`, `new g.URL(...)`,
     // a helper. A literal first argument is a reference to check; anything else is unreadable.
-    const urlArgs = callArguments(tokens, k);
-    if (urlArgs === null) {
-      if (tokens[k - 1] && tokens[k - 1].t === "id" && tokens[k - 1].v === "URL") unreadable.push({ form: "url", specifier: `unparseable call at offset ${tokens[k].s}` });
-    } else if (urlArgs[1] && urlArgs[1].map((t) => t.v).join("") === "import.meta.url") {
-      if (urlArgs[0].length === 1 && urlArgs[0][0].t === "str") specifiers.push({ form: "url", specifier: urlArgs[0][0].v });
-      else unreadable.push({ form: "url", specifier: `non-literal at offset ${tokens[k].s}` });
+    const urlArgs = urlConstructions.has(k) ? null : callArguments(tokens, k);
+    if (urlArgs !== null && urlArgs[1]) {
+      const base = urlArgs[1].map((t) => t.v).join("");
+      if (base === "import.meta.url") {
+        if (urlArgs[0].length === 1 && urlArgs[0][0].t === "str") specifiers.push({ form: "url", specifier: urlArgs[0][0].v });
+        else unreadable.push({ form: "url", specifier: `non-literal at offset ${tokens[k].s}` });
+      } else if (base.startsWith("import.meta")) {
+        unreadable.push({ form: "url", specifier: `base is import.meta used in a form other than import.meta.url at offset ${tokens[k].s}` });
+      }
     }
     const callee = calleeAt(tokens, k);
     if (!callee) continue;

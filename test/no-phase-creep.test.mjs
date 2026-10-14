@@ -138,6 +138,29 @@ test("the repository-wide scan decides relative specifiers against the repositor
     "URL.prototype": "URL.prototype.constructor",
     "a computed member of URL": 'URL["bind"](null, x)',
     "a bind on the qualified constructor": 'globalThis.URL.bind(null, "../../outside.mjs")',
+    // the base argument: only the literal import.meta.url is accepted
+    "the base held in a variable": 'new URL("../../outside.mjs", base)',
+    "the base is import.meta.url read into a variable first": 'const base = import.meta.url; new URL("../../outside.mjs", base)',
+    "the base is a computed import.meta member": 'new URL("../../outside.mjs", import.meta["url"])',
+    "the base is another import.meta member": 'new URL("../../outside.mjs", import.meta.dirname)',
+    "the base is a member of an object": 'new URL("../../outside.mjs", opts.base)',
+    "the base is a call": 'new URL("../../outside.mjs", getBase())',
+    "the base is a template": "new URL(\"../../outside.mjs\", `${base}`)",
+    "the base is a concatenation": 'new URL("../../outside.mjs", import.meta.url + "")',
+    "the base is a different URL": 'new URL("../../outside.mjs", "file:///elsewhere/")',
+    "a computed import.meta base passed to a helper": 'resolveHere("../../outside.mjs", import.meta["url"])',
+    // the first argument and the argument list
+    "the first argument in a variable": "new URL(rel, import.meta.url)",
+    "the first argument a template with an interpolation": "new URL(`./${name}.mjs`, import.meta.url)",
+    "the first argument a concatenation": 'new URL("./" + name, import.meta.url)',
+    "the first argument a member": "new URL(opts.path, import.meta.url)",
+    "the first argument a call": "new URL(pick(), import.meta.url)",
+    "a spread of the arguments": "new URL(...args)",
+    "a spread after the first argument": 'new URL("./a.mjs", ...rest)',
+    "no arguments": "new URL()",
+    "a third argument": 'new URL("./a.mjs", import.meta.url, extra)',
+    "a relative literal with no base": 'new URL("./a.mjs")',
+    "an inside literal with a computed import.meta base": 'new URL("./b.mjs", import.meta["url"])',
   };
   for (const [label, expr] of Object.entries(spellings)) {
     assert.notDeepEqual(url("export const u = " + expr + ";\n"), [], "must be an offender: " + label);
@@ -149,6 +172,9 @@ test("the repository-wide scan decides relative specifiers against the repositor
     "a URL that names no file of this module": 'new URL("https://example.com/")',
     "a static member of URL": "URL.canParse(input)",
     "a static member of globalThis.URL": "globalThis.URL.canParse(input)",
+    "an absolute literal with any base (the base is ignored)": 'new URL("https://example.com/x", base)',
+    "import.meta.url with whitespace and a comment inside": 'new URL("./b.mjs", import . meta /* c */ . url)',
+    "a helper given an inside literal and import.meta.url": 'resolveHere("./b.mjs", import.meta.url)',
     "URL.createObjectURL": "URL.createObjectURL(blob)",
     "URL.revokeObjectURL": "URL.revokeObjectURL(objectUrl)",
     "URL.parse": "URL.parse(text)",
@@ -158,6 +184,10 @@ test("the repository-wide scan decides relative specifiers against the repositor
     "a longer identifier": "export const URLS = 1; export const MyURL = 2;",
     "createRequire-free import.meta.url alone": "export const here = import.meta.url;",
   };
+  // each unreadable or offending construction is reported once, not once per pass over the tokens
+  assert.equal(url('export const u = new URL("../../o.mjs", import.meta.url);\n').length, 1);
+  assert.equal(url('export const u = new URL("../../o.mjs", base);\n').length, 1);
+  assert.equal(url('export const u = h("../../o.mjs", import.meta.dirname);\n').length, 1);
   for (const [label, expr] of Object.entries(accepted)) {
     assert.deepEqual(url(expr + ";\n"), [], "must be accepted: " + label);
   }
