@@ -391,9 +391,13 @@ export function callArguments(tokens, open) {
 }
 
 // The callee of the call whose `(` is tokens[open]: `name(...)`, `obj.name(...)` or `obj["name"](...)`.
-function calleeAt(tokens, open) {
+function calleeAt(tokens, openAt) {
+  if (tokens[openAt].syn) return null;
+  // An optional call `f?.(...)`: the callee ends before the `?.`.
+  const optional = tokens[openAt - 1] && tokens[openAt - 1].t === "punct" && tokens[openAt - 1].v === "." && tokens[openAt - 2] && tokens[openAt - 2].t === "punct" && tokens[openAt - 2].v === "?";
+  const open = optional ? openAt - 2 : openAt;
   const p = tokens[open - 1];
-  if (!p || tokens[open].syn) return null;
+  if (!p) return null;
   const objectAt = (k) => (tokens[k] && tokens[k].t === "id" ? tokens[k].v : null);
   if (p.t === "id") {
     const dot = tokens[open - 2];
@@ -492,7 +496,22 @@ function statementSpecifier(tokens, at, isImport) {
   return null;
 }
 
-/** Every module specifier a JavaScript source names, and every reference it makes that cannot be read. */
+// Whether the token at `k` is directly called: `x(...)` or `x?.(...)`.
+function isCalledAt(tokens, k) {
+  const a = tokens[k + 1];
+  if (a && a.t === "punct" && a.v === "(" && !a.syn) return true;
+  const b = tokens[k + 2];
+  const c = tokens[k + 3];
+  return Boolean(a && a.v === "?" && b && b.v === "." && c && c.v === "(" && !c.syn);
+}
+
+/**
+ * Every module specifier a JavaScript source names, and every reference it makes that cannot be read.
+ * `require` is Node's loader under any spelling, so every reference to it that is not a direct call with a
+ * literal first argument is reported as unreadable, never skipped: `(require)("x")`, `(0, require)("x")`,
+ * `require.call(null, "x")` / `.apply` / `.bind`, `const r = require`, `module.require`, `o["require"]`.
+ * A direct call is `require("x")`, `require?.("x")`, `module.require("x")` and `o["require"]("x")`.
+ */
 export function moduleReferences(source) {
   const specifiers = [];
   const unreadable = [];
@@ -502,6 +521,12 @@ export function moduleReferences(source) {
     const tk = tokens[k];
     if (tk.t === "id" && tk.v === "createRequire") unreadable.push({ form: "createRequire", specifier: `at offset ${tk.s}` });
     const memberOf = tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === ".";
+    if (tk.t === "id" && tk.v === "require" && !isCalledAt(tokens, k)) {
+      unreadable.push({ form: "require", specifier: `reference that is not a literal call at offset ${tk.s}` });
+    }
+    if (tk.t === "str" && tk.v === "require" && tokens[k - 1] && tokens[k - 1].v === "[" && tokens[k + 1] && tokens[k + 1].v === "]" && !isCalledAt(tokens, k + 1)) {
+      unreadable.push({ form: "require", specifier: `computed reference that is not a literal call at offset ${tk.s}` });
+    }
     if (tk.t === "id" && (tk.v === "import" || tk.v === "export") && !memberOf) {
       const spec = statementSpecifier(tokens, k, tk.v === "import");
       if (spec !== null) specifiers.push({ form: tk.v === "import" ? "import" : "export-from", specifier: spec });
