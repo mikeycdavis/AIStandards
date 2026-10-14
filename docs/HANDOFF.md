@@ -464,7 +464,7 @@ the coordinator's inference from the plan, the schemas and Standard 17, and the 
 - **Guard.** `test/no-phase-creep.test.mjs` now requires these files and that a bare `init` refuses; the
   attestation, exception, container, workflow and adapter restrictions are unchanged.
 - **Limits.** Templates are LF in git and CRLF in this Windows working tree, and `init` copies working-tree
-  bytes, so a target inherits the checkout's line endings; no `.gitattributes` was added (Q8). Coverage is
+  bytes, so a target inherits the checkout's line endings; no `.gitattributes` was added (Q8; answered A, vendor-only rule, on 2026-10-14). Coverage is
   still declared, not measured. The human report's closing NOTE prints on a refused run too.
 
 **Deliberately not built, and asserted absent by test:** the remaining 36 standards, shards for

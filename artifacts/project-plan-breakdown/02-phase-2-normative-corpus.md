@@ -569,7 +569,7 @@ Built to §12.2–§12.4. Decisions the workers made beyond the contract, each i
 
 **Known limits.** Templates are LF in git and CRLF in this Windows working tree, and `init` copies
 working-tree bytes, so a target inherits the checkout's line endings. Repeating `init` is unchanged within
-one checkout. No `.gitattributes` was added (Q8). `init` writes no `evaluation-plan.yml`, no `.gitignore`
+one checkout. No `.gitattributes` was added (Q8; answered A, vendor-only rule, on 2026-10-14). `init` writes no `evaluation-plan.yml`, no `.gitignore`
 entry and nothing outside the three core files and the optional `docs/ai/` set. The file set, marker forms,
 destination and conflict behaviour are the coordinator's inference from the plan, the schemas and Standard 17;
 the owner may reverse any of them.

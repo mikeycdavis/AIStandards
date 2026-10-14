@@ -132,6 +132,12 @@ test("the repository-wide scan decides relative specifiers against the repositor
     "called without new": 'URL("https://example.com/")',
     "new without an argument list": "new URL",
     "a member read without new": "globalThis.URL",
+    "URL.bind with a path, constructed later": 'U = URL.bind(null, "../../outside.mjs"); new U(import.meta.url)',
+    "URL.call": 'URL.call(null, "../../outside.mjs", import.meta.url)',
+    "URL.apply": 'URL.apply(null, ["../../outside.mjs", import.meta.url])',
+    "URL.prototype": "URL.prototype.constructor",
+    "a computed member of URL": 'URL["bind"](null, x)',
+    "a bind on the qualified constructor": 'globalThis.URL.bind(null, "../../outside.mjs")',
   };
   for (const [label, expr] of Object.entries(spellings)) {
     assert.notDeepEqual(url("export const u = " + expr + ";\n"), [], "must be an offender: " + label);
@@ -143,6 +149,9 @@ test("the repository-wide scan decides relative specifiers against the repositor
     "a URL that names no file of this module": 'new URL("https://example.com/")',
     "a static member of URL": "URL.canParse(input)",
     "a static member of globalThis.URL": "globalThis.URL.canParse(input)",
+    "URL.createObjectURL": "URL.createObjectURL(blob)",
+    "URL.revokeObjectURL": "URL.revokeObjectURL(objectUrl)",
+    "URL.parse": "URL.parse(text)",
     "URL named in an import clause": 'import { URL, fileURLToPath } from "node:url";\nexport const f = fileURLToPath;',
     "URL in a string": 'export const s = "new URL(x)";',
     "URL in a comment": "// new URL(x, import.meta.url)\nexport const a = 1;",

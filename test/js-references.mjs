@@ -499,6 +499,9 @@ function statementSpecifier(tokens, at, isImport) {
   return null;
 }
 
+// Members of URL that do not turn a path into a URL: they test, parse a complete URL string, or manage object URLs.
+const URL_STATIC_SAFE = ["canParse", "createObjectURL", "revokeObjectURL", "parse"];
+
 // Whether the `URL` identifier at `k` is the constructor of a `new` expression, in any spelling that keeps the
 // name visible: `new URL(`, `new globalThis.URL(`, `new window.URL(`, `new (URL)(`, `new (self.URL)(`.
 function isConstructedAt(tokens, k) {
@@ -559,8 +562,11 @@ export function moduleReferences(source) {
     }
     // `URL` is how a module names a file next to itself (`new URL("./x", import.meta.url)`). Anything that
     // is not a recognised construction (an alias, Reflect.construct, a value passed on) is unreadable, never
-    // skipped; `URL.canParse` and the like (a following `.`) and an import clause naming it are not.
-    if (tk.t === "id" && tk.v === "URL" && !inClause.has(k) && !(tokens[k + 1] && tokens[k + 1].t === "punct" && tokens[k + 1].v === ".") && !isConstructedAt(tokens, k)) {
+    // skipped. Only the static members that cannot make a URL from a path (URL_STATIC_SAFE) and an import
+    // clause naming it are not references; `URL.bind(...)`, `.call`, `.apply`, `.prototype` and any other
+    // member are, because each can hand back a constructor for a later `new`.
+    const staticSafe = tokens[k + 1] && tokens[k + 1].t === "punct" && tokens[k + 1].v === "." && tokens[k + 2] && tokens[k + 2].t === "id" && URL_STATIC_SAFE.includes(tokens[k + 2].v);
+    if (tk.t === "id" && tk.v === "URL" && !inClause.has(k) && !staticSafe && !isConstructedAt(tokens, k)) {
       unreadable.push({ form: "url", specifier: `reference to URL that is not a literal construction at offset ${tk.s}` });
     }
     if (tk.t !== "punct" || tk.v !== "(" || tk.syn) continue;
