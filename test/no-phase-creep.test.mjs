@@ -16,6 +16,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { REPO, cli, validate, fixture } from "./helpers.mjs";
+import { externalReferences } from "./js-references.mjs";
 
 const read = (rel) => fs.readFileSync(path.join(REPO, rel), "utf8");
 const exists = (rel) => fs.existsSync(path.join(REPO, rel));
@@ -52,20 +53,44 @@ test("invariant 4: no lockfile, no installed modules and no registry configurati
 test("invariant 4: every runtime import under scripts/ is a node: builtin or a local module", () => {
   const offenders = [];
   for (const file of filesUnder("scripts").filter((f) => /\.(mjs|js|cjs)$/.test(f))) {
-    const text = read(file);
-    for (const m of text.matchAll(/(?:^|\n)\s*(?:import|export)[^;'"]*?from\s*["']([^"']+)["']/g)) {
-      const spec = m[1];
-      if (spec.startsWith("node:") || spec.startsWith(".") || spec.startsWith("/")) continue;
-      offenders.push(`${file}: ${spec}`);
-    }
-    for (const m of text.matchAll(/\bimport\s*\(\s*["']([^"']+)["']/g)) {
-      if (!m[1].startsWith("node:") && !m[1].startsWith(".")) offenders.push(`${file}: dynamic ${m[1]}`);
-    }
-    for (const m of text.matchAll(/\brequire\s*\(\s*["']([^"']+)["']/g)) {
-      if (!m[1].startsWith("node:") && !m[1].startsWith(".")) offenders.push(`${file}: require ${m[1]}`);
-    }
+    for (const o of externalReferences(read(file))) offenders.push(`${file}: ${o}`);
   }
   assert.deepEqual(offenders, [], "a bare import specifier is a third-party dependency resolved from the environment");
+});
+
+test("the repository-wide import scan itself: every form that names a module is read, and unreadable ones are offenders", () => {
+  const must = {
+    "side-effect import of a package": 'import "package";\n',
+    "static import": 'import x from "package";\n',
+    "named import with a string name": 'import { "a-b" as c } from "package";\n',
+    "re-export with a string name": 'export { "a-b" as c } from "package";\n',
+    "namespace re-export with a string name": 'export * as "ns" from "package";\n',
+    "import with attributes": 'import x from "package" with { type: "json" };\n',
+    "side-effect import with attributes": 'import "package" with { type: "json" };\n',
+    "import across lines": 'import {\n  a,\n  b,\n} from "package";\n',
+    "dynamic import": 'export const p = import("package");\n',
+    "dynamic import with options": 'export const p = import("package", { with: { type: "json" } });\n',
+    "require with a trailing comma": 'const x = require("package",);\n',
+    "require with extra arguments": 'const x = require("package", {});\n',
+    "non-literal require": 'const x = require(name);\n',
+    "createRequire": 'import { createRequire } from "node:module";\nconst r = createRequire(import.meta.url);\n',
+    "an import after a semicolon in a string": 'const s = ";"; import "package";\n',
+    "an unbalanced call": 'const x = require("package"\n',
+  };
+  for (const [label, text] of Object.entries(must)) assert.notDeepEqual(externalReferences(text), [], `must be an offender: ${label}`);
+  const may = {
+    "a node: builtin": 'import fs from "node:fs";\nexport { fs };\n',
+    "side-effect node: import": 'import "node:process";\n',
+    "a relative import": 'import { a } from "./a.mjs";\nexport { a };\n',
+    "a relative side-effect import": 'import "./a.mjs";\n',
+    "a relative re-export": 'export * from "../b.mjs";\n',
+    "a relative dynamic import with options": 'export const p = import("./a.mjs", { with: { type: "json" } });\n',
+    "a mention in a comment": '// import "package";\n/* require("package") */\nexport const a = 1;\n',
+    "a mention in a string": 'export const s = "import \\"package\\"; require(\'package\')";\n',
+    "import.meta": 'export const u = import.meta.url;\n',
+    "a property named import": 'export const f = (o) => o.import("x");\n',
+  };
+  for (const [label, text] of Object.entries(may)) assert.deepEqual(externalReferences(text), [], `must be accepted: ${label}`);
 });
 
 test("init exists, but only ever runs against an explicitly selected target", () => {
