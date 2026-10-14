@@ -534,6 +534,18 @@ export function moduleReferences(source) {
       const spec = statementSpecifier(tokens, k, tk.v === "import");
       if (spec !== null) specifiers.push({ form: tk.v === "import" ? "import" : "export-from", specifier: spec });
     }
+    if (tk.t === "id" && tk.v === "URL" && tokens[k - 1] && tokens[k - 1].v === "new" && tokens[k + 1] && tokens[k + 1].v === "(" && !tokens[k + 1].syn) {
+      // `new URL(x, import.meta.url)` names a file next to this one: a literal x is a reference to check,
+      // a non-literal x is unreadable. Any other base is not a reference to a file by this module.
+      const args = callArguments(tokens, k + 1);
+      const base = args && args[1] ? args[1].map((t) => t.v).join("") : null;
+      if (args === null) {
+        unreadable.push({ form: "url", specifier: `unparseable call at offset ${tk.s}` });
+      } else if (base === "import.meta.url") {
+        if (args[0].length === 1 && args[0][0].t === "str") specifiers.push({ form: "url", specifier: args[0][0].v });
+        else unreadable.push({ form: "url", specifier: `non-literal at offset ${tk.s}` });
+      }
+    }
     if (tk.t !== "punct" || tk.v !== "(") continue;
     const callee = calleeAt(tokens, k);
     if (!callee) continue;
@@ -558,36 +570,48 @@ export function moduleReferences(source) {
  * references (a non-literal require, createRequire, an unparseable call or source) are reported too, never
  * skipped. A relative specifier is resolved against the importing file: it is an offender when it holds
  * `\`, `%`, `?` or `#` (a relative specifier is a URL to Node), when it lands outside the root
- * (`../../outside.mjs`), or when, existing, its real path does (a link). `where.io` is an injectable
- * file system (existsSync, realpathSync).
+ * (`../../outside.mjs`), when its real path does (an in-repository link whose target is outside), or when
+ * it does not exist (containment cannot be proved). Literal `new URL(x, import.meta.url)` is read the same
+ * way; a non-literal one is unreadable. `where.io` is an injectable file system (existsSync, realpathSync).
  */
 export function externalReferences(source, where) {
   if (!where || typeof where.file !== "string" || typeof where.root !== "string") throw new TypeError("externalReferences needs { file, root }");
   const io = where.io ?? fs;
   const real = (p) => (io.realpathSync.native ?? io.realpathSync)(p);
-  const settle = (p) => {
+  let root = null;
+  try {
+    root = real(path.resolve(where.root));
+  } catch {
+    root = null;
+  }
+  // "ok", "missing" (containment cannot be proved), "unresolvable" or "outside"; case-insensitive file
+  // systems are handled by comparing REAL paths with path.relative, never a string prefix.
+  const place = (target) => {
     try {
-      return io.existsSync(p) ? real(p) : p;
+      if (!io.existsSync(target)) return "missing";
+      if (root === null) return "unresolvable";
+      const rel = path.relative(root, real(target));
+      return rel !== "" && rel.split(path.sep)[0] !== ".." && !path.isAbsolute(rel) ? "ok" : "outside";
     } catch {
-      return null;
+      return "unresolvable";
     }
-  };
-  const root = settle(path.resolve(where.root));
-  const inside = (p) => {
-    if (p === null || root === null) return false;
-    const rel = path.relative(root, p);
-    return rel !== "" && rel.split(path.sep)[0] !== ".." && !path.isAbsolute(rel);
   };
   const { specifiers, unreadable } = moduleReferences(source);
   const out = unreadable.map((u) => `${u.form} ${u.specifier}`);
   for (const { form, specifier } of specifiers) {
     if (specifier.startsWith("node:")) continue;
-    if (!specifier.startsWith(".")) {
+    // `new URL(x, import.meta.url)` resolves x as a URL reference: a bare "data/x.json" is relative, and
+    // an absolute URL (any scheme) is not a path in this repository.
+    const urlForm = form === "url";
+    const relative = urlForm ? !/^[A-Za-z][A-Za-z0-9+.-]*:/.test(specifier) && !specifier.startsWith("/") : specifier.startsWith(".");
+    if (!relative) {
       out.push(`${form} ${specifier}`);
     } else if (/[\\%?#]/.test(specifier)) {
       out.push(`${form} ${specifier} is not a plain relative path`);
-    } else if (!inside(settle(path.resolve(path.dirname(where.file), specifier)))) {
-      out.push(`${form} ${specifier} lands outside the repository`);
+    } else {
+      const where2 = place(path.resolve(path.dirname(where.file), specifier));
+      if (where2 === "missing") out.push(`${form} ${specifier} does not exist, so containment cannot be proved`);
+      else if (where2 !== "ok") out.push(`${form} ${specifier} lands outside the repository or cannot be resolved`);
     }
   }
   return out;

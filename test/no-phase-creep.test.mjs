@@ -59,28 +59,85 @@ test("invariant 4: every runtime import under scripts/ is a node: builtin or a l
   assert.deepEqual(offenders, [], "a bare import specifier is a third-party dependency resolved from the environment");
 });
 
-// A file at <root>/scripts/a.mjs, for the scan's own tests (nothing is read from disk).
+// A file at <root>/scripts/a.mjs, for the scan's own tests. The injected file system says every path exists
+// (except names starting "missing") and has no links, so only the containment logic is under test.
 const FAKE_ROOT = path.join(os.tmpdir(), "aistd-scan-root");
-const HERE_FILE = { file: path.join(FAKE_ROOT, "scripts", "a.mjs"), root: FAKE_ROOT };
+const FAKE_IO = {
+  existsSync: (p) => !path.basename(p).startsWith("missing"),
+  realpathSync: (p) => p,
+};
+const HERE_FILE = { file: path.join(FAKE_ROOT, "scripts", "a.mjs"), root: FAKE_ROOT, io: FAKE_IO };
 
 test("the repository-wide scan decides relative specifiers against the repository, not by their first character", () => {
-  const refs = (spec, where = HERE_FILE) => externalReferences(`import x from ${JSON.stringify(spec)};\n`, where);
+  const refs = (spec, where = HERE_FILE) => externalReferences("import x from " + JSON.stringify(spec) + ";\n", where);
   for (const ok of ["./b.mjs", "../tests/x.mjs", "./sub/../b.mjs", "../scripts/b.mjs"]) assert.deepEqual(refs(ok), [], ok);
-  for (const bad of ["../../outside.mjs", "../../../etc/x.mjs", "./../../outside.mjs", "./sub/../../../outside.mjs", "../..", "..", "./b.mjs?x=1", "./b.mjs#h", "./%2e%2e/x.mjs", ".\\b.mjs"]) {
-    assert.notDeepEqual(refs(bad), [], bad);
-  }
+  const bad = ["../../outside.mjs", "../../../etc/x.mjs", "./../../outside.mjs", "./sub/../../../outside.mjs", "../..", "..", "./b.mjs?x=1", "./b.mjs#h", "./%2e%2e/x.mjs", ".\\b.mjs"];
+  for (const spec of bad) assert.notDeepEqual(refs(spec), [], spec);
+  // a target that does not exist cannot be shown to be contained
+  assert.match(refs("./missing.mjs")[0], /does not exist/);
+  assert.match(refs("../missing-dir.mjs")[0], /does not exist/);
   // a file deeper in the tree reaches less far
-  const deep = { file: path.join(FAKE_ROOT, "scripts", "lib", "a.mjs"), root: FAKE_ROOT };
+  const deep = { ...HERE_FILE, file: path.join(FAKE_ROOT, "scripts", "lib", "a.mjs") };
   assert.deepEqual(refs("../../outside.mjs", deep), []);
   assert.notDeepEqual(refs("../../../outside.mjs", deep), []);
   // an existing relative target whose real path is outside the root (a link) is an offender
   const target = path.join(FAKE_ROOT, "scripts", "b.mjs");
-  const io = {
-    existsSync: (p) => p === FAKE_ROOT || p === target,
-    realpathSync: (p) => (p === target ? path.join(os.tmpdir(), "elsewhere.mjs") : p),
+  const linked = { ...FAKE_IO, realpathSync: (p) => (p === target ? path.join(os.tmpdir(), "elsewhere.mjs") : p) };
+  assert.notDeepEqual(refs("./b.mjs", { ...HERE_FILE, io: linked }), []);
+  // a root that cannot be resolved proves nothing
+  const noRoot = { ...FAKE_IO, realpathSync: () => { throw new Error("EACCES"); } };
+  assert.notDeepEqual(refs("./b.mjs", { ...HERE_FILE, io: noRoot }), []);
+  // the other literal forms are resolved the same way
+  const forms = {
+    "dynamic import": (spec) => "export const p = import(" + JSON.stringify(spec) + ");\n",
+    "require": (spec) => "const x = require(" + JSON.stringify(spec) + ");\n",
+    "re-export": (spec) => "export * from " + JSON.stringify(spec) + ";\n",
+    "side-effect import": (spec) => "import " + JSON.stringify(spec) + ";\n",
+    "new URL against import.meta.url": (spec) => "export const u = new URL(" + JSON.stringify(spec) + ", import.meta.url);\n",
   };
-  assert.notDeepEqual(refs("./b.mjs", { ...HERE_FILE, io }), []);
+  for (const [label, make] of Object.entries(forms)) {
+    assert.deepEqual(externalReferences(make("./b.mjs"), HERE_FILE), [], label + ": inside");
+    assert.notDeepEqual(externalReferences(make("../../outside.mjs"), HERE_FILE), [], label + ": outside");
+    assert.notDeepEqual(externalReferences(make("./missing.mjs"), HERE_FILE), [], label + ": missing");
+  }
+  // new URL: a bare path is relative; an absolute URL, a root-relative path and a non-literal are offenders
+  const url = (src) => externalReferences(src, HERE_FILE);
+  assert.deepEqual(url('export const u = new URL("data/x.json", import.meta.url);\n'), []);
+  assert.notDeepEqual(url('export const u = new URL("../../data/x.json", import.meta.url);\n'), []);
+  assert.notDeepEqual(url('export const u = new URL("file:///etc/passwd", import.meta.url);\n'), []);
+  assert.notDeepEqual(url('export const u = new URL("https://example.com/x.js", import.meta.url);\n'), []);
+  assert.notDeepEqual(url('export const u = new URL("/etc/passwd", import.meta.url);\n'), []);
+  // a root-relative URL is the file system root, not the repository, even when that path is inside it
+  const rootRelative = "/" + path.join(FAKE_ROOT, "scripts", "b.mjs").split(path.sep).join("/");
+  assert.notDeepEqual(url('export const u = new URL(' + JSON.stringify(rootRelative) + ', import.meta.url);\n'), []);
+  assert.notDeepEqual(url('export const u = new URL("a", import.meta.url;\n'), [], "an unbalanced new URL call");
+  assert.notDeepEqual(url("export const u = new URL(name, import.meta.url);\n"), []);
+  assert.notDeepEqual(url('export const u = new URL("a" + b, import.meta.url);\n'), []);
+  assert.deepEqual(url('export const u = new URL("https://example.com/");\n'), [], "a URL with no import.meta.url base names no file of this module");
   assert.throws(() => externalReferences("export const a = 1;\n"), TypeError);
+});
+
+test("real links are caught by the repository-wide scan (skipped, and reported, where links cannot be created)", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "aistd-scan-"));
+  const outside = root + "-outside.mjs";
+  try {
+    fs.mkdirSync(path.join(root, "scripts"));
+    fs.writeFileSync(path.join(root, "scripts", "ok.mjs"), "export const ok = 1;\n");
+    fs.writeFileSync(outside, "export const outside = 1;\n");
+    try {
+      fs.symlinkSync(outside, path.join(root, "scripts", "link.mjs"));
+    } catch (e) {
+      t.skip("symbolic links cannot be created here (" + e.code + "); the injected file system test runs the same logic");
+      return;
+    }
+    const where = { file: path.join(root, "scripts", "a.mjs"), root };
+    assert.deepEqual(externalReferences('import "./ok.mjs";\n', where), []);
+    assert.notDeepEqual(externalReferences('import "./link.mjs";\n', where), [], "an in-repository link whose target is outside");
+    assert.notDeepEqual(externalReferences('import "./nothing.mjs";\n', where), [], "a missing target");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+    fs.rmSync(outside, { force: true });
+  }
 });
 
 test("the repository-wide import scan itself: every form that names a module is read, and unreadable ones are offenders", () => {
