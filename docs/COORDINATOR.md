@@ -23,7 +23,7 @@ issue. Items that will end this way, **OBSERVED** from the plan files:
 | --- | --- | --- |
 | **Phase 7**, and cutting `1.0.0` | Needs an externally held scope registry, a reviewer already in its `authorisedReviewers`, a route for invoking this pack in a pipeline, and an **observed** enforcement run including a non-passing verdict | Q1, Q2; `07-phase-7-enforcer-integration.md` |
 | `humanSignOff` on the boundary review | A claim about who read what; **never set by tooling** | `artifacts/boundary-review.json` |
-| Open questions Q7, Q8, Q9–Q12, Q15–Q22 | Owner decisions; several change a rule's `standard` field, a validation type or an already-written standard's wording | `08-open-questions.md` |
+| Open questions Q7, Q9–Q12, Q15–Q22 (Q8 answered A, 2026-10-14) | Owner decisions; several change a rule's `standard` field, a validation type or an already-written standard's wording | `08-open-questions.md` |
 | Phase 6 gating decision | Valid only if the honest self-verdict permits it; never reached by lowering anything | `06-phase-6-dogfooding-and-docs.md` |
 | Phase 5 digest and hosted CI | The `node:20-bookworm` digest must be read from a registry, not recalled; this repository has no hosted-CI evidence | Q6; `05-phase-5-ci-and-adapter.md` |
 
@@ -45,8 +45,10 @@ nothing has been pushed** (OBSERVED 2026-10-03). Ask the owner first, every time
 7. A check that could not run is never a pass. **Scaffolding is not evidence** for any rule that reads it.
 8. This repository's own verdict is `NON_COMPLIANT` 0 (OBSERVED). That is a result, not a target: neither
    preserve it nor chase `COMPLIANT`.
-9. No repository-wide line-ending policy (Q8 is open). The only `.gitattributes` pins `scripts/vendor/**` to LF so the
-   vendored parser's hashes do not depend on a checkout; it decides nothing about any other file. Do not hand-patch
+9. No repository-wide line-ending policy (Q8 answered A by the owner, 2026-10-14). The only `.gitattributes` pins
+   `scripts/vendor/**` to LF so the vendored parser's hashes do not depend on a checkout; that rule is the answer and
+   it decides nothing about any other file. Revisit only when a second byte-pinned artifact appears outside
+   `scripts/vendor/`. Do not hand-patch
    `docs/architecture.md`; regenerate it.
 
 ## 3 · Where state lives
@@ -180,7 +182,7 @@ change the plan unilaterally.**
 | 2 | 14 of 53 standards; 39 unwritten; 9 namespaces have no shard; `standards-source-inventory.json` unwritten | Q-decisions only where a standard depends on one |
 | 3 | not started; detectors, evidence-availability architecture, bait fixtures | none known |
 | 4 | not started; includes **Standard 4** and the attestation mechanism | none known |
-| 5 | not started; containers, adapter, `diagrams`, workflows | Q6 digest read from a registry; Q8 if line endings matter |
+| 5 | not started; containers, adapter, `diagrams`, workflows | Q6 digest read from a registry; Q8 is answered A (revisit only for a second byte-pinned artifact outside `scripts/vendor/`) |
 | 6 | not started; docs corpus, `0.9.0`, gating decision | the ADR 0021 decision must be honest |
 | 7 | not started | **Q1, Q2**; an enforcer run; a reviewer; owner |
 
@@ -235,7 +237,7 @@ Rules for working beside them:
   (one broke a source file): write scripts with the Write tool instead.
 - **Working-directory drift.** A `cd` persists between calls; use absolute paths and `git -C`.
 - **Line endings.** `core.autocrlf=true`: LF in git, CRLF in the working tree. Compare bytes with Node, not
-  with Git Bash `grep`, which hides carriage returns. Do not "fix" it (Q8).
+  with Git Bash `grep`, which hides carriage returns. Do not "fix" it (Q8 answered A: no repository-wide rule).
 - **Node 18** is checked through the local Docker image:
   `MSYS_NO_PATHCONV=1 docker run --rm --pull=never --network none -v "F:/Repos/AIStandards:/src:ro" node:18-alpine sh -c '<copy tree to /w, then node --test ...>'`.
   Images present: node 18, 20, 22, 24 variants. Report which versions you actually ran.

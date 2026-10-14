@@ -94,13 +94,14 @@ There is no install step. Clone and run.
 git had no copy. There is now a safety net; keep it by committing each slice rather than accumulating
 another untracked tree.
 
-**`core.autocrlf` is `true` and there is no repository-wide line-ending policy.** Committed bytes are LF,
+**`core.autocrlf` is `true` and there is no repository-wide line-ending policy (Q8 answered A, 2026-10-14).** Committed bytes are LF,
 working-tree bytes are CRLF, and a clone on another platform will differ from this one at the byte level. The
 fidelity gate is unaffected because it normalizes CRLF→LF on both sides and declares that it does.
 The one `.gitattributes` that exists (added by ST-57) is `scripts/vendor/** text eol=lf` and covers only the
 vendored parser tree, so its recorded hashes do not depend on a checkout; it decides nothing about any other
-file. A repository-wide `.gitattributes` would rewrite the line endings of every file, so it is left as a
-deliberate open item (Q8) rather than done in passing. (The `init` note near the end of this section, "no
+file. Q8 was answered A by the owner on 2026-10-14: that vendor-only rule is the answer, no repository-wide
+rule is added, and the question is revisited only when a second byte-pinned artifact appears outside
+`scripts/vendor/`. (The `init` note near the end of this section, "no
 `.gitattributes` was added", is a dated record of that slice and is left as written.)
 
 **`.claude/` is untracked local tooling state, and a clean `git status` in one checkout is not
@@ -547,10 +548,10 @@ governance until a sign-off exists.
    unapproved, and its own reasoning does not reach the word "propose". Standard 11's R7 was scoped
    narrowly rather than propagating it, so the two standards currently differ on adjacent ground.
    This is the only open question that changes the wording of an already-written standard.
-5. **Whether to pin line endings repository-wide with a `.gitattributes`** — Q8. `core.autocrlf` is `true`. The one
-   `.gitattributes` that exists (ST-57) pins only `scripts/vendor/**` to LF so vendored hashes are checkout-independent;
-   it is not an answer to Q8. Nothing breaks today; it becomes real in Phase 5, where the container
-   materialises its clone with `core.autocrlf=false`.
+5. **~~Whether to pin line endings repository-wide with a `.gitattributes`~~ — Q8, ANSWERED A on 2026-10-14.**
+   `core.autocrlf` is `true`. The one `.gitattributes` that exists (ST-57) pins only `scripts/vendor/**` to LF so
+   vendored hashes are checkout-independent, and that vendor-only rule is the owner's answer: no repository-wide
+   rule is added. Revisit only when a second byte-pinned artifact appears outside `scripts/vendor/`. Packet: `F:\Repos\StandardsPortfolio-evidence\aistandards-125-q8-packet-2026-10-14.md`.
 6. **Whether the substantive authored content of Standards 08, 09, 13, 17 and 23 stands.** Each discloses every
    authored element in its Additions section — for 08, that safety cases are not graded by risk
    tier; for 09, the definitions of misuse and abuse, reading jailbreak attempts as Standard 21's

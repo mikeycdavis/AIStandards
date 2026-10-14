@@ -59,9 +59,9 @@ corrupts the run and produces failures unrelated to your change. Do not "optimis
 bytes are LF; working-tree bytes are CRLF. `scripts/fidelity.mjs` declares a single normalization (CRLF→LF on
 both sides) and reports raw-byte matches separately, so this is currently harmless. The one
 `.gitattributes` that exists (ST-57) pins only `scripts/vendor/**` to LF and decides nothing about any other
-file. Do **not** add a repository-wide `.gitattributes` as a side effect of other work — it rewrites every
-file's line endings in one commit and buries whatever you were actually doing. It is recorded as an open
-item (Q8) in `08-open-questions.md`. (The `init` note further down, "No `.gitattributes` was added", is a
+file. Do **not** add a repository-wide `.gitattributes` as a side effect of other work. The owner answered Q8
+(option A, 2026-10-14): the vendor-only rule is the answer and no repository-wide rule is added; the entry in
+`08-open-questions.md` records it and the revisit trigger. (The `init` note further down, "No `.gitattributes` was added", is a
 dated record of that slice and is left as written.)
 
 ---

@@ -174,7 +174,7 @@ test("line endings are LF in the tree, and git is told to keep them LF", () => {
   assert.match(attributes, /^scripts\/vendor\/\*\* +text +eol=lf$/m);
 });
 
-test(".gitattributes is scoped to the vendored tree and decides nothing about the rest of the repository (Q8 stays open)", () => {
+test(".gitattributes is scoped to the vendored tree and decides nothing about the rest of the repository (Q8 answered A: this vendor-only rule is the answer)", () => {
   const rules = fs.readFileSync(path.join(REPO, ".gitattributes"), "utf8").split(String.fromCharCode(10)).map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
   assert.ok(rules.length > 0);
   for (const rule of rules) assert.ok(rule.startsWith("scripts/vendor/"), `a repository-wide or foreign rule would decide Q8: ${rule}`);
