@@ -111,6 +111,47 @@ test("the repository-wide scan decides relative specifiers against the repositor
   const rootRelative = "/" + path.join(FAKE_ROOT, "scripts", "b.mjs").split(path.sep).join("/");
   assert.notDeepEqual(url('export const u = new URL(' + JSON.stringify(rootRelative) + ', import.meta.url);\n'), []);
   assert.notDeepEqual(url('export const u = new URL("a", import.meta.url;\n'), [], "an unbalanced new URL call");
+  // every spelling of the constructor, and every way of holding it that hides the name
+  const OUT = '"../../outside.mjs", import.meta.url';
+  const spellings = {
+    "member of globalThis": "new globalThis.URL(" + OUT + ")",
+    "member of window": "new window.URL(" + OUT + ")",
+    "member of self": "new self.URL(" + OUT + ")",
+    "member of global": "new global.URL(" + OUT + ")",
+    "member of an arbitrary object": "new anything.URL(" + OUT + ")",
+    "parenthesised": "new (URL)(" + OUT + ")",
+    "parenthesised member": "new (globalThis.URL)(" + OUT + ")",
+    "doubly parenthesised": "new ((URL))(" + OUT + ")",
+    "optional call": "new URL?.(" + OUT + ")",
+    "escaped name": "new " + String.fromCharCode(92) + "u0055RL(" + OUT + ")",
+    "a helper that takes the base as its second argument": "resolveHere(" + OUT + ")",
+    "Reflect.construct": "Reflect.construct(URL, [" + OUT + "])",
+    "an alias of the constructor": "(() => { const U = URL; return new U(" + OUT + "); })()",
+    "the constructor passed as a value": "make(URL)",
+    "the constructor compared": "(x instanceof URL)",
+    "called without new": 'URL("https://example.com/")',
+    "new without an argument list": "new URL",
+    "a member read without new": "globalThis.URL",
+  };
+  for (const [label, expr] of Object.entries(spellings)) {
+    assert.notDeepEqual(url("export const u = " + expr + ";\n"), [], "must be an offender: " + label);
+  }
+  const accepted = {
+    "member of globalThis, inside": 'new globalThis.URL("./b.mjs", import.meta.url)',
+    "parenthesised, inside": 'new (URL)("./b.mjs", import.meta.url)',
+    "member of window, bare relative, inside": 'new window.URL("b.mjs", import.meta.url)',
+    "a URL that names no file of this module": 'new URL("https://example.com/")',
+    "a static member of URL": "URL.canParse(input)",
+    "a static member of globalThis.URL": "globalThis.URL.canParse(input)",
+    "URL named in an import clause": 'import { URL, fileURLToPath } from "node:url";\nexport const f = fileURLToPath;',
+    "URL in a string": 'export const s = "new URL(x)";',
+    "URL in a comment": "// new URL(x, import.meta.url)\nexport const a = 1;",
+    "a longer identifier": "export const URLS = 1; export const MyURL = 2;",
+    "createRequire-free import.meta.url alone": "export const here = import.meta.url;",
+  };
+  for (const [label, expr] of Object.entries(accepted)) {
+    assert.deepEqual(url(expr + ";\n"), [], "must be accepted: " + label);
+  }
   assert.notDeepEqual(url("export const u = new URL(name, import.meta.url);\n"), []);
   assert.notDeepEqual(url('export const u = new URL("a" + b, import.meta.url);\n'), []);
   assert.deepEqual(url('export const u = new URL("https://example.com/");\n'), [], "a URL with no import.meta.url base names no file of this module");

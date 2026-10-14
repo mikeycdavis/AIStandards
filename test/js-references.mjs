@@ -474,7 +474,7 @@ function statementSpecifier(tokens, at, isImport) {
   const first = tokens[at + 1];
   if (!first) return null;
   if (isImport) {
-    if (first.t === "str") return first.v;
+    if (first.t === "str") return { spec: first.v, end: at + 1 };
     if (first.t === "punct" && (first.v === "(" || first.v === ".")) return null;
   }
   let depth = 0;
@@ -491,12 +491,31 @@ function statementSpecifier(tokens, at, isImport) {
       }
     } else if (tk.t === "id" && tk.v === "from" && depth === 0) {
       const spec = tokens[j + 1];
-      return spec && spec.t === "str" ? spec.v : null;
+      return spec && spec.t === "str" ? { spec: spec.v, end: j + 1 } : null;
     } else if (tk.t !== "id" && tk.t !== "str") {
       return null;
     }
   }
   return null;
+}
+
+// Whether the `URL` identifier at `k` is the constructor of a `new` expression, in any spelling that keeps the
+// name visible: `new URL(`, `new globalThis.URL(`, `new window.URL(`, `new (URL)(`, `new (self.URL)(`.
+function isConstructedAt(tokens, k) {
+  let start = k;
+  let end = k;
+  const punctAt = (i, v) => tokens[i] && tokens[i].t === "punct" && tokens[i].v === v;
+  for (;;) {
+    while (punctAt(start - 1, ".") && tokens[start - 2] && tokens[start - 2].t === "id") start -= 2;
+    if (punctAt(start - 1, "(") && !tokens[start - 1].syn && punctAt(end + 1, ")")) {
+      start -= 1;
+      end += 1;
+      continue;
+    }
+    break;
+  }
+  const before = tokens[start - 1];
+  return Boolean(before && before.t === "id" && before.v === "new" && punctAt(end + 1, "(") && !tokens[end + 1].syn);
 }
 
 // Whether the token at `k` is directly called: `x(...)` or `x?.(...)`.
@@ -520,6 +539,7 @@ export function moduleReferences(source) {
   const unreadable = [];
   const { tokens, ok } = tokenize(source);
   if (!ok) unreadable.push({ form: "source", specifier: "unparseable (unterminated string, template, regex or comment)" });
+  const inClause = new Set();
   for (let k = 0; k < tokens.length; k += 1) {
     const tk = tokens[k];
     if (tk.t === "id" && tk.v === "createRequire") unreadable.push({ form: "createRequire", specifier: `at offset ${tk.s}` });
@@ -531,22 +551,29 @@ export function moduleReferences(source) {
       unreadable.push({ form: "require", specifier: `computed reference that is not a literal call at offset ${tk.s}` });
     }
     if (tk.t === "id" && (tk.v === "import" || tk.v === "export") && !memberOf) {
-      const spec = statementSpecifier(tokens, k, tk.v === "import");
-      if (spec !== null) specifiers.push({ form: tk.v === "import" ? "import" : "export-from", specifier: spec });
-    }
-    if (tk.t === "id" && tk.v === "URL" && tokens[k - 1] && tokens[k - 1].v === "new" && tokens[k + 1] && tokens[k + 1].v === "(" && !tokens[k + 1].syn) {
-      // `new URL(x, import.meta.url)` names a file next to this one: a literal x is a reference to check,
-      // a non-literal x is unreadable. Any other base is not a reference to a file by this module.
-      const args = callArguments(tokens, k + 1);
-      const base = args && args[1] ? args[1].map((t) => t.v).join("") : null;
-      if (args === null) {
-        unreadable.push({ form: "url", specifier: `unparseable call at offset ${tk.s}` });
-      } else if (base === "import.meta.url") {
-        if (args[0].length === 1 && args[0][0].t === "str") specifiers.push({ form: "url", specifier: args[0][0].v });
-        else unreadable.push({ form: "url", specifier: `non-literal at offset ${tk.s}` });
+      const found = statementSpecifier(tokens, k, tk.v === "import");
+      if (found !== null) {
+        specifiers.push({ form: tk.v === "import" ? "import" : "export-from", specifier: found.spec });
+        for (let j = k; j <= found.end; j += 1) inClause.add(j);
       }
     }
-    if (tk.t !== "punct" || tk.v !== "(") continue;
+    // `URL` is how a module names a file next to itself (`new URL("./x", import.meta.url)`). Anything that
+    // is not a recognised construction (an alias, Reflect.construct, a value passed on) is unreadable, never
+    // skipped; `URL.canParse` and the like (a following `.`) and an import clause naming it are not.
+    if (tk.t === "id" && tk.v === "URL" && !inClause.has(k) && !(tokens[k + 1] && tokens[k + 1].t === "punct" && tokens[k + 1].v === ".") && !isConstructedAt(tokens, k)) {
+      unreadable.push({ form: "url", specifier: `reference to URL that is not a literal construction at offset ${tk.s}` });
+    }
+    if (tk.t !== "punct" || tk.v !== "(" || tk.syn) continue;
+    // Any call whose second argument is `import.meta.url` resolves its first argument against this file,
+    // whatever the callee is spelled: `new URL(x, import.meta.url)`, `new (URL)(...)`, `new g.URL(...)`,
+    // a helper. A literal first argument is a reference to check; anything else is unreadable.
+    const urlArgs = callArguments(tokens, k);
+    if (urlArgs === null) {
+      if (tokens[k - 1] && tokens[k - 1].t === "id" && tokens[k - 1].v === "URL") unreadable.push({ form: "url", specifier: `unparseable call at offset ${tokens[k].s}` });
+    } else if (urlArgs[1] && urlArgs[1].map((t) => t.v).join("") === "import.meta.url") {
+      if (urlArgs[0].length === 1 && urlArgs[0][0].t === "str") specifiers.push({ form: "url", specifier: urlArgs[0][0].v });
+      else unreadable.push({ form: "url", specifier: `non-literal at offset ${tokens[k].s}` });
+    }
     const callee = calleeAt(tokens, k);
     if (!callee) continue;
     const dynamicImport = callee.name === "import" && !callee.member;
