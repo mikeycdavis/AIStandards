@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 // Reading JavaScript source for module references and property-setting calls, shared by the vendor
 // isolation guard (vendor-yaml.test.mjs) and the repository-wide invariant-4 scan (no-phase-creep.test.mjs).
 // Nothing here matches call arguments or import clauses with a regular expression over text: the source is
@@ -550,15 +553,42 @@ export function moduleReferences(source) {
 }
 
 /**
- * Every reference under `source` that is not a `node:` builtin or a relative path: what a repository-wide
- * invariant-4 scan reports. Unreadable references (a non-literal require, createRequire, an unparseable
- * call or source) are reported too, never skipped.
+ * Every reference in `source` (the text of `where.file`) that is not a `node:` builtin or a plain relative
+ * path that lands inside `where.root`: what a repository-wide invariant-4 scan reports. Unreadable
+ * references (a non-literal require, createRequire, an unparseable call or source) are reported too, never
+ * skipped. A relative specifier is resolved against the importing file: it is an offender when it holds
+ * `\`, `%`, `?` or `#` (a relative specifier is a URL to Node), when it lands outside the root
+ * (`../../outside.mjs`), or when, existing, its real path does (a link). `where.io` is an injectable
+ * file system (existsSync, realpathSync).
  */
-export function externalReferences(source) {
+export function externalReferences(source, where) {
+  if (!where || typeof where.file !== "string" || typeof where.root !== "string") throw new TypeError("externalReferences needs { file, root }");
+  const io = where.io ?? fs;
+  const real = (p) => (io.realpathSync.native ?? io.realpathSync)(p);
+  const settle = (p) => {
+    try {
+      return io.existsSync(p) ? real(p) : p;
+    } catch {
+      return null;
+    }
+  };
+  const root = settle(path.resolve(where.root));
+  const inside = (p) => {
+    if (p === null || root === null) return false;
+    const rel = path.relative(root, p);
+    return rel !== "" && rel.split(path.sep)[0] !== ".." && !path.isAbsolute(rel);
+  };
   const { specifiers, unreadable } = moduleReferences(source);
   const out = unreadable.map((u) => `${u.form} ${u.specifier}`);
   for (const { form, specifier } of specifiers) {
-    if (!specifier.startsWith("node:") && !specifier.startsWith(".")) out.push(`${form} ${specifier}`);
+    if (specifier.startsWith("node:")) continue;
+    if (!specifier.startsWith(".")) {
+      out.push(`${form} ${specifier}`);
+    } else if (/[\\%?#]/.test(specifier)) {
+      out.push(`${form} ${specifier} is not a plain relative path`);
+    } else if (!inside(settle(path.resolve(path.dirname(where.file), specifier)))) {
+      out.push(`${form} ${specifier} lands outside the repository`);
+    }
   }
   return out;
 }

@@ -14,6 +14,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { REPO, cli, validate, fixture } from "./helpers.mjs";
 import { externalReferences } from "./js-references.mjs";
@@ -53,9 +54,33 @@ test("invariant 4: no lockfile, no installed modules and no registry configurati
 test("invariant 4: every runtime import under scripts/ is a node: builtin or a local module", () => {
   const offenders = [];
   for (const file of filesUnder("scripts").filter((f) => /\.(mjs|js|cjs)$/.test(f))) {
-    for (const o of externalReferences(read(file))) offenders.push(`${file}: ${o}`);
+    for (const o of externalReferences(read(file), { file: path.join(REPO, file), root: REPO })) offenders.push(`${file}: ${o}`);
   }
   assert.deepEqual(offenders, [], "a bare import specifier is a third-party dependency resolved from the environment");
+});
+
+// A file at <root>/scripts/a.mjs, for the scan's own tests (nothing is read from disk).
+const FAKE_ROOT = path.join(os.tmpdir(), "aistd-scan-root");
+const HERE_FILE = { file: path.join(FAKE_ROOT, "scripts", "a.mjs"), root: FAKE_ROOT };
+
+test("the repository-wide scan decides relative specifiers against the repository, not by their first character", () => {
+  const refs = (spec, where = HERE_FILE) => externalReferences(`import x from ${JSON.stringify(spec)};\n`, where);
+  for (const ok of ["./b.mjs", "../tests/x.mjs", "./sub/../b.mjs", "../scripts/b.mjs"]) assert.deepEqual(refs(ok), [], ok);
+  for (const bad of ["../../outside.mjs", "../../../etc/x.mjs", "./../../outside.mjs", "./sub/../../../outside.mjs", "../..", "..", "./b.mjs?x=1", "./b.mjs#h", "./%2e%2e/x.mjs", ".\\b.mjs"]) {
+    assert.notDeepEqual(refs(bad), [], bad);
+  }
+  // a file deeper in the tree reaches less far
+  const deep = { file: path.join(FAKE_ROOT, "scripts", "lib", "a.mjs"), root: FAKE_ROOT };
+  assert.deepEqual(refs("../../outside.mjs", deep), []);
+  assert.notDeepEqual(refs("../../../outside.mjs", deep), []);
+  // an existing relative target whose real path is outside the root (a link) is an offender
+  const target = path.join(FAKE_ROOT, "scripts", "b.mjs");
+  const io = {
+    existsSync: (p) => p === FAKE_ROOT || p === target,
+    realpathSync: (p) => (p === target ? path.join(os.tmpdir(), "elsewhere.mjs") : p),
+  };
+  assert.notDeepEqual(refs("./b.mjs", { ...HERE_FILE, io }), []);
+  assert.throws(() => externalReferences("export const a = 1;\n"), TypeError);
 });
 
 test("the repository-wide import scan itself: every form that names a module is read, and unreadable ones are offenders", () => {
@@ -96,7 +121,7 @@ test("the repository-wide import scan itself: every form that names a module is 
     "escaped optional call": "const x = \\u0072equire?.(\"package\");\n",
     "require.resolve of a package": "const p = require.resolve(\"package\");\n",
   };
-  for (const [label, text] of Object.entries(must)) assert.notDeepEqual(externalReferences(text), [], `must be an offender: ${label}`);
+  for (const [label, text] of Object.entries(must)) assert.notDeepEqual(externalReferences(text, HERE_FILE), [], `must be an offender: ${label}`);
   const may = {
     "a node: builtin": 'import fs from "node:fs";\nexport { fs };\n',
     "side-effect node: import": 'import "node:process";\n',
@@ -120,7 +145,7 @@ test("the repository-wide import scan itself: every form that names a module is 
     "a longer identifier": "export const requirements = 1; export const requireAll = 2;\n",
     "a property named import": 'export const f = (o) => o.import("x");\n',
   };
-  for (const [label, text] of Object.entries(may)) assert.deepEqual(externalReferences(text), [], `must be accepted: ${label}`);
+  for (const [label, text] of Object.entries(may)) assert.deepEqual(externalReferences(text, HERE_FILE), [], `must be accepted: ${label}`);
 });
 
 test("init exists, but only ever runs against an explicitly selected target", () => {
