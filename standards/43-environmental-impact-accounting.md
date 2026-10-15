@@ -148,10 +148,14 @@ consumed. Reporting an impact from a presence would turn a setting into a measur
 | Unknown filled silently | A hosted model's energy taken from another model's published figure with no label | R2 |
 | Estimate presented as measurement | A figure computed from token counts and a published coefficient described as measured | R2 |
 | Method unnamed | A single number with no account of how inputs were combined | R2 |
-| Stale or foreign basis | A figure for an earlier model or another region quoted for the current system | R3 |
+| Input unlabelled | An input with no status (measured, estimated, reported or unknown) | R2 |
+| Reported input without provenance | An input "reported by a provider" naming no source, or no disclosure revision or date | R2 |
+| Stale or foreign basis | A figure for an earlier model, period or region presented as describing the current system | R3 |
 | Grid assumed silently | "Runs on renewables" with no region, date or intensity | R3 |
 | Neutrality by offset alone | "Carbon-neutral AI" with the gross figure absent | R4 |
-| Low-impact claim with no figure | "Efficient" or "green" used as a description | R4 |
+| Low-impact claim with no figure | "Efficient" or "green" used as a description, naming no figure | R4 |
+| Offset without coverage | An offset or credit listed with no statement of what it covers | R4 |
+| Offset netted into the gross | Only a net figure after offsets is reported, the gross absent | R4 |
 | Projection stated as fact | A forecast of next year's impact written as a present result | R5 |
 | Setting read as impact | A framework report of "low-impact" because a region name or a small model is configured | R6 |
 
@@ -221,9 +225,9 @@ by a risk tier (Standard 2 R3).
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | A reported figure states whether training is in or out, which of inference, retrieval, storage, networking and end-user devices are counted, and whether embodied hardware is in or out; any comparison or ratio between figures states the difference in their boundaries | A number with no boundary, one that states only some of the three, or a comparison or ratio of figures with different boundaries that does not say so | A figure that states "training excluded; inference counted, retrieval, storage, networking and end-user devices excluded; operational energy only, embodied hardware excluded" must **not** be faulted for the narrow boundary |
-| R2 | Each input has a status label, a reported input names its source and disclosure revision or date, and the method is named | An estimate described as measured, an unknown replaced silently, or a "reported" input with no source | A project that records its hosted model's energy as "unknown" and reports no figure must **not** be reported as failing R2 |
-| R3 | A figure names model or class, period and its assumptions, including the grid intensity and its date where the calculation uses one | A figure with a number and no subject, period or assumptions, or a calculated emissions figure whose calculation uses a grid intensity and names none | A figure that names an old model and an old period, and says so, must **not** be flagged as stale |
-| R4 | A neutrality or low-impact claim cites the figure, with offsets reported separately and what each covers | "Carbon-neutral" with the gross figure absent | A project that publishes a gross figure and separately lists an offset must **not** be flagged for having one |
+| R2 | Each input has a status label, a reported input names its source and disclosure revision or date, and the method is named | An estimate described as measured; an unknown replaced silently; an input with no status label; a figure with no named method; or a "reported" input with no source, or with a source but no disclosure revision or date | A project that records its hosted model's energy as "unknown" and reports no figure must **not** be reported as failing R2 |
+| R3 | A figure names model or class, period and its assumptions, including the grid intensity and its date where the calculation uses one | A figure with a number and no subject, period or assumptions, or a calculated emissions figure whose calculation uses a grid intensity and names none; or a figure for an earlier model, period or region presented as describing the current system | A figure that names an old model and an old period, and says so, must **not** be flagged as stale |
+| R4 | A neutrality or low-impact claim cites the figure, with offsets reported separately and what each covers | "Carbon-neutral" or "low-impact" with the gross figure absent or not named; an offset with no stated coverage; or an offset netted into the gross figure so that only the net is reported | A project that publishes a gross figure and separately lists an offset must **not** be flagged for having one |
 | R5 | A projection is labelled as one and names its assumptions | A projection with no projection label, or with no named assumptions | A labelled projection with assumptions must **not** be flagged for being uncertain |
 | R6 | No detector, rule, audit finding or generated report in this repository states an impact verdict from presence | A detector, rule (a rule that treats a presence as establishing the property), audit finding or report that reported low-impact because a region name was present | Reporting that a region setting was *found*, as an observation with no verdict, is permitted |
 
