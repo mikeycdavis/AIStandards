@@ -67,8 +67,9 @@ It does **not** cover, and claims none of the ground of:
   groups and harms; it does not ask that the record be shown to a user.
 - **Personal data handling.** [Standard 13](13-personal-data-in-ai-systems.md) governs real personal
 data in prompts, traces, evaluation fixtures and model-adjacent stores. Whether a group attribute
-may lawfully be collected for a per-group measurement is a legal matter that no standard of this
-pack governs; this standard does not restate Standard 13, and R3 records the limit where a group
+may lawfully be collected for a per-group measurement is a legal matter that no written standard of
+this pack governs; this standard does not restate Standard 13, and R3 records the limit where a
+group
 cannot be measured.
 - **Evaluation planning.** How an evaluation is planned, scored and reported is
   [Standard 17](17-evaluation-plans-for-generative-systems.md). A per-group result is an evaluation
@@ -121,8 +122,8 @@ next run, and it cannot be held to a claim.
 **Where a system's quality, error rate or outcome is reported, the report MUST give the figure of
 each affected group recorded under R1 that can be measured, with the size of the group it was
 computed on, and MUST NOT be limited to an aggregate; where a group cannot be measured, the report
-MUST record that as a limit of the evaluation and MUST NOT present the absence of a measurement as
-parity.**
+MUST record that as a limit of the evaluation, with the reason, and MUST NOT present the absence of
+a measurement as parity.**
 
 An aggregate is dominated by the largest group. A group that is a small fraction of the evaluation
 set can be wrong in most of its cases and move the headline by less than its noise. The requirement is
@@ -143,8 +144,8 @@ a record of the person's characteristic.
 ### R4 — Record how the harm is distributed, and where a mitigation moves it
 
 **A project MUST record, for each harm identified under R1, which groups bear it and how, MUST
-record any proxy it has identified through which a group difference could reach an outcome without
-the group attribute being an input, together with how proxies were looked for, and MUST record where
+record how proxies were looked for and any proxy identified through which a group difference could
+reach an outcome without the group attribute being an input, and MUST record where
 a mitigation reduces a harm for one group by shifting it to another.**
 
 Removing a sensitive attribute from the inputs does not remove it from the outcomes: postcode, device,
@@ -192,8 +193,9 @@ The second sentence is a boundary of competence. Which attributes the law protec
 is appropriate, are contextual and jurisdictional, and a framework that shipped a list or a threshold
 would present a judgment from one context as a standard for all of them.
 
-**A fairness evaluation that has never been shown to detect a disparity is not demonstrated to
-work.** A check is shown by a disparity it finds in a case where one was put there.
+A fairness evaluation that has never been shown to detect a disparity is not demonstrated to work;
+it is shown by a disparity it finds in a case where one was put there. That is a note on project
+evidence, not a requirement.
 
 ## Failure modes
 
@@ -206,19 +208,19 @@ work.** A check is shown by a disparity it finds in a case where one was put the
 | Aggregate as verdict | A single accuracy figure reported while one group's error rate is several times another's | R3 |
 | Unmeasured read as equal | No group-level figure exists and the report says no disparity was found | R3 |
 | Tiny-group figure | A rate reported for a group of a few cases with no size alongside it | R3 |
-| Proxy ignored | The sensitive attribute is dropped from inputs and the outcome still tracks it | R4 |
+| Proxy not looked for | The sensitive attribute is dropped from inputs, no record shows proxies were looked for, and the outcome still tracks it | R4 |
 | Harm moved, reported as reduced | A mitigation lowers one group's rate and raises another's, and only the first is reported | R4 |
 | Non-user left out | The person scored or described by the system is not in any record | R1, R4 |
 | Route ending in nothing | Reports are received, logged and never examined | R5 |
 | Presence read as outcome | A framework report of "fair" because a fairness document or a bias library is present | R6 |
-| Framework-supplied list | A fixed list of protected attributes or a threshold applied to projects in other jurisdictions | R6 |
+| Framework-supplied list | A list of protected attributes, a preferred measure or a numeric threshold shipped by this framework | R6 |
 
 ## Evidence
 
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
-| R1 | A record of each output kind with its affected groups, harm and bearer, or a reasoned no-individual-consequence finding | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | The measure, groups, data, criterion and the reason for the choice, for each fairness claim | The project's evaluation records and published statements | Human review |
+| R1 | A record of each output kind with its affected groups, harm and bearer, or a reasoned no-individual-consequence finding; for any fairness statement, that record | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
+| R2 | The measure, groups, data, criterion and the reason for the choice, for each fairness claim, in a dated record that precedes the result | The project's evaluation records and published statements | Human review |
 | R3 | Per-group results with group sizes, and a statement of each group that was not measured and why | The project's evaluation results ([Standard 17](17-evaluation-plans-for-generative-systems.md) governs a plan, if any) | Human review of the records |
 | R4 | The harm-by-group record, the proxies identified and how they were looked for, and, where a mitigation shifts harm, the groups the shift falls on | The project's analysis documents and evaluation results | Human review |
 | R5 | The route, and a record of what became of reports received | Project operations records | Human review |
@@ -264,28 +266,27 @@ type or project severity, because the thing it prohibits is a behaviour of the t
 levels a rule would carry if one is minted; this release emits no framework finding at them.
 
 **Exemptibility.** R6 is not exemptible: no project circumstance makes it reasonable for a scan to
-report an effect from a presence, or to apply one jurisdiction's list to another's, and a mechanism
-for excepting the prohibition would be self-defeating. R2's prohibition on an unqualified fairness
-claim is likewise not exemptible, because an exception would record a project as knowingly making a
-claim no evidence can support; a project that wishes to say something stronger must supply the
-measurement. R1, R3, R4 and R5 reach a system only where its output affects people. That is a scope
-condition, not a disposition: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4's
-dispositions are recorded against catalog rules, this standard has none, and the policy schema
-offers no declaration for it. A project whose system lacks the subject records why in its own
-documents, and no detector in this release would contradict a false record. No level here is lowered
-by a risk tier
-(Standard 2 R3).
+report an effect from a presence, or to apply one jurisdiction's list to another's. R1's prohibition
+on describing a system as fair without the record, and R2's prohibition on an unqualified fairness
+claim, are not exemptible either, because an exception would record a project as knowingly making a
+claim no evidence can support. Each remaining duty reaches a system only on its own condition: R1's
+record where output affects people; R2's duties where a fairness or parity statement is made; R3
+where results are reported; R4 for each harm identified under R1; R5, a SHOULD, where output affects
+people. Where a condition does not hold the duty does not arise. That is a scope condition, not a
+disposition: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4's dispositions are recorded
+against catalog rules, this standard has none, and the policy schema offers no declaration for it.
+No level here is lowered by a risk tier (Standard 2 R3).
 
 ## Tests and falsifiers
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | An output kind that affects people has a recorded group set, harm and bearer | A system that scores or classifies people with no record of who bears an error | A system recording a reasoned "no individual consequence" finding must **not** be reported as missing a record |
-| R2 | A fairness claim names a measure, the reason it was chosen, the groups, the data and a criterion | "Fair", "equitable" or "bias-free" with any of them missing, a measure with no recorded reason for its selection, or a measure or criterion recorded only after the result it passed | A statement reporting a named measure on named groups with the number and no stronger claim must **not** be flagged |
+| R1 | Each output or decision a person bears a consequence from has a recorded group set, harm and bearer, covering people who are not users | Any such output or decision with no record of who bears an error; a person the system scores or describes who is in no record; a statement that the system is fair, unbiased or equitable with no R1 record | A system recording a reasoned "no individual consequence" finding must **not** be reported as missing a record |
+| R2 | A fairness claim names a measure, the reason it was chosen, the groups, the data and a criterion, in a record dated before the result it judges | "Fair", "equitable" or "bias-free" with any of them missing, a measure with no recorded reason for its selection, or a measure or criterion recorded only after the result it judged | A statement reporting a named measure on named groups with the number and no stronger claim must **not** be flagged |
 | R3 | A report carries per-group figures with sizes, or states which group was not measured and why | An aggregate-only report where a recorded group was measurable; a report stating no disparity or parity for a group that has no measurement; a per-group figure with no group size | A report stating "not measured, attribute not lawfully collected" must **not** be read as a failure to evaluate; a group with a very small size reported as such is not a defect |
-| R4 | Each identified harm has a record of which groups bear it and how; every proxy the project has identified is recorded, with how proxies were looked for; where a mitigation reduces a harm for one group by shifting it to another, the shift is recorded with the groups it falls on | A harm with no record of who bears it; a known proxy left unrecorded; a mitigation that shifts harm reported with its benefit to one group and no record of where the harm went | A project recording that no proxy was identified, with how it looked, must **not** be failed for the empty list; a system with no mitigation, or a mitigation with no harm shift, needs no shift record |
-| R5 | A route exists and a report received has a recorded disposition | A route that discards or never reads reports | A system with no individual-level consequence (R1) must not be failed for having no route |
-| R6 | No detector or report in this repository outputs a fairness verdict, an adequacy verdict for an evaluation, an effectiveness verdict for a mitigation, or a preferred measure, from presence, and none supplies a protected-attribute list or threshold | A detector that reported fair, adequate or effective because a bias-testing import or a fairness document was present, or that named a default measure | Reporting that a fairness document or library was *found*, as an observation with no verdict, is permitted |
+| R4 | Each identified harm has a record of which groups bear it and how; every proxy the project has identified is recorded, with how proxies were looked for; where a mitigation reduces a harm for one group by shifting it to another, the shift is recorded with the groups it falls on | A harm with no record of who bears it; an identified proxy left unrecorded; no record of how proxies were looked for; a harm record that says who bears it and not how; a mitigation that shifts harm reported with its benefit to one group and no record of where the harm went | A project recording that no proxy was identified, with how it looked, must **not** be failed for the empty list; a system with no mitigation, or a mitigation with no harm shift, needs no shift record |
+| R5 | A route exists and a report received has a recorded disposition | No route exists; a route unavailable to one of affected people, operators or reviewers; a route that discards or never reads reports; a well-founded report with no recorded outcome | A system with no individual-level consequence (R1) must not be failed for having no route |
+| R6 | No detector or report in this repository outputs a fairness verdict, an adequacy verdict for an evaluation, an effectiveness verdict for a mitigation, or a preferred measure, from presence, and none supplies a protected-attribute list or threshold | A detector that reported fair, adequate or effective because a bias-testing import or a fairness document was present, or that named a default measure, shipped a protected-attribute list or applied a numeric threshold | Reporting that a fairness document or library was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a fairness artifact, so no detector
 checks R1 to R5; they are enforced by review or not at all, and the last requirement holds by
@@ -295,10 +296,10 @@ a project that has the right subject and does the right thing.
 
 ## Exceptions and staleness
 
-There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to
-except. A project that knowingly does not meet R1, R3, R4 or R5 records that in its own documents
-(R2's prohibition on an unqualified claim is not exemptible, see Validation); Standard 2's
-dispositions apply to the application of a rule, and this standard has none.
+There is no policy-level exception mechanism in this release, because no rule exists to except;
+[Standard 2](02-ai-risk-tiering-and-applicability.md) R4's dispositions apply to the application of
+a rule, and this standard has none. A duty whose condition does not hold does not arise, and the
+project's own documents say why (see Validation); R1's and R2's prohibitions are not exemptible.
 
 **What invalidates a recorded group set, measure or result.** Each of these is a different subject, and
 a record made before the change describes the earlier one:
