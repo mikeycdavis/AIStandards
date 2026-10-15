@@ -35,7 +35,8 @@ that presents an AI feature to people through an interface: a conversational sur
 streamed content, a voice or multimodal channel, or an agent acting on a user's behalf in an interface
 they use.
 
-Covers: that the accessibility obligations the owner states reach AI features, and the limit of what this framework says about any of it.
+Covers: that the accessibility obligations the owner states reach AI features, and the limit of what
+this framework says about any of it.
 
 It does **not** cover, and claims none of the ground of:
 
@@ -117,7 +118,7 @@ asserts that it does, and neither is a requirement of this standard.
 
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
-| R1 | The project's accessibility record under the owner's standards, covering its AI-facing interfaces | The project's accessibility documentation and the owner's own evidence | Human review, by the owner's standards |
+| R1 | The evidence the owner's standards require, covering the project's AI-facing interfaces, in the form those standards require | The project's accessibility documentation and the owner's own evidence | Human review, by the owner's standards |
 | R2 | The absence of any accessibility rule or verdict of this framework's own | This repository's catalog, detectors and tests | Code review; see Implementation |
 
 Whether an accessibility requirement is *met* is the owner's evidence, established under the owner's
@@ -157,7 +158,7 @@ owner's own requirement is available is the owner's to state, and this pack gran
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | The accessibility record under the owner's standards includes the AI-facing interface | A record that excludes an AI-facing interface because it is generated, conversational or provider-supplied | A project with no AI-facing interface must **not** be failed for lacking a record |
+| R1 | The evidence the owner's standards require for accessibility, in whatever form those standards require it, covers the AI-facing interface | Evidence that excludes an AI-facing interface because it is generated, conversational or provider-supplied | A project with no AI-facing interface must **not** be failed for lacking evidence |
 | R2 | No rule, detector or report here asserts accessibility or defines an accessibility requirement | A catalog rule restating an owner requirement, or a report of "accessible" from a statement's presence | Reporting that an accessibility statement or an owner rule was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads an accessibility record, so no detector
@@ -249,7 +250,7 @@ has confirmed it. No ADR covers this standard — `artifacts/adr/` does not exis
 
 | Requirement | What would be needed | Why it is not here |
 | --- | --- | --- |
-| R1 | A place to reference the project's accessibility record | Both schemas are closed; a schema change is out of scope (plan 02 section 8) |
+| R1 | A place to reference the project's accessibility evidence | Both schemas are closed; a schema change is out of scope (plan 02 section 8) |
 | R2 | A test that no catalog id defines an accessibility requirement | Meaningful only if a rule is ever proposed in the area |
 
 **What no future release will implement.** An accessibility requirement minted in this catalog, or a
