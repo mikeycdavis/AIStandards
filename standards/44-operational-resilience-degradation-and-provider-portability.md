@@ -223,13 +223,16 @@ Three reasons, stated so a reader can disagree with any one of them:
    another, is the owner's decision; a proposal, if one is natural, is recorded in the pull request that
    introduced this document for per-rule approval.
 
-**Severity.** A reviewer's finding against R1 to R4 is reported at **warning** severity: the system may
-behave well, and what is missing is the account of it. A finding against R5 is reported at **error**
-severity, because it is a claim with nothing behind it and R5 is not exemptible. These levels are this
-repository's judgment, listed in Additions, and are not owner-approved. R1 to R5 are also
-`manual-review` obligations in this release. What a real outage will do is not a
-property of a repository, and no requirement here asks a reviewer to establish it. R6 constrains this framework and has
-no validation type, because the thing it prohibits is a behaviour of the tool.
+**Severity.** The standard separates a missing account from an observed failure. A reviewer's
+finding that a record, statement or label the requirement asks for is missing or incomplete is reported
+at **warning** severity: the system may behave well, and what is missing is the account of it. A
+finding that review has *observed* a falsifier occurring in the system or its documentation — the
+behaviour or claim the requirement forbids actually present — is reported at **error** severity, as is
+any finding against R3, which concerns a claim or a control whose absence is itself the failure, and a
+violation of R6 by a detector or report. These levels are this repository's judgment, listed in
+Additions, and are not owner-approved. R1 to R5 are also `manual-review` obligations in this release;
+the validation type and the severity are different things. R6 constrains this framework and has no
+validation type, because the thing it prohibits is a behaviour of the tool.
 
 **Exemptibility.** R6 is not exemptible, for the reason R6 of
 [Standard 25](25-grounding-and-hallucination-control.md) is not. R3 is not lowered by an outage: a
@@ -264,11 +267,14 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 except. A project that knowingly does not meet one records that in its own documents; Standard 2's
 dispositions apply to the application of a rule, and this standard has none.
 
-**Attestations and expiry.** This release provides no attestation mechanism for these records, and no
-record under this standard expires on a schedule. [Standard 2](02-ai-risk-tiering-and-applicability.md)'s
-attestation and expiry machinery attaches to catalog rules, and none exists here; attestations are
-Phase 4 work. Review-staleness is event-driven only: a record is stale when one of the events below
-occurs, and nothing in this release detects that.
+**Attestations and expiry.** No attestation is produced for these records in this release.
+[Standard 6](06-standard-structure-and-rule-identity.md) R8 makes `manual-review` rules attestable by
+default and `not-evaluable` ones never attestable, but it governs catalog rules, none exists here, and
+the attestation mechanism itself is later work ([Standard 5](05-verdict-vocabulary.md) records the
+`attested` disposition as not yet produced). No record under this standard expires on a schedule;
+[Standard 2](02-ai-risk-tiering-and-applicability.md) R5's event-driven expiry concerns applicability
+declarations and does not apply to these records. Review-staleness is event-driven only: a record is
+stale when one of the events below occurs, and nothing in this release detects that.
 
 **What invalidates a recorded dependency inventory, degraded mode or exercise.** Each is a different
 subject, and a record made before the change describes the earlier one:
@@ -315,8 +321,9 @@ owner-approved:
 - **The recheck of the precedent** at EngineeringStandards `3b1b18d` on 2026-10-14, including the
   observation that the standard's text and the rule record differ in level, which the boundary review
   did not make.
-- **The severity assignments** (warning for R1 to R4, error for R5) and the statement that no
-  attestation or scheduled expiry exists in this release.
+- **The severity assignments** (warning for a missing account, error for an observed failure, for R3
+  and for a detector's violation of R6) and the statement that no attestation or scheduled expiry
+  exists in this release.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
   decision to mint no id.
 
