@@ -25,9 +25,10 @@ regression testing" bullet of [`artifacts/prompts/original_prompt.md`](../artifa
 > [`artifacts/prompts/ai-standards-spec.md`](../artifacts/prompts/ai-standards-spec.md), which
 > passed both Phase 2 blocking reviews on 2026-09-04 — `node scripts/fidelity.mjs` and
 > `node scripts/inventory.mjs`. Those reviews are mechanical. The boundary posture is **O**, this
-> pack's own: [`artifacts/boundary-review.json`](../artifacts/boundary-review.json) records evidence
-> only for non-`O` postures and carries no entry for item 19, and its substantive half carries
-> `humanSignOff: null`.
+> pack's own: [`artifacts/boundary-review.json`](../artifacts/boundary-review.json) carries no
+> non-`O` posture entry for item 19 and lists it under `notGovernedElsewhere`, the items recorded
+> posture `O` "after searching the nine packs for an owner and finding none", and its substantive
+> half carries `humanSignOff: null`.
 >
 > **The brief supplies one word and this standard supplies the rest.** The brief's bullet names
 > "robustness" and states no requirement for it. The item is class `D` because its token is the
@@ -39,7 +40,7 @@ regression testing" bullet of [`artifacts/prompts/original_prompt.md`](../artifa
 Applies to any AI system within this pack's scope as [Standard 1](01-ai-system-manifest.md) draws
 it — a repository that invokes a model, retrieves context for one, or acts on a model's output —
 that reports, or relies on, a claim that the system continues to work under input that differs
-from its expected form.
+from its expected form, or that reports a result computed on perturbed input.
 
 Covers: how the variations a system must withstand are chosen and recorded; what a robustness
 result is measured against; how variations are specified and kept apart from the sets a system is
@@ -84,18 +85,21 @@ It does **not** cover, and claims none of the ground of, the following:
 - **Operational resilience** — latency, failover, outage behaviour. A system's tolerance of a
   provider being down is not a property of its input handling.
 
-**Boundary posture O.** The boundary review records none for this item, and this standard consults
-no sibling pack and reads none of one. Whether an adjacent pack governs perturbation testing of
-a model is **unknown**, not absent: no pack was examined for it. Where a project is also governed
-by a pack that does, Standard 7 R5 orders the two and a boundary defect is for the maintainers to
-fix.
+**Boundary posture O.** The boundary review records item 19 as one of the items posture `O` after
+a search of the nine packs for an owner that found none, which it describes as the negative control
+for an `O`. This standard relies on that recorded search and repeats none of it, so it names no
+adjacent pack as governing or not governing perturbation testing. The search carries no human
+sign-off, so the posture is a recorded finding and not a confirmed one. Where a project is also
+governed by a pack that does cover it, Standard 7 R5 orders the two and a boundary defect is for the
+maintainers to fix.
 
 ## Requirements
 
 ### R1 — Name the perturbation classes the system must withstand, and why
 
-**A system that makes a robustness claim MUST record the perturbation classes it is claimed to
-withstand, and MUST give for each the reason it is expected in operation.**
+**A system that makes a robustness claim, or reports a result under perturbation, MUST record the
+perturbation classes the claim or the result concerns, MUST give for each the reason it is expected
+in operation, and MUST record the classes it considered and did not test, with the reason.**
 
 A list of classes taken from a library's menu is a list of what the library does. The classes that
 matter are the ones the system's users and upstream producers actually generate: the input channel
@@ -105,6 +109,12 @@ short one is enough: "users paste from spreadsheets" is a reason; "standard prac
 
 **A class with no stated reason is a class nobody decided to care about.** Recording it still
 counts as coverage of that class, but the claim reaches no further than the recorded list (R5).
+
+**The list of considered-and-untested classes is what makes "not tested" finite.** The project
+cannot enumerate every variation there is, and this standard does not ask it to. It asks for the
+classes the project actually thought of and set aside — a language it does not yet serve, a length
+it does not yet handle — each with a reason. A class on neither list was not considered, and a
+claim says so (R5).
 
 ### R2 — Measure each class against a paired baseline and a stated bar
 
@@ -117,7 +127,10 @@ whether awkward input made it worse. A set of misspelled questions answered at 7
 good result for a system that scores 80 on the clean forms and a bad one for a system that scores
 97. The paired baseline is what makes the figure a statement about the perturbation.
 
-The bar is the project's: the permitted degradation, or a floor, per class. This standard fixes no
+The bar is the project's: the permitted degradation, or a floor, per class. **Each class's
+degradation is also recorded as its margin to its own bar** — how far above or below the floor, or
+how much of the permitted drop was used — so that classes measured with different scorers or
+scales can be compared under R4 without a common metric. This standard fixes no
 number, because that number would be this repository's invention. It requires only that the bar
 exist before the result does ([Standard 17](17-evaluation-plans-for-generative-systems.md) R1), and
 that the baseline be the same items, not a different clean sample.
@@ -146,7 +159,7 @@ is stated here because robustness work is where derived items are made in quanti
 ### R4 — Report per class, and name the worst
 
 **A robustness result MUST be reported for each class separately, MUST name the class with the
-largest degradation, and MUST NOT be presented only as one aggregate over classes. The number of variants behind each
+smallest margin to its bar (R2), and MUST NOT be presented only as one aggregate over classes. The number of variants behind each
 class's result MUST be stated.**
 
 An average over fifteen classes in which fourteen are untouched and one collapses reports a system
@@ -161,7 +174,7 @@ cannot make it without the number. This standard does not set a minimum count.
 ### R5 — A claim of robustness reaches only what was tested
 
 **A statement of robustness MUST be bounded to the classes recorded under R1 and measured under R2,
-MUST say which were not tested, and MUST NOT be worded as general.**
+MUST name the classes considered and not tested under R1, and MUST NOT be worded as general.**
 
 "Robust to the perturbations in the table, at the stated bars" is a claim. "Robust" is not. A
 system that was tested for typos and passed has been shown tolerant of typos; the claim does not
@@ -210,12 +223,11 @@ seen. It is **not-evaluable** from a repository.
 
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
-| R1 | The list of classes, each with the reason it is expected in operation | The evaluation plan, or a document it names | Human review |
+| R1 | The list of classes, each with the reason it is expected in operation, and the list of classes considered and not tested, each with a reason | The evaluation plan, or a document it names | Human review |
 | R2 | For each class: the bar, dated before the run, and the paired baseline and perturbed results for the same items | The evaluation plan and the run's record | Human review |
 | R3 | The generator, parameters and seed, or the committed variants; the split each variant is in; and the selection record: how the variants were drawn, fixed before the run, and the number generated against the number kept and scored | The suite, its data and the plan | Human review; split membership is checkable by reading, and a kept count below the generated count with no recorded reason is the finding |
-| R4 | Per-class results, the named worst class, and the count of variants per class | The evaluation report | Human review |
-| R5 | The claim as worded, with the tested and untested classes and the subject measured | The report, the manifest or the documentation that states it | Human review |
-| R5 (wording) | The claim as worded, read for whether it names the tested classes, the untested ones and the subject | The report, manifest or documentation that states it | Human review |
+| R4 | Per-class results with each margin to its bar, the class with the smallest margin named, and the count of variants per class | The evaluation report | Human review |
+| R5 (wording) | The claim as worded, read for whether it names the tested classes, the considered-and-untested classes (R1) and the subject measured | The report, manifest or documentation that states it | Human review |
 | R5 (robustness beyond the tested inputs) | None obtainable from a repository | — | **Not-evaluable** |
 | R6 | The absence of any detector that reports robustness from presence | This repository's own detectors and tests | Code review; see Implementation |
 
@@ -226,8 +238,10 @@ plan against the run's own record.
 ## Validation, severity, and exemptibility
 
 **This standard has no catalog rules of its own in this release.**
-[Standard 6](06-standard-structure-and-rule-identity.md) R3 requires every standard to cite at least
-one rule or record why it does not; this is that record.
+The Phase 2 acceptance criteria (plan 02 section 6) require every standard to cite at least one rule
+or to record in its Validation section why it ships with none; this is that record.
+[Standard 6](06-standard-structure-and-rule-identity.md) R3 separately requires each requirement to be
+falsifiable or declared not-evaluable, which the Tests and falsifiers section answers.
 
 Three reasons, stated so a reader can disagree with any one of them:
 
@@ -269,11 +283,11 @@ tier (Standard 2 R3).
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | Each recorded class carries a reason tied to operation | A class list with no reasons, or reasons that name only a library | A short, specific reason must **not** be failed for brevity |
+| R1 | Each recorded class carries a reason tied to operation, and each considered-and-untested class a reason | A class list with no reasons, or reasons that name only a library | A short, specific reason must **not** be failed for brevity |
 | R2 | Each class has a bar dated before the run and a baseline over the same items | A perturbed figure with no baseline, or a bar written after the result | A project whose bar is "no degradation" must **not** be failed for having no numeric tolerance |
 | R3 | The variants can be regenerated or are committed, none of a held-out item's variants is in the development split, and the selection record shows the draw fixed before the run with generated and kept counts | "Typos added" with no generator; paraphrases of a held-out item in the tuning set; a generated pool of which only the variants the system failed were kept, with no record of the draw | A class made of variants all in the same split as their sources must **not** be flagged |
-| R4 | Results per class, the worst class named, counts given | One aggregate only | An aggregate reported beside the per-class results must **not** be flagged |
-| R5 | The claim names the classes tested and those not tested, and the subject | An unqualified "robust" | A narrow, bounded claim must **not** be failed for being narrow |
+| R4 | Results per class with margin to bar, the smallest-margin class named, counts given | One aggregate only | An aggregate reported beside the per-class results must **not** be flagged |
+| R5 | The claim names the classes tested, the considered-and-untested classes, and the subject | An unqualified "robust" | A narrow, bounded claim must **not** be failed for being narrow |
 | R6 | No detector or report in this repository outputs a robustness verdict from presence | A detector that reported robustness evaluated because a fixture directory existed | Reporting that a perturbation fixture was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a plan's class list and no fixture
@@ -350,7 +364,8 @@ evaluation set to a model; R3 here governs variants a project derives. [Standard
 [Standard 7](07-boundary-with-adjacent-standards.md) R5 orders a conflict between packs.
 [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and
 non-lowering language used above, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is
-the requirement the Validation section answers by recording why no rule is shipped.
+the requirement the Tests and falsifiers section answers, and the Validation section records why no
+rule is shipped, as plan 02 section 6 asks.
 
 Items 20, 31, 34 and 35 are unwritten in this release; the lines drawn above are provisional until
 they are, and the later standards may legitimately move them. Open question Q19 (whether the two
