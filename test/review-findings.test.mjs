@@ -20,6 +20,8 @@ import os from "node:os";
 import path from "node:path";
 import { validate, fixture, resultFor as ruleIn, cli, REPO } from "./helpers.mjs";
 import { parseYaml } from "../scripts/yaml.mjs";
+import { parseStructuralBytes } from "../scripts/structural.mjs";
+import { spawnSync } from "node:child_process";
 
 const VERSIONED = "promptsec.prompt-is-versioned-artifact";
 const NO_INLINE = "promptsec.no-inline-system-prompt";
@@ -427,9 +429,16 @@ for (const [label, file, source] of BLOCK_SCALAR_NOT_FIRING) {
   });
 }
 
+// Valid-YAML forms of the three block-scalar boundary cases (measured to parse and to fire).
+const BLOCK_SCALAR_SEQ_KEY = `- documentation: |\n    text\n- "system": "${LONG}"\n`;
+const BLOCK_SCALAR_QUOTED_PIPE = `note: "a: |"\n"system": "${LONG}"\n`;
+const BLOCK_SCALAR_COMMENT_PIPE = `note: a # b: |\n"system": "${LONG}"\n`;
+
 const BLOCK_SCALAR_ENDS_FIRING = [
   ["a real key right after a block scalar ends by dedent", "src/p.yaml", `documentation: |\n  text\nsystem: "${LONG}"\n`],
-  ["a sequence-marker key right after a block scalar ends by dedent", "src/p.yaml", `a:\n  documentation: |\n    text\n  - "system": "${LONG}"\n`],
+  ["a sequence-marker key right after a block scalar ends by dedent (valid YAML)", "src/p.yaml", BLOCK_SCALAR_SEQ_KEY],
+  ["a pipe inside a closed quoted string after a key is not a block header", "src/p.yaml", BLOCK_SCALAR_QUOTED_PIPE],
+  ["a pipe inside a trailing comment is not a block header (valid YAML)", "src/p.yaml", BLOCK_SCALAR_COMMENT_PIPE],
   ["a quoted key after a blank line following a block scalar's dedent", "src/p.yaml", `documentation: |\n  text\n\n"system": "${LONG}"\n`],
   ["a key after an EMPTY block scalar", "src/p.yaml", `documentation: |\n"system": "${LONG}"\n`],
   ["a header-looking value in a quoted string does not open a block", "src/p.yaml", `note: "a |"\n"system": "${LONG}"\n`],
@@ -438,13 +447,7 @@ const BLOCK_SCALAR_ENDS_FIRING = [
   see foo: |
 "system": "${LONG}"
 `],
-  ["a pipe after an unclosed quote is not a block header", "src/p.yaml", `note: "a: |
-  "system": "${LONG}"
-`],
   ["an empty block scalar whose next key sits at the owning key column after a sequence marker", "src/p.yaml", `- documentation: |
-  "system": "${LONG}"
-`],
-  ["a pipe inside a trailing comment is not a block header", "src/p.yaml", `note: a # b: |
   "system": "${LONG}"
 `],
   ["a block scalar header in a non-YAML file is not special", "src/a.py", `x = {"a": 1}  # |\nclient.create(system="${LONG}")\n`],
@@ -464,6 +467,39 @@ for (const [label, file, source] of BLOCK_SCALAR_ENDS_FIRING) {
     for (const rule of [VERSIONED, NO_INLINE]) {
       const r = resultFor({ [file]: source }, rule);
       assert.equal(r.result, rule === VERSIONED ? "failed" : "warning", `${rule}: ${r.result}: ${r.message}`);
+    }
+  });
+}
+
+// ST-57 (#119). Three cases of this table were first written with YAML that is not valid YAML, so the
+// structural reader refuses them and a refused file is file-scoped unknown with no lexical fallback.
+// They are migrated to valid YAML that keeps each case's intended boundary under test. Each must produce
+// its FINDING, and must not be able to pass because the file became unknown: the guard below asserts the
+// file parses, is absent from the audit's unparseableFiles, and that the inline-prompt rules were
+// evaluated and violated (disposition `evaluated`), not withdrawn.
+const MIGRATED_FINDINGS = [
+  ["a sequence-marker key right after a block scalar ends by dedent", "src/p.yaml", BLOCK_SCALAR_SEQ_KEY],
+  ["a pipe inside a closed quoted string is not a block header (an unclosed quote has no valid-YAML form)", "src/p.yaml", BLOCK_SCALAR_QUOTED_PIPE],
+  ["a pipe inside a trailing comment is not a block header", "src/p.yaml", BLOCK_SCALAR_COMMENT_PIPE],
+];
+
+for (const [label, file, source] of MIGRATED_FINDINGS) {
+  test(`finding 8 (migrated, direct): ${label} is parseable and reports its finding`, () => {
+    const parsed = parseStructuralBytes(file, Buffer.from(source));
+    assert.equal(parsed.ok, true, `the migrated input must be valid YAML, got ${parsed.reason}`);
+    const dir = target({ [file]: source });
+    try {
+      const surface = JSON.parse(spawnSync(process.execPath, [path.join(REPO, "scripts", "standards.mjs"), "audit", `--dir=${dir}`, "--json"], { encoding: "utf8" }).stdout).evidenceSurface;
+      assert.equal(surface.unparseableFiles.total, 0, "the file must not be unknown");
+      const report = validate(dir).json;
+      for (const rule of [VERSIONED, NO_INLINE]) {
+        const r = ruleIn(report, rule);
+        assert.equal(r.disposition, "evaluated", `${rule}: must be evaluated, not withdrawn (${r.message})`);
+        assert.equal(r.result, rule === VERSIONED ? "failed" : "warning", `${rule}: ${r.message}`);
+        assert.deepEqual(r.evidence, [`${file} (${LONG.length} chars)`], rule);
+      }
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
     }
   });
 }

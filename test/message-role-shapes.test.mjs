@@ -20,7 +20,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { validate, fixture, resultFor as ruleIn } from "./helpers.mjs";
+import { spawnSync } from "node:child_process";
+import { validate, fixture, resultFor as ruleIn, REPO } from "./helpers.mjs";
+import { parseStructuralBytes } from "../scripts/structural.mjs";
 
 const VERSIONED = "promptsec.prompt-is-versioned-artifact";
 const NO_INLINE = "promptsec.no-inline-system-prompt";
@@ -53,6 +55,15 @@ function resultFor(files, rule) {
 }
 
 const call = (body) => `export const call = () => client.chat.completions.create({\n${body}\n});\n`;
+
+// Valid-YAML forms of three non-claim controls. Their first spellings were not valid YAML (`"system" x`
+// inside a flow mapping, and plain scalars containing `: `), so the structural reader refused them and
+// each control passed only because the file became unknown. These are the measured valid forms: the file
+// parses, the detector evaluates it, and it reports no inline prompt. (A plain YAML scalar cannot contain
+// `: `, so the ternary guard has no plain-scalar subject; the quoted form is its only valid YAML spelling.)
+const NONCLAIM_FLOW_ROLE = `- {role: "system x", content: "${LONG}"}\n`;
+const NONCLAIM_TERNARY_INSTRUCTION = `note: "ok ? systemInstruction : {parts: [{text: \\"${LONG}\\"}]}"\n`;
+const NONCLAIM_TERNARY_SYSTEM = `note: "ok ? system : \\"${LONG}\\""\n`;
 
 const ROLE_FIRING = [
   ["role before content, double-quoted keys", "src/a.js", call(`  messages: [{ "role": "system", "content": "${LONG}" }],`)],
@@ -150,7 +161,7 @@ const NOT_FIRING = [
   ["a role that is a TypeScript as-expression to another type", "src/a.ts", call(`  messages: [{ role: "system" as Role, content: "${LONG}" }],`)],
   ["a role composed in a single-quoted dict", "src/a.py", `messages = [{'role': 'system' + '-admin', 'content': '${LONG}'}]\n`],
   ["a Python conditional role", "src/a.py", `messages = [{"role": "system" if admin else "user", "content": "${LONG}"}]\n`],
-  ["a YAML flow role followed by trailing text", "src/p.yaml", `- {role: "system" x, content: "${LONG}"}\n`],
+  ["a YAML flow role whose quoted value is longer than the word system", "src/p.yaml", NONCLAIM_FLOW_ROLE],
   // short content, at and below the boundary
   ["content one character under the threshold", "src/a.js", call(`  messages: [{ role: "system", content: "${at(199)}" }],`)],
   ["short content, content first", "src/a.js", call(`  messages: [{ content: "${SHORT}", role: "system" }],`)],
@@ -206,7 +217,7 @@ role: system
   ["a quoted ternary operand", "src/a.js", `const x = ok ? "systemInstruction" : { parts: [{ text: "${LONG}" }] };\n`],
   ["a ternary operand after an operator", "src/a.js", `const x = ok ? !systemInstruction : { parts: [{ text: "${LONG}" }] };\n`],
   ["a ternary operand on its own line", "src/a.js", `const x = ok\n  ? systemInstruction\n  : { parts: [{ text: "${LONG}" }] };\n`],
-  ["a YAML plain scalar that contains the ternary text", "src/p.yaml", `note: ok ? systemInstruction : {parts: [{text: "${LONG}"}]}\n`],
+  ["a YAML quoted scalar that contains the ternary text", "src/p.yaml", NONCLAIM_TERNARY_INSTRUCTION],
   ["a labelled block", "src/a.js", `systemInstruction: { parts: [{ text: "${LONG}" }] }\n`],
   // The same ternary-operand class in the parameter shape (found re-checking the neighbouring grammar)
   ["a parameter name as a ternary operand", "src/a.js", `const x = ok ? system : "${LONG}";\n`],
@@ -355,7 +366,7 @@ const YAML_SEQ_FIRING = [
   ["a text entry first in the parts flow sequence", "src/p.yaml", `systemInstruction: {parts: [text: "${LONG}"]}\n`],
 ];
 const YAML_KEY_NOT_FIRING = [
-  ["a YAML plain scalar with a ternary mark", "src/p.yaml", `note: ok ? system : "${LONG}"\n`],
+  ["a YAML quoted scalar with a ternary mark", "src/p.yaml", NONCLAIM_TERNARY_SYSTEM],
   // Codex review of PR #103: in block form `? system: "..."` the mapping on the line is itself the complex key
   ["a block explicit key that is an inline mapping", "src/p.yaml", `? system: "${LONG}"
 `],
@@ -406,5 +417,36 @@ for (const [label, file, source] of YAML_KEY_NOT_FIRING) {
   test(`YAML key forms: ${label} does not report`, () => {
     const r = resultFor({ [file]: source }, VERSIONED);
     assert.notEqual(r.result, "failed", `${r.result}: ${JSON.stringify(r.evidence)}`);
+  });
+}
+
+// The three migrated controls above, asserted DIRECTLY. A control that is refused as unparseable would
+// also report `skipped`, so each is required to (a) parse, (b) be absent from the audit's
+// unparseableFiles, and (c) have been evaluated by the detector with nothing found: the rule's message
+// is the partial-assurance "Not established ... No long instruction literal found" one, never the
+// "could not be read structurally" unknown. That is an explicit non-claim, not a withdrawn file.
+for (const [label, source] of [
+  ["a flow role whose quoted value is longer than the word system", NONCLAIM_FLOW_ROLE],
+  ["a quoted scalar containing the systemInstruction ternary text", NONCLAIM_TERNARY_INSTRUCTION],
+  ["a quoted scalar containing the system ternary text", NONCLAIM_TERNARY_SYSTEM],
+]) {
+  test(`message shapes non-claim (migrated, direct): ${label} is parsed, evaluated and not claimed`, () => {
+    const parsed = parseStructuralBytes("src/p.yaml", Buffer.from(source));
+    assert.equal(parsed.ok, true, `the migrated input must be valid YAML, got ${parsed.reason}`);
+    const dir = target({ "src/p.yaml": source });
+    try {
+      const audit = spawnSync(process.execPath, [path.join(REPO, "scripts", "standards.mjs"), "audit", `--dir=${dir}`, "--json"], { encoding: "utf8" });
+      assert.equal(JSON.parse(audit.stdout).evidenceSurface.unparseableFiles.total, 0, "the file must not be unknown");
+      const { json } = validate(dir);
+      for (const rule of [VERSIONED, NO_INLINE]) {
+        const r = ruleIn(json, rule);
+        assert.equal(r.result, "skipped", rule);
+        assert.equal(r.disposition, "not-evaluated", rule);
+        assert.doesNotMatch(r.message, /could not be read structurally/, `${rule}: the file was withdrawn as unknown, not evaluated`);
+        assert.match(r.message, /No long instruction literal found at a model call site/, `${rule}: the detector must have run and found nothing`);
+      }
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 }
