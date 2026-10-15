@@ -67,7 +67,7 @@ It does **not** cover, and claims none of the ground of, the following:
 - **Gates for externally visible actions** — item 46, unwritten in this release.
 - **What the system must never do to its overseers.** Item 48, Safety and Oversight Prohibitions, is
   the negative face of this item's token in the specification and is unwritten. This standard states
-  the positive obligations and mints no prohibition; see Q-A below.
+  the positive obligations and mints no prohibition; see Q23 below.
 - **Records of what the system did**, and the investigation of what went wrong. Item 36
   (Auditability of AI Actions) and item 34 (AI Incident Response) are unwritten in this release.
 - **Whether the overseer is entitled to see the data they are shown.** That is
@@ -130,8 +130,8 @@ was withheld by the interface. What counts as an uncertainty signal is
 
 ### R3 — The overseer can intervene, not only observe
 
-**At every oversight point, the overseer MUST be able to decline or correct the output, and where the
-system runs over time MUST be able to pause and to stop it; and the system MUST NOT be able to
+**At every oversight point, the overseer MUST be able to decline the output and, where the output can
+be edited, to correct it, and where the system runs over time MUST be able to pause and to stop it; and the system MUST NOT be able to
 reverse, retry past or silently re-queue an overseer's decline or stop.**
 
 An oversight function whose only action is "approve" is a logging function with a button. Declining
@@ -166,7 +166,7 @@ relax it. Whether the gate fails closed when no overseer is available is Standar
 ### R5 — Oversight that is never exercised is recorded as such
 
 **A project SHOULD keep, for each oversight point, a record of how many items reached the overseer,
-how many were declined, corrected or paused, and how many were decided without a recorded decision
+how many were declined, corrected, paused or stopped, and how many were decided without a recorded decision
 (timed out, auto-closed or bulk-approved); and a record showing no intervention over a period in which
 the system was in use MUST be read as a finding to explain rather than as evidence the system is
 well behaved.**
@@ -275,7 +275,7 @@ Four reasons, stated so a reader can disagree with any one of them:
    would either duplicate it or widen it, and which is owed is a decision about Standard 11's rules, not
    a side effect of writing this document.
 4. **Where the prohibitive face belongs is open.** Whether "the system must not disable, evade or
-   degrade oversight" is stated here or as item 48's prohibition is undecided (Q-A). A rule minted here
+   degrade oversight" is stated here or as item 48's prohibition is undecided (Q23). A rule minted here
    would pre-empt that.
 
 **Proposed rules are in the pull request, not in `rules/`.** Whether any is wanted is a per-rule
@@ -285,19 +285,19 @@ decision for the owner; none is added to a shard by this change.
 this release; the table states what each requirement is and the severity a breach would carry were a
 rule minted, so that a consumer classifies it consistently.
 
-| Requirement | Validation type | Severity of a breach | Exemptible |
-| --- | --- | --- | --- |
-| R1 | manual-review | error | independence condition: no; otherwise yes, by not-applicable declaration where there is no oversight point |
-| R2 | manual-review | error | yes, as above |
-| R3 | manual-review | error | the requirement that a decline stick: no; otherwise yes, as above |
-| R4 | manual-review | error | yes, as above |
-| R5 (the record exists, `SHOULD`) | manual-review | warning | yes, as above |
-| R5 (the reason for a zero) | not-evaluable | none reported; not scored | not attestable |
-| R6 | manual-review | warning for the `SHOULD` design change, error for presenting review as item-by-item | yes, as above |
-| R7 | none for a consuming project; constrains this framework and is checked by code review | not applicable to a project | no |
+| Requirement | Validation type | Severity of a breach | Not-applicable declaration | Exception for a knowing breach |
+| --- | --- | --- | --- | --- |
+| R1 | manual-review | error | yes, where there is no oversight point | the independence condition: no; the rest: yes |
+| R2 | manual-review | error | yes, as R1 | yes |
+| R3 | manual-review | error | yes, as R1 | the requirement that a decline stick: no; the rest: yes |
+| R4 | manual-review | error for presenting an after-the-fact point as before the effect; warning for omitting the intervention window (`SHOULD`) | yes, as R1 | yes |
+| R5 (the record exists, `SHOULD`) | manual-review | warning | yes, as R1 | yes |
+| R5 (the reason for a zero) | not-evaluable | none reported; not scored | yes, as R1 | not attestable |
+| R6 | manual-review | warning for the `SHOULD` design change, error for presenting review as item-by-item | yes, as R1 | yes |
+| R7 | manual-review (code review of this repository, since it constrains this framework) | error for this repository's changes; not applicable to a consuming project | not applicable | no |
 
-R7 has no validation type because the thing it prohibits is a behaviour of the tool, which a consuming
-project cannot breach.
+R7 constrains a behaviour of the tool, which a consuming project cannot breach; it is reviewed in this
+repository's own changes.
 
 **Exemptibility.** R7 is not exemptible: no project circumstance makes it reasonable for a scan to
 report oversight from a presence, and a mechanism for excepting the prohibition would be
@@ -315,10 +315,10 @@ release would contradict a false declaration. No level here is lowered by a risk
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Each oversight point names a person or a role with at least one holder, and names what it is independent of | A role with no holder, or an approval generated by the system or by the requesting party | A reviewer who is the system's operator and is named must **not** be failed for that |
-| R2 | The overseer can reach the concrete artifact or action from the decision point | A decision screen that shows only a description the system wrote | A summary that links to the full artifact must **not** be flagged for being a summary |
+| R2 | From the decision point the overseer can reach the concrete artifact or action, the inputs it was made from (or a route to them), and any uncertainty signal the system holds | A decision screen that shows only a description the system wrote, or that hides the inputs or a held uncertainty signal | A summary that links to the full artifact must **not** be flagged for being a summary |
 | R3 | A decline stops the action, and the system does not re-submit it by another path | An action that proceeds after a decline, or a decline overwritten by a retry | A `propose` system whose output is simply not applied must **not** be failed for lacking a decline button |
 | R4 | The timing of each point is recorded, and an after-the-fact point is not described as before | A next-day review described as pre-effect | A stated after-the-fact design for a low-impact, reversible action must **not** be failed for its timing alone |
-| R5 | Counts per period exist, or their absence is stated | A claim that oversight "works" resting on a record with no interventions and no explanation | A system with a recorded, explained zero must **not** be flagged |
+| R5 | Counts per period exist, including stops; a statement that none are kept is reported as the warning, not as a pass | A claim that oversight "works" resting on a record with no interventions and no explanation, or on no record | A system with a recorded, explained zero must **not** be flagged |
 | R6 | The volume and time allotted are recorded, and the claim fits them | Item-by-item review claimed for a volume the assigned holders together cannot review | A stated sampling design with a rate must **not** be flagged as weaker oversight; a queue divided among enough holders to review every item must **not** be failed for its volume |
 | R7 | No detector or report in this repository outputs an oversight verdict from presence | A detector that reported "overseen" because an approval file existed | Reporting that an approval file was *found*, as an observation with no verdict, is permitted |
 
@@ -387,17 +387,16 @@ Specifically authored here, none of it owner-approved:
 
 Not authored here: the posture `O` and the search that supports it are the boundary review's.
 
-**Open questions, recorded and not answered** (to be numbered in
-`artifacts/project-plan-breakdown/08-open-questions.md` by whoever integrates; this change edits
-neither that file nor any count document):
+**Open questions, recorded and not answered** (Q23 to Q25 in
+[`artifacts/project-plan-breakdown/08-open-questions.md`](../artifacts/project-plan-breakdown/08-open-questions.md)):
 
-- **Q-A.** Is the prohibitive form — a system must not disable, evade, degrade or retry past its
+- **Q23.** Is the prohibitive form — a system must not disable, evade, degrade or retry past its
   overseers — item 48's, as the specification's "negative face of `human oversight`" suggests, or is it
   stated here? This standard states positive obligations only and relies on R3's "a decline must
   stick" as the sole must-not-adjacent clause.
-- **Q-B.** Should the general intervention capability (R3) and the halt record (Standard 11 R4) be one
+- **Q24.** Should the general intervention capability (R3) and the halt record (Standard 11 R4) be one
   rule or two, and in which standard's shard does it live?
-- **Q-C.** Is R1's exclusion of a model-instance reviewer from the meaning of "overseer" what the owner
+- **Q25.** Is R1's exclusion of a model-instance reviewer from the meaning of "overseer" what the owner
   wants, given that automated review may be a legitimate control?
 
 ## Relationship to other standards and ADRs
@@ -447,7 +446,7 @@ as a capability.
 | --- | --- | --- |
 | R1, R4 | A place to record overseers and timing: a schema change, or a named document a rule can find | Both schemas are closed; a change is a schema-versioning decision and Phase 2 section 8 puts it out of scope |
 | R2, R3, R5, R6 | A way to read a project's own review interface and decision records | The form is the project's; a repository scan cannot read a queue or a person, and Phase 3 detector and evidence-availability work follows the corpus |
-| Rule ids | An owner decision on Q-A and Q-B, and a shard placement | Not decided; this standard names none |
+| Rule ids | An owner decision on Q23 and Q24, and a shard placement | Not decided; this standard names none |
 | R7 | A test asserting no detector emits an oversight verdict | Meaningful only once a detector exists for it to constrain |
 
 **What no future release will implement.** A detector that reports a system overseen, an overseer able
