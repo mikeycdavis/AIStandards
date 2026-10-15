@@ -135,7 +135,7 @@ permitted drop in absolute scorer units, or both, in which case the class meets 
 both hold — and the range of the scorer, or record that the scorer is unbounded and no range is stated;
 MUST measure the unperturbed items from which its variants
 were made with the same subject and scorer; MUST report the result as a difference from that
-baseline; and MUST record the class's bar status, its loss and its headroom, and its margin where
+baseline; and MUST record the class's bar status, its loss where defined and its headroom, and its margin where
 the class meets its bar.**
 
 A robustness figure alone says only how well the system did on awkward input; it does not say
@@ -204,16 +204,19 @@ is stated here because robustness work is where derived items are made in quanti
 ### R4 — Report per class, and name the worst
 
 **A robustness result MUST be reported for each tested class separately, MUST name the worst class
-or every class tied for it under the order below, MUST name every class that failed on the clean
+of each group under the order below and every class tied for it, MUST name every class that failed on the clean
 items or whose loss is undefined, MUST state the number of variants behind each class's result, and
 MUST NOT be presented only as one aggregate over classes.**
 
 **The order, which is total up to ties.** Breached classes come before classes that meet their bar.
-Among breached classes, the larger loss is worse. Among classes that meet their bar, the smaller
-margin is worse. Classes with equal loss, or equal margin, are tied and all are named. A breached
-class whose loss is undefined is named alongside the worst defined one, and where every breached
-class has an undefined loss they are all named. This is an ordering of the report, not a claim that
-a margin and a loss are on one scale: a breach is always worse than a met bar.
+Breached classes are ordered in two groups that are not comparable with each other, because a loss
+on a stated range and a drop in raw scorer units share no scale: classes with a defined loss, where
+the larger loss is worse, and classes with an undefined loss, where the larger drop in oriented
+scorer units is worse. Among classes that meet their bar, the smaller margin is worse. Equal values
+are tied. The report names the worst class of each breached group that is non-empty, and every class
+tied for it; where there are no breached classes it names the worst class that meets its bar. This
+is an ordering of the report, not a claim that a margin and a loss are on one scale: a breach is
+always worse than a met bar.
 
 An average over fifteen classes in which fourteen are untouched and one collapses reports a system
 that has a small problem. The class that collapses is the one a user in that class meets, and for
@@ -284,7 +287,7 @@ seen. It is **not-evaluable** from a repository.
 | R1 | The claimed classes each with the reason it is expected in operation, and the set-aside classes each with a reason; no claimed class is untested and unlisted | The evaluation plan, or a document it names | Human review |
 | R2 | For each tested class: the bar and the scorer range (or the record that the scorer is unbounded and no range is stated), dated before the run; baseline and perturbed results over the same items with the same subject and scorer; the difference; bar status, loss (or its being undefined), headroom and margin where it meets its bar | The evaluation plan and the run's record | Human review |
 | R3 | The generator, parameters and seed, or the committed variants; the split each variant is in; and the selection record: how the variants were drawn, fixed before the run, the number generated and kept, and the reason for each variant not kept | The suite, its data and the plan | Human review; split membership is checkable by reading |
-| R4 | Per-class results with bar status, loss (or its being undefined), headroom and margin, the worst class (every class tied) named, each class failing on the clean items or with undefined loss named, and the count of variants per class | The evaluation report | Human review |
+| R4 | Per-class results with bar status, loss (or its being undefined), headroom and margin where the bar is met, the worst class of each non-empty breached group (or of the met classes) and every class tied for it named, each class failing on the clean items or with undefined loss named, and the count of variants per class | The evaluation report | Human review |
 | R5 (wording) | The claim as worded, read for whether it names the tested classes, the set-aside classes, the non-exhaustiveness statement and the subject measured | The report, manifest or documentation that states it | Human review |
 | R5 (robustness beyond the tested inputs) | None obtainable from a repository | — | **Not-evaluable** |
 | R6 | The absence of any detector that reports robustness from presence | This repository's own detectors and tests | Code review; see Implementation |
@@ -342,9 +345,9 @@ tier (Standard 2 R3).
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Each claimed class carries a reason tied to operation, each set-aside class a reason, and no claimed class is untested and unlisted | A class list with no reasons, or reasons that name only a library; no set-aside list; a claimed class that was never tested and is not listed as set aside | A short, specific reason must **not** be failed for brevity |
-| R2 | Each tested class has a bar and scorer range dated before the run, a baseline over the same items with the same subject and scorer, the result reported as a difference, and bar status, loss, headroom and margin | A perturbed figure with no baseline, a baseline on other items or another scorer, a result not given as a difference, no bar status, loss or headroom, a range not fixed before the run, or a bar written after the result | A project whose bar is "no degradation" must **not** be failed for having no numeric tolerance, a met zero bar must **not** be called a breach, and an unbounded scorer with no stated range must **not** be failed for lacking a loss when it says so |
+| R2 | Each tested class has a bar and a scorer range dated before the run (or the record that the scorer is unbounded and no range is stated), a baseline over the same items with the same subject and scorer, the result reported as a difference, and bar status, headroom and, where the range is stated, loss; a margin where the class meets its bar | A perturbed figure with no baseline, a baseline on other items or another scorer, a result not given as a difference, no bar status or headroom, a loss claimed with no range fixed before the run, a margin given for a breached class, or a bar written after the result | A project whose bar is "no degradation" must **not** be failed for having no numeric tolerance, a met zero bar must **not** be called a breach, an unbounded scorer with no stated range must **not** be failed for lacking a loss when it says so, and a breached class must **not** be failed for lacking a margin |
 | R3 | The variants can be regenerated or are committed; every variant is in the split of its source item; the selection record shows the draw fixed before the run, the generated and kept counts and a reason for each variant not kept | "Typos added" with no generator; a variant of a held-out item in the development split, or of a development item in the held-out set; a generated pool of which only the variants the system failed were kept, with no record of the draw or of why others were dropped | A class made of variants all in the same split as their sources must **not** be flagged; adjusting a generator on the development split while building it must **not** be flagged |
-| R4 | Results per tested class with bar status, loss, headroom and margin, the worst class and every class tied for it named, classes failing on the clean items or with undefined loss named, and counts given | One aggregate only; a tie for worst reported as one class; a class failing on the clean items or with undefined loss left out; a class result with no variant count or no headroom | An aggregate reported beside the per-class results must **not** be flagged |
+| R4 | Results per tested class with bar status, headroom, loss where defined and margin where the bar is met; the worst class of each non-empty breached group (or, with no breach, of the met classes) and every class tied for it named; classes failing on the clean items or with undefined loss named; counts given | One aggregate only; a tie for worst reported as one class; a class failing on the clean items or with undefined loss left out; a class result with no variant count or no headroom | An aggregate reported beside the per-class results must **not** be flagged |
 | R5 | The claim is bounded to the tested classes, names the set-aside classes and the subject, and says its lists are not exhaustive | An unqualified "robust"; a claim that omits the non-exhaustiveness statement, the subject or the set-aside classes; a claim that reaches a class on which no perturbed result was computed | A narrow, bounded claim that says its lists are not exhaustive must **not** be failed for being narrow |
 | R6 | No detector or report in this repository outputs a robustness verdict from presence | A detector that reported robustness evaluated because a fixture directory existed | Reporting that a perturbation fixture was *found*, as an observation with no verdict, is permitted |
 
