@@ -125,10 +125,13 @@ A class on neither list was not considered, and R5 has the claim say its lists a
 
 ### R2 — Report each tested class against its own bar and a paired baseline
 
-**For each tested class the project MUST state its bar before the run — a floor on the result, a
-permitted drop from the baseline, or both, in the scorer's own units, the class passing only if
-every stated bar holds — MUST measure the paired baseline with the same subject and scorer, and MUST
-report the result against the baseline and the bar as pass or fail.**
+**For each tested class the project MUST state its bar before the run — in the scorer's own terms,
+a floor on the result, a ceiling for a scorer where lower is better, a permitted drop or rise from
+the baseline in the scorer's bad direction, or, for a categorical, rubric or other non-numeric
+result, a pass criterion declared in advance; the class passing only if every stated bar holds —
+MUST measure the paired baseline with the same subject and scorer, with each source item weighted
+in the baseline as many times as it has scored variants or both sides aggregated by source item with
+the same weights, and MUST report the result against the baseline and the bar as pass or fail.**
 
 A robustness figure alone says only how well the system did on awkward input; it does not say
 whether awkward input made it worse. A set of misspelled questions answered at 78 percent is a
@@ -220,8 +223,8 @@ that has not yet been seen. It is **not-evaluable** from a repository.
 | Class off the list | A class with a perturbed result in the report that is missing from the tested list, or moved to the set-aside list | R1 |
 | Set-aside classes unlisted | Classes the project considered and did not test not recorded, so "not tested" has no edge | R1 |
 | Figure without baseline | "78 percent on perturbed input" with no measurement of the same items clean | R2 |
-| Different clean sample | A baseline measured on other items, another subject or another scorer than the ones perturbed | R2 |
-| Partial bar | A class marked pass with a stated floor or permitted drop unmet, a bar not in the scorer's units, or no bar stated at all | R2 |
+| Different clean sample | A baseline measured on other items, another subject, another scorer or other weighting than the ones perturbed | R2 |
+| Partial bar | A class marked pass with a stated bar unmet, a bar not in the scorer's terms, or no bar stated at all | R2 |
 | Moving bar | A floor or permitted drop chosen after the result, at the value the system reached | R2 |
 | Result without verdict | A result given with no statement of whether it met the bar | R2 |
 | Unrepeatable variants | "Typos were added" with no generator, seed or committed set, or a model-made variant with no model identifier | R3 |
@@ -244,7 +247,7 @@ that has not yet been seen. It is **not-evaluable** from a repository.
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | The tested classes each with the reason it is expected in operation, and the set-aside classes each with a reason; every class with a perturbed result is on the tested list | The evaluation plan, or a document it names | Human review |
-| R2 | For each tested class: the bar, in the scorer's units and dated before the run; the paired baseline over the items from which the scored variants were made and the perturbed result over the same items with the same subject and scorer; the pass or fail | The evaluation plan and the run's record | Human review |
+| R2 | For each tested class: the bar, in the scorer's terms and dated before the run; the paired baseline over the items from which the scored variants were made, weighted as the variants are, and the perturbed result over the same items with the same subject and scorer; the pass or fail | The evaluation plan and the run's record | Human review |
 | R3 | The generator, parameters and seed, or the committed variants; the model identifier for any model-made variant; the draw fixed before the run with generated and kept counts and a reason for each variant not kept; the split each variant is in | The suite, its data and the plan | Human review; split membership is checkable by reading |
 | R4 | Per-class bar, baseline, result, pass or fail and variant count; the failing classes named | The evaluation report | Human review |
 | R5 (wording) | The claim as worded, read for whether it is bounded to passing tested classes and names the failed classes, the set-aside classes, the non-exhaustiveness statement and the subject | The report, manifest or documentation that states it | Human review |
@@ -305,7 +308,7 @@ catalog rule id, and this standard has none. No level here is lowered by a risk 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Each tested class carries a reason tied to operation, each set-aside class a reason, and every class with a perturbed result is on the tested list | A class list with no reasons or reasons that name only a library; no set-aside list; a class with a perturbed result missing from the tested list or moved to the set-aside list | A short, specific reason must **not** be failed for brevity |
-| R2 | Each tested class has a bar in scorer units dated before the run, a paired baseline over the items from which the scored variants were made with the same subject and scorer, and a stated pass or fail that agrees with every stated floor and permitted drop | A perturbed figure with no baseline, a baseline on other items, another subject or another scorer, a result with no verdict, a class marked pass with a stated floor or permitted drop unmet, a bar not in scorer units or not stated, or a bar written after the result | A project whose bar is "no degradation" must **not** be failed for having no numeric tolerance |
+| R2 | Each tested class has a bar in the scorer's terms dated before the run, a paired baseline over the items from which the scored variants were made with the same subject and scorer and the same weighting, and a stated pass or fail that agrees with every stated bar | A perturbed figure with no baseline, a baseline on other items, another subject, another scorer or other weighting, a result with no verdict, a class marked pass with a stated floor, ceiling, permitted change or criterion unmet, a bar not stated or written after the result | A project whose bar is "no degradation" must **not** be failed for having no numeric tolerance; a lower-is-better scorer with a ceiling, or a rubric result with a declared criterion, must **not** be failed for lacking a floor |
 | R3 | The variants behind a reported or held-out result can be regenerated or are committed; any model-made variant names its model; the selection record shows the draw fixed before the run, the generated and kept counts and a reason for each variant not kept; every variant is in its source item's split | "Typos added" with no generator; a model-made variant with no model identifier; a draw fixed or replaced after the run or after seeing failures, with or without a record; generated or kept counts absent; a pool of which only the variants the system failed were kept; a variant of a held-out item in the development split, or of a development item in the held-out set | A class whose variants are all in their sources' split must **not** be flagged; adjusting a generator on the development split while building it must **not** be flagged |
 | R4 | Every tested class with a computed result is reported with bar, baseline, result, pass or fail and variant count, and every class that failed is named | One aggregate only; a tested class with a computed result absent from the report, or only passing classes reported; a failing class present in the table but not named; a class result with no variant count | An aggregate reported beside the per-class results must **not** be flagged |
 | R5 | The claim is bounded to passing tested classes and names the failed classes, the set-aside classes, the subject and that its lists are not exhaustive | An unqualified "robust"; a claim that covers a failed class; a claim that omits the failed classes, the set-aside classes, the subject or the non-exhaustiveness statement | A narrow, bounded claim that states its limits must **not** be failed for being narrow |
