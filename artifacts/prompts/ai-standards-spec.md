@@ -261,7 +261,7 @@ under [Authored items](#authored-items).
 | 37 | Fairness and Harm Distribution | D | `fairness` | O | — |
 | 38 | Accessibility of AI Features | D | `Accessibility` | D | — |
 | 39 | Transparency and System Documentation | D | `transparency` | B | — |
-| 40 | User Disclosure of AI Involvement | D | `user disclosure` | B | — |
+| 40 | User Disclosure of AI Involvement | D | `user disclosure` | B | standards/40-user-disclosure-of-ai-involvement.md |
 
 ### Band J — Cost, latency, environment, resilience · bullet 9
 
