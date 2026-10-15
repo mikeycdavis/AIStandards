@@ -56,7 +56,7 @@ Two terms, each defined here rather than by the brief:
   vector store, a tool API, a moderation service. The project's ordinary infrastructure (its
   databases, queues and application servers) is not a dependency in this sense; Scope excludes it.
 - A **degraded mode** is a defined, reduced service the system gives when a dependency is unavailable,
-  slow, rate-limited, changed or untrustworthy, which may be to decline.
+  slow, rate-limited or changed, which may be to decline.
 
 It does **not** cover, and claims none of the ground of, the following:
 
@@ -170,13 +170,12 @@ a request it served.
 | Failure | What it looks like | Requirement |
 | --- | --- | --- |
 | Unenumerated dependency | A moderation or embedding service whose outage nobody planned for | R1 |
-| Failure behaviour left to the exception | What happens on provider failure is whatever the HTTP client's default does | R1 |
+| Failure behaviour left to the exception | No record of what the system does on provider failure; the behaviour is whatever the HTTP client's default does | R1 |
 | Silent degradation | A response from a weaker model, or with no retrieved context, returned in the usual form | R2 |
 | Distinction kept in a trace only | The degraded flag exists in telemetry; the caller never receives it | R2 |
-| Degraded mode that acts | A system with a tool that proceeds on an indeterminate dependency | R2, [Standard 45](45-approval-gates.md) R6 |
+| Degraded mode that acts | A system with a tool that proceeds on an indeterminate dependency; reported under [Standard 45](45-approval-gates.md) R6, not restated here | Standard 45 R6 |
 | Fallback outside the controls | A secondary provider with no redaction, no output check, or different data terms | R3 |
 | Fallback chosen for availability only | Failing over to an unreviewed model because it is up, and serving without a control the primary path applies | R3 |
-| Abstraction as portability | One adapter implementation presented as provider independence | R4 |
 | Unstated swap cost | "We can switch providers" with no account of what behaves differently | R4 |
 | Never-run fallback | A failover path last exercised never, found broken in the outage | R5 |
 | Arrangement read as resilience | A framework report of "resilient" because a fallback model is configured | R6 |
@@ -228,7 +227,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 **Severity.** A finding is reported at **error** severity when review observes one of: a fallback
 serving an interaction without a control the primary path applies (R3); a degraded response presented in
 the form of a full one (R2); a degraded mode or fallback described as available that has never been
-exercised or whose latest exercise is older than its stated interval (R5); or a detector's violation of R6. **Every other finding is reported at warning
+exercised or whose latest exercise is older than its stated interval (R5); or a violation of R6 by any detector, rule, audit finding or generated report. **Every other finding is reported at warning
 severity**, including a missing or incomplete record, statement or label (R1 to R5), a missing
 statement of how a fallback's controls apply, and provider-specific behaviour embedded in domain logic
 under R4's abstraction clause, which is a SHOULD. The assignment is exhaustive and does not depend on
@@ -251,13 +250,13 @@ here is lowered by a risk tier (Standard 2 R3).
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | Each dependency, including a self-served model's host, has a recorded behaviour for each of the four conditions: unavailable, slow, rate-limited, changed | A dependency in use with no record, or a record covering only a total outage | A system whose record states, for the model dependency, that the degraded mode under each condition is to decline, recorded as its degraded mode, must **not** be reported missing a degraded mode |
+| R1 | Each dependency, including a self-served model's host, has a recorded behaviour for each of the four conditions: unavailable, slow, rate-limited, changed | A dependency in use with no record, or a record that omits any of the four conditions (unavailable, slow, rate-limited, changed) | A system whose record states, for the model dependency, that the degraded mode under each condition is to decline, recorded as its degraded mode, must **not** be reported missing a degraded mode |
 | R2 | Every R1 condition that results in reduced service is defined as a degraded mode, and a response produced in a degraded mode carries the recorded field, header or distinct response shape that a full response does not | A reduced-service behaviour in the R1 record that is not defined as a degraded mode, no such signal recorded, or the signal absent from a degraded response (comparing the generated text of the two does not establish a signal) | A system whose recorded degraded mode is to decline must **not** be failed for lacking a separate marker on responses it never produces in a degraded form; a system that declines without recording the decline as its degraded mode fails R2 |
-| R3 | A request served by the fallback passes through the controls of the primary, or is declined | A fallback that serves an interaction without a control the primary path applies (no redaction, no output check) | A fallback behind the same controls must **not** be flagged for being a different model |
+| R3 | A request served by the fallback passes through the controls of the primary, or is declined, and a statement of how each control applies to the fallback exists | A fallback that serves an interaction without a control the primary path applies (no redaction, no output check); or no statement of how each primary-path control applies to the fallback | A fallback behind the same controls must **not** be flagged for being a different model |
 | R4, replacement claim | A stated list of what replacement would change exists beside the claim | "Provider-agnostic" with one adapter and no list | A project that makes no portability claim and says so must **not** be failed for lacking a replacement list |
 | R4, abstraction | Provider-specific calls and request shapes sit at an integration boundary behind an interface | Provider-specific behaviour (a provider SDK call, a provider-specific request shape) embedded in domain logic | A provider SDK used only inside the adapter or integration module must **not** be flagged |
 | R5 | A dated record of an exercise, with its result, and a stated interval, exist for each degraded mode and each fallback, and the latest exercise falls within the interval, or the path is not described as available until it is exercised again | A degraded mode or fallback with no record of ever running, or with no stated interval, or whose record of an exercise gives no result, or whose latest exercise is older than its interval and which is still described as available | A degraded mode exercised only in a test, and recorded as such, must **not** be flagged for not having been used in production |
-| R6 | No detector, rule, audit finding or generated report in this repository states a resilience verdict from presence | A detector, rule (a rule that treats a presence as establishing the property), audit finding or report that reported resilient because a fallback model was configured | Reporting that a fallback setting was *found*, as an observation with no verdict, is permitted |
+| R6 | No detector, rule, audit finding or generated report in this repository states a resilience verdict from presence | A detector, rule, audit finding or report that stated a system resilient, degrading safely or provider-portable because a fallback setting, second provider name, retry policy or adapter interface was present | Reporting that a fallback setting was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a resilience artifact and no fixture
 carries one, so R1 to R5 are enforced by review or not at all, and R6 holds by construction. **A
@@ -280,7 +279,7 @@ the attestation mechanism itself is later work ([Standard 5](05-verdict-vocabula
 declarations and does not apply to these records. Review-staleness is event-driven only: a record is
 stale when one of the events below occurs, and nothing in this release detects that.
 
-**What invalidates a recorded dependency inventory, degraded mode or exercise.** Each is a different
+**What invalidates a recorded dependency inventory, degraded mode, exercise, statement of fallback controls or replacement list.** Each is a different
 subject, and a record made before the change describes the earlier one:
 
 - a change of model identifier, or a model silently updated behind an alias
@@ -327,7 +326,7 @@ owner-approved:
   did not make.
 - **The severity assignments** (error for an observed fallback serving without a primary-path control,
   an observed degraded response in full form, a path described as available that was never exercised or is overdue,
-  and a detector's violation of R6; warning for every other finding) and the statement that no
+  and a violation of R6 by any detector, rule, audit finding or report; warning for every other finding) and the statement that no
   attestation or scheduled expiry exists in this release.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
   decision to mint no id.
