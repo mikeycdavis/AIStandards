@@ -267,7 +267,7 @@ under [Authored items](#authored-items).
 
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
-| 41 | Inference Cost and Budget Control | D | `Cost` | O | — |
+| 41 | Inference Cost and Budget Control | D | `Cost` | O | standards/41-inference-cost-and-budget-control.md |
 | 42 | Latency Budgets for AI Interactions | D | `latency` | O | — |
 | 43 | Environmental Impact Accounting | D | `environmental impact` | O | — |
 | 44 | Operational Resilience, Degradation, and Provider Portability | D | `operational resilience` | X | — |
