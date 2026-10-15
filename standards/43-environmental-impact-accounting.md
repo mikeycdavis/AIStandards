@@ -63,8 +63,11 @@ It does **not** cover, and claims none of the ground of, the following:
   include it.
 
 **Boundary posture O — owned outright.** The boundary review records that no pack in the portfolio
-mentions environmental impact, and that the item's validation type is not-evaluable, so it reports as a
-stated requirement that nothing checks. This document accepts that record and adds no precedent to it.
+mentions environmental impact, and that the item's validation type is not-evaluable. This document
+accepts that record for what a repository can establish — the *correctness* of an energy, emissions or
+water figure — and narrows it there: that a boundary, method, assumptions and labels are present beside
+a figure is a reviewable record, so R1 to R5 are `manual-review` obligations (see Validation). It adds
+no precedent to the review's.
 
 ## Requirements
 
@@ -93,8 +96,9 @@ number and no label is the failure.
 ### R3 — Name the subject, period and assumptions
 
 **A reported figure MUST name the model identifier or class it applies to, the period or workload it
-was computed over, and the assumptions it depends on, among them the grid or region intensity used and
-its date.**
+was computed over, and the assumptions it depends on: for an energy or emissions figure, among them the
+grid or region intensity used and its date, and for any other figure (water, hardware) the conversion
+factors it relies on. An assumption the figure does not use is not reported.**
 
 Grid intensity varies by region and by hour, and a model identifier can change behind an alias. A figure
 for last year's model on last year's grid is a statement about that, not about the system now running.
@@ -152,7 +156,7 @@ consumed. Reporting an impact from a presence would turn a setting into a measur
 | --- | --- | --- | --- |
 | R1 | The boundary written beside each reported figure | The document or report carrying the figure | Human review |
 | R2 | The method, and each input's status | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R3 | The subject, period and assumptions, including grid intensity and its date | The report carrying the figure | Human review |
+| R3 | The subject, period and assumptions, including grid intensity and its date for an energy or emissions figure | The report carrying the figure | Human review |
 | R4 | Any neutrality or low-impact claim, with the figure and the separately reported offset | The project's documentation and public statements | Human review |
 | R5 | Any projection, labelled, with its assumptions | The project's documentation | Human review |
 | The correctness of a figure, and of a projection, as a statement about energy actually used | None obtainable from a repository | — | **Not-evaluable** |
@@ -211,9 +215,9 @@ by a risk tier (Standard 2 R3).
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | A reported figure states whether training, inference and embodied hardware are in or out | A number with no boundary | A figure that states "inference only, operational energy, no embodied hardware" must **not** be faulted for the narrow boundary |
+| R1 | A reported figure states whether training is in or out, which of inference, retrieval, storage, networking and end-user devices are counted, and whether embodied hardware is in or out | A number with no boundary, or one that states only some of the three | A figure that states "training excluded; inference counted, retrieval, storage, networking and end-user devices excluded; operational energy only, embodied hardware excluded" must **not** be faulted for the narrow boundary |
 | R2 | Each input has a status label and the method is named | An estimate described as measured, or an unknown replaced silently | A project that records its hosted model's energy as "unknown" and reports no figure must **not** be reported as failing R2 |
-| R3 | A figure names model or class, period and grid assumption with date | A figure with a number and no subject, period or region | A figure that names an old model and an old period, and says so, must **not** be flagged as stale |
+| R3 | A figure names model or class, period and its assumptions, including grid intensity with date for an energy or emissions figure | A figure with a number and no subject, period or assumptions, or an emissions figure with no grid intensity | A figure that names an old model and an old period, and says so, must **not** be flagged as stale |
 | R4 | A neutrality or low-impact claim cites the figure, with offsets reported separately | "Carbon-neutral" with the gross figure absent | A project that publishes a gross figure and separately lists an offset must **not** be flagged for having one |
 | R5 | A projection is labelled as one and names its assumptions | A projection with no projection label, or with no named assumptions | A labelled projection with assumptions must **not** be flagged for being uncertain |
 | R6 | No detector or report in this repository outputs an impact verdict from presence | A detector that reported low-impact because a region name was present | Reporting that a region setting was *found*, as an observation with no verdict, is permitted |
@@ -235,8 +239,10 @@ attestation and expiry machinery attaches to catalog rules, and none exists here
 Phase 4 work. Review-staleness is event-driven only: a record is stale when one of the events below
 occurs, and nothing in this release detects that.
 
-**What invalidates a recorded figure.** Each is a different subject, and a record made before the change
-describes the earlier one:
+**What invalidates a recorded figure.** A figure that names a completed period remains a true statement
+about that period after any change below; it stops describing the system as it now runs, and it is
+stale only where it is presented as current or is a projection whose basis has changed. Each of the
+following is a different subject, and a record made before the change describes the earlier one:
 
 - a change of model identifier, or a model silently updated behind an alias
   ([Standard 1](01-ai-system-manifest.md) R4 asks for the identifier to be pinned);
@@ -245,8 +251,8 @@ describes the earlier one:
 - a change of prompt, output length, caching or batching, each of which changes the work done per request;
 - a change of volume, which moves a projection's basis.
 
-**Staleness is asymmetric here.** A figure becomes false when something outside the project changes: a
-grid's mix and a provider's hardware are changes nobody in the project made. Nothing in this release
+**Staleness is asymmetric here.** A figure presented as current becomes stale when something outside the
+project changes: a grid's mix and a provider's hardware are changes nobody in the project made. Nothing in this release
 detects the transition; the events above are a note to a future reader.
 
 **Contradicted by operation.** A provider's revised disclosure, or a measurement that departs from an
