@@ -160,7 +160,7 @@ consumed. Reporting an impact from a presence would turn a setting into a measur
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | The boundary written beside each reported figure | The document or report carrying the figure | Human review |
-| R2 | The method, and each input's status | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
+| R2 | The method, each input's status, and the source and revision of each reported input | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R3 | The subject, period and assumptions, including grid intensity and its date where the calculation uses one | The report carrying the figure | Human review |
 | R4 | Any neutrality or low-impact claim, with the figure and the separately reported offset | The project's documentation and public statements | Human review |
 | R5 | Any projection, labelled, with its assumptions | The project's documentation | Human review |
@@ -221,7 +221,7 @@ by a risk tier (Standard 2 R3).
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | A reported figure states whether training is in or out, which of inference, retrieval, storage, networking and end-user devices are counted, and whether embodied hardware is in or out | A number with no boundary, or one that states only some of the three | A figure that states "training excluded; inference counted, retrieval, storage, networking and end-user devices excluded; operational energy only, embodied hardware excluded" must **not** be faulted for the narrow boundary |
-| R2 | Each input has a status label and the method is named | An estimate described as measured, or an unknown replaced silently | A project that records its hosted model's energy as "unknown" and reports no figure must **not** be reported as failing R2 |
+| R2 | Each input has a status label, a reported input names its source and disclosure revision or date, and the method is named | An estimate described as measured, an unknown replaced silently, or a "reported" input with no source | A project that records its hosted model's energy as "unknown" and reports no figure must **not** be reported as failing R2 |
 | R3 | A figure names model or class, period and its assumptions, including the grid intensity and its date where the calculation uses one | A figure with a number and no subject, period or assumptions, or a calculated emissions figure whose calculation uses a grid intensity and names none | A figure that names an old model and an old period, and says so, must **not** be flagged as stale |
 | R4 | A neutrality or low-impact claim cites the figure, with offsets reported separately and what each covers | "Carbon-neutral" with the gross figure absent | A project that publishes a gross figure and separately lists an offset must **not** be flagged for having one |
 | R5 | A projection is labelled as one and names its assumptions | A projection with no projection label, or with no named assumptions | A labelled projection with assumptions must **not** be flagged for being uncertain |
