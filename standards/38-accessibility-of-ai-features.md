@@ -176,24 +176,14 @@ thing.
 There is no policy-level exception mechanism for R1 in this release, because no rule exists to
 except. A project that knowingly does not meet it records that in its own documents.
 
-**What invalidates a record.** An accessibility record of an AI-facing interface describes the
-interface at one revision, and a material change to the system or to the basis of the assessment makes
-it stale:
+**When a record is stale is the owner's to say.** Whether evidence of accessibility remains valid
+after a change of model, prompt, surface, component or standards revision, and what re-examination
+it needs, is governed by UIUXDesignStandards' own lifecycle for that evidence. This standard
+declares no invalidating event and no sampling rule, so that it does not become a second authority
+over that evidence. Nothing in this release detects staleness.
 
-- a change of model or prompt that changes what kind of content the surface produces or how it is
-  structured, as opposed to ordinary variation between responses;
-- a new surface, channel or modality, including a voice or agent interaction not previously offered;
-- a change of the component library or provider widget that renders it;
-- a revision of the owner's standards a record was made against.
-
-**Staleness is asymmetric here.** An interface that is generated can change without a release. Ordinary
-response-to-response variation is not a change of the system, and does not by itself invalidate a
-record; whether the record's assessment still holds for what the surface now produces is the owner's
-method to say, for instance by ongoing sampling, and this standard specifies none. Nothing in this
-release detects the transition.
-
-**Contradicted by operation.** A reported barrier that a project judges well-founded invalidates the
-record until re-examined. Operational handling is item 34's subject (AI Incident Response, unwritten
+**Contradicted by operation.** What a reported barrier does to the owner's evidence is the owner's
+to say. Operational handling is item 34's subject (AI Incident Response, unwritten
 in this release).
 
 ## Additions this standard makes beyond the source
@@ -253,7 +243,7 @@ has confirmed it. No ADR covers this standard — `artifacts/adr/` does not exis
 | Requirement | What would be needed | Why it is not here |
 | --- | --- | --- |
 | R1 | A place to reference the project's accessibility evidence | Both schemas are closed; a schema change is out of scope (plan 02 section 8) |
-| R2 | A test that no id in a reserved namespace defines an accessibility requirement | The catalog loader refuses only the unreserved `accessibility.*` namespace; whether a reserved-namespace id restates an owner requirement is a judgment a test cannot make without a list, which R2 of Standard 37 forbids this framework to carry |
+| R2 | A test that no id in a reserved namespace defines an accessibility requirement | The catalog loader refuses only the unreserved `accessibility.*` namespace; whether a reserved-namespace id restates an owner requirement is a judgment a test cannot make without a list, and any such list would be this framework supplying a judgment that belongs to the owner, against posture `D` |
 
 **What no future release will implement.** An accessibility requirement minted in this catalog, or a
 verdict that an AI feature is accessible from the presence of a statement, a library or an owner's
