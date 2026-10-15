@@ -89,7 +89,9 @@ judgment about its users.
 **A system MUST apply a time limit to each model call it makes that a person or process waits on, MUST
 record where in the call path the limit is applied, and MUST define what the system does when that call
 limit or the interaction's deadline (R3) is reached, including cancelling the underlying call where the
-provider allows it. The behaviour MUST NOT be to wait indefinitely or to leave a caller hanging.**
+provider allows it, and MUST record where cancellation is not available. The behaviour MUST NOT be to
+wait indefinitely or to leave a caller hanging, and a project MUST NOT describe a limit as working
+without the configuration or run that shows the behaviour at it.**
 
 A call without a limit has no latency budget, only a hope. The behaviours differ in what they cost the
 user, and the project chooses: return a partial answer marked as partial, fall back, fail with a
@@ -180,7 +182,6 @@ shown by a call it cut short.
 | Wrong-path measurement | A figure from short prompts on an idle endpoint, quoted for production | R4 |
 | Unattached figure | "p95 is 1.8 s" naming no measurement point, model, prompt revision, deployment or workload | R4 |
 | Unqualified claim | "Real-time" or "instant" with no budget behind it | R5 |
-| Setting read as bound | A framework report of "bounded in time" because a timeout argument is present | R6 |
 | Limit claimed with no record of its behaviour | A project states that a limit works and offers no configuration or run showing the behaviour at it | R2 |
 | Setting reported as bounding calls by a framework | A detector or report states calls bounded in time because a timeout setting is present | R6 |
 
@@ -189,9 +190,9 @@ shown by a call it cut short.
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | Each budget as interaction, point of measurement, and percentile or fraction of requests | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | The limit and where it is applied, the behaviour at it as implemented in code or configuration, and, where the limit has been reached, the record of that run | Project code, configuration and the records of a run | Human review of the records |
+| R2 | The limit and where it is applied, the behaviour at it as implemented in code or configuration, where cancellation is not available, and, where the limit has been reached, the record of that run | Project code, configuration and the records of a run | Human review of the records |
 | R3 | Retry and fallback policy, the interaction deadline, and how what remains is checked before an attempt | Project code and configuration | Human review; a project's own test where one exists |
-| R4 | A reported figure with interaction, measurement point, statistic, collection period, model, prompt revision, provider, region and tier, and workload, and every deployment that took part with their mixture, or the figure stratified by deployment | The project's documentation and measurement records | Human review |
+| R4 | A reported figure with interaction, measurement point, statistic, collection period, model, prompt revision, provider, region and tier, and workload and, where it spans more than one deployment or model call, every deployment that took part with their mixture, or the figure stratified by deployment | The project's documentation and measurement records | Human review |
 | R5 | Any published latency claim with the budget and measurement behind it | The project's documentation | Human review |
 | R6 | The absence of any detector, rule, audit finding or generated report that reports latency from a setting or presence | This repository's own detectors and tests | Code review; see Implementation |
 
@@ -229,10 +230,13 @@ requirement asks for is missing or incomplete, even where the Tests table lists 
 falsifier: the system may behave well, and what is missing is the account of it. A finding is reported at
 **error** severity for each of: a model call someone waits on that has no time limit, or whose limit is
 reached without the recorded behaviour (R2); a retry or fallback started past the interaction's
-deadline (R3); an unqualified latency claim such as "real-time" or "instant" with no budget behind it
-(R5); a figure presented as a measurement of the user path that was measured elsewhere (R4); or a
-detector's violation of R6. Every other finding is a warning, including a figure with a missing or
-mislabelled field (R4). The two lists do not overlap: each falsifier in the Tests table is assigned to
+deadline, or started with less time remaining than its own limit (R3); a claim R5 prohibits — "real-time",
+"instant" or "within budget" with no budget or measurement named, a named measurement that misses the
+budget, or a claim about production traffic supported only by a measurement of a different workload or
+path (R5); a figure presented as a measurement of the user path that was measured elsewhere (R4); or a
+violation of R6 by any detector, rule, audit finding or generated report. Every other finding is a
+warning, including a figure with a missing or mislabelled field (R4) and a limit described as working
+with no record of its behaviour (R2). The two lists do not overlap: each falsifier in the Tests table is assigned to
 exactly one. These levels are this repository's judgment, listed in Additions, and are not
 owner-approved. R1 to R5 are also `manual-review` obligations in this release; the validation type and
 the severity are different things. R6 constrains this framework and has no validation type, because the
@@ -252,9 +256,9 @@ contradict a false statement. No level here is lowered by a risk tier (Standard 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | A stated budget names interaction, point of measurement, and a percentile or fraction of requests | "Fast" or "under two seconds" with any of the three missing, or a mean or other statistic in place of a percentile or fraction | A budget stated as complete-answer p95 for a named interaction, with no first-token figure, must **not** be reported as missing one it never claimed |
-| R2 | A call that exceeds the call limit, or an interaction that reaches its deadline, is cut, cancelled where the provider allows it, and handled as recorded | A model call path someone waits on has no time limit, or its limit's location or its behaviour at the limit is not recorded; or the limit is reached and the call hangs the caller, or proceeds as before, or the underlying call continues to completion where cancellation was available | A system whose only model call is a background step nobody waits on is out of scope for R2, not failing it |
-| R3 | An interaction that retries or falls back has a stated deadline, and a retry is declined, or given a limit no longer than what remains, when the remaining deadline is shorter than its own limit | Retries with no stated interaction deadline, or three attempts at the per-call limit inside an interaction deadline equal to one such limit | A system that never retries or falls back, and says so, must **not** be failed for lacking a deadline; a request that exceeds a p95 objective but is inside its deadline must **not** be reported as a violation of R3 |
-| R4 | A reported aggregate figure names interaction, measurement point, statistic, collection period, model, prompt revision, provider, region and tier, and workload, and every deployment that took part with their mixture (or is stratified by deployment) | A figure with a number and nothing else, a mean reported as a percentile or the reverse, or a multi-deployment figure that lists deployments and not their mixture | A figure on a named workload that says it was measured on an idle endpoint must **not** be flagged for admitting it; a per-call duration in a trace record must **not** be flagged for lacking a percentile or workload |
+| R2 | The limit and its location in the call path are recorded; a call that exceeds the call limit, or an interaction that reaches its deadline, is cut, cancelled where the provider allows it, and handled as recorded | A model call path someone waits on has no time limit, or its limit's location or its behaviour at the limit is not recorded; or the limit is reached and the call hangs the caller, or proceeds as before, or the underlying call continues to completion where cancellation was available; or the interaction's deadline is reached with no defined behaviour or a hung caller; or a limit is described as working with no configuration or run showing it | A system whose only model call is a background step nobody waits on is out of scope for R2, not failing it |
+| R3 | An interaction that retries or falls back has a stated deadline, and a retry is declined, or given a limit no longer than what remains, when the remaining deadline is shorter than its own limit | Retries with no stated interaction deadline; a percentile or fraction objective stated as the deadline; a deadline not reduced by the time already spent on earlier attempts; or three attempts at the per-call limit inside an interaction deadline equal to one such limit | A system that never retries or falls back, and says so, must **not** be failed for lacking a deadline; a request that exceeds a p95 objective but is inside its deadline must **not** be reported as a violation of R3 |
+| R4 | A reported aggregate figure names interaction, measurement point, statistic, collection period, model, prompt revision, provider, region and tier, and workload and, where it spans more than one deployment or model call, every deployment that took part with their mixture (or is stratified by deployment); a figure presented as describing the user path was measured on that path or is labelled with the path it covers | A figure with a number and nothing else, a mean reported as a percentile or the reverse, a multi-deployment figure that lists deployments and not their mixture, or a figure measured on a different path (idle endpoint, short prompts, non-production tier) presented as a measurement of the user path | A figure on a named workload that says it was measured on an idle endpoint must **not** be flagged for admitting it; a per-call duration in a trace record must **not** be flagged for lacking a percentile or workload |
 | R5 | A published claim names the budget and the measurement, and the measurement's interaction, point, statistic and result are compared with the budget's and meet it, and the claim's operating context matches the measured workload and path or is qualified to it | "Real-time" or "instant" with neither, one that names a measurement that misses its budget, or one describing production traffic supported only by a measurement of a different workload or path | A statement of a measured figure on a named workload and no stronger claim must **not** be flagged |
 | R6 | No detector, rule, audit finding or generated report in this repository states a latency verdict from presence | A detector, rule, audit finding or report that stated a latency budget met, or calls bounded in time, because a timeout setting, a streaming flag or a named model was present | Reporting that a timeout setting was *found*, as an observation with no verdict, is permitted |
 
@@ -318,7 +322,9 @@ it owner-approved:
 - **R1 in full**: the three things a budget must name (interaction, point of measurement, percentile)
   and the refusal to fix a number.
 - **R2 in full**: a time limit on every call someone waits on, a named enforcement place, and the
-  ruling that the behaviour at the limit must not be to wait.
+  ruling that the behaviour at the limit must not be to wait; cancelling the underlying call where the
+  provider allows it; and defining the behaviour at the interaction deadline (R3) as well as at the call
+  limit.
 - **R3 in full**: a per-interaction deadline distinct from the percentile
   objective, counting retries and fallbacks against it, and declining an attempt the remainder cannot
   cover.
@@ -336,8 +342,10 @@ it owner-approved:
   Where this standard stops and items 41 and 44 begin is unconfirmed by anyone.
 - **The recheck of the adjacent file and rule id** at UIUXDesignStandards `7bff2e9` on 2026-10-14,
   which the boundary review did not make.
-- **The severity assignments** (warning for a missing account; error for an observed timeout, deadline
-  or limit failure, a prohibited claim, and a detector's violation of R6) and the statement that no
+- **The severity assignments** (warning for a missing account; error for a model call with no time limit or whose limit is reached without the recorded behaviour, a
+  retry or fallback started past the deadline or with less time than its limit, a claim R5 prohibits, a
+  figure presented as measuring the user path that was measured elsewhere, and a violation of R6 by any
+  detector, rule, audit finding or report) and the statement that no
   attestation or scheduled expiry exists in this release.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
   decision not to name a rule id.
