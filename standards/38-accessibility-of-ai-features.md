@@ -70,9 +70,9 @@ statement, which is authored here and unconfirmed.
 ### R1 — This framework MUST NOT mint an accessibility rule or report a feature accessible
 
 **No id in this catalog MAY define an accessibility requirement. No rule, detector, audit finding or
-generated report in this framework MAY assert that an AI feature is accessible because an owner's
-rule exists, a component library is imported, or an accessibility statement is present in the
-repository.**
+generated report in this framework MAY assert that an AI feature is accessible, whether from the
+presence of an owner's rule, a component library or an accessibility statement, from an imported
+owner result, or from any other basis; the accessibility verdict is the owner's.**
 
 This is a constraint on the framework, not on a project. It follows from posture `D`, from Standard 7
 R2 (link, do not copy), from Standard 6 R5 (a namespace this pack does not reserve is refused at
