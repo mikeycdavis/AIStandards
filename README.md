@@ -3,7 +3,7 @@
 Numbered AI engineering standards, and the `audit` and `validate` commands that check a repository
 against them.
 
-**Version 0.1.0 — Phase 1 complete, Phase 2 begun.** This is a working CLI with seventeen of
+**Version 0.1.0 — Phase 1 complete, Phase 2 begun.** This is a working CLI with eighteen of
 fifty-three standards and forty-six of a planned ninety-six rules, nine of which a detector can
 actually reach. The catalog's two blocking reviews
 have passed, so the fifty-three items and their numbering are settled. What it does, it does
@@ -86,6 +86,7 @@ Exit codes are process semantics. The verdict is the `status` field of the JSON 
 [8 AI Safety Requirements and Safety Cases](standards/08-ai-safety-requirements-and-safety-cases.md) ·
 [9 Misuse and Abuse Prevention](standards/09-misuse-and-abuse-prevention.md) ·
 [11 Autonomy Levels and Delegated Authority](standards/11-autonomy-levels-and-delegated-authority.md) ·
+[12 Context and Corpus Provenance](standards/12-context-and-corpus-provenance.md) ·
 [13 Personal Data in AI Systems](standards/13-personal-data-in-ai-systems.md) ·
 [17 Evaluation Plans for Generative Systems](standards/17-evaluation-plans-for-generative-systems.md) ·
 [21 Prompt and Instruction Security](standards/21-prompt-and-instruction-security.md) ·

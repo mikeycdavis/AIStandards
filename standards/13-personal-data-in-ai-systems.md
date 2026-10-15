@@ -66,7 +66,7 @@ nobody looked.
 
 The boundary with this standard's neighbours, none of whose ground is claimed:
 
-- **Item 12, Context and Corpus Provenance** (unwritten, posture B) — where a corpus, fixture or
+- **Item 12, Context and Corpus Provenance** (written as [Standard 12](12-context-and-corpus-provenance.md), posture B) — where a corpus, fixture or
   evaluation set came from. R1 asks only whether its content is about real people.
 - **Item 14, Consent and Licensing** (unwritten) — whether anyone agreed to their data being used,
   and on what terms. Nothing here makes a use of personal data permissible.
@@ -545,8 +545,7 @@ A misuse log is a model-adjacent store, so R4 and R5 here reach it too.
 set out under R2. **21 governs what may enter a model's context at runtime; R2 here governs what may be
 committed in a prompt asset or fixture**, and the two are not reconciled.
 
-Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 12
-(provenance of corpora and fixtures); item 14 (consent and licensing); item 15 (retention periods,
+Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 14 (consent and licensing); item 15 (retention periods,
 deletion schedules and memorization, and the open question of R4's and R5's rules); item 16 (who may
 read a store); item 33 (whether inference calls are traced); item 34 (what follows a privacy incident);
 and item 49 (prohibitions on bullet 2's ground, whose relationship to the three `forbidden` rules here
