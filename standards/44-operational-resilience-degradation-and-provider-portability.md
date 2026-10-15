@@ -185,11 +185,11 @@ a request it served.
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | Each dependency and its failure behaviour | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | Each degraded mode, and the field, header or shape that carries it, with a sample of a degraded response | The project's output contract and a captured example | Human review |
+| R2 | Each degraded mode and, where it produces a response, the field, header or shape that carries it with a sample of a degraded response; for a mode that declines, a captured declined outcome and the record that the decline is the mode | The project's output contract and a captured example | Human review |
 | R3 | The controls on the primary path and a statement of how each applies to the fallback | Project code, configuration and data-handling terms | Human review |
 | R4 | The boundary where provider-specific behaviour sits, and the stated list of what replacement would change | Project code and documentation | Human review |
 | R5 | The date and result of each exercise of a degraded or fallback path, and the stated interval; an exercise record without a result is incomplete | Test records, drill records or incident records | Human review of the records |
-| R6 | The absence of any detector that reports resilience from a presence | This repository's own detectors and tests | Code review; see Implementation |
+| R6 | The absence of any detector, rule, audit finding or generated report that reports resilience from a setting or presence | This repository's own detectors and tests | Code review; see Implementation |
 
 Evidence for R1 to R5 is a human-authored record. A document naming a fallback establishes that the
 project wrote it down and says nothing about whether the running system takes it; the reviewer reads
@@ -255,7 +255,7 @@ here is lowered by a risk tier (Standard 2 R3).
 | R4, replacement claim | A stated list of what replacement would change exists beside the claim | "Provider-agnostic" with one adapter and no list | A project that makes no portability claim and says so must **not** be failed for lacking a replacement list |
 | R4, abstraction | Provider-specific calls and request shapes sit at an integration boundary behind an interface | Provider-specific behaviour (a provider SDK call, a provider-specific request shape) embedded in domain logic | A provider SDK used only inside the adapter or integration module must **not** be flagged |
 | R5 | A dated record of an exercise, with its result, and a stated interval, exist for each degraded mode and each fallback | A degraded mode or fallback with no record of ever running, or with no stated interval, or whose record of an exercise gives no result | A degraded mode exercised only in a test, and recorded as such, must **not** be flagged for not having been used in production |
-| R6 | No detector or report in this repository outputs a resilience verdict from presence | A detector that reported resilient because a fallback model was configured | Reporting that a fallback setting was *found*, as an observation with no verdict, is permitted |
+| R6 | No detector, rule, audit finding or generated report in this repository states a resilience verdict from presence | A detector, rule (a rule that treats a presence as establishing the property), audit finding or report that reported resilient because a fallback model was configured | Reporting that a fallback setting was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a resilience artifact and no fixture
 carries one, so R1 to R5 are enforced by review or not at all, and R6 holds by construction. **A
