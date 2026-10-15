@@ -210,7 +210,7 @@ under [Authored items](#authored-items).
 | --- | --- | --- | --- | --- | --- |
 | 17 | Evaluation Plans for Generative Systems | D | `Model evaluation` | B | standards/17-evaluation-plans-for-generative-systems.md |
 | 18 | Benchmark Integrity and Contamination | D | `benchmark integrity` | B | — |
-| 19 | Robustness Evaluation | D | `robustness` | O | — |
+| 19 | Robustness Evaluation | D | `robustness` | O | standards/19-robustness-evaluation.md |
 | 20 | Regression Testing Across Model and Prompt Versions | D | `regression testing` | O | — |
 
 ### Band E — Prompt, tool, agent, retrieval security · bullet 4
