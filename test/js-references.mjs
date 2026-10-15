@@ -572,6 +572,48 @@ const CHILD_PROCESS_NAMES = ["exec", "execSync", "execFile", "execFileSync", "sp
 const EVAL_FLAG = /(^|\s)(-e\S*|-p\S*|--eval(=\S*)?|--print(=\S*)?)(\s|$)/;
 const unquoted = (text) => text.replace(/["'`\\]/g, "");
 
+// The indexes of string tokens that are direct ELEMENTS of an array literal (`["a", "eval"]`): a list of names is
+// data. A `[` after an identifier, a string, a number or a closing delimiter is a member access (`o["eval"]`),
+// not a literal, and a `[` after a keyword such as `return` is one.
+const LITERAL_PRECEDERS = new Set([...REGEX_KEYWORDS, "default", "export", "else", "extends"]);
+function arrayElementStrings(tokens) {
+  const out = new Set();
+  const stack = [];
+  for (let k = 0; k < tokens.length; k += 1) {
+    const tk = tokens[k];
+    if (tk.inRegex) continue;
+    if (tk.t === "punct" && (tk.v === "(" || tk.v === "[" || tk.v === "{")) {
+      const prev = tokens[k - 1];
+      const literal = tk.v === "[" && (!prev || (prev.t === "punct" && ![")", "]", "}"].includes(prev.v)) || (prev.t === "id" && LITERAL_PRECEDERS.has(prev.v)));
+      stack.push(literal);
+    } else if (tk.t === "punct" && (tk.v === ")" || tk.v === "]" || tk.v === "}")) {
+      stack.pop();
+    } else if (tk.t === "str" && stack.length > 0 && stack[stack.length - 1] === true) {
+      out.add(k);
+    }
+  }
+  return out;
+}
+
+// Objects whose properties are the global scope and its loaders: a computed access on them with a key that is
+// not a literal can reach eval, Function, require, process.binding and the rest by a name built at run time.
+const GLOBAL_OBJECTS = ["globalThis", "global", "self", "window", "process", "module", "exports", "this"];
+
+// The index of the `]` that closes the `[` at `open`, or -1.
+function closeBracketIndex(tokens, open) {
+  let depth = 0;
+  for (let k = open; k < tokens.length; k += 1) {
+    const t = tokens[k];
+    if (t.inRegex || t.t !== "punct") continue;
+    if (t.v === "[" || t.v === "(" || t.v === "{") depth += 1;
+    else if (t.v === "]" || t.v === ")" || t.v === "}") {
+      depth -= 1;
+      if (depth === 0) return t.v === "]" ? k : -1;
+    }
+  }
+  return -1;
+}
+
 // Whether the token at `k` is directly called: `x(...)` or `x?.(...)`.
 function isCalledAt(tokens, k) {
   const a = tokens[k + 1];
@@ -588,43 +630,84 @@ function isCalledAt(tokens, k) {
  * `require.call(null, "x")` / `.apply` / `.bind`, `const r = require`, `module.require`, `o["require"]`.
  * A direct call is `require("x")`, `require?.("x")`, `module.require("x")` and `o["require"]("x")`.
  */
-export function moduleReferences(source) {
+export function moduleReferences(source, options = {}) {
+  // `dynamicCode: false` turns the dynamic-code rules off. The vendored parser is pinned, hash-checked content
+  // with its own ambient-access guard (vendor-yaml.test.mjs), and it legitimately holds `coll.constructor`;
+  // first-party scripts keep every rule.
+  const checkDynamicCode = options.dynamicCode !== false;
   const specifiers = [];
   const unreadable = [];
   const { tokens, ok } = tokenize(source);
   if (!ok) unreadable.push({ form: "source", specifier: "unparseable (unterminated string, template, regex or comment)" });
   const inClause = new Set();
+  const arrayElements = arrayElementStrings(tokens);
+  const nameStrings = new Set([...DYNAMIC_CODE_NAMES, "constructor", ...TIMER_NAMES, ...CHILD_PROCESS_NAMES]);
   const urlConstructions = new Set();
   for (let k = 0; k < tokens.length; k += 1) {
     const tk = tokens[k];
     if (tk.t === "id" && tk.v === "createRequire") unreadable.push({ form: "createRequire", specifier: `at offset ${tk.s}` });
-    const dynamic = (why) => unreadable.push({ form: "dynamic-code", specifier: `${why} at offset ${tk.s}` });
+    const dynamic = (why) => {
+      if (checkDynamicCode) unreadable.push({ form: "dynamic-code", specifier: `${why} at offset ${tk.s}` });
+    };
     if (tk.t === "id" && DYNAMIC_CODE_NAMES.includes(tk.v)) dynamic(`reference to ${tk.v}, which runs source text`);
-    if (tk.t === "str" && DYNAMIC_CODE_NAMES.includes(tk.v) && tokens[k - 1] && tokens[k - 1].v === "[" && tokens[k + 1] && tokens[k + 1].v === "]") {
-      dynamic(`computed reference to ${tk.v}, which runs source text`);
+    // A string equal to one of these names is a way of naming the property or function without writing it as an
+    // identifier ("eval": true as an object key, o["execSync"], Reflect.get(f, "constructor")). It is reported
+    // wherever it appears except as an element of an array literal, which is a list of names, not a use.
+    if (tk.t === "str" && nameStrings.has(tk.v) && !arrayElements.has(k)) {
+      dynamic(`the string "${tk.v}" naming a code-running or process-starting member`);
+    }
+    // A computed member access whose key is not a literal names its member at run time. It is unreadable when
+    // the result is called (`x[name](...)`, `new x[name](...)`) or when the object is the global scope or a
+    // module-level loader holder (`globalThis[name]`), because the name can be assembled to spell eval,
+    // Function or a loader. A key that is a single string or number literal is read by the string rule above.
+    if (tk.t === "punct" && tk.v === "[" && !tk.syn) {
+      const prev = tokens[k - 1];
+      const access = prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !LITERAL_PRECEDERS.has(prev.v)));
+      const close = access ? closeBracketIndex(tokens, k) : -1;
+      if (close !== -1) {
+        const key = tokens.slice(k + 1, close);
+        const literalKey = key.length === 1 && (key[0].t === "str" || key[0].t === "num");
+        if (!literalKey && isCalledAt(tokens, close)) dynamic("a computed member called, whose name is built at run time");
+        else if (!literalKey && prev.t === "id" && GLOBAL_OBJECTS.includes(prev.v)) dynamic(`computed access on ${prev.v} with a key built at run time`);
+      }
     }
     if (tk.t === "id" && tk.v === "Script" && tokens[k - 1] && (tokens[k - 1].v === "new" || (tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "vm"))) {
       dynamic("vm.Script, which compiles source text");
     }
-    // `.constructor(...)` and `.constructor?.(...)` reach Function; so does `["constructor"](...)`.
-    if (tk.t === "id" && tk.v === "constructor" && tokens[k - 1] && tokens[k - 1].v === "." && isCalledAt(tokens, k)) {
-      dynamic(".constructor(...), which reaches Function");
+    // `.constructor` reaches Function (`fn.constructor("code")`, `(fn.constructor)("code")`,
+    // `fn.constructor.call(null, "code")`, `const C = fn.constructor`). It is positively classified safe only
+    // when it is compared (`x.constructor === Y`) or its `.name` is read; every other use is unreadable.
+    if (tk.t === "id" && tk.v === "constructor" && tokens[k - 1] && tokens[k - 1].v === ".") {
+      const n1 = tokens[k + 1];
+      const n2 = tokens[k + 2];
+      const n3 = tokens[k + 3];
+      const named = (n1 && n1.v === "." && n2 && n2.t === "id" && n2.v === "name") || (n1 && n1.v === "?" && n2 && n2.v === "." && n3 && n3.t === "id" && n3.v === "name");
+      const compared = n1 && (n1.v === "=" || n1.v === "!") && n2 && n2.v === "=";
+      if (!named && !compared) dynamic(".constructor used other than compared or named, which reaches Function");
     }
-    if (tk.t === "str" && tk.v === "constructor" && tokens[k - 1] && tokens[k - 1].v === "[" && tokens[k + 1] && tokens[k + 1].v === "]" && isCalledAt(tokens, k + 1)) {
-      dynamic('["constructor"](...), which reaches Function');
-    }
-    if (tk.t === "id" && (TIMER_NAMES.includes(tk.v) || CHILD_PROCESS_NAMES.includes(tk.v)) && isCalledAt(tokens, k)) {
-      const open = tokens[k + 1].v === "(" ? k + 1 : k + 3;
-      const callArgs = callArguments(tokens, open);
-      if (callArgs === null) {
-        dynamic(`unparseable ${tk.v} call`);
-      } else if (TIMER_NAMES.includes(tk.v)) {
-        const first = callArgs[0] ?? [];
-        if (first.some((t) => t.t === "str" || t.t === "tmpl")) dynamic(`${tk.v} with source text`);
+    // Timers and child processes: a direct call is read (source text, evaluation flags); a reference that is
+    // not a direct call ((execSync)(...), const r = spawn, passing setTimeout on) cannot be read and is
+    // unreadable. An import clause naming them is neither.
+    if (tk.t === "id" && (TIMER_NAMES.includes(tk.v) || CHILD_PROCESS_NAMES.includes(tk.v))) {
+      if (inClause.has(k)) {
+        // `import { execSync }` is a plain import. A rename (`import { execSync as run }`) hides the call from
+        // the name checks, so it is unreadable.
+        if (tokens[k + 1] && tokens[k + 1].t === "id" && tokens[k + 1].v === "as") dynamic(`${tk.v} imported under another name`);
+      } else if (!isCalledAt(tokens, k)) {
+        dynamic(`reference to ${tk.v} that is not a direct call`);
       } else {
-        for (const arg of callArgs) {
-          for (const t of arg) {
-            if (t.t === "str" && EVAL_FLAG.test(unquoted(t.v))) dynamic(`${tk.v} told to evaluate source (${t.v.slice(0, 30)})`);
+        const open = tokens[k + 1].v === "(" ? k + 1 : k + 3;
+        const callArgs = callArguments(tokens, open);
+        if (callArgs === null) {
+          dynamic(`unparseable ${tk.v} call`);
+        } else if (TIMER_NAMES.includes(tk.v)) {
+          const first = callArgs[0] ?? [];
+          if (first.some((t) => t.t === "str" || t.t === "tmpl")) dynamic(`${tk.v} with source text`);
+        } else {
+          for (const arg of callArgs) {
+            for (const t of arg) {
+              if (t.t === "str" && EVAL_FLAG.test(unquoted(t.v))) dynamic(`${tk.v} told to evaluate source (${t.v.slice(0, 30)})`);
+            }
           }
         }
       }
@@ -751,6 +834,7 @@ export function moduleReferences(source) {
  * way; a non-literal one is unreadable. `where.io` is an injectable file system (existsSync, realpathSync).
  */
 export function externalReferences(source, where) {
+  // where.dynamicCode === false switches the dynamic-code rules off for one file (the pinned vendored tree).
   if (!where || typeof where.file !== "string" || typeof where.root !== "string") throw new TypeError("externalReferences needs { file, root }");
   const io = where.io ?? fs;
   const real = (p) => (io.realpathSync.native ?? io.realpathSync)(p);
@@ -772,7 +856,7 @@ export function externalReferences(source, where) {
       return "unresolvable";
     }
   };
-  const { specifiers, unreadable } = moduleReferences(source);
+  const { specifiers, unreadable } = moduleReferences(source, { dynamicCode: where.dynamicCode !== false });
   const out = unreadable.map((u) => `${u.form} ${u.specifier}`);
   for (const { form, specifier } of specifiers) {
     if (specifier.startsWith("node:")) continue;

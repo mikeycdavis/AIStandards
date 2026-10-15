@@ -219,7 +219,7 @@ export function importOffenders(treeDir, relFiles, io = fs) {
       continue;
     }
     const dir = path.dirname(full);
-    const { specifiers, unreadable } = moduleReferences(io.readFileSync(full, "utf8"));
+    const { specifiers, unreadable } = moduleReferences(io.readFileSync(full, "utf8"), { dynamicCode: false });
     for (const u of unreadable) offenders.push(`${rel}: ${u.form} ${u.specifier}`);
     for (const { form, specifier } of specifiers) {
       if (!specifier.startsWith(".")) {
