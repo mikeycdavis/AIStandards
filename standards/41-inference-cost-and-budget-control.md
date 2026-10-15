@@ -139,8 +139,9 @@ requirement is not that the two agree; it is that nobody believes they do withou
 
 ### R5 — Describe cost as a measured quantity with a named subject, model and price date
 
-**A project MUST NOT state or imply that inference cost is capped, bounded or negligible unless the
-statement names the enforcing mechanism (R2); and a stated cost per unit MUST name the model
+**A project MUST NOT state or imply that inference cost is capped or bounded unless the statement
+names the enforcing mechanism (R2), and MUST NOT state or imply that it is negligible unless the
+statement names the measurement it rests on; and a stated cost per unit MUST name the model
 identifier and the date of the price it assumes, and, where the figure depends on a workload — a cost
 per request, per conversation or per job — the workload it was measured on.**
 
@@ -231,12 +232,15 @@ Three reasons, stated so a reader can disagree with any one of them:
    introduced this document for per-rule approval, and not here, so that this document does not
    describe a rule that does not exist.
 
-**Severity.** A reviewer's finding against R1 to R4 is reported at **warning** severity: the system may
-behave well, and what is missing is the account of it. A finding against R5 is reported at **error**
-severity, because it is a claim with nothing behind it and R5 is not exemptible. These levels are this
-repository's judgment, listed in Additions, and are not owner-approved. R1 to R5 are also
-`manual-review` obligations in this release. Whether a stated figure holds for a future
-request is not a property of a repository, and no requirement here asks a reviewer to establish it. R6 constrains this framework and has no
+**Severity.** The standard separates a missing account from an observed failure. A reviewer's
+finding that a record, statement or label the requirement asks for is missing or incomplete is reported
+at **warning** severity: the system may behave well, and what is missing is the account of it. A
+finding that review has *observed* a falsifier occurring in the system or its documentation — the
+behaviour or claim the requirement forbids actually present — is reported at **error** severity, as is
+any finding against R5, which concerns a claim or a control whose absence is itself the failure, and a
+violation of R6 by a detector or report. These levels are this repository's judgment, listed in
+Additions, and are not owner-approved. R1 to R5 are also `manual-review` obligations in this release;
+the validation type and the severity are different things. R6 constrains this framework and has no
 validation type, because the thing it prohibits is a behaviour of the tool.
 
 **Exemptibility.** R6 is not exemptible: no project circumstance makes it reasonable for a scan to
@@ -273,11 +277,14 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 except. A project that knowingly does not meet one records that in its own documents; Standard 2's
 dispositions apply to the application of a rule, and this standard has none.
 
-**Attestations and expiry.** This release provides no attestation mechanism for these records, and no
-record under this standard expires on a schedule. [Standard 2](02-ai-risk-tiering-and-applicability.md)'s
-attestation and expiry machinery attaches to catalog rules, and none exists here; attestations are
-Phase 4 work. Review-staleness is event-driven only: a record is stale when one of the events below
-occurs, and nothing in this release detects that.
+**Attestations and expiry.** No attestation is produced for these records in this release.
+[Standard 6](06-standard-structure-and-rule-identity.md) R8 makes `manual-review` rules attestable by
+default and `not-evaluable` ones never attestable, but it governs catalog rules, none exists here, and
+the attestation mechanism itself is later work ([Standard 5](05-verdict-vocabulary.md) records the
+`attested` disposition as not yet produced). No record under this standard expires on a schedule;
+[Standard 2](02-ai-risk-tiering-and-applicability.md) R5's event-driven expiry concerns applicability
+declarations and does not apply to these records. Review-staleness is event-driven only: a record is
+stale when one of the events below occurs, and nothing in this release detects that.
 
 **What invalidates a recorded budget, bound or unit cost.** Each is a different subject, and a record
 made before the change describes the earlier one:
@@ -320,7 +327,7 @@ it owner-approved:
   above it, and the statement that having none is a legitimate answer.
 - **R4 in full**: reconciliation of recorded spend with the billed amount (or, for provisioned or owned
   capacity, its accounting cost or utilisation), and its interval.
-- **R5's prohibition** on a cap, bound or negligibility claim with no enforcing mechanism, the names a
+- **R5's prohibition** on a cap or bound claim with no enforcing mechanism and a negligibility claim with no measurement, the names a
   unit cost must carry (model, price date, and workload where one applies), and the ruling that it is not
   exemptible. It sets no price and no
   threshold.
@@ -330,8 +337,9 @@ it owner-approved:
 - **The five exclusions in Scope** as division lines. The specification lists items 42 to 44 under the
   same bullet; where this standard stops and each begins is unconfirmed by anyone, and the lines to
   Standards 9 and 23 follow what those standards themselves say about item 41.
-- **The severity assignments** (warning for R1 to R4, error for R5) and the statement that no
-  attestation or scheduled expiry exists in this release.
+- **The severity assignments** (warning for a missing account, error for an observed failure, for R5
+  and for a detector's violation of R6) and the statement that no attestation or scheduled expiry
+  exists in this release.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
   decision not to name a rule id in the unsharded `cost` namespace.
 
