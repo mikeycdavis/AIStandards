@@ -86,8 +86,8 @@ It does **not** cover, and claims none of the ground of, the following:
   provider being down is not a property of its input handling.
 
 **Boundary posture O.** The boundary review records item 19 as one of the items posture `O` after
-a search of the nine packs for an owner that found none, which it describes as the negative control
-for an `O`. This standard relies on that recorded search and repeats none of it, so it names no
+a search of the nine packs for an owner that found none, which its comment calls "the negative
+control of the boundary review". This standard relies on that recorded search and repeats none of it, so it names no
 adjacent pack as governing or not governing perturbation testing. The search carries no human
 sign-off, so the posture is a recorded finding and not a confirmed one. Where a project is also
 governed by a pack that does cover it, Standard 7 R5 orders the two and a boundary defect is for the
@@ -107,21 +107,26 @@ matter are the ones the system's users and upstream producers actually generate:
 retrieval can return, the ordering of options a caller supplies. The reason is the project's, and a
 short one is enough: "users paste from spreadsheets" is a reason; "standard practice" is not.
 
-**A class with no stated reason is a class nobody decided to care about.** Recording it still
-counts as coverage of that class, but the claim reaches no further than the recorded list (R5).
+**A class with no stated reason is a class nobody decided to care about.** It does not meet R1,
+and a claim may not rely on it.
+
+Three terms are used from here on. A **recorded class** is one named under R1 as concerned by the
+claim or result. A **tested class** is a recorded class that was measured under R2. A
+**considered-and-untested class** is one the project listed under R1 as set aside; it is neither
+recorded nor tested in this sense.
 
 **The list of considered-and-untested classes is what makes "not tested" finite.** The project
 cannot enumerate every variation there is, and this standard does not ask it to. It asks for the
 classes the project actually thought of and set aside — a language it does not yet serve, a length
-it does not yet handle — each with a reason. A class on neither list was not considered, and a
-claim says so (R5).
+it does not yet handle — each with a reason. A class on neither list was not considered, and the
+claim says its lists are not exhaustive (R5).
 
 ### R2 — Measure each class against a paired baseline and a stated bar
 
-**For each class the claim or result concerns — a tested class, and not one recorded under R1 as
-considered and not tested — the project MUST state the bar before the run, MUST measure the
-unperturbed items from which its variants were made with the same subject and scorer, and MUST
-report the result as a difference from that baseline.**
+**For each tested class the project MUST state the bar before the run, MUST measure the unperturbed
+items from which its variants were made with the same subject and scorer, MUST report the result as
+a difference from that baseline, and MUST record the normalised margin defined below, disclosing
+where it is undefined.**
 
 A robustness figure alone says only how well the system did on awkward input; it does not say
 whether awkward input made it worse. A set of misspelled questions answered at 78 percent is a
@@ -132,29 +137,38 @@ The bar is the project's: the permitted degradation, or a floor, per class. **Ea
 result is also recorded as a normalised margin to its own bar**, a unitless figure so that classes
 measured with different scorers or scales can be ordered under R4: where the bar is a floor, the
 margin is (result − floor) ÷ (baseline − floor); where it is a permitted drop, the margin is
-1 − (observed drop ÷ permitted drop). A margin of 1 is no degradation, 0 is exactly at the bar and
-below 0 is a breach, so a smaller margin is always a worse class. Where a class's baseline is at or
-below its floor, or its permitted drop is zero, the margin is undefined and the report says so and
-names that class as the worst. This standard fixes no
-number, because that number would be this repository's invention. It requires only that the bar
+1 − (observed drop ÷ permitted drop). Metrics are oriented so that higher is better: an error rate
+or a latency is negated or inverted before either formula is applied. A margin of 1 is no
+degradation, 0 is exactly at the bar and below 0 is a breach, so a smaller margin is always a worse
+class. A permitted drop of zero ("no degradation") gives a margin of 1 when the observed drop is
+zero or less and is a breach (reported as below 0, with the drop stated) otherwise; a met zero bar is
+not a breach. The margin is **undefined** only where a floor bar's baseline is at or below the
+floor, so the clean items already fail; the report says so, and R4 names that class alongside the
+smallest defined margin. The margin is a share of the headroom the baseline had: a class with very
+little headroom will swing widely, and the report gives the headroom beside the margin. This
+standard fixes no number, because that number would be this repository's invention. It requires only that the bar
 exist before the result does ([Standard 17](17-evaluation-plans-for-generative-systems.md) R1), and
 that the baseline be the same items, not a different clean sample.
 
 ### R3 — Specify each perturbation so it can be regenerated, and keep variants in their split
 
-**A perturbation MUST be specified well enough to regenerate the same variants, MUST NOT be chosen
-or adjusted by looking at which variants the system fails, and a variant of an item MUST stay in
-the split its source item belongs to.**
+**A perturbation MUST be specified well enough to regenerate the same variants; the draw of the
+variants behind a reported or held-out result MUST be fixed before the run and recorded with the
+number generated and the number kept, and MUST NOT be chosen or adjusted by looking at which
+variants the system fails; and a variant of an item MUST stay in the split its source item belongs to.**
 
 A class specified as "some typos added" cannot be rerun, and its next run measures a different set.
-Recording the generator, its parameters and any seed, or committing the variants, is the minimum.
+Recording the generator, its parameters and any seed, or committing the variants, and the selection
+record described above, is the minimum.
 Where a variant was produced by a model, the model identifier is recorded
 ([Standard 17](17-evaluation-plans-for-generative-systems.md) R6).
 
 **Choosing variants by failure is selection against the evaluation.** If the variants kept are the
 ones that broke the system, the figure is a count of known failures and the bar was set by them.
 Where finding such failures is the aim, that is an exercise to be recorded as one, not a measurement
-reported as a rate.
+reported as a rate. Adjusting a generator against the development split while building it is
+development and is outside the clause; the clause concerns the variants whose result is reported or
+held out.
 
 **A variant of a held-out item is held-out.** A paraphrase of an item that sits in the held-out set,
 used to tune a prompt, is the item itself under another surface form. This is
@@ -179,7 +193,8 @@ cannot make it without the number. This standard does not set a minimum count.
 ### R5 — A claim of robustness reaches only what was tested
 
 **A statement of robustness MUST be bounded to the classes recorded under R1 and measured under R2,
-MUST name the classes considered and not tested under R1, and MUST NOT be worded as general.**
+MUST name the classes considered and not tested under R1, MUST say that its lists of classes are
+not exhaustive, and MUST NOT be worded as general.**
 
 "Robust to the perturbations in the table, at the stated bars" is a claim. "Robust" is not. A
 system that was tested for typos and passed has been shown tolerant of typos; the claim does not
@@ -220,6 +235,8 @@ seen. It is **not-evaluable** from a repository.
 | Derived items tuned on | Paraphrases of held-out items used to adjust a prompt | R3 |
 | Diluted worst class | One aggregate across classes hides the class that collapses | R4 |
 | Unstated sample size | A class result from a handful of variants reported without the count | R4 |
+| Considered classes unlisted | Classes the project set aside not recorded, so "not tested" has no edge | R1 |
+| Unnamed worst class or undefined margin hidden | The smallest-margin class not named, or a class already failing on clean items left out of the report | R4 |
 | General claim from narrow test | "Robust" written beside a list of three tested classes | R5 |
 | Stale subject | A robustness result carried across a model or prompt change | R5 |
 | Presence read as robustness | A framework report of "robustness evaluated" because a fixture or generator is in the repository | R6 |
@@ -229,7 +246,7 @@ seen. It is **not-evaluable** from a repository.
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | The list of classes, each with the reason it is expected in operation, and the list of classes considered and not tested, each with a reason | The evaluation plan, or a document it names | Human review |
-| R2 | For each class: the bar, dated before the run, and the paired baseline and perturbed results for the same items | The evaluation plan and the run's record | Human review |
+| R2 | For each tested class: the bar, dated before the run, the paired baseline and perturbed results for the same items, the normalised margin and its headroom, and a disclosure where the margin is undefined | The evaluation plan and the run's record | Human review |
 | R3 | The generator, parameters and seed, or the committed variants; the split each variant is in; and the selection record: how the variants were drawn, fixed before the run, and the number generated against the number kept and scored | The suite, its data and the plan | Human review; split membership is checkable by reading, and a kept count below the generated count with no recorded reason is the finding |
 | R4 | Per-class results with each margin to its bar, the class with the smallest margin named, and the count of variants per class | The evaluation report | Human review |
 | R5 (wording) | The claim as worded, read for whether it names the tested classes, the considered-and-untested classes (R1) and the subject measured | The report, manifest or documentation that states it | Human review |
@@ -289,14 +306,14 @@ tier (Standard 2 R3).
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Each recorded class carries a reason tied to operation, and each considered-and-untested class a reason | A class list with no reasons, or reasons that name only a library | A short, specific reason must **not** be failed for brevity |
-| R2 | Each class has a bar dated before the run and a baseline over the same items | A perturbed figure with no baseline, or a bar written after the result | A project whose bar is "no degradation" must **not** be failed for having no numeric tolerance |
+| R2 | Each tested class has a bar dated before the run, a baseline over the same items and a margin with its headroom | A perturbed figure with no baseline, no margin, or a bar written after the result; an undefined margin not disclosed | A project whose bar is "no degradation" must **not** be failed for having no numeric tolerance |
 | R3 | The variants can be regenerated or are committed, none of a held-out item's variants is in the development split, and the selection record shows the draw fixed before the run with generated and kept counts | "Typos added" with no generator; paraphrases of a held-out item in the tuning set; a generated pool of which only the variants the system failed were kept, with no record of the draw | A class made of variants all in the same split as their sources must **not** be flagged |
 | R4 | Results per class with margin to bar, the smallest-margin class named, counts given | One aggregate only | An aggregate reported beside the per-class results must **not** be flagged |
 | R5 | The claim names the classes tested, the considered-and-untested classes, and the subject | An unqualified "robust" | A narrow, bounded claim must **not** be failed for being narrow |
 | R6 | No detector or report in this repository outputs a robustness verdict from presence | A detector that reported robustness evaluated because a fixture directory existed | Reporting that a perturbation fixture was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a plan's class list and no fixture
-carries one, so R1 to R5 are enforced by review or not at all, and R6 holds by construction. The
+carries one, so R1 to R5 are enforced by review or not at all, and R6 holds today because no detector has this subject, and no test guards it. The
 negative controls state what review must not do to a project that has the right subject and does
 the right thing. **A requirement with no falsifier is a requirement nobody can be shown to have
 broken**, and that is the honest state of this standard.
@@ -304,7 +321,8 @@ broken**, and that is the honest state of this standard.
 ## Exceptions and staleness
 
 There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to
-except. A project that knowingly does not meet one records that in its own documents; Standard 2's
+except. A project that knowingly does not meet R1 to R4 records that in its own documents; for R5
+the only remedy is to remove or bound the claim, because R5 is not exemptible; Standard 2's
 dispositions apply to the application of a rule, and this standard has none.
 
 **What invalidates a recorded robustness result.** Each of these changes what the result describes:
@@ -344,7 +362,6 @@ here, none of it owner-approved:
 - **R6**, the constraint on this framework, in the same form as the equivalent requirement in
   [Standard 8](08-ai-safety-requirements-and-safety-cases.md),
   [Standard 17](17-evaluation-plans-for-generative-systems.md),
-  item 18 (Benchmark Integrity and Contamination),
   [Standard 25](25-grounding-and-hallucination-control.md) and
   [Standard 33](33-ai-observability.md).
 - **The exclusions in Scope** as division lines, including the line between robustness to ordinary
@@ -379,7 +396,7 @@ No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
 ## Implementation
 
-**Normative. Nothing about R1 to R5 is enforced; R6 holds by construction.**
+**Normative. Nothing about R1 to R5 is enforced; R6 holds today because no detector has this subject, and no test guards it.**
 
 Stated as two separate lists, because a reader scanning one table will otherwise carry a proposal away
 as a capability.
@@ -388,7 +405,7 @@ as a capability.
 
 | Requirement | State |
 | --- | --- |
-| R6 | **Holds by construction, not by assertion.** No detector, rule or report in `scripts/`, `rules/`, `schemas/`, `templates/` or `ai-policy.yml` has a concept of robustness as a subject; a case-insensitive search of those paths for `robust` found one use, in `templates/RED-TEAM-REPORT.md`, as a caution against inferring robustness from a failed attempt, and no check. No test asserts the absence, so a future detector could break R6 without failing one |
+| R6 | **Holds today, unguarded.** No detector, rule or report in `scripts/`, `rules/`, `schemas/`, `templates/` or `ai-policy.yml` has a concept of robustness as a subject; a case-insensitive search of those paths for `robust` found one use, in `templates/RED-TEAM-REPORT.md`, as a caution against inferring robustness from a failed attempt, and no check. No test asserts the absence, so a future detector could break R6 without failing one |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's robustness |
 
 **Proposed, and deliberately absent from this release. None of the following exists:**
