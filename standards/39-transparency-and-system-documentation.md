@@ -319,7 +319,7 @@ crosswalk, and no maintainer of that pack has confirmed it. No ADR covers this s
 
 ## Implementation
 
-**Normative. Nothing about R1 to R5 is enforced; R6 holds by construction.**
+**Normative. Nothing about R1 to R5 is enforced; R6 holds today because no such detector exists.**
 
 **Implemented today, and re-runnable now:**
 
