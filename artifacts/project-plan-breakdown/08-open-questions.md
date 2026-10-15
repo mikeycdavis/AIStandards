@@ -84,10 +84,13 @@ blanket form was not propagated.
 affirms the blanket form, Standard 11 R3 tightens to match. If the owner distinguishes advisory from
 authoritative, Standard 02 R2 loses the word "propose" and gains the distinction.
 
-### Q8 — Should the repository pin line endings with a `.gitattributes`?
+### Q8 — Should the repository pin line endings with a `.gitattributes`? — **ANSWERED 2026-10-14: option A**
 
-`core.autocrlf` is `true` and no `.gitattributes` exists, so committed bytes are LF and working-tree
-bytes CRLF. `scripts/fidelity.mjs` declares a CRLF→LF normalization on both sides and reports raw-byte
+**Answer (owner, 2026-10-14): option A.** Keep the vendor-only rule, `scripts/vendor/** text eol=lf`, and add no repository-wide `.gitattributes` rule. Revisit only when a second byte-pinned artifact appears outside `scripts/vendor/`. The decision packet (question as written, options A/B/C, behaviour on Windows `autocrlf=true`/`false` and Linux CI, risks) is `F:\Repos\StandardsPortfolio-evidence\aistandards-125-q8-packet-2026-10-14.md` (owner-side evidence, not part of this repository). The text below is the question as it was asked.
+
+`core.autocrlf` is `true` and no repository-wide `.gitattributes` exists (the one file, added by ST-57, pins only
+`scripts/vendor/**` to LF so the vendored parser's recorded hashes do not depend on a checkout, and is not an
+answer to this question), so committed bytes are LF and working-tree bytes CRLF. `scripts/fidelity.mjs` declares a CRLF→LF normalization on both sides and reports raw-byte
 matches separately, so nothing currently breaks. Adding one would rewrite every file's line endings
 in a single commit, which is why it has not been done as a side effect of other work.
 **Impact if unanswered:** none today. It becomes real in Phase 5, where `ci-context` sets
