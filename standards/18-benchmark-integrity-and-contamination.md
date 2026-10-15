@@ -58,9 +58,10 @@ Three terms, each defined here rather than by the brief:
   capability it cares about, as opposed to a set built from its own task.
 
 **Where each requirement reaches.** R1 reaches every system that reports a result on an evaluation
-set. R2 reaches every system that reports a result on a set that a model it did not train could
-have seen, which includes every public benchmark; for a model the project trains, the
-training-pipeline path is MachineLearningStandards' ground (see below). R3 reaches systems that hold a held-out set. R4
+set. R2 reaches every system that reports a result on a set that a third-party-trained model could
+have seen, which includes every public benchmark and a model the project fine-tunes from a
+third-party base; what the project's own training pipeline introduces is MachineLearningStandards'
+ground (see below). R3 reaches systems that hold a held-out set. R4
 reaches a project that states a contamination check was run. R5 reaches systems that rely on a
 benchmark as evidence. R6 constrains this framework and reaches no consuming project. A system with
 none of a requirement's subject has nothing to meet: this standard defines no catalog rule, so there
@@ -76,7 +77,8 @@ It does **not** cover, and claims none of the ground of, the following:
   tuned against it by the project.
 - **Leakage introduced by a project's own training pipeline** — preprocessing fitted across a split,
   duplicates spanning partitions, features unavailable at prediction time. That is
-  MachineLearningStandards' subject; see the posture note below.
+  MachineLearningStandards' subject; see the posture note below. Exposure a fine-tuned model
+  inherits from its third-party base model is not introduced by that pipeline and stays under R2.
 - **What an evaluation must cover** (item 19, Robustness Evaluation) and **when regressions are
   tested** (item 20, Regression Testing Across Model and Prompt Versions), both unwritten in this
   release.
@@ -143,9 +145,15 @@ rejects: the record is a document the project names, and which document is the p
 
 ### R2 — A result on a set the model may have seen says so
 
-**Where an evaluated model that the project did not train could have been trained on the
-evaluation set, a result MUST be reported with that qualification, and MUST NOT be reported as free
-of contamination because no contamination was found.**
+**Where an evaluated model, or a model it was fine-tuned from, was trained by a party other than
+the project and could have been trained on the evaluation set, a result MUST be reported with that
+qualification, and MUST NOT be reported as free of contamination because no contamination was
+found.**
+
+A model the project trains entirely itself from data it holds is outside this trigger; what its
+pipeline lets in is MachineLearningStandards' subject. A model the project fine-tunes is inside it
+for what the base model saw: the project's pipeline did not introduce that exposure and cannot see
+it.
 
 For a model the project did not train, which is every hosted model, the project usually cannot see
 the training data. A provider may state that it filtered named benchmarks, may publish a training
@@ -195,7 +203,8 @@ breach either without the other.
 
 **Where a project reports that a contamination check was run, it MUST record the method, the
 data it was able to examine, and the limits of what a negative result establishes, and MUST NOT
-describe a negative result as showing the set was not in a model's training data.**
+describe a negative result of a proxy check, or of a check over data that is not the complete
+training data, as showing the set was not in a model's training data.**
 
 Common methods are overlap between evaluation items and a corpus the project can see, planted
 canary strings that a model is then asked to complete, comparing performance on items with their
@@ -206,7 +215,10 @@ paraphrased, translated or partially included.
 **A check examines a proxy.** A check against a corpus the project holds says that corpus does not
 contain the items. A canary string absent from completions says the model did not reproduce it.
 Both are worth recording and neither is a finding about the model's training data, which for a
-hosted model the project does not have.
+hosted model the project does not have. **A check over the complete training corpus of a model the
+project trained is not a proxy**: where the project can show the corpus examined is the whole of
+what the model was trained on, a negative result is a finding about that model's training data and
+may be described as one, with the corpus and its completeness recorded.
 
 The requirement does not ask a project to run a check. It asks that one that was run be described
 by what it did.
@@ -283,8 +295,10 @@ the record against the set's actual publication history and the repository's vis
 ## Validation, severity, and exemptibility
 
 **This standard has no catalog rules of its own in this release.**
-[Standard 6](06-standard-structure-and-rule-identity.md) R3 requires every standard to cite at least
-one rule or record why it does not; this is that record.
+The Phase 2 acceptance criteria (plan 02 section 6) require every standard to cite at least one rule
+or to record in its Validation section why it ships with none; this is that record.
+[Standard 6](06-standard-structure-and-rule-identity.md) R3 separately requires each requirement to be
+falsifiable or declared not-evaluable, which the Tests and falsifiers section answers.
 
 Three reasons, stated so a reader can disagree with any one of them:
 
@@ -328,7 +342,7 @@ lowered by a risk tier (Standard 2 R3).
 | R1 | For one evaluation set, origin, public status with a date or "not published", and the model identifiers are all recoverable from the record | A result reported on a set with no exposure record, or a record naming no model | A set recorded as "not published" with a stated reason must **not** be failed for lacking a publication date |
 | R2 | A result on a public benchmark carries the qualification, and a provider statement is marked as the provider's | A result described as uncontaminated because a search found no overlap | A project that reports "exposure unknown" and the score must **not** be failed for not having excluded contamination |
 | R3 | The held-out set is absent from public repositories and from prompts, and the routes relied on are recorded | The set in a repository that is public, or its items in a few-shot prompt | A set held in a private repository with no model-facing use must **not** be flagged for existing, and the held-out item presented to the model under evaluation to obtain its answer must **not** be flagged |
-| R4 | A reported check names its method, what it examined, and what a negative result does not show | "Checked, no contamination" with no method | A project that ran no check and says so must **not** be failed for not running one |
+| R4 | A reported check names its method, what it examined, and what a negative result does not show | "Checked, no contamination" with no method | A project that ran no check and says so must **not** be failed for not running one, and a negative result over the recorded complete training corpus of a model the project trained must **not** be failed for being described as a finding about its training data |
 | R5 | A benchmark found saturated or defective is recorded as such and is reported with that qualification | A benchmark on which every candidate scores at the ceiling reported as a differentiator with no note | A benchmark still discriminating between candidates must **not** be flagged for being old or public |
 | R6 | No detector or report in this repository outputs a contamination or benchmark-validity verdict from presence | A detector that reported a set uncontaminated because an overlap check's output was zero | Reporting that an exposure record was *found*, as an observation with no verdict, is permitted |
 
@@ -353,8 +367,9 @@ what the record means, and a record made before the change describes the earlier
   becomes public, or reaching a provider on terms that permit retention;
 - a change in a provider's published terms, which R3's recorded route depends on;
 - a change in the benchmark itself: items added or removed, reference answers corrected;
-- the project beginning to train or fine-tune a model of its own, which brings the training pipeline
-  into MachineLearningStandards' ground.
+- the project beginning to train or fine-tune a model of its own, which brings what its training
+  pipeline introduces into MachineLearningStandards' ground; exposure inherited from a third-party
+  base model stays under R2.
 
 **Staleness is asymmetric here.** A "private" record becomes false the moment a set leaves the
 repository by a route nobody listed, and nothing in a repository shows the set was copied. Nothing
@@ -417,8 +432,9 @@ evaluation set and is not relaxed by anything above.
 [Standard 7](07-boundary-with-adjacent-standards.md) R5 orders a conflict between packs, specialist
 first and then the stricter compatible requirement. [Standard 2](02-ai-risk-tiering-and-applicability.md)
 R3 and R4 govern the applicability and non-lowering language used above, and
-[Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the Validation section
-answers by recording why no rule is shipped.
+[Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the Tests and
+falsifiers section answers, and the Validation section records why no rule is shipped, as plan 02
+section 6 asks.
 
 Items 12, 19, 20 and 50 are unwritten in this release; the lines drawn above are provisional until
 they are, and the later standards may legitimately move them. Open questions Q19 (whether the two
