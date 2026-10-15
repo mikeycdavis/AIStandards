@@ -103,7 +103,8 @@ revision and MUST NOT restate its limitations, performance or training claims in
 words; where it does not exist, the description MUST say so and MUST NOT supply capabilities or
 limitations the project has not established.**
 
-A restatement is a fork, and it drifts the moment the original is revised ([Standard 7](07-boundary-with-adjacent-standards.md)
+A restatement is a fork, and it drifts the moment the original is revised ([Standard
+7](07-boundary-with-adjacent-standards.md)
 R2). For a model the project trained, the owner's model card (MachineLearningStandards 25) is where
 limitations live. For a third-party model, the project records which provider documentation it
 relied on and at which revision, and records "not published" where nothing is. A capability the
@@ -197,27 +198,36 @@ Three reasons, stated so a reader can disagree with any one of them:
 **Severity.** R1 to R5 are `manual-review` obligations in this release. R6 constrains this framework
 and has no validation type.
 
+**No severity is assigned to R1 to R5 in this release.** A severity belongs to a rule's finding, and
+no rule exists here to produce one. A failed manual review is a finding for the reviewer, made under
+the standards the project and its owner apply, not a framework finding; if a rule is later minted
+for any of these requirements its severity is decided then and recorded in its shard.
+
 **Exemptibility.** R6 is not exemptible: no circumstance makes it reasonable for a scan to report an
-effect from a presence. R1 to R5 reach a system only where it has a system to describe; a project that
-believes it has none may declare the requirement not-applicable under
-[Standard 2](02-ai-risk-tiering-and-applicability.md) R4 with a reason and a `revisitWhen`. No detector
-in this release would contradict a false declaration. No level here is lowered by a risk tier
+effect from a presence. R1 to R5 reach a system only where it has a system to describe. That is a
+scope condition, not a disposition: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4's
+dispositions are recorded against catalog rules, this standard has none, and the policy schema
+offers no declaration for it. A project whose system lacks the subject records why in its own
+documents, and no detector in this release would contradict a false record. No level here is lowered
+by a risk tier
 (Standard 2 R3).
 
 ## Tests and falsifiers
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | A document states purpose, users, affected non-users and exclusions | The only description is a README sentence, a slide or a thread | A short document that answers all four must **not** be failed for brevity |
+| R1 | A document states purpose, users, affected non-users and exclusions | The description exists only in a slide, a thread or someone's head, or is a document that omits any of the four | A short document, including a README passage, that answers all four and is findable must **not** be failed for brevity or form |
 | R2 | Each model, tool, source and approval point in the code appears in the description | A tool callable in code that the description never mentions | A system with no tools or retrieval, said to have none, must not be failed for the empty sections |
 | R3 | The model documentation is referenced by name and revision, or "none" is recorded | A paraphrase of a model card's limitations in the project's words | A reference that names a provider document and its revision, with nothing copied, must **not** be flagged |
 | R4 | No contradiction with the manifest; unknowns carry an owner | A model named in one place and a different one in the other | A section reading "unknown — the vendor does not say; ask the account owner" must **not** be treated as missing |
 | R5 | An owner is named and a recent system change has a matching revision | A prompt changed twice since the description was last edited | A change with no effect on anything the description states needs no revision |
 | R6 | No detector or report here outputs a transparency verdict from presence | A detector that reported "documented" because a file was found | Reporting that a system description was *found*, as an observation with no verdict, is permitted |
 
-**No falsifier is automated in this release.** R1 to R5 are enforced by review or not at all, and R6
-holds by construction. **A requirement with no falsifier is a requirement nobody can be shown to have
-broken**, and that is the honest state of this standard.
+**No falsifier is automated in this release.** No rule reads a system description, so no detector
+checks R1 to R5; they are enforced by review or not at all, and the last requirement holds by
+construction. The falsifiers in the table are observable by a reviewer reading the record or the
+running system: they are manual, not absent. The negative controls state what review must not do to
+a project that has the right subject and does the right thing.
 
 ## Exceptions and staleness
 
