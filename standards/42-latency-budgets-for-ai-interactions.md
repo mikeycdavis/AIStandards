@@ -180,14 +180,14 @@ shown by a call it cut short.
 | Unattached figure | "p95 is 1.8 s" naming no measurement point, model, prompt revision, deployment or workload | R4 |
 | Unqualified claim | "Real-time" or "instant" with no budget behind it | R5 |
 | Setting read as bound | A framework report of "bounded in time" because a timeout argument is present | R6 |
-| Untested limit | A timeout shown to exist and never shown to cut a call | R2, R6 |
+| Limit presented as demonstrated | A timeout described as working, or reported as bounding calls, with no run in which it cut a call | R6 |
 
 ## Evidence
 
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | Each budget as interaction, point of measurement and percentile | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | The limit and where it is applied, the behaviour at it, and a run in which it was reached | Project code, configuration and the records of a run | Human review of the records |
+| R2 | The limit and where it is applied, the behaviour at it as implemented in code or configuration, and, where the limit has been reached, the record of that run | Project code, configuration and the records of a run | Human review of the records |
 | R3 | Retry and fallback policy, the interaction deadline, and how what remains is checked before an attempt | Project code and configuration | Human review; a project's own test where one exists |
 | R4 | A reported figure with interaction, measurement point, statistic, model, prompt revision, provider, region and tier, and workload, and every deployment that took part | The project's documentation and measurement records | Human review |
 | R5 | Any published latency claim with the budget and measurement behind it | The project's documentation | Human review |
@@ -251,7 +251,7 @@ contradict a false statement. No level here is lowered by a risk tier (Standard 
 | R2 | A call that exceeds the call limit, or an interaction that reaches its deadline, is cut, cancelled where the provider allows it, and handled as recorded | The limit is reached and the call hangs the caller, or proceeds as before, or the underlying call continues to completion where cancellation was available | A system whose only model call is a background step nobody waits on is out of scope for R2, not failing it |
 | R3 | An interaction that retries or falls back has a stated deadline, and a retry is declined when the remaining deadline is shorter than its own limit | Retries with no stated interaction deadline, or three attempts at the per-call limit inside an interaction with a deadline of one | A system that never retries or falls back, and says so, must **not** be failed for lacking a deadline; a request that exceeds a p95 objective but is inside its deadline must **not** be reported as a violation of R3 |
 | R4 | A reported aggregate figure names interaction, measurement point, statistic, model, prompt revision, provider, region and tier, and workload, and every deployment that took part | A figure with a number and nothing else, or a mean reported as a percentile or the reverse | A figure on a named workload that says it was measured on an idle endpoint must **not** be flagged for admitting it; a per-call duration in a trace record must **not** be flagged for lacking a percentile or workload |
-| R5 | A published claim names the budget and measurement | "Real-time" or "instant" with neither | A statement of a measured figure on a named workload and no stronger claim must **not** be flagged |
+| R5 | A published claim names the budget and the measurement, and the measurement's point, statistic and result are compared with the budget and meet it | "Real-time" or "instant" with neither, or one that names a measurement that misses its budget | A statement of a measured figure on a named workload and no stronger claim must **not** be flagged |
 | R6 | No detector or report in this repository outputs a latency verdict from presence | A detector that reported a bound because a timeout argument was present | Reporting that a timeout setting was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a latency artifact and no fixture carries
@@ -282,7 +282,8 @@ following makes the earlier one describe a different subject:
 
 - a change of model identifier, or a model silently updated behind an alias
   ([Standard 1](01-ai-system-manifest.md) R4 asks for the identifier to be pinned);
-- a change of the provider, its region, its tier or its load at the time of measurement;
+- a change of the provider, its region or its tier, or a known and material change in the provider's load
+  regime (a launch, a migration, a stated capacity change);
 - a change of the prompt, the retrieval step or the output length limit, each of which moves the time
   taken;
 - a change of the retry, fallback or timeout policy;
