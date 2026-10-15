@@ -565,7 +565,12 @@ const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext",
 // is a stated limit.
 const TIMER_NAMES = ["setTimeout", "setInterval", "setImmediate"];
 const CHILD_PROCESS_NAMES = ["exec", "execSync", "execFile", "execFileSync", "spawn", "spawnSync", "fork"];
-const EVAL_FLAG = /(^|\s)(-e|--eval|-p|--print|--eval=\S*|--print=\S*)(\s|$)/;
+// A shell removes quotes and backslashes before node sees the words, so `node "-e" "..."` and `node -e"1"`
+// are the same invocation as `node -e 1`: the command string is read with them removed. A short flag
+// may carry its value attached, so `-e` and `-p` match as a word prefix (conservatively: `-p` of another
+// tool in a literal is reported too).
+const EVAL_FLAG = /(^|\s)(-e\S*|-p\S*|--eval(=\S*)?|--print(=\S*)?)(\s|$)/;
+const unquoted = (text) => text.replace(/["'`\\]/g, "");
 
 // Whether the token at `k` is directly called: `x(...)` or `x?.(...)`.
 function isCalledAt(tokens, k) {
@@ -601,8 +606,12 @@ export function moduleReferences(source) {
     if (tk.t === "id" && tk.v === "Script" && tokens[k - 1] && (tokens[k - 1].v === "new" || (tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "vm"))) {
       dynamic("vm.Script, which compiles source text");
     }
-    if (tk.t === "id" && tk.v === "constructor" && tokens[k - 1] && tokens[k - 1].v === "." && tokens[k + 1] && tokens[k + 1].v === "(" && !tokens[k + 1].syn) {
+    // `.constructor(...)` and `.constructor?.(...)` reach Function; so does `["constructor"](...)`.
+    if (tk.t === "id" && tk.v === "constructor" && tokens[k - 1] && tokens[k - 1].v === "." && isCalledAt(tokens, k)) {
       dynamic(".constructor(...), which reaches Function");
+    }
+    if (tk.t === "str" && tk.v === "constructor" && tokens[k - 1] && tokens[k - 1].v === "[" && tokens[k + 1] && tokens[k + 1].v === "]" && isCalledAt(tokens, k + 1)) {
+      dynamic('["constructor"](...), which reaches Function');
     }
     if (tk.t === "id" && (TIMER_NAMES.includes(tk.v) || CHILD_PROCESS_NAMES.includes(tk.v)) && isCalledAt(tokens, k)) {
       const open = tokens[k + 1].v === "(" ? k + 1 : k + 3;
@@ -615,7 +624,7 @@ export function moduleReferences(source) {
       } else {
         for (const arg of callArgs) {
           for (const t of arg) {
-            if (t.t === "str" && EVAL_FLAG.test(t.v)) dynamic(`${tk.v} told to evaluate source (${t.v.slice(0, 30)})`);
+            if (t.t === "str" && EVAL_FLAG.test(unquoted(t.v))) dynamic(`${tk.v} told to evaluate source (${t.v.slice(0, 30)})`);
           }
         }
       }
