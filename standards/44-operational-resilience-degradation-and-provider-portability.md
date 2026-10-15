@@ -113,7 +113,7 @@ This is a constraint on the framework, not on a project. A repository can show t
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | Each dependency and its behaviour under each of the four conditions | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | Each degraded mode and the field, header or shape that carries its signal | The project's output contract and a captured example | Human review |
+| R2 | Each degraded mode and, for one that produces a response, the field, header or shape that carries its signal; for a mode that declines, the record that it declines | The project's output contract and a captured example | Human review |
 | R3 | The primary path's controls and, for each, where it applies on the fallback path, or the record that the request is declined before the fallback can serve it | Project code, configuration and data-handling terms | Human review |
 | R4 | Where provider-specific calls and request shapes sit, and the abstraction in front of them | Project code and documentation | Human review |
 | R5 | The date, result and stated interval of each exercise and, for a path described as available, the date of the latest change to the path | Test records, drill records or incident records | Human review |
@@ -170,11 +170,11 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 
 | Requirement | Event that makes its record stale |
 | --- | --- |
-| R1 | The addition of a dependency, or a change in what a dependency returns or in its terms. |
+| R1 | The addition of a dependency, a change in what a dependency returns or in its terms, or a change to the system's own behaviour under a condition. |
 | R2 | A change of the model or provider that produces the response, or of the degraded-mode routing or the response contract. |
 | R3 | A change to the controls on the primary path, or to the fallback policy. |
 | R4 | A change of provider or of the integration boundary. |
-| R5 | Any change to the path since the latest exercise: a model, provider, terms, primary-path control or fallback policy. |
+| R5 | For a path described as available, any change to the path since its latest exercise: a model, provider, terms, primary-path control or fallback policy. |
 | R6 | A new detector, rule or report that touches resilience. |
 
 ## Additions this standard makes beyond the source
