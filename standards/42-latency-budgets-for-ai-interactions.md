@@ -155,7 +155,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | R5 | A latency claim names a budget and a latency figure, they match in interaction, point and statistic, the figure meets the budget, and the claim is about the figure's workload and path | A latency claim naming no budget or no figure, a figure that misses its budget, or a mismatch of interaction, point, statistic, workload or path | A statement of a measured figure on a named workload and no stronger claim must **not** be faulted |
 | R6 | No detector, rule, audit finding or generated report in this repository states a latency verdict from presence | A detector, rule, audit finding or report that states a latency budget met, or calls bounded in time, because a timeout setting, a streaming flag or a named model is present | Reporting that a timeout setting was *found*, as an observation with no verdict, is permitted |
 
-**No falsifier is automated in this release.** No rule reads this subject's artifact and no fixture carries one, so R1 to R5 are enforced by review or not at all, and R6 holds today only because no such detector exists. The falsifiers in the table are available for manual review; what this release lacks is a detector that applies them.
+**No falsifier is automated in this release.** No rule reads this subject's artifact and no fixture carries one, so R1 to R5 are enforced by review or not at all, and R6 holds today only because no such detector exists. The falsifiers in the table are available for manual review; what this release lacks is a detector that applies them. A record made stale by the event in the staleness table below does not satisfy the minimum test it was offered for until it is re-made.
 
 ## Exceptions and staleness
 
