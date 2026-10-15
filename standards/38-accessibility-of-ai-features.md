@@ -48,7 +48,8 @@ It does **not** cover, and claims none of the ground of:
 - **How a disclosure is presented.** Standard 7 records that UIUXDesignStandards owns presentation and
   this pack only whether a disclosure is owed. That is item 40.
 - **Unequal outcomes between groups.** Whether the system's *result* differs for people, which can
-  include people who use assistive technology, is item 37 (Fairness and Harm Distribution, unwritten on this base).
+  include people who use assistive technology, is item 37 (Fairness and Harm Distribution, unwritten
+on this base).
   Whether a person can *use* the feature is this item and its owner.
 - **Legal conformance.** Whether a feature meets a legal accessibility obligation is a legal question
   this standard does not answer.
@@ -154,11 +155,18 @@ Three reasons, stated so a reader can disagree with any one of them:
 **Severity.** R1 to R3 are `manual-review` obligations, carried out under the owner's standards. R4
 constrains this framework and has no validation type.
 
+**No severity is assigned to R1 to R3 in this release.** A severity belongs to a rule's finding, and
+no rule exists here to produce one. A failed manual review is a finding for the reviewer, made under
+the standards the project and its owner apply, not a framework finding; if a rule is later minted
+for any of these requirements its severity is decided then and recorded in its shard.
+
 **Exemptibility.** R4 is not exemptible: no circumstance makes it reasonable for this framework to
-restate or vary the owner's requirement. R1 to R3 reach a system only where it presents an AI feature
-through an interface; a system without one may declare the requirement not-applicable under
-[Standard 2](02-ai-risk-tiering-and-applicability.md) R4 with a reason and a `revisitWhen`. No
-detector in this release would contradict a false declaration. No level here is lowered by a risk tier
+restate or vary the owner's requirement. R1 to R3 reach a system only where it presents an AI
+feature through an interface. That is a scope condition, not a disposition: [Standard
+2](02-ai-risk-tiering-and-applicability.md) R4's dispositions are recorded against catalog rules,
+this standard has none, and the policy schema offers no declaration for it. A project whose system
+lacks the subject records why in its own documents, and no detector in this release would contradict
+a false record. No level here is lowered by a risk tier
 (Standard 2 R3). Whether an exception to the owner's own requirement is available is the owner's to
 state, and this pack grants none.
 
@@ -171,9 +179,11 @@ state, and this pack grants none.
 | R3 | The independent evidence for each requirement claimed exists | The generated description of an image is the only evidence it has a text alternative | A generated text alternative that a reviewer then checked is cited with that review, and must **not** be flagged for having been model-written |
 | R4 | No rule, detector or report here asserts accessibility or defines an accessibility requirement | A catalog rule restating an owner requirement, or a report of "accessible" from a statement's presence | Reporting that an accessibility statement or an owner rule was *found*, as an observation with no verdict, is permitted |
 
-**No falsifier is automated in this release.** No rule reads an accessibility record, and R4 holds by
-construction. **A requirement with no falsifier is a requirement nobody can be shown to have broken**,
-and that is the honest state of this standard.
+**No falsifier is automated in this release.** No rule reads an accessibility record, so no detector
+checks R1 to R3; they are enforced by review or not at all, and the last requirement holds by
+construction. The falsifiers in the table are observable by a reviewer reading the record or the
+running system: they are manual, not absent. The negative controls state what review must not do to
+a project that has the right subject and does the right thing.
 
 ## Exceptions and staleness
 
@@ -223,7 +233,8 @@ Not authored here: the posture `D`, the owner and the nineteen rule ids are the 
 accessibility and the presentation of a disclosure; R2 there is the link-do-not-copy rule this standard
 follows, and R4 there is why no id is minted.
 
-item 37 (Fairness and Harm Distribution, unwritten on this base) governs unequal outcomes; this standard governs
+item 37 (Fairness and Harm Distribution, unwritten on this base) governs unequal outcomes; this
+standard governs
 whether the feature can be used. Items 39 (Transparency and System Documentation) and 40 (User
 Disclosure of AI Involvement) are unwritten in this release and sit under the same bullet; the line is
 provisional until they are.
