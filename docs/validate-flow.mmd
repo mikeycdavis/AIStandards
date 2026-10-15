@@ -5,11 +5,12 @@ sequenceDiagram
     participant Pol as policy.mjs
     participant Cat as catalog.mjs
     participant Det as detectors (in standards.mjs)
+    participant Rdr as structural.mjs
     participant Comp as compliance.mjs
 
     Caller->>CLI: validate <target> --json
     CLI->>Cat: loadCatalog(rules/)
-    Cat-->>CLI: 46 rules, or throw CatalogError
+    Cat-->>CLI: 46 rules in 8 shards, or throw CatalogError
     CLI->>Pol: resolvePolicyPath(target, --policy)
     Note over Pol: Resolved against the TARGET.<br/>The pack root is never a fallback.
     Pol-->>CLI: {path, source: explicit | target-default}
@@ -24,6 +25,9 @@ sequenceDiagram
     Pol-->>CLI: resolved rule set (applicability applied)
     CLI->>Det: createRun(target) then runDetectors
     Note over Det: Descriptive detectors first (rule: null),<br/>judgmental after. A shortened walk<br/>withdraws content-derived rules.
+    Det->>Rdr: readStructuralFiles: parse every .yml/.yaml/.json once
+    Rdr-->>Det: parsed (counts, aliases not followed)<br/>or a failure value per file
+    Note over Det: A file that failed is never scanned lexically.<br/>The inline-prompt rules get an unknown for it.
     Det-->>CLI: observations[], findings[], invariantViolations[]
     CLI->>CLI: assertBindings(catalog, observed rule ids)
     CLI->>CLI: checkApplicabilityContradictions(run, resolved)
