@@ -48,18 +48,18 @@ It does **not** cover, and claims none of the ground of:
   accessibility of the notice are UIUXDesignStandards' subject (below). [Standard
 7](07-boundary-with-adjacent-standards.md)
   records it as deferred, and this pack "owns only *whether* disclosure is owed".
-- **Deception and denial of AI involvement.** A system asserting that a person, not an AI, produced or
-  is producing its output is the prohibitive face of this item's subject. The specification lists it
-  as item 53, "Disclosure and Deception Prohibitions", class `A`, derived from the same `user
-  disclosure` token and unwritten on this base. Provisionally it is item 53's, and that division is
-recorded open (see Relationship); nothing here states, restates or pre-empts such a prohibition.
 - **Whether a statement is true.** A claim the system makes about the world is item 25's subject, and
   what it says about its own capabilities is item 28's.
-- **Documentation for a reader of the repository.** That is item 39, item 39 (Transparency and
-System Documentation, unwritten on this base)
-  where written; a document in a repository is not a disclosure to a user.
+- **Documentation for a reader of the repository.** That is item 39 (Transparency and System
+Documentation, unwritten on this base); a document in a repository is not a disclosure to a user.
 - **What the law requires.** Some jurisdictions require disclosure in particular settings, and which
   settings is a legal question this standard does not answer and must not be read as answering.
+
+**Provisionally not covered, recorded open.** A system asserting that a person, not an AI, produced
+or is producing its output is the prohibitive face of this item's subject. The specification lists
+it as item 53, "Disclosure and Deception Prohibitions", class `A`, derived from the same `user
+disclosure` token and unwritten on this base. Provisionally it is item 53's; the division is
+recorded open (see Relationship), and nothing here states, restates or pre-empts such a prohibition.
 
 **Boundary posture B — baseline, with a named half deferred.** The boundary review changed the posture
 from `O` because owning the item outright contradicted this pack's own Standard 7: the owner entry
@@ -73,9 +73,9 @@ evidence is one standard in UIUXDesignStandards, and only this:
   restated." Its R1 requires generated content be marked where a user could take it for verified fact.
 
 The file, the three rule ids, the lede and R1 are as the boundary review and
-`artifacts/foreign-namespace-inventory.json` record them (pinned 2026-09-04). Standard 7 records R8
-(the system not anthropomorphized in ways that misrepresent capability) as adjacent to R2 below; it
-is **not** cited as precedent here.
+`artifacts/foreign-namespace-inventory.json` record them (pinned 2026-09-04). UIUXDesignStandards'
+R8 (anthropomorphism) is crosswalked by Standard 7 to item 28, not to this item, and is not cited as
+precedent here.
 
 ## Requirements
 
@@ -94,7 +94,7 @@ The record is a document, not a manifest field. `schemas/ai-system-manifest.sche
 has no property for it, and nothing in this requirement asks an adopter to write a field that schema
 rejects.
 
-### R2 — Where a disclosure is owed, it MUST precede reliance
+### R2 — Where a disclosure is owed, it MUST reach the person no later than interaction or reliance
 
 **A disclosure that is owed MUST reach the person no later than the point at which they interact or
 rely, and, for a person who does not interact with the system (R3), no later than the point at which
@@ -125,23 +125,24 @@ have already made it.
 
 **A project that presents a disclosure MUST be able to name the UIUXDesignStandards standards its
 presentation evidence sits under, and MUST NOT offer its disclosure decision as evidence that those
-presentation requirements are met; this framework MUST NOT restate them.**
+presentation requirements are met.**
 
 Deciding that a disclosure is owed and presenting it so that it can be perceived and understood are
 two obligations, owned by two packs. A project that wrote "we disclose AI use in the footer" has
-answered the first and has not shown the second, and a footer is the textbook case of a notice no one
-reads before relying. The owner's standards say what presentation requires, and a project reads them
+answered the first and has not shown the second. The owner's standards say what presentation
+requires, and a project reads them
 there ([Standard 7](07-boundary-with-adjacent-standards.md) R2).
 
 ### R5 — Keep what was shown, and revise the decision when the system changes
 
-**A project MUST revise the decision under R1 and R3 when a model, a prompt, a use of the output, an
-audience (including a channel, region or language), the interface that presents the disclosure, the
-owner's presentation standards, the project's presentation evidence under R4, or the law that
-applies changes. Where a disclosure was presented, the project MUST be able to show what was
-presented, in the form users received it, at a given time, and MUST replace the capture when the
-notice, its position, its audience, or the presentation standards or evidence it was captured under
-changes, recording otherwise that the earlier capture was re-confirmed and when.**
+**When a model, a prompt, a use of the output, an audience (including a channel, region or
+language), the interface that presents the disclosure, the owner's presentation standards, the
+project's presentation evidence under R4, or the law that applies changes, a project MUST revise the
+decision under R1 and R3, or record that it was re-examined and affirmed, and when. Where a
+disclosure was presented, the project MUST be able to show what was presented, in the form users
+received it, at a given time, and MUST replace the capture on each such change if the notice, its
+position or its audience changed, recording otherwise that the earlier capture was re-confirmed and
+when.**
 
 A decision recorded as "owed, shown" is a claim about the interface at the time. Without the shipped
 text and where it appeared, a later review cannot tell whether it was shown, and a change to the
@@ -171,10 +172,10 @@ capture of what a user saw.
 | Decided by implication | "Everyone knows it is AI" written as the reason, with no look at who the users are | R1 |
 | After the fact | The notice appears once the person has acted on the output | R2 |
 | Not before reliance | The only disclosure is in a document the person is not shown before they interact or rely | R2 |
-| Operator told, subject not | A decision concerning a person is documented in the operator's console and nowhere the person can find | R3 |
+| Operator told, subject not | A decision concerning a person is documented in the operator's console and nowhere the person can find, or the record treats notice to the operator as notice to the person | R3 |
 | Decision read as presentation | "We decided it is owed" offered as showing the notice can be perceived | R4 |
 | No record of the shipped text | No one can say what users saw in March | R5 |
-| Stale decision | The system was extended to a new audience, or a prompt, interface or law changed; the record describes the old one | R5 |
+| Stale decision | A model, prompt, use of the output, audience, interface, owner standard, presentation evidence or the law changed; the record describes the old one | R5 |
 | Presence read as disclosure | A framework report of "discloses AI" because a notice string exists | R6 |
 
 ## Evidence
@@ -225,8 +226,11 @@ constrains this framework and has no validation type or project severity. These 
 rule would carry if one is minted; this release emits no framework finding at them.
 
 **Exemptibility.** R6 is not exemptible: no circumstance makes it reasonable for a scan to report an
-effect from a presence. R1, R3 and R5 reach a system only where output or action reaches a person
-outside the team; R2 only where a disclosure is owed; R4 only where a project presents a disclosure.
+effect from a presence. R1 reaches a system only where output or action reaches a person outside the
+team; R2 only where a disclosure is owed; R3 only where AI contributes to a decision or action
+concerning a person who is not the one interacting; R4 only where a project presents a disclosure;
+R5's decision duty wherever R1 or R3 applies, and its capture duty only where a disclosure was
+presented.
 That is a scope condition, not a disposition: [Standard
 2](02-ai-risk-tiering-and-applicability.md) R4's dispositions are recorded against catalog rules,
 this standard has none, and the policy schema offers no declaration for it. A project whose system
@@ -238,11 +242,11 @@ is lowered by a risk tier (Standard 2 R3).
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | Each person-facing output kind has an owed-or-not decision with a reason | A system that emits generated messages in a person's name with no record of the question | A recorded "not owed — suggestion the user accepts or rejects in the act" must **not** be failed |
-| R2 | The disclosure precedes interaction or reliance on the path a user takes; for a subject who does not interact, the sample of what is sent (R3) shows it no later than the decision or action concerning them | The specified or captured point of disclosure falls after reliance or after the decision, or none is specified | A disclosure delivered at the first point of interaction, in whatever form the owner's standards allow, must **not** be failed for its form here |
-| R3 | An AI-assisted decision about a person records whether they are told | A person denied a service with the operator informed and the person not, and no record of deciding | A decision recorded "not told, reason" with an authority behind it is a recorded decision, not a failure of this requirement |
-| R4 | The project names the owner's standards its presentation evidence sits under, and does not offer this decision as that evidence | "Disclosure is in the footer" offered as showing it can be perceived, or a project that presents a disclosure and names no owner standard | A project that cites the owner's standards by name and does not restate them must **not** be flagged |
-| R5 | The decision has revisions after each listed change; where a disclosure was presented, a dated capture of the shipped notice exists | A decision unchanged across a new audience, prompt, interface or law change, or a presented disclosure with no capture | A decision recorded "not owed" has no notice to capture and must **not** be failed for lacking one; a system whose notice never changed needs one capture, not one per release |
+| R1 | Each person-facing output kind has an owed-or-not decision with the person it is owed to and a reason | A system that emits generated messages in a person's name with no record of the question | A recorded "not owed — suggestion the user accepts or rejects in the act" must **not** be failed |
+| R2 | The disclosure is no later than interaction or reliance on the path a user takes; for a subject who does not interact, the sample of what is sent (R3) shows it no later than the decision or action concerning them | The specified or captured point of disclosure falls after interaction or reliance, or after the decision for a non-interacting subject, or none is specified | A disclosure delivered at the first point of interaction, in whatever form the owner's standards allow, must **not** be failed for its form here |
+| R3 | An AI-assisted decision about a person records whether that person, and not only the operator, is told, and what the person receives | A decision about a person with no record of whether they are told, or a record that treats notice to the operator as notice to the person | A decision recorded "not told, reason" is a recorded decision, not a failure of this requirement |
+| R4 | The project names the owner's standards its presentation evidence sits under, and does not offer this decision as that evidence | "Disclosure is in the footer" offered as showing it can be perceived, or a project that presents a disclosure and names no owner standard | A project that cites the owner's standards by name for its presentation evidence must **not** be flagged |
+| R5 | After each listed change the decision is revised or dated as re-examined and affirmed; where a disclosure was presented, a dated capture of the shipped notice exists and is replaced or re-confirmed | A decision neither revised nor recorded as re-examined across a model, prompt, use, audience, interface, owner-standard, presentation-evidence or law change; a presented disclosure with no capture, or a capture neither replaced nor re-confirmed after one | A decision recorded "not owed" has no notice to capture and must **not** be failed for lacking one; a system whose notice never changed needs one capture, not one per release |
 | R6 | No detector or report here outputs a disclosure verdict from presence | A detector that reported "discloses AI" because a notice string was found | Reporting that a notice string was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a disclosure record, so no detector
@@ -256,8 +260,9 @@ the right subject and does the right thing.
 There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to
 except. A project that knowingly does not meet one records that in its own documents.
 
-**What invalidates a decision or a capture.** Each of these is a different subject, and a record made
-before the change describes the earlier system:
+**What invalidates a decision or a capture.** Each of these is a different subject, and a record
+made before the change describes the earlier system; R5 requires the decision to be revised or
+re-examined, and the capture replaced or re-confirmed, on each:
 
 - a new audience, including a channel, region or language, since who is owed a disclosure depends on
 who is there;
@@ -288,12 +293,16 @@ owner-approved:
 - **R2 in full**: that a disclosure owed precedes reliance, with a deadline tied to the decision for
 a non-interacting subject, and nothing about where or how it appears.
   An earlier draft also placed a prohibition on denying AI involvement here; it is withdrawn and
-  recorded under Relationship as item 53's, unanswered.
+recorded under Relationship as provisionally item 53's, open and not decided.
 - **R3 in full**: the extension to a person who is the subject of an AI-assisted decision and is not a
   user.
-- **R4**: that a decision is not evidence of presentation, and that this framework restates no
-  presentation requirement.
-- **R5**: the capture of what users saw, and revision on a change of audience, use or model.
+- **R4**: that a decision is not evidence of presentation, and that a project that presents a
+disclosure names the owner's standards its presentation evidence sits under.
+- **R5**: the capture of what users saw, revision or dated re-examination of the decision on each of
+eight listed changes (model, prompt, use, audience, interface, owner standards, presentation
+evidence, law), and capture replacement or re-confirmation; the ruling that an unshown disclosure is
+not demonstrated.
+- **The rule that a reported lack of awareness contradicts the record** in Exceptions and staleness.
 - **R6**, the constraint on this framework, in the same form as the equivalent requirement in
   [Standard 25](25-grounding-and-hallucination-control.md).
 - **The exclusions in Scope** (presentation, truthfulness, repository documentation, legal compliance)
@@ -311,7 +320,7 @@ evidence are the boundary review's, and Standard 7's table is where the line was
 **Item 53, Disclosure and Deception Prohibitions** is the negative face of this item's `user
 disclosure` token: class `A`, authored, posture `O`, unwritten on this base. This standard says
 whether a disclosure is owed and that it precedes reliance; whether and how a system may state or
-imply that a person rather than an AI is the source is item 53's. The line is drawn here and is
+imply that a person rather than an AI is the source is provisionally item 53's. The line is
 provisional until item 53 is written; **it is recorded open, not decided**. Which of the two items
 owns each deception case, and whether either is non-exemptible, needs an owner's ruling and is not
 settled by this document.
@@ -352,7 +361,7 @@ crosswalk, and no maintainer of that pack has confirmed it. No ADR covers this s
 
 | Requirement | State |
 | --- | --- |
-| R6 | **Holds by construction, not by assertion.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` reports that a system discloses AI involvement. I found no test asserting the absence, so a future detector could break R6 without failing one |
+| R6 | **Holds because no such detector exists today; nothing prevents one.** No detector, rule or report in `scripts/`, `rules/`, `test/` or `templates/` reports that a system discloses AI involvement. No test asserts the absence |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence that any project discloses anything |
 
 **Proposed, and deliberately absent from this release. None of the following exists:**
