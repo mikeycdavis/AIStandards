@@ -142,8 +142,10 @@ model-generated, and says so.
 ### R4 — The statement tracks the source as it changes
 
 **A provenance statement MUST name the revision, snapshot or period it describes, and MUST be
-revisited when material is added to or replaced in the source by a path the statement did not
-describe.**
+revisited when material is added to, removed from or replaced in the source, when the source is
+regenerated, re-filtered or re-chunked, when the system that produced the material changes, when the
+source is put to a use the statement did not contemplate, or when the terms under which it was
+obtained change.**
 
 A retrieval index is rarely static. The initial import is documented; the connector added later, the
 user uploads, the nightly sync from a wiki are not, and a statement written on day one goes on
@@ -173,15 +175,18 @@ is unknown satisfies R1 and R5 and is read as an untrusted source, not as a defe
 ### R6 — Say how each source is used, and where it develops the project's own model, defer
 
 **A project MUST record, for each source, whether the source itself is used only as context or
-fixture input or to evaluate a model the project does not operate, or is also used to train,
-fine-tune, validate, evaluate or calibrate a model the project operates, and for any use of the second
-kind this standard MUST NOT be offered as satisfying MachineLearningStandards' dataset provenance and
-versioning requirements.**
+fixture input, or is also used to train, fine-tune, validate, evaluate or calibrate a model, and for
+any use of the second kind this standard MUST NOT be offered as satisfying MachineLearningStandards'
+dataset provenance and versioning requirements.**
 
-The split is by what the *source* is used for, not by who trained the model that consumes it. A
+The split is by what the *source* is used for, not by who operates the model that consumes it. A
 retrieval corpus read at inference time by a model the project trained itself is context, and is in
-this standard's Scope; the same corpus used to fine-tune that model is also a training source, and
-for that use the other pack's requirements apply.
+this standard's Scope; the same corpus used to fine-tune that model, or an evaluation set used to
+evaluate a model, is also a development or evaluation source, and the project does not offer this
+standard in place of the other pack's requirements for that use. Whether that pack reaches an
+evaluation of a hosted model the project did not train is the boundary review's inference and is
+recorded as unknown (see the posture note); the requirement is only that the use is stated and no
+substitution is claimed. This standard's own requirements apply to the source either way.
 
 The declaration is the project's, not a finding. The manifest's `fine-tuning-set` kind is the signal
 that the second use exists, and its presence in a manifest does not by itself decide who operates the
@@ -265,19 +270,20 @@ Three reasons, stated so a reader can disagree with any one of them:
 this release; the table states what each requirement is and the severity a breach would carry were a
 rule minted, so that a consumer classifies it consistently.
 
-| Requirement | Validation type | Severity of a breach | Exemptible |
-| --- | --- | --- | --- |
-| R1 | manual-review | error | yes, by not-applicable declaration where no source is in Scope |
-| R2 | manual-review | error | yes, as R1 |
-| R3 | manual-review | error | yes, as R1 |
-| R4 | manual-review | warning | yes, as R1 |
-| R5 | manual-review | error | no |
-| R6 | manual-review | error | yes, as R1 |
-| Truth and currency of any statement (R2 to R5) | not-evaluable | none reported; not scored | not attestable |
-| R7 | none for a consuming project; constrains this framework and is checked by code review | not applicable to a project | no |
+| Requirement | Validation type | Severity of a breach | Not-applicable declaration | Exception for a knowing breach |
+| --- | --- | --- | --- | --- |
+| R1 | manual-review | error | yes, where no source is in Scope | yes |
+| R2 | manual-review | error | yes, as R1 | yes |
+| R3 | manual-review | error | yes, as R1 | yes |
+| R4 | manual-review | warning | yes, as R1 | yes |
+| R5 | manual-review | error | yes, as R1 | no |
+| R6 | manual-review | error | yes, as R1 | yes |
+| Truth and currency of any statement (R2 to R5) | not-evaluable | none reported; not scored | yes, as R1 | not attestable |
+| R7 | manual-review (code review of this repository, since it constrains this framework) | error for this repository's changes; not applicable to a consuming project | not applicable | no |
 
-R7 has no validation type because the thing it prohibits is a behaviour of the tool, which a consuming
-project cannot breach.
+R7 constrains a behaviour of the tool, which a consuming project cannot breach; it is reviewed in this
+repository's own changes. An exception mechanism does not exist in this release (Standard 4 is Phase 4),
+so the right-hand column states what would be permitted, not what can be recorded.
 
 **Exemptibility.** R7 is not exemptible: no project circumstance makes it reasonable for a scan to
 report an origin from a string, and a mechanism for excepting the prohibition would be
@@ -295,7 +301,7 @@ release would contradict a false declaration. No level here is lowered by a risk
 | R1 | Every path the system and its tests read as data corresponds to a declared source | A directory read by the retrieval job that no declaration names | A source declared and not currently read must **not** be failed for that |
 | R2 | For each component of origin that is known, a reader can locate the original from the statement; each component that is not known is stated as unknown under R5 | A statement consisting of an adjective such as "internal" or "curated" | A statement naming a system, an export and a date must **not** be failed for being short |
 | R3 | A source containing model output is `synthetic` and names its generator | A source of generated pairs declared human-authored | A human-written source declared `synthetic: false` must **not** be flagged |
-| R4 | The statement names a revision or period, and a new ingestion path prompts a re-read | A statement older than an ingestion path it does not mention | A source whose statement names its snapshot and has taken no additions must **not** be flagged for age |
+| R4 | The statement names a revision or period, and each listed event (addition, removal, replacement, regeneration, a changed generator, a new use, changed terms) prompts a re-read | A statement older than an event it does not mention | A source whose statement names its snapshot and has had none of those events must **not** be flagged for age |
 | R5 | An unknown origin is stated as unknown, with what is known | A guess recorded as an origin | A statement "unknown, found at this path" must **not** be failed for being unknown |
 | R6 | The recorded use is present for each source and not derived from file names | A use inferred from the presence of a `fine-tuning-set` entry | A source recorded as used both as context and for fine-tuning, with a reason, must **not** be treated as hedging; a corpus read by the project's own model and not used to train it must **not** be failed |
 | R7 | No detector or report in this repository outputs a provenance verdict from presence | A detector that reported "documented" because a `provenance` string was non-empty | Reporting that a field was *found*, as an observation with no verdict, is permitted |
