@@ -141,8 +141,10 @@ margin is (result − floor) ÷ (baseline − floor); where it is a permitted dr
 or a latency is negated or inverted before either formula is applied. A margin of 1 is no
 degradation, 0 is exactly at the bar and below 0 is a breach, so a smaller margin is always a worse
 class. A permitted drop of zero ("no degradation") gives a margin of 1 when the observed drop is
-zero or less and is a breach (reported as below 0, with the drop stated) otherwise; a met zero bar is
-not a breach. The margin is **undefined** only where a floor bar's baseline is at or below the
+zero or less; otherwise it is a breach with the margin −(observed drop ÷ the scorer's stated scale),
+the scale being the maximum less the minimum the scorer can return, recorded with the result, so
+that breached zero-drop classes are ordered by how much was lost and compare with the other
+margins; a met zero bar is not a breach. The margin is **undefined** only where a floor bar's baseline is at or below the
 floor, so the clean items already fail; the report says so, and R4 names that class alongside the
 smallest defined margin. The margin is a share of the headroom the baseline had: a class with very
 little headroom will swing widely, and the report gives the headroom beside the margin. This
@@ -309,7 +311,7 @@ tier (Standard 2 R3).
 | R2 | Each tested class has a bar dated before the run, a baseline over the same items and a margin with its headroom | A perturbed figure with no baseline, no margin, or a bar written after the result; an undefined margin not disclosed | A project whose bar is "no degradation" must **not** be failed for having no numeric tolerance |
 | R3 | The variants can be regenerated or are committed, none of a held-out item's variants is in the development split, and the selection record shows the draw fixed before the run with generated and kept counts | "Typos added" with no generator; paraphrases of a held-out item in the tuning set; a generated pool of which only the variants the system failed were kept, with no record of the draw | A class made of variants all in the same split as their sources must **not** be flagged |
 | R4 | Results per class with margin to bar, the smallest-margin class named, counts given | One aggregate only | An aggregate reported beside the per-class results must **not** be flagged |
-| R5 | The claim names the classes tested, the considered-and-untested classes, and the subject | An unqualified "robust" | A narrow, bounded claim must **not** be failed for being narrow |
+| R5 | The claim names the classes tested, the considered-and-untested classes, and the subject | An unqualified "robust", or a claim that omits the statement that its class lists are not exhaustive | A narrow, bounded claim that states its lists are not exhaustive must **not** be failed for being narrow |
 | R6 | No detector or report in this repository outputs a robustness verdict from presence | A detector that reported robustness evaluated because a fixture directory existed | Reporting that a perturbation fixture was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a plan's class list and no fixture
