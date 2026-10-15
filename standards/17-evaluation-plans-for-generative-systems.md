@@ -114,7 +114,7 @@ an open edge.** Every statement about that pack below was read through git objec
 
 The boundary with this standard's other neighbours, none of whose ground is claimed:
 
-- **Item 18, Benchmark Integrity and Contamination** (unwritten, posture B) — whether evaluation
+- **Item 18, [Benchmark Integrity and Contamination](18-benchmark-integrity-and-contamination.md)** (posture B) — whether evaluation
   input has leaked into a model's training data, and whether a public benchmark still measures
   anything. R4 concerns selection against the held-out set by the project, not contamination by a
   provider.
@@ -793,8 +793,10 @@ model-adjacent stores. Nothing here restates either.
 [Standard 21](21-prompt-and-instruction-security.md) R1 makes prompts versioned artifacts, which is
 what gives R6's prompt revision something to name.
 
+Item 18 is written: [Standard 18](18-benchmark-integrity-and-contamination.md) owns benchmark integrity and contamination.
+
 Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 12
-(provenance of evaluation sets); item 18 (benchmark integrity and contamination); item 19 (what an
+(provenance of evaluation sets); item 19 (what an
 evaluation must cover); item 20 (when regressions are tested and what fails a change, and the open
 question of R3's rule); items 29, 30 and 31 (versioning, lineage, and nondeterminism of re-runs);
 item 35 (adversarial exercises); and item 50 (evaluation integrity prohibitions, whose relationship to
