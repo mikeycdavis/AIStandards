@@ -136,11 +136,12 @@ there ([Standard 7](07-boundary-with-adjacent-standards.md) R2).
 ### R5 — Keep what was shown, and revise the decision when the system changes
 
 **A project MUST revise the decision under R1 and R3 when a model, a prompt, a use of the output, an
-audience (including a channel, region or language), the interface that presents the disclosure, or
-the law that applies changes. Where a disclosure was presented, the project MUST be able to show
-what was presented, in the form users received it, at a given time, and MUST replace the capture
-when the notice, its position or its audience changes, recording otherwise that the earlier capture
-was re-confirmed and when.**
+audience (including a channel, region or language), the interface that presents the disclosure, the
+owner's presentation standards, the project's presentation evidence under R4, or the law that
+applies changes. Where a disclosure was presented, the project MUST be able to show what was
+presented, in the form users received it, at a given time, and MUST replace the capture when the
+notice, its position, its audience, or the presentation standards or evidence it was captured under
+changes, recording otherwise that the earlier capture was re-confirmed and when.**
 
 A decision recorded as "owed, shown" is a claim about the interface at the time. Without the shipped
 text and where it appeared, a later review cannot tell whether it was shown, and a change to the
