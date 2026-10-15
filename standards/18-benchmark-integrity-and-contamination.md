@@ -59,8 +59,10 @@ Three terms, each defined here rather than by the brief:
 
 **Where each requirement reaches.** R1 reaches every system that reports a result on an evaluation
 set. R2 reaches every system that reports a result on a set that a third-party-trained model could
-have seen, which includes every public benchmark and a model the project fine-tunes from a
-third-party base; what the project's own training pipeline introduces is MachineLearningStandards'
+have seen, which includes a public benchmark published before the model's training cutoff or where
+the cutoff or training window is unknown, and a model the project fine-tunes from a third-party
+base; a set first published after every training cutoff that applies could not have been seen
+through training and R2 does not qualify its result (R1 records the dates that show it); what the project's own training pipeline introduces is MachineLearningStandards'
 ground (see below). R3 reaches systems that hold a held-out set. R4
 reaches a project that states a contamination check was run. R5 reaches systems that rely on a
 benchmark as evidence. R6 constrains this framework and reaches no consuming project. A system with
@@ -216,9 +218,13 @@ paraphrased, translated or partially included.
 contain the items. A canary string absent from completions says the model did not reproduce it.
 Both are worth recording and neither is a finding about the model's training data, which for a
 hosted model the project does not have. **A check over the complete training corpus of a model the
-project trained is not a proxy**: where the project can show the corpus examined is the whole of
-what the model was trained on, a negative result is a finding about that model's training data and
-may be described as one, with the corpus and its completeness recorded.
+project trained is not a proxy for the corpus, but it is still a method with a reach**: where the
+project can show the corpus examined is the whole of what the model was trained on, and the method
+is one capable of supporting the conclusion drawn, a negative result may be described as a finding
+about that model's training data *for the form of overlap the method detects*. An exact-match or
+n-gram search of a complete corpus shows no verbatim or near-verbatim presence; it does not exclude
+a paraphrase or a translation, and the description says so. The corpus, its completeness, the method
+and the form of overlap checked are recorded.
 
 The requirement does not ask a project to run a check. It asks that one that was run be described
 by what it did.
@@ -342,7 +348,7 @@ lowered by a risk tier (Standard 2 R3).
 | R1 | For one evaluation set, origin, public status with a date or "not published", and the model identifiers are all recoverable from the record | A result reported on a set with no exposure record, or a record naming no model | A set recorded as "not published" with a stated reason must **not** be failed for lacking a publication date |
 | R2 | A result on a public benchmark carries the qualification, and a provider statement is marked as the provider's | A result described as uncontaminated because a search found no overlap | A project that reports "exposure unknown" and the score must **not** be failed for not having excluded contamination |
 | R3 | The held-out set is absent from public repositories and from prompts, and the routes relied on are recorded | The set in a repository that is public, or its items in a few-shot prompt | A set held in a private repository with no model-facing use must **not** be flagged for existing, and the held-out item presented to the model under evaluation to obtain its answer must **not** be flagged |
-| R4 | A reported check names its method, what it examined, and what a negative result does not show | "Checked, no contamination" with no method | A project that ran no check and says so must **not** be failed for not running one, and a negative result over the recorded complete training corpus of a model the project trained must **not** be failed for being described as a finding about its training data |
+| R4 | A reported check names its method, what it examined, and what a negative result does not show | "Checked, no contamination" with no method | A project that ran no check and says so must **not** be failed for not running one, and a negative result over the recorded complete training corpus of a model the project trained must **not** be failed for being described as a finding about its training data for the form of overlap the method detects; the same description claiming absence of paraphrase or translation is the falsifier |
 | R5 | A benchmark found saturated or defective is recorded as such and is reported with that qualification | A benchmark on which every candidate scores at the ceiling reported as a differentiator with no note | A benchmark still discriminating between candidates must **not** be flagged for being old or public |
 | R6 | No detector or report in this repository outputs a contamination or benchmark-validity verdict from presence | A detector that reported a set uncontaminated because an overlap check's output was zero | Reporting that an exposure record was *found*, as an observation with no verdict, is permitted |
 
