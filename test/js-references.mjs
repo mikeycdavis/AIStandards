@@ -559,17 +559,22 @@ function readUrlConstruction(tokens, open, offset, specifiers, unreadable) {
 // reference, whatever precedes it: `eval`, `Function` (`new Function(...)`, `Function(...)`,
 // `.constructor("...")`), `importScripts`, and the vm entry points that compile or run source text. A
 // worker started with `{ eval: true }` contains the identifier `eval` and is caught by the same rule.
-const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule"];
+const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH"];
 // Timers that accept source text as their first argument, and child processes that can be told to evaluate
 // source (`node -e`, `--eval`, `-p`, `--print`). Seen only through literals: a command held in a variable
 // is a stated limit.
 const TIMER_NAMES = ["setTimeout", "setInterval", "setImmediate"];
 const CHILD_PROCESS_NAMES = ["exec", "execSync", "execFile", "execFileSync", "spawn", "spawnSync", "fork"];
-// A shell removes quotes and backslashes before node sees the words, so `node "-e" "..."` and `node -e"1"`
-// are the same invocation as `node -e 1`: the command string is read with them removed. A short flag
-// may carry its value attached, so `-e` and `-p` match as a word prefix (conservatively: `-p` of another
-// tool in a literal is reported too).
-const EVAL_FLAG = /(^|\s)(-e\S*|-p\S*|--eval(=\S*)?|--print(=\S*)?)(\s|$)/;
+// A shell removes quotes and backslashes before a program sees its words, so `node "-e" "..."` is the same
+// invocation as `node -e 1`: a command string is read with them removed and split into words. Node (and
+// every other program a script might start) takes options that evaluate source (-e, -p), preload code
+// (-r / --require, --import, --loader / --experimental-loader), change how files are read (--input-type,
+// --experimental-default-type, --env-file) or run another entry point. Rather than list the options that do
+// harm, an option-shaped literal in a child-process call is classified: only the options on this list are
+// known to be harmless, and every other literal word that begins with `-` is unreadable. Words that are not
+// literals (a variable, a spread of a computed list) are paths and values the scan cannot see; that is the
+// boundary of reading text, stated in the PR body.
+const SAFE_CHILD_OPTION = /^(--test|--test-concurrency=\d+)$/;
 const unquoted = (text) => text.replace(/["'`\\]/g, "");
 
 // The indexes of string tokens that are direct ELEMENTS of an array literal (`["a", "eval"]`): a list of names is
@@ -706,7 +711,10 @@ export function moduleReferences(source, options = {}) {
         } else {
           for (const arg of callArgs) {
             for (const t of arg) {
-              if (t.t === "str" && EVAL_FLAG.test(unquoted(t.v))) dynamic(`${tk.v} told to evaluate source (${t.v.slice(0, 30)})`);
+              if (t.t !== "str") continue;
+              for (const word of unquoted(t.v).split(/\s+/)) {
+                if (word.startsWith("-") && !SAFE_CHILD_OPTION.test(word)) dynamic(`${tk.v} given the option "${word.slice(0, 30)}", which is not known to be harmless`);
+              }
             }
           }
         }
