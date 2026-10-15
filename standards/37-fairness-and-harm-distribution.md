@@ -253,15 +253,22 @@ reviewed, not required. The inference-time property of a system treating groups 
 **not-evaluable** and is not reported as reviewed. R6 constrains this framework and has no validation
 type, because the thing it prohibits is a behaviour of the tool.
 
+**No severity is assigned to R1 to R5 in this release.** A severity belongs to a rule's finding, and
+no rule exists here to produce one. A failed manual review is a finding for the reviewer, made under
+the standards the project and its owner apply, not a framework finding; if a rule is later minted
+for any of these requirements its severity is decided then and recorded in its shard.
+
 **Exemptibility.** R6 is not exemptible: no project circumstance makes it reasonable for a scan to
 report an effect from a presence, or to apply one jurisdiction's list to another's, and a mechanism
 for excepting the prohibition would be self-defeating. R2's prohibition on an unqualified fairness
 claim is likewise not exemptible, because an exception would record a project as knowingly making a
 claim no evidence can support; a project that wishes to say something stronger must supply the
-measurement. R1, R3 and R4 reach a system only where its output affects people, and a system without
-that subject may declare the requirement not-applicable under
-[Standard 2](02-ai-risk-tiering-and-applicability.md) R4 with a reason and a `revisitWhen`. No detector
-in this release would contradict a false declaration. No level here is lowered by a risk tier
+measurement. R1, R3 and R4 reach a system only where its output affects people. That is a scope
+condition, not a disposition: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4's
+dispositions are recorded against catalog rules, this standard has none, and the policy schema
+offers no declaration for it. A project whose system lacks the subject records why in its own
+documents, and no detector in this release would contradict a false record. No level here is lowered
+by a risk tier
 (Standard 2 R3).
 
 ## Tests and falsifiers
@@ -275,11 +282,11 @@ in this release would contradict a false declaration. No level here is lowered b
 | R5 | A route exists and a report received has a recorded disposition | A route that discards or never reads reports | A system with no individual-level consequence (R1) must not be failed for having no route |
 | R6 | No detector or report in this repository outputs a fairness verdict from presence, or supplies a protected-attribute list or threshold | A detector that reported fair because a bias-testing import was present | Reporting that a fairness document or library was *found*, as an observation with no verdict, is permitted |
 
-**No falsifier is automated in this release.** No rule reads a fairness artifact and no fixture
-carries one, so R1 to R5 are enforced by review or not at all, and R6 holds by construction. The
-negative controls state what review must not do to a project that has the right subject and does the
-right thing. **A requirement with no falsifier is a requirement nobody can be shown to have broken**,
-and that is the honest state of this standard.
+**No falsifier is automated in this release.** No rule reads a fairness artifact, so no detector
+checks R1 to R5; they are enforced by review or not at all, and the last requirement holds by
+construction. The falsifiers in the table are observable by a reviewer reading the record or the
+running system: they are manual, not absent. The negative controls state what review must not do to
+a project that has the right subject and does the right thing.
 
 ## Exceptions and staleness
 
