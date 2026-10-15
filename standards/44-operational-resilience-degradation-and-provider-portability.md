@@ -41,7 +41,7 @@ operational resilience" bullet of
 Applies to any AI system within this pack's scope as [Standard 1](01-ai-system-manifest.md) draws
 it — a repository that invokes a model, retrieves context for one, or acts on a model's output —
 that depends on a model, a provider, a retrieval store or a tool service it does not itself operate,
-or that operates a model whose host can fail.
+or that operates a model or other AI-specific service whose host can fail.
 
 Covers: knowing each dependency, external or self-operated, and what happens when it fails; the degraded service the
 system gives and whether it says so; what a fallback must not do; keeping provider-specific behaviour
@@ -55,8 +55,8 @@ Two terms, each defined here rather than by the brief:
   itself operates: a model endpoint or the host a self-served model runs on, an embedding service, a
   vector store, a tool API, a moderation service. The project's ordinary infrastructure (its
   databases, queues and application servers) is not a dependency in this sense; Scope excludes it.
-- A **degraded mode** is a defined, reduced service the system gives when a dependency is unavailable or
-  untrustworthy, which may be to decline.
+- A **degraded mode** is a defined, reduced service the system gives when a dependency is unavailable,
+  slow, rate-limited, changed or untrustworthy, which may be to decline.
 
 It does **not** cover, and claims none of the ground of, the following:
 
@@ -117,7 +117,7 @@ is not restated.
 ### R3 — A fallback must not weaken the controls the primary path carries
 
 **A fallback model, provider or path MUST NOT be used for an interaction unless the controls the
-primary path applies — those the system's own standards require, such as redaction, prompt and
+primary path applies — such as redaction, prompt and
 instruction handling, output checks and logging — apply to it too, or the system declines.**
 
 A fallback is a second path through the system, and it is the one least reviewed. A secondary provider
@@ -175,12 +175,12 @@ a request it served.
 | Distinction kept in a trace only | The degraded flag exists in telemetry; the caller never receives it | R2 |
 | Degraded mode that acts | A system with a tool that proceeds on an indeterminate dependency | R2, [Standard 45](45-approval-gates.md) R6 |
 | Fallback outside the controls | A secondary provider with no redaction, no output check, or different data terms | R3 |
-| Fallback chosen for availability only | Failing over to an unreviewed model because it is up | R3 |
+| Fallback chosen for availability only | Failing over to an unreviewed model because it is up, and serving without a control the primary path applies | R3 |
 | Abstraction as portability | One adapter implementation presented as provider independence | R4 |
 | Unstated swap cost | "We can switch providers" with no account of what behaves differently | R4 |
 | Never-run fallback | A failover path last exercised never, found broken in the outage | R5 |
 | Arrangement read as resilience | A framework report of "resilient" because a fallback model is configured | R6 |
-| Untested adapter | An interface shown to exist and never shown to carry a second provider | R4, R6 |
+| Abstraction offered as portability | An interface presented as portability that has never carried a second provider, with no replacement list | R4 |
 
 ## Evidence
 
@@ -228,7 +228,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 **Severity.** A finding is reported at **error** severity when review observes one of: a fallback
 serving an interaction without a control the primary path applies (R3); a degraded response presented in
 the form of a full one (R2); a degraded mode or fallback described as available that has never been
-exercised (R5); or a detector's violation of R6. **Every other finding is reported at warning
+exercised or whose latest exercise is older than its stated interval (R5); or a detector's violation of R6. **Every other finding is reported at warning
 severity**, including a missing or incomplete record, statement or label (R1 to R5), a missing
 statement of how a fallback's controls apply, and provider-specific behaviour embedded in domain logic
 under R4's abstraction clause, which is a SHOULD. The assignment is exhaustive and does not depend on
@@ -267,7 +267,8 @@ honest state of this standard.
 ## Exceptions and staleness
 
 There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to
-except. A project that knowingly does not meet one records that in its own documents; Standard 2's
+except. A project that knowingly does not meet R1, R2, R4 or R5 records that in its own documents; R3 admits no
+exception and is met by declining; Standard 2's
 dispositions apply to the application of a rule, and this standard has none.
 
 **Attestations and expiry.** No attestation is produced for these records in this release.
@@ -325,7 +326,7 @@ owner-approved:
   observation that the standard's text and the rule record differ in level, which the boundary review
   did not make.
 - **The severity assignments** (error for an observed fallback serving without a primary-path control,
-  an observed degraded response in full form, a path described as available that was never exercised,
+  an observed degraded response in full form, a path described as available that was never exercised or is overdue,
   and a detector's violation of R6; warning for every other finding) and the statement that no
   attestation or scheduled expiry exists in this release.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
@@ -372,7 +373,7 @@ as a capability.
 
 | Requirement | State |
 | --- | --- |
-| R6 | **Holds by construction, not by assertion.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` has a concept of fallback, degradation or provider portability. No test asserts the absence, so a future detector could break R6 without failing one |
+| R6 | **Holds by construction, not by assertion.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` emits a verdict about model, provider or dependency fallback, degradation or portability. No test asserts the absence, so a future detector could break R6 without failing one |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's resilience |
 
 **Proposed, and deliberately absent from this release. None of the following exists:**
