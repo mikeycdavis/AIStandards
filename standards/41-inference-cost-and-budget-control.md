@@ -112,9 +112,10 @@ extend it. The case of a spend ceiling the system can itself rewrite is R2's.
 
 ### R3 — Bound every multiplier
 
-**A system MUST bound each multiplier on its model calls — retries, fallbacks, completion length and
-carried conversation history, and the repetition of any call that is not an agent loop — and MUST NOT
-leave one governed only by the budget that sits above it. The step and sub-agent bound of an agent loop
+**A system MUST bound each multiplier on its model calls — retries, fallbacks, the repetition of any
+call that is not an agent loop, and, where the charge is metered by tokens or time, completion length
+and carried conversation history — and MUST NOT leave one governed only by the budget that sits above
+it. The step and sub-agent bound of an agent loop
 is [Standard 23](23-agent-execution-security.md) R1's and is not restated here.**
 
 A request budget does not bound a retry loop that spends it faster than anyone looks. The bounds need
@@ -200,7 +201,7 @@ queued, shortened or re-routed — at the ceiling.
 | R2 | Each budget as number, subject and period; where it is enforced; the behaviour at the ceiling as implemented in code or configuration; and, where the ceiling has been reached, the record of that run | Project configuration and code, gateway configuration, and the records of a run | Human review of the records |
 | R3 | Each multiplier the system has and the bound on it, or the statement that it has none | Project code and configuration | Human review; a project's own test where one exists |
 | R4 | Where a budget is stated, the reconciliation of recorded spend with the billed amount, or with the capacity's accounting cost or utilisation, and its interval; for any published spend figure, its source, so a billed amount can be told from an estimate | Finance or operations records the project names | Human review |
-| R5 | Any published cost figure, with model identifier and price date, and the workload where the figure depends on one; any cap or bound claim with the enforcing mechanism it names (R2); any negligibility claim with the measurement it rests on | The project's documentation | Human review |
+| R5 | Any published unit-cost figure, with model identifier and price date, and the workload where the figure depends on one (an aggregate billed total is R4's and needs only its source); any cap or bound claim with the enforcing mechanism it names (R2); any negligibility claim with the measurement it rests on | The project's documentation | Human review |
 | R6 | The absence of any detector, rule, audit finding or generated report that reports cost controlled from a setting or presence | This repository's own detectors and tests | Code review; see Implementation |
 
 Evidence for R1 to R5 is a human-authored record. A document naming a budget or a bound establishes
