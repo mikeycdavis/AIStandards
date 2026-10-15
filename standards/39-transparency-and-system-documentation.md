@@ -124,7 +124,8 @@ statements about the same system that disagree leave a reader unable to say whic
 ### R5 — Name an owner, and revise the description when the system changes
 
 **The description MUST name who answers for it, and MUST be revised when a model, an instruction, a
-tool, a retrieval source or an approval point it describes is changed.**
+tool, a retrieval source or an approval point it describes is changed, when documentation it cites
+under R3 is revised, or when any other change alters a fact the description is required to state.**
 
 A description with no owner has no one whose job it is to change it, and the system around a model
 changes more often than the model does: a prompt edit, a new tool or a new source alters the system
