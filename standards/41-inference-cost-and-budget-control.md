@@ -85,7 +85,7 @@ An estimate computed from token counts and a price list is a model of the bill. 
 
 **A project MUST NOT state that cost is capped or bounded without naming the ceiling (R2), MUST NOT state that it is negligible without naming the measurement, and MUST NOT state a cost per unit without naming the model identifier and the date of the price.**
 
-A cost per request is a function of the model, its price on a date, the prompt and the output; "costs a few cents per conversation" is a claim with no subject. This requirement sets no threshold and no price.
+A cost per request is a function of the model, its price on a date, the prompt and the output; "costs a few cents per conversation" is a claim with no subject. A dated price-sheet entry kept as a historical figure, and not stated as the cost of a call, is not a cost per unit under this requirement. This requirement sets no threshold and no price.
 
 ### R6 — This framework MUST NOT report cost controlled from the presence of a setting
 
@@ -97,7 +97,7 @@ This is a constraint on the framework, not on a project. A repository can show t
 
 | Failure | What it looks like | Requirement |
 | --- | --- | --- |
-| Spend not attributable to a named subject | A budget or reported figure is stated per tenant or feature and spend is recorded only per API key; or unattributed spend is folded into the largest subject | R1 |
+| Spend not attributable to a named spend subject | A budget or reported figure is stated per tenant or feature and spend is recorded only per API key; or unattributed spend is folded into the largest spend subject | R1 |
 | Ceiling that does not act | A notification at 80% and no action at 100%; "continue and log"; a ceiling read from configuration the system can raise; or no named enforcement point | R2 |
 | Unbounded multiplier | A retry with no maximum; a fallback with no bound on how often; no completion limit or history bound where billing is by tokens or time; or a multiplier governed only by the budget above it | R3 |
 | Estimate presented as spend | A figure computed from token counts is shown as the amount spent, or a spend figure carries no label | R4 |
@@ -111,7 +111,7 @@ This is a constraint on the framework, not on a project. A repository can show t
 | R1 | Spend per spend subject the project names, and the unattributed amount | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R2 | The ceiling's number, spend subject, period and enforcement point; the behaviour as implemented in code or configuration; and where the system cannot raise the value | Project code and configuration, gateway configuration | Human review |
 | R3 | Each multiplier the system has and the limit of its own, or the statement that it has none | Project code and configuration, gateway configuration | Human review |
-| R4 | Each reported spend figure with its label and, for a billed figure, its source | The project's documentation and finance or operations records the project names | Human review |
+| R4 | Each reported spend figure with its label | The project's documentation and finance or operations records the project names | Human review |
 | R5 | Each published cost claim with the ceiling, measurement, or model and price date it names | The project's documentation | Human review |
 | R6 | The absence of any detector, rule, audit finding or generated report that reports cost controlled from a setting | This repository's own detectors and tests | Code review; see Implementation |
 
@@ -126,7 +126,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 
 1. **There is no artifact a rule could read.** A rule for R1 or R2 would look for a declared spend subject or ceiling, and neither `schemas/ai-system-manifest.schema.json` nor `schemas/ai-policy.schema.json` has a place to put one; both are closed. A rule failing every project for omitting what no schema accepts would measure this framework's own incompleteness and blame the project for it. Adding a schema field is a schema-versioning decision, outside this slice (plan 02 section 8).
 2. **R3 to R5 concern behaviour and records, not files.** Whether a retry is bounded on the path a request takes, or a figure was labelled, is not a property of a checkout. A detector reading source would test for the presence of a setting, which R6 forbids this framework from reporting as a result.
-3. **No rule namespace exists for it.** The `cost` namespace is reserved ([Standard 7](07-boundary-with-adjacent-standards.md) names `cost.provider-portable` as a later-phase id, which is item 44's) and has no shard. This standard mints no id; a proposed rule, if one is natural, is recorded in the pull request that introduced this document for per-rule approval, and not here.
+3. **No rule namespace exists for it.** The `cost` namespace is reserved ([Standard 7](07-boundary-with-adjacent-standards.md) names `cost.provider-portable` as a later-phase id; the boundary review ties it to item 44) and has no shard. This standard mints no id; a proposed rule, if one is natural, is recorded in the pull request that introduced this document for per-rule approval, and not here.
 
 **Validation type.** R1 to R5 are `manual-review` obligations in this release; R6 constrains this framework and has no validation type, because the thing it prohibits is a behaviour of the tool. The validation type and the severity are different things.
 
@@ -170,7 +170,7 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 | R2 | A change to the ceiling's value, spend subject, period, enforcement point or behaviour, or to who can write it. |
 | R3 | A change of retry, fallback or loop policy, or an observed multiplier exceeding its limit. |
 | R4 | A change of provider price or of how the provider counts billed units. |
-| R5 | A change of model or price, for a cost per unit presented as current. |
+| R5 | A change of model or price, for a cost per unit stated as the current cost of a call. |
 | R6 | A new detector, rule or report that touches cost. |
 
 ## Additions this standard makes beyond the source
@@ -199,7 +199,7 @@ Stated as two separate lists, because a reader scanning one table will otherwise
 
 | Requirement | State |
 | --- | --- |
-| R6 | **Holds today because no such detector exists; nothing prevents or tests one being added.** No detector, rule, audit finding or report in `scripts/`, `rules/` or `ai-policy.yml` has a concept of inference cost or budget in the sense of this standard. The rule `agent.step-budget-bounded` reads an agent's step budget, which [Standard 23](23-agent-execution-security.md) R1 states is not a cost ceiling; it is not a cost verdict. |
+| R6 | **Holds today because no such detector exists; nothing prevents or tests one being added.** No detector, rule, audit finding or report in `scripts/`, `rules/` or `ai-policy.yml` has a concept of inference cost or budget in the sense of this standard. The rule `agent.step-budget-bounded` reads an agent's step budget, which [Standard 23](23-agent-execution-security.md) R1 states is not a cost ceiling; it is not a cost verdict; `oversight.authority-matches-tier` mentions budgets granted among authority and reports no cost verdict. |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's practice |
 
 **Proposed, and deliberately absent from this release. None of the following exists:**
