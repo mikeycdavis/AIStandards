@@ -215,7 +215,7 @@ from a repository.
 | R8 | Undated statement | A statement that does not say which snapshot or period it describes |
 | R9 | Stale statement | A day-one description of an index that has since taken in uploads and a sync |
 | R10 | Use unrecorded | A fine-tuning set described only as context, or no use recorded |
-| R11 | Substitution | A source also used to fine-tune or evaluate, described under this standard and offered as satisfying the ML pack |
+| R11 | Substitution | A source with an evaluation use or a development use, described under this standard and offered as satisfying the ML pack |
 | R12 | Presence read as provenance | A framework report of "documented" because the string is non-empty |
 
 ## Evidence
@@ -226,10 +226,10 @@ from a repository.
 | R2 | The statement for each declared source | The manifest's `provenance` or the document it names | Human review |
 | R3 | For each known component of origin, the original the statement points to | The statement and the project's production records | Human review |
 | R4 | The division of a multi-origin source by origin | The statement | Human review |
-| R5 | The `synthetic` declaration set against how the material was made | The manifest and the production records | Human review |
+| R5 | The `synthetic` declaration (or `synthetic` omitted with the unknown recorded under R7) set against how the material was made | The manifest and the production records | Human review |
 | R6 | The generator named where known | The statement | Human review |
 | R7 | Each component recorded as unknown, and what is known | The statement | Human review |
-| R8 | The revision, snapshot or period named | The statement | Human review |
+| R8 | The revision, snapshot or period named, or, where the origin is unknown, the date the statement was written about | The statement | Human review |
 | R9 | The recorded re-read on each revisit event | The statement's history or the project's change record | Human review |
 | R10 | The recorded use or uses of each source | A project document the project names — no manifest field exists (see Implementation) | Human determination |
 | R11 | The recorded use set against any claim of satisfying the ML pack | The same document | Human review |
@@ -251,7 +251,7 @@ The reasons:
    schema conformance for an empty value; nothing requires the field to be present. A rule failing a
    project for a missing value is decidable and would be a structural check, as
    `oversight.autonomy-tier-declared` is for Standard 11. Whether it is wanted, and whose it is where the
-   kind is `fine-tuning-set`, is Q26 and Q27; the proposed rule text is under Q26 and is not added.
+   kind is `fine-tuning-set`, is Q26 and Q27; the proposed rule is described under Q26 and is not added.
 2. **R3 to R9 concern whether a statement is true and current**, not source text; a detector would test
    that a string is non-empty, which R12 forbids reporting as a result.
 3. **No id is minted in a reserved namespace that has no shard**; naming the first id is a catalog
@@ -299,7 +299,7 @@ No level is lowered by a risk tier (Standard 2 R3).
 | R8 | The statement names a revision, snapshot or period | A statement with none | An unknown-origin statement dated to the day it was written about must **not** be failed for naming no revision |
 | R9 | Each revisit event is followed by a recorded re-read | A revisit event with no recorded re-read, other than a snapshot advance the statement says it covers | A statement that says it covers each new snapshot of a named sync must **not** be flagged when one arrives; a documented re-read concluding no change is needed must **not** be failed; a source with no revisit event must **not** be flagged for age |
 | R10 | Each source's use or uses are recorded, not derived from a `kind` value or a file name | A use inferred from a `fine-tuning-set` entry, or a source with no recorded use | A source recorded with both a context use and a development use, with a reason, must **not** be treated as hedging; a corpus read by the project's own model and not used to train it must **not** be failed |
-| R11 | No claim that this standard satisfies the ML pack's requirements for a source with an evaluation or development use | A source used to fine-tune or evaluate a model offered as satisfying the ML pack | A source with only a context use must **not** be flagged |
+| R11 | No claim that this standard satisfies the ML pack's requirements for a source with an evaluation or development use | A source with an evaluation use or a development use offered as satisfying the ML pack | A source with only a context use must **not** be flagged |
 | R12 | No detector or report outputs a provenance verdict from presence | A detector reporting an origin established because a `provenance` string was non-empty | Reporting that a field was *found*, with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a provenance statement and no fixture
@@ -374,8 +374,8 @@ review's.
 
 ## Relationship to other standards and ADRs
 
-[Standard 1](01-ai-system-manifest.md) owns the manifest and its `dataSources` field, where R1 to R8 and
-R10 land. [Standard 13](13-personal-data-in-ai-systems.md) R1 asks whether a fixture holds real personal
+[Standard 1](01-ai-system-manifest.md) owns the manifest and its `dataSources` field, where R1 to R8 land; R10 has
+no field. [Standard 13](13-personal-data-in-ai-systems.md) R1 asks whether a fixture holds real personal
 data, a different question about the same source; its remark on training-data provenance is Q27.
 [Standard 17](17-evaluation-plans-for-generative-systems.md) records an evaluated subject; where an
 evaluation set is one, its origin is this standard's and what it is measured against is that one's.
@@ -401,7 +401,7 @@ standard — `artifacts/adr/` does not exist in this release.
 
 | Requirement | State |
 | --- | --- |
-| R1 to R6, R8 (the place) | `dataSources` exists in `schemas/ai-system-manifest.schema.json` with `name`, `kind`, `synthetic` and `provenance`, and rejects other properties. The schema constrains shape; it does not require any entry or any value to be true |
+| R1 to R8 (the place) | `dataSources` exists in `schemas/ai-system-manifest.schema.json` with `name`, `kind`, `synthetic` and `provenance`, and rejects other properties. The schema constrains shape; it does not require any entry or any value to be true |
 | R12 | No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` reads `dataSources` beyond schema conformance (`lifecycle.manifest-valid`) or reports provenance as a subject; `provenance` in `scripts/catalog.mjs` is the reserved namespace name. No test asserts the absence, so a future detector could break R12 without failing one |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs` and `scripts/inventory.mjs`. That a document exists is not evidence of any project's provenance |
 
