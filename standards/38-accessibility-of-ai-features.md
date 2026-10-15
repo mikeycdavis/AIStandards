@@ -82,8 +82,9 @@ feature is accessible, and no id in this catalog MAY define an accessibility req
 owner's rule exists, a component library is imported, or an accessibility statement is present in the
 repository.**
 
-This is a constraint on the framework, not on a project. It follows from posture `D`, from Standard 7
-R2 (link, do not copy) and R4 (no id may shadow another pack's), and from the same reasoning as the
+This is a constraint on the framework, not on a project. It follows from posture `D`, from Standard
+7 R2 (link, do not copy) and Standard 6 R5 (a namespace this pack does not reserve is refused at
+catalog load), and from the same reasoning as the
 last requirement of [Standard 25](25-grounding-and-hallucination-control.md) and
 item 37 (Fairness and Harm Distribution, unwritten on this base): a presence is not an effect.
 
@@ -127,8 +128,10 @@ standards. This pack holds no evidence of it and does not duplicate any.
 ## Validation, severity, and exemptibility
 
 **This standard has no catalog rules of its own in this release, and posture `D` means it is not
-expected to gain an accessibility rule.** [Standard 6](06-standard-structure-and-rule-identity.md) R3
-requires every standard to cite at least one rule or record why it does not; this is that record.
+expected to gain an accessibility rule.** [Plan 02 section
+6](../artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md) requires every standard to
+cite at least one rule or record in its Validation section why it ships with none; this is that
+record.
 
 Three reasons, stated so a reader can disagree with any one of them:
 
@@ -141,9 +144,11 @@ Three reasons, stated so a reader can disagree with any one of them:
 3. **No shard exists and none is proposed.** A rule for R1 would be a rule about reach, not an
    accessibility requirement; whether one is wanted is not decided here.
 
-**Severity.** R1 is a `manual-review` obligation under the owner's standards, and a failed review is
-severity `error`. R2 constrains this framework and has no validation type or project severity. These
-are the levels a rule would carry if one is minted; this release emits no framework finding at them.
+**Severity.** R1 is a pointer to the owner's requirements and is held by `manual-review` under the
+owner's standards; the severity of a failed review is the owner's, and this framework assigns none,
+so that it does not create a second pass/fail beside the owner's. R2 constrains this framework: no
+detector evaluates it, and it is held by code review (`manual-review`). No project severity applies
+to it.
 
 **Exemptibility.** R2 is not exemptible: no circumstance makes it reasonable for this framework to
 restate or vary the owner's requirement. R1 reaches a system only where it presents an AI feature
@@ -202,8 +207,8 @@ requirements are not derived. Specifically authored here, none of it owner-appro
   exemption. It is a statement of reach and adds no control.
 - **R2**: the constraint on this framework, in the form of
   [Standard 25](25-grounding-and-hallucination-control.md) R6, with the additional prohibition on
-  minting an accessibility requirement at all, which is posture `D` and Standard 7 R2 and R4 applied.
-- **The severity** in Validation (`error` for a failed R1 review), the level a rule would carry.
+  minting an accessibility requirement at all, which is posture `D`, Standard 7 R2 and Standard 6 R5 applied.
+
 - **The exclusions in Scope** (what accessibility requires, disclosure presentation, outcome
   disparity, legal conformance) as division lines, unconfirmed by anyone.
 - **The ruling that this standard ships with no catalog rules**, and the three reasons for it.
@@ -218,7 +223,7 @@ Not authored here: the posture `D`, the owner and the nineteen rule ids are the 
 
 [Standard 7](07-boundary-with-adjacent-standards.md) records that UIUXDesignStandards owns
 accessibility and the presentation of a disclosure; R2 there is the link-do-not-copy rule this standard
-follows, and R4 there is why no id is minted.
+follows.
 
 Item 37 (Fairness and Harm Distribution, unwritten on this base) governs unequal outcomes; this
 standard governs whether the feature can be used. Items 39 (Transparency and System Documentation) and
@@ -228,8 +233,8 @@ line is provisional until they are.
 [Standard 25](25-grounding-and-hallucination-control.md) is the source of R2's form.
 [Standard 1](01-ai-system-manifest.md) declares no surface or accessibility property and none is
 proposed. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern applicability and
-non-lowering. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the
-Validation section's no-rule record answers.
+non-lowering. [Standard 6](06-standard-structure-and-rule-identity.md) R3 (each requirement carries
+a falsifier or is declared not-evaluable) is what the Tests section answers.
 
 **Outside this pack.** UIUXDesignStandards' accessibility standards and rules are named in Scope with
 what the boundary review recorded. This is a deference, not a crosswalk, and no maintainer of that pack
@@ -243,7 +248,7 @@ has confirmed it. No ADR covers this standard — `artifacts/adr/` does not exis
 
 | Requirement | State |
 | --- | --- |
-| R2 | **Holds by construction, not by assertion.** No rule in `rules/` carries an accessibility id and no detector in `scripts/` reports an interface as accessible. No test asserts the absence, so a future rule could break R2 without failing one |
+| R2 | **Holds by construction, not by assertion.** No rule in `rules/` carries an accessibility id and no detector in `scripts/` reports an interface as accessible. An `accessibility.*` id is refused at catalog load (`NAMESPACES` in `scripts/catalog.mjs`: unreserved namespace); a requirement placed in a namespace this pack does reserve (for example `fairness.*` or `disclosure.*`) is not detected, and no test asserts it |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test |
 
 **Proposed, and deliberately absent from this release. None of the following exists:**
@@ -251,7 +256,7 @@ has confirmed it. No ADR covers this standard — `artifacts/adr/` does not exis
 | Requirement | What would be needed | Why it is not here |
 | --- | --- | --- |
 | R1 | A place to reference the project's accessibility evidence | Both schemas are closed; a schema change is out of scope (plan 02 section 8) |
-| R2 | A test that no catalog id defines an accessibility requirement | Meaningful only if a rule is ever proposed in the area |
+| R2 | A test that no id in a reserved namespace defines an accessibility requirement | The catalog loader refuses only the unreserved `accessibility.*` namespace; whether a reserved-namespace id restates an owner requirement is a judgment a test cannot make without a list, which R2 of Standard 37 forbids this framework to carry |
 
 **What no future release will implement.** An accessibility requirement minted in this catalog, or a
 verdict that an AI feature is accessible from the presence of a statement, a library or an owner's
