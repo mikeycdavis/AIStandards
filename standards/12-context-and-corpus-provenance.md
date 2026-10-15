@@ -57,8 +57,9 @@ Two terms, each defined here rather than by the brief:
 
 It does **not** cover, and claims none of the ground of, the following:
 
-- **Data used to train, validate, evaluate or calibrate a model the project itself trains.**
+- **The use of a source to train, fine-tune, validate or calibrate a model the project operates.**
   MachineLearningStandards owns that, per the boundary review's recorded owner; see the posture note.
+  The same source used as context stays in Scope (R6).
 - **Whether anyone agreed to the use, and on what terms.** Item 14, Consent and Licensing, is
   unwritten in this release. A provenance statement may name a licence; it does not establish that
   the use is permitted.
@@ -86,7 +87,7 @@ retrieval corpus consulted at inference time by a hosted model is not a dataset 
 validate, evaluate or calibrate a model, so that pack's standard 3 does not reach it. Whether it does
 is not something this repository has established, and nothing was re-read for this document. This
 standard therefore (a) applies to every source in Scope regardless, (b) claims no reading of the ML
-pack's reach, and (c) makes the project record which case it is in (R6) rather than infer it. Where
+pack's reach, and (c) makes the project record how each source is used (R6) rather than infer it. Where
 both packs govern a concern, the more specialised requirement governs and the stricter compatible one
 applies ([Standard 7](07-boundary-with-adjacent-standards.md) R5; its table row on dataset provenance
 reads "Defers. Adds only retrieval corpora, prompt fixtures and eval sets").
@@ -113,8 +114,9 @@ outside the repository. The declaration is what makes such a source discoverable
 ### R2 — The statement says where it came from, in a form that can be checked
 
 **A provenance statement MUST say who or what produced the material, how it was obtained, and when,
-at a granularity from which a reader could find the original; "internal", "curated" and "public" are
-not provenance statements.**
+to the extent each is known, at a granularity from which a reader could find the original; where
+any of these is not known, R5 governs that part and the statement says so. "Internal", "curated"
+and "public" are not provenance statements.**
 
 Those three words describe a property of the source, not an origin. The test of a statement is that a
 reader who disagrees could go and look: a named system and export, a repository and revision, a
@@ -166,20 +168,25 @@ It tells the next reader that the source is untrusted rather than reassuring the
 **Absence of a statement is not the same as "unknown".** One is a gap in the record; the other is a
 fact about the source. Both are findings under R1, differently.
 
-### R6 — Say which case applies, and where the data trains the project's own model, defer
+### R6 — Say how each source is used, and where it develops the project's own model, defer
 
-**A project MUST record whether a source is used only as context, fixture or evaluation input for a
-model it does not train, or is used to train, fine-tune, validate or calibrate a model the project
-operates, and for the latter this standard MUST NOT be offered as satisfying
+**A project MUST record, for each source, whether the source itself is used only as context, fixture
+or evaluation input, or is also used to train, fine-tune, validate or calibrate a model the project
+operates, and for any use of the second kind this standard MUST NOT be offered as satisfying
 MachineLearningStandards' dataset provenance and versioning requirements.**
 
-The declaration is the project's, not a finding. The manifest's `fine-tuning-set` kind is the signal
-that the second case exists, and its presence in a manifest does not by itself decide who operates the
-model; the repository shows which sets are listed and says nothing about who trains what. A project
-that records "both" has recorded a fact, not hedged.
+The split is by what the *source* is used for, not by who trained the model that consumes it. A
+retrieval corpus read at inference time by a model the project trained itself is context, and is in
+this standard's Scope; the same corpus used to fine-tune that model is also a training source, and
+for that use the other pack's requirements apply.
 
-Where a source is both — a corpus that is retrieved from and also used for fine-tuning — each use is
-described, and the more specialised requirement governs the training use (Standard 7 R5).
+The declaration is the project's, not a finding. The manifest's `fine-tuning-set` kind is the signal
+that the second use exists, and its presence in a manifest does not by itself decide who operates the
+model; the repository shows which sets are listed and says nothing about who trains what. A project
+that records both uses for one source has recorded a fact, not hedged.
+
+Where a source has both uses — a corpus that is retrieved from and also used for fine-tuning — each
+use is described, and the more specialised requirement governs the training use (Standard 7 R5).
 
 ### R7 — This framework MUST NOT report provenance established from the presence of a field
 
@@ -208,7 +215,7 @@ verdict, remains permitted.
 | Stale statement | A day-one description of an index that has since taken in uploads and a sync | R4 |
 | Guess as origin | "Probably the 2023 export" written into the record | R5 |
 | Gap read as unknown | No statement at all, treated as though the origin were known to be unknown | R1, R5 |
-| Training data treated as context | A fine-tuning set described under this standard and offered as satisfying the ML pack | R6 |
+| Training use treated as context | A source also used to fine-tune a model, described under this standard and offered as satisfying the ML pack | R6 |
 | Presence read as provenance | A framework report of "documented" because the string is non-empty | R7 |
 
 ## Evidence
@@ -220,7 +227,7 @@ verdict, remains permitted.
 | R3 | The `synthetic` declaration and the generator named, set against how the material was made | The manifest and the project's own production records | Human review |
 | R4 | The revision or period each statement names, and the list of ingestion paths | The manifest or named document, and the ingestion configuration | Human review |
 | R5 | Each statement that says "unknown", and what it records instead | The same | Human review |
-| R6 | The recorded case for each source | A project document the project names — **no manifest field exists for it; see Implementation** | Human determination |
+| R6 | The recorded use or uses of each source | A project document the project names — **no manifest field exists for it; see Implementation** | Human determination |
 | R2 to R5 (truth of the statement) | None obtainable from a repository | — | **Not-evaluable** |
 | R7 | The absence of any detector that reports provenance from presence | This repository's own detectors and tests | Code review; see Implementation |
 
@@ -251,9 +258,23 @@ Three reasons, stated so a reader can disagree with any one of them:
    naming the first id is a catalog decision made once, with the rule's level and validation type, not
    made here.
 
-**Severity.** R1 to R6 are `manual-review` obligations in this release. The truth of a statement is
-**not-evaluable** and is not reported as reviewed. R7 constrains this framework and has no validation
-type, because the thing it prohibits is a behaviour of the tool.
+**Severity and validation type.** No rule exists, so none of the following is a reported result in
+this release; the table states what each requirement is and the severity a breach would carry were a
+rule minted, so that a consumer classifies it consistently.
+
+| Requirement | Validation type | Severity of a breach | Exemptible |
+| --- | --- | --- | --- |
+| R1 | manual-review | error | yes, by not-applicable declaration where no source is in Scope |
+| R2 | manual-review | error | yes, as R1 |
+| R3 | manual-review | error | yes, as R1 |
+| R4 | manual-review | warning | yes, as R1 |
+| R5 | manual-review | error | no |
+| R6 | manual-review | error | yes, as R1 |
+| Truth and currency of any statement (R2 to R5) | not-evaluable | none reported; not scored | not attestable |
+| R7 | none for a consuming project; constrains this framework and is checked by code review | not applicable to a project | no |
+
+R7 has no validation type because the thing it prohibits is a behaviour of the tool, which a consuming
+project cannot breach.
 
 **Exemptibility.** R7 is not exemptible: no project circumstance makes it reasonable for a scan to
 report an origin from a string, and a mechanism for excepting the prohibition would be
@@ -273,7 +294,7 @@ release would contradict a false declaration. No level here is lowered by a risk
 | R3 | A source containing model output is `synthetic` and names its generator | A source of generated pairs declared human-authored | A human-written source declared `synthetic: false` must **not** be flagged |
 | R4 | The statement names a revision or period, and a new ingestion path prompts a re-read | A statement older than an ingestion path it does not mention | A source whose statement names its snapshot and has taken no additions must **not** be flagged for age |
 | R5 | An unknown origin is stated as unknown, with what is known | A guess recorded as an origin | A statement "unknown, found at this path" must **not** be failed for being unknown |
-| R6 | The recorded case is present for each source and not derived from file names | A case inferred from the presence of a `fine-tuning-set` entry | A project recording "both", with a reason, must **not** be treated as hedging |
+| R6 | The recorded use is present for each source and not derived from file names | A use inferred from the presence of a `fine-tuning-set` entry | A source recorded as used both as context and for fine-tuning, with a reason, must **not** be treated as hedging; a corpus read by the project's own model and not used to train it must **not** be failed |
 | R7 | No detector or report in this repository outputs a provenance verdict from presence | A detector that reported "documented" because a `provenance` string was non-empty | Reporting that a field was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads `dataSources` and no fixture carries a
@@ -297,7 +318,7 @@ statement made before the change describes the earlier source:
 - the source being regenerated, re-filtered or re-chunked by a different process;
 - a change of the system that produced the material, including a change of the generating model;
 - the source being used for a purpose the statement did not contemplate, such as a retrieval corpus
-  being used to fine-tune, which makes R6's recorded case false at once;
+  being used to fine-tune, which makes R6's recorded use false at once;
 - a licence or terms change in the origin, which is item 14's subject and is noted here only because it
   makes the origin statement incomplete.
 
@@ -329,7 +350,7 @@ it owner-approved:
 - **R4 in full**: that a statement names the revision or period it describes and is revisited on a new
   ingestion path.
 - **R5 in full**: that unknown is recorded as unknown and distinguished from an absent statement.
-- **R6's declaration** of which case applies, and the deference where a project trains its own model.
+- **R6's declaration** of how each source is used, split by the source's use rather than by who trained the model, and the deference for a training use.
   The deference is the boundary review's finding; its form in R6 is this document's.
 - **R7**, the constraint on this framework, in the same form as the equivalent requirement in
   [Standard 8](08-ai-safety-requirements-and-safety-cases.md),
@@ -406,7 +427,7 @@ as a capability.
 | --- | --- | --- |
 | R1 (presence of a statement) | A structural rule over `dataSources[].provenance`, and an owner decision on Q-A | Decidable and useful; adding it is a catalog decision outside this slice, and it would test presence only |
 | R2 to R5 | A way to read a project's own production records | The form is the project's; Phase 3 detector and evidence-availability work follows the corpus |
-| R6 | A place to record the case: a schema change or a named document a rule can find | Both schemas are closed; a change is a schema-versioning decision and Phase 2 section 8 puts it out of scope |
+| R6 | A place to record each source's use: a schema change or a named document a rule can find | Both schemas are closed; a change is a schema-versioning decision and Phase 2 section 8 puts it out of scope |
 | R7 | A test asserting no detector emits a provenance verdict | Meaningful only once a detector exists for it to constrain |
 
 **What no future release will implement.** A detector that reports a source's provenance established,
