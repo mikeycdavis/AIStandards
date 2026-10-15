@@ -189,7 +189,7 @@ a request it served.
 | R1 | Each dependency and its failure behaviour | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R2 | Each degraded mode and, where it produces a response, the field, header or shape that carries it with a sample of a degraded response; for a mode that declines, a captured declined outcome and the record that the decline is the mode | The project's output contract and a captured example | Human review |
 | R3 | The controls on the primary path and a statement of how each applies to the fallback | Project code, configuration and data-handling terms | Human review |
-| R4 | The boundary where provider-specific behaviour sits, and the stated list of what replacement would change | Project code and documentation | Human review |
+| R4 | The boundary where provider-specific behaviour sits; and, where the project claims the provider can be replaced, the stated list of what replacement would change | Project code and documentation | Human review |
 | R5 | The date and result of each exercise of a degraded or fallback path, and the stated interval; an exercise record without a result is incomplete | Test records, drill records or incident records | Human review of the records |
 | R6 | The absence of any detector, rule, audit finding or generated report that reports resilience from a setting or presence | This repository's own detectors and tests | Code review; see Implementation |
 
