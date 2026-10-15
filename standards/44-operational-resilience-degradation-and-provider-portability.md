@@ -110,15 +110,16 @@ degraded response in the same form as a full one.**
 A fallback to a smaller model, a retrieval step that returned nothing, a tool that timed out and was
 skipped: each produces a response of the usual shape. If the difference is only in a trace nobody reads,
 the user and the downstream process cannot discount it. What the distinction is *named* is the
-project's choice. Where the degraded system would otherwise **act**, an unavailable approval or an
-indeterminate dependency does not proceed; that is [Standard 45](45-approval-gates.md) R6's subject and
-is not restated.
+project's choice. Where the degraded system would otherwise **act**, an unavailable, timed-out or
+indeterminate approval mechanism does not proceed; that is [Standard 45](45-approval-gates.md) R6's
+subject and is not restated. Any other indeterminate dependency is governed by R1 and R2 here.
 
 ### R3 — A fallback must not weaken the controls the primary path carries
 
 **A fallback model, provider or path MUST NOT be used for an interaction unless the controls the
 primary path applies — such as redaction, prompt and
-instruction handling, output checks and logging — apply to it too, or the system declines.**
+instruction handling, output checks and logging — apply to it too, or the system declines; and the
+project MUST state how each of those controls applies to the fallback.**
 
 A fallback is a second path through the system, and it is the one least reviewed. A secondary provider
 that is not under the data-handling arrangement of the first, a fallback model that is not behind the
@@ -146,8 +147,8 @@ those.
 event — and the project MUST record when and with what result and state how often it will be exercised
 again; a path that has never been exercised, whose latest recorded exercise is older than its stated
 interval, whose latest exercise did not show the expected degraded or fallback behaviour, or that has
-changed since its latest exercise (a model, provider, terms, primary-path control or fallback policy),
-MUST NOT be described as available.**
+changed since its latest exercise (any event listed under Exceptions and staleness), MUST NOT be
+described as available.**
 
 A fallback that has never run has an unknown failure rate, and the usual way to find it out is the
 outage it was written for. The interval is the project's choice; the requirement is that one is stated
@@ -175,7 +176,7 @@ a request it served.
 | Failure behaviour left to the exception | No record of what the system does on provider failure; the behaviour is whatever the HTTP client's default does | R1 |
 | Silent degradation | A response from a weaker model, or with no retrieved context, returned in the usual form | R2 |
 | Distinction kept in a trace only | The degraded flag exists in telemetry; the caller never receives it | R2 |
-| Degraded mode that acts | A system with a tool that proceeds on an indeterminate dependency; reported under [Standard 45](45-approval-gates.md) R6, not restated here | Standard 45 R6 |
+| Degraded mode that acts | A system with a tool that proceeds when its approval mechanism is unavailable or indeterminate; reported and severity-assigned under [Standard 45](45-approval-gates.md) R6, not restated here | Standard 45 R6 |
 | Fallback outside the controls | A secondary provider with no redaction, no output check, or different data terms | R3 |
 | Fallback chosen for availability only | Failing over to an unreviewed model because it is up, and serving without a control the primary path applies | R3 |
 | Unstated swap cost | "We can switch providers" with no account of what behaves differently | R4 |
@@ -254,11 +255,11 @@ here is lowered by a risk tier (Standard 2 R3).
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Each dependency, including a self-served model's host, has a recorded behaviour for each of the four conditions: unavailable, slow, rate-limited, changed | A dependency in use with no record, or a record that omits any of the four conditions (unavailable, slow, rate-limited, changed) | A system whose record states, for the model dependency, that the degraded mode under each condition is to decline, recorded as its degraded mode, must **not** be reported missing a degraded mode |
-| R2 | Every R1 condition that results in reduced service is defined as a degraded mode, and a response produced in a degraded mode carries the recorded field, header or distinct response shape that a full response does not | A reduced-service behaviour in the R1 record that is not defined as a degraded mode, no such signal recorded, or the signal absent from a degraded response (comparing the generated text of the two does not establish a signal) | A system whose recorded degraded mode is to decline must **not** be failed for lacking a separate marker on responses it never produces in a degraded form; a system that declines without recording the decline as its degraded mode fails R2 |
+| R2 | Every R1 condition that results in reduced service is defined as a degraded mode, and a response produced in a degraded mode carries the recorded field, header or distinct response shape that a full response does not | A reduced-service behaviour in the R1 record that is not defined as a degraded mode, no such signal recorded, the signal absent from a degraded response (comparing the generated text of the two does not establish a signal), or no sample of a degraded response (for a declining mode, no captured declined outcome) | A system whose recorded degraded mode is to decline must **not** be failed for lacking a separate marker on responses it never produces in a degraded form; a system that declines without recording the decline as its degraded mode fails R2 |
 | R3 | A request served by the fallback passes through the controls of the primary, or is declined, and a statement of how each control applies to the fallback exists | A fallback that serves an interaction without a control the primary path applies (no redaction, no output check); or no statement of how each primary-path control applies to the fallback | A fallback behind the same controls must **not** be flagged for being a different model |
 | R4, replacement claim | A stated list of what replacement would change exists beside the claim | "Provider-agnostic" with one adapter and no list | A project that makes no portability claim and says so must **not** be failed for lacking a replacement list |
 | R4, abstraction | Provider-specific calls and request shapes sit at an integration boundary behind an interface | Provider-specific behaviour (a provider SDK call, a provider-specific request shape) embedded in domain logic | A provider SDK used only inside the adapter or integration module must **not** be flagged |
-| R5 | A dated record of an exercise, with its result, and a stated interval, exist for each degraded mode and each fallback, and the latest exercise falls within the interval, shows the expected behaviour, and postdates the latest change to the path, or the path is not described as available until it is exercised again | A degraded mode or fallback with no record of ever running, or with no stated interval, or whose record of an exercise gives no result, or whose latest exercise is older than its interval, failed to show the expected behaviour, or predates a change to the path, and which is still described as available | A degraded mode exercised only in a test, and recorded as such, must **not** be flagged for not having been used in production |
+| R5 | A dated record of an exercise, with its result, and a stated interval, exist for each degraded mode and each fallback, and the latest exercise falls within the interval, shows the expected behaviour, and postdates the latest change to the path, or the path is not described as available until it is exercised again | A degraded mode or fallback with no record of ever running, no stated interval, or no result; or one described as available whose latest exercise is older than its interval, failed to show the expected behaviour, or predates a change to the path | A degraded mode exercised only in a test, and recorded as such, must **not** be flagged for not having been used in production |
 | R6 | No detector, rule, audit finding or generated report in this repository states a resilience verdict from presence | A detector, rule, audit finding or report that stated a system resilient, degrading safely or provider-portable because a fallback setting, second provider name, retry policy or adapter interface was present | Reporting that a fallback setting was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a resilience artifact and no fixture
@@ -313,8 +314,8 @@ owner-approved:
 - **R1 in full**: the dependency inventory and the recorded failure behaviour.
 - **R2 in full**: the defined degraded mode (which may be to decline), its detectability downstream, and
   the ruling that a degraded response must not be presented in the form of a full one.
-- **R3 in full**: that a fallback must not weaken the controls of the primary path, and that where it
-  would, the system declines.
+- **R3 in full**: that a fallback must not weaken the controls of the primary path, that where it
+  would, the system declines, and that the project states how each control applies to the fallback.
 - **R4's second half**: the requirement to state what replacement would change, and the ruling that an
   abstraction alone is not a portability claim. The first half corresponds to the EngineeringStandards
   precedent and is written at its SHOULD.
@@ -328,7 +329,7 @@ owner-approved:
   observation that the standard's text and the rule record differ in level, which the boundary review
   did not make.
 - **The severity assignments** (error for an observed fallback serving without a primary-path control,
-  an observed degraded response in full form, a path described as available that was never exercised or is overdue,
+  an observed degraded response in full form, a path described as available that was never exercised, is overdue, failed, or predates a change to the path,
   and a violation of R6 by any detector, rule, audit finding or report; warning for every other finding) and the statement that no
   attestation or scheduled expiry exists in this release.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
