@@ -125,8 +125,10 @@ statements about the same system that disagree leave a reader unable to say whic
 ### R5 — Name an owner, and revise the description when the system changes
 
 **The description MUST name who answers for it, and MUST be revised when a change alters a fact it
-states or is required to state: a model, instruction, tool, retrieval source or approval point
-added, changed, moved or removed; a model identifier silently re-pointed behind an alias; a change
+states or is required to state: a model (including its role), instruction, tool (including its
+authority), retrieval source (including its re-indexing) or approval point added, changed, moved or
+removed; a change of purpose, owner, lifecycle stage or autonomy tier; a model identifier silently
+re-pointed behind an alias; a change
 in who the system reaches; or a revision of documentation it cites under R3.**
 
 A description with no owner has no one whose job it is to change it, and the system around a model
@@ -220,16 +222,17 @@ by a risk tier
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | A document states purpose, users, affected non-users and exclusions | The description exists only in a slide, a thread or someone's head, or is a document that omits any of the four | A short document, including a README passage, that answers all four and is findable must **not** be failed for brevity or form |
+| R1 | A document states purpose, users, affected non-users and exclusions | The description exists only in a slide, a thread or someone's head, or is a document that omits any of the four, or one the repository neither contains nor points to | A short document, including a README passage, that answers all four and is findable must **not** be failed for brevity or form |
 | R2 | For each model, its role; the instructions that govern it and where they live; for each tool, its authority; each retrieval source; each approval point, all as they exist in the system as built, including process outside code | A tool callable in code that the description never mentions, or one named with no statement of its authority; a model with no role; instructions with no location; a retrieval source read in code and not named; an approval point, in code or in process, not stated; a model with instructions governing it and none stated | A system with no tools, retrieval, instructions or approval points, said to have none, must not be failed for the empty sections |
 | R3 | The model documentation is referenced by name and revision, or "none" is recorded and no capability or limitation is stated that the project has not established | A paraphrase of a model card's limitations, performance or training claims in the project's words; a capability or limitation asserted as fact, whether or not documentation is cited, that neither that documentation nor the project's observation establishes; a reference that omits the revision where one exists, or neither a reference nor a "none" record | A reference that names a provider document and its revision, with nothing copied, must **not** be flagged |
 | R4 | No contradiction with the manifest on any fact both state; each unknown is recorded with who could establish it | A model, tool, data source, purpose, owner, prompt path, lifecycle stage, autonomy tier or any other fact both state that differs between the two; a fact the project does not know that is omitted; a plausible guess written where the project did not know; an "unknown" with no one named who could establish it | A section reading "unknown — the vendor does not say; ask the account owner" must **not** be treated as missing |
-| R5 | An owner is named, and each change of a listed subject that altered a stated or required fact has a matching revision | No owner named; or a model, instruction, tool, source, approval point, alias target, reach or cited documentation revision changed in a way that altered a stated or required fact with no revision since | A change with no effect on anything the description states needs no revision |
+| R5 | An owner is named, and each change of a listed subject that altered a stated or required fact has a matching revision | No owner named; or a model, instruction, tool, source, approval point, alias target, reach or cited documentation revision changed, or any other stated or required fact (purpose, owner, lifecycle stage, autonomy tier, a model's role, a tool's authority, a re-indexed source) changed, with no revision since | A change with no effect on any fact the description states or is required to state needs no revision |
 | R6 | No detector, rule, finding or report here states a system transparent, its documentation adequate, or its description accurate or current from presence | A detector, rule or report that did so because a file was found, a template was copied or a section heading existed | Reporting that a system description was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a system description, so no detector
-checks R1 to R5; they are enforced by review or not at all, and the last requirement holds by
-construction. The falsifiers in the table are observable by a reviewer reading the record or the
+checks R1 to R5; they are enforced by review or not at all, and the last requirement holds today
+because no such detector exists. The falsifiers in the table are observable by a reviewer reading
+the record or the
 running system: they are manual, not absent. The negative controls state what review must not do to
 a project that has the right subject and does the right thing.
 
@@ -322,7 +325,7 @@ crosswalk, and no maintainer of that pack has confirmed it. No ADR covers this s
 
 | Requirement | State |
 | --- | --- |
-| R1 to R2 (aid only) | `templates/AI-SYSTEM.md` is a narrative template with questions on purpose, users, models, prompts, tools, data and ownership, and carries the scaffold marker. It asks what data the system reads or retrieves and to name each source; the nearest it comes to approval points is "What can the system do without a human acting?", so it does not name them, and it prompts nothing for R3 or R5. It is an aid to writing the description, not a check that one exists |
+| R1 to R2 (aid only) | `templates/AI-SYSTEM.md` is a narrative template with questions on purpose, users, models, prompts, tools, data and ownership, and carries the scaffold marker. It asks what data the system reads or retrieves and to name each source; the nearest it comes to approval points is "What can the system do without a human acting?", so it does not name them; it prompts nothing for R3 and nothing for R5's revision half (it does ask who answers for the system). It is an aid to writing the description, not a check that one exists |
 | R6 | **Holds because no such detector exists today; nothing prevents one.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` reports a system transparent or documented, and no detector calls the scaffold-marker check on a Markdown description. No test asserts the absence |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test |
 
