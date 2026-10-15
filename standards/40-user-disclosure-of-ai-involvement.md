@@ -31,21 +31,18 @@ disclosure" bullet of [`artifacts/prompts/original_prompt.md`](../artifacts/prom
 ## Scope
 
 Applies to any AI system within this pack's scope as [Standard 1](01-ai-system-manifest.md) draws it
-whose output or action reaches a person who is not part of the team that built it.
+whose output or action reaches or concerns a person who is not part of the team that built it.
 
 Terms, defined once and used verbatim below:
 
-- **Disclosure decision** — for each kind of output or action that reaches such a person (including a
-  person concerned by a decision who never interacts with the system): whether that person is owed a
+- **Disclosure decision** — for each kind of output or action that reaches such a person (including a person concerned by a decision or action who never interacts with the system): whether that person is owed a
   disclosure that AI produced or materially shaped it, to whom, and the reason. Notice to the operator
   is not notice to the person concerned.
 - **Disclosure deadline** — for a person who interacts with or relies on the output, no later than that
   interaction or reliance; for a person concerned by a decision or action who does not interact, no
   later than the earlier of the point at which the decision or action is taken and the point at which it
-  is communicated; for any other person
-  to whom output is delivered, no later than its delivery or their exposure to it.
-- **Disclosure capture** — a dated copy of what was presented, in the form users received it, including
-  its position.
+  is communicated; for any other person to whom output is delivered or who is exposed to the output or action, no later than that delivery or exposure.
+- **Disclosure capture** — a dated copy of what was presented, in the form users received it, with the point in the interaction or delivery at which it was presented.
 - **Disclosure verdict** — a statement that a system discloses AI involvement, that a disclosure is
   adequate or timely, or that the system complies with a disclosure obligation.
 - **Presentation evidence** — what shows a presented disclosure can be perceived and understood.
@@ -64,16 +61,13 @@ Relationship), and nothing here states, restates or pre-empts such a prohibition
 
 It does **not** cover, and claims none of the ground of:
 
-- **How a disclosure is presented**, including its accessibility, which [Standard 7](07-boundary-with-adjacent-standards.md)
-  records as UIUXDesignStandards' and which that standard says this pack "owns only *whether* disclosure
-  is owed", and the marking of generated content, which the boundary review records as that pack's R1.
+- **How a disclosure is presented**, including its accessibility, which [Standard 7](07-boundary-with-adjacent-standards.md) records as UIUXDesignStandards' and records this pack as owning only *whether* disclosure is owed, and the marking of generated content, which the boundary review records as that pack's R1.
 - **Whether a statement is true** (item 25) and **what the system says about its capabilities** (item 28).
 - **Documentation for a reader of the repository**, which is item 39.
 - **What the law requires**, a legal question this standard does not answer.
 
 **Boundary posture B — baseline, with a named half deferred.** The boundary review changed the posture
-from `O` because owning the item outright contradicted this pack's own Standard 7: the owner entry
-reads "AIStandards for whether disclosure is owed; UIUXDesignStandards for how it is presented". Its
+from `O` because owning the item outright contradicted this pack's own Standard 7: the review's owner entry reads "AIStandards for whether disclosure is owed; UIUXDesignStandards for how it is presented". Its
 evidence is `standards/26-ai-user-experience.md` in UIUXDesignStandards, with rules
 `ai-ux.no-generated-as-verified`, `ai-ux.ai-failure-states` and `ai-ux.proposal-vs-execution`, and its
 lede and R1 as the review records them (reviewed 2026-09-04). Nothing is claimed here about the sibling
@@ -83,7 +77,7 @@ pack beyond that record.
 
 ### R1 — Have a disclosure decision
 
-**A project MUST have a disclosure decision.**
+**A project MUST have a disclosure decision for each kind of output or action that reaches or concerns a person outside the team.**
 
 "Not owed" is a legitimate answer, recorded with its reason: an autocomplete suggestion the person
 accepts or rejects in the act is a different case from a generated reply sent in a person's name. What
@@ -198,7 +192,7 @@ rules, and this standard has none. No level here is lowered by a risk tier (Stan
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | A disclosure decision exists | Output or action that reaches a person outside the team with no disclosure decision, or a disclosure decision that treats notice to the operator as notice to the person concerned | A disclosure decision "not owed — suggestion the user accepts or rejects in the act" is a disclosure decision |
+| R1 | Each such kind of output or action has a disclosure decision | Output or action that reaches a person outside the team with no disclosure decision, or a disclosure decision that treats notice to the operator as notice to the person concerned | A disclosure decision "not owed — suggestion the user accepts or rejects in the act" is a disclosure decision |
 | R2 | The specified point of disclosure, or the point in a disclosure capture, is no later than the disclosure deadline | The point falls after the disclosure deadline, or none is specified | A disclosure at the first point of interaction, in whatever form, is not failed for its form here |
 | R3 | Each presented disclosure has a disclosure capture, replaced or re-confirmed on each listed change | A presented disclosure with no disclosure capture, or one neither replaced nor re-confirmed after a listed change | A project that presents no disclosure has nothing to capture |
 | R4 | A project that presents a disclosure names UIUXDesignStandards standards and its presentation evidence sits under them | A project that presents a disclosure and names none | A project that cites the named UIUXDesignStandards standards for its presentation evidence is not flagged |
@@ -216,9 +210,9 @@ There is no policy-level exception mechanism in this release, because no rule ex
 | Requirement | Invalidated by |
 | --- | --- |
 | R1 | A listed change |
-| R2 | A listed change |
-| R3 | A listed change |
-| R4 | A change of the owner's presentation standards, of the project's presentation evidence, of the interface that presents the disclosure, or of the audience |
+| R2 | A listed change, or a revision of the disclosure decision |
+| R3 | A listed change, or a revision of the disclosure decision |
+| R4 | A listed change; a revision of the disclosure decision; or a replaced disclosure capture |
 | R5 | A listed change |
 | R6 | Nothing: it constrains this repository |
 
@@ -248,8 +242,7 @@ evidence are the boundary review's, and Standard 7's table is where the line was
 
 ## Relationship to other standards and ADRs
 
-**Item 53, Disclosure and Deception Prohibitions** is the negative face of this item's `user disclosure`
-token as the specification lists it: class `A`, authored, posture `O`, unwritten on this base. This
+**Item 53, Disclosure and Deception Prohibitions** is listed by the specification as derived from the same `user disclosure` token: class `A`, authored, posture `O`, unwritten on this base. This
 standard says whether a disclosure is owed and when it must arrive; whether and how a system may state
 or imply that a person rather than an AI is the source is provisionally item 53's. The line is
 provisional until item 53 is written; **it is recorded open, not decided**. Which of the two items owns
@@ -277,7 +270,8 @@ No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
 | Requirement | State |
 | --- | --- |
-| R6 | No detector, rule or report in `scripts/`, `rules/`, `test/` or `templates/` states that a system discloses AI involvement. No test asserts the absence |
+| R1 to R5 | Not enforced; held by review |
+| R6 | No detector, rule or report in `scripts/`, `rules/`, `test/` or `templates/` states a disclosure verdict. No test asserts the absence |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test |
 
 **Proposed, and deliberately absent. None of the following exists:** a place for the disclosure decision
