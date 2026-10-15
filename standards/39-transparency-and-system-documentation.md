@@ -98,8 +98,9 @@ reconstruct them from code.
 
 **Where a model's own documentation exists, the system description MUST reference it by name and
 revision and MUST NOT restate its limitations, performance or training claims in the project's own
-words; where it does not exist, the description MUST say so and MUST NOT supply capabilities or
-limitations the project has not established.**
+words; where it does not exist, the description MUST say so; and in either case the description MUST
+NOT supply a capability or limitation that neither that documentation nor the project's own
+observation establishes.**
 
 A restatement is a fork, and it drifts the moment the original is revised ([Standard
 7](07-boundary-with-adjacent-standards.md)
@@ -318,7 +319,7 @@ crosswalk, and no maintainer of that pack has confirmed it. No ADR covers this s
 
 | Requirement | State |
 | --- | --- |
-| R1 to R2 (aid only) | `templates/AI-SYSTEM.md` is a narrative template with questions on purpose, users, models, prompts, tools, data and ownership, and carries the scaffold marker. It asks no question about retrieval sources as such (only "Data") or about approval points, so it does not prompt for two things R2 requires. It is an aid to writing the description, not a check that one exists |
+| R1 to R2 (aid only) | `templates/AI-SYSTEM.md` is a narrative template with questions on purpose, users, models, prompts, tools, data and ownership, and carries the scaffold marker. It asks what data the system reads or retrieves and to name each source, but asks no question about approval points, so it does not prompt for one thing R2 requires. It is an aid to writing the description, not a check that one exists |
 | R6 | **Holds by construction, not by assertion.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` reports a system transparent or documented. No detector reads the scaffold marker in a Markdown description. I found no test asserting the absence, so a future detector could break R6 without failing one |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test |
 
