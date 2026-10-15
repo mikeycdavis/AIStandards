@@ -44,7 +44,7 @@ Terms, each defined once here and used verbatim below:
 - **Spend subject** — a feature, tenant, user, job, run, or the provider account itself where the project's budget or reported figure is stated over the account.
 - **Ceiling** — a number over a spend subject and a period at which the system acts.
 - **Multiplier** — a retry, a fallback, the repetition of a call outside an agent loop, and, where the charge is metered by tokens or time, completion length and carried conversation history.
-- **Spend figure** — any figure a project reports as an amount spent or as a cost per unit.
+- **Spend figure** — any figure a project reports as an amount spent.
 
 It does **not** cover, and claims none of the ground of:
 
@@ -83,7 +83,7 @@ An estimate computed from token counts and a price list is a model of the bill. 
 
 ### R5 — Name the support for a cost claim
 
-**A project MUST NOT state that cost is capped or bounded without naming the ceiling (R2), MUST NOT state that it is negligible without naming the measurement, and MUST NOT state a cost per unit without naming the model identifier and the date of the price.**
+**A project MUST NOT state that cost is capped or bounded without naming the ceiling (R2), MUST NOT state that it is negligible without naming the measurement, and MUST NOT state a cost per unit without naming the model identifier and the date of the price and, where the figure depends on a workload (a cost per request, conversation or job), the workload it was measured on.**
 
 A cost per request is a function of the model, its price on a date, the prompt and the output; "costs a few cents per conversation" is a claim with no subject. A dated price-sheet entry kept as a historical figure, and not stated as the cost of a call, is not a cost per unit under this requirement. This requirement sets no threshold and no price.
 
@@ -101,7 +101,7 @@ This is a constraint on the framework, not on a project. A repository can show t
 | Ceiling that does not act | A notification at 80% and no action at 100%; "continue and log"; a ceiling read from configuration the system can raise; or no named enforcement point | R2 |
 | Unbounded multiplier | A retry with no maximum; a fallback with no bound on how often; no completion limit or history bound where billing is by tokens or time; or a multiplier governed only by the budget above it | R3 |
 | Estimate presented as spend | A figure computed from token counts is shown as the amount spent, or a spend figure carries no label | R4 |
-| Cost claim without support | "Cost is capped" naming no ceiling; "negligible" naming no measurement; or "$0.02 per request" naming no model or price date | R5 |
+| Cost claim without support | "Cost is capped" naming no ceiling; "negligible" naming no measurement; or "$0.02 per request" naming no model, price date or workload | R5 |
 | Setting read as control | A framework report of "cost controlled" because a token limit is present | R6 |
 
 ## Evidence
@@ -112,7 +112,7 @@ This is a constraint on the framework, not on a project. A repository can show t
 | R2 | The ceiling's number, spend subject, period and enforcement point; the behaviour as implemented in code or configuration; and where the system cannot raise the value | Project code and configuration, gateway configuration | Human review |
 | R3 | Each multiplier the system has and the limit of its own, or the statement that it has none | Project code and configuration, gateway configuration | Human review |
 | R4 | Each reported spend figure with its label | The project's documentation and finance or operations records the project names | Human review |
-| R5 | Each published cost claim with the ceiling, measurement, or model and price date it names | The project's documentation | Human review |
+| R5 | Each published cost claim with the ceiling, measurement, or model, price date and workload it names | The project's documentation | Human review |
 | R6 | The absence of any detector, rule, audit finding or generated report that reports cost controlled from a setting | This repository's own detectors and tests | Code review; see Implementation |
 
 Evidence for R1 to R5 is a human-authored record. A document naming a ceiling or a limit establishes that the project wrote it down and says nothing about whether the running system acts; the reviewer reads what is claimed against the code or configuration that would carry it out.
@@ -134,7 +134,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 
 | Requirement | Severity |
 | --- | --- |
-| R1 | warning |
+| R1 | error |
 | R2 | error |
 | R3 | error |
 | R4 | error |
@@ -151,7 +151,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | R2 | The ceiling record is complete, its behaviour is one of those listed and is implemented, and the system cannot raise the value | A ceiling record missing a number, spend subject, period or enforcement point; a behaviour that is continue-and-log or an alert alone; or a value the system can raise | A system that states no budget is out of scope for R2; a ceiling the system can only lower, or cannot write, must **not** be faulted for that |
 | R3 | Each multiplier the system has has a limit of its own stated in code or configuration; a reviewed static limit establishes it without a run | A multiplier the system has with no limit of its own, including one governed only by the budget above it | A system that never retries or falls back, and says so, must **not** be faulted for lacking a retry limit |
 | R4 | Every reported spend figure carries a billed or estimated label, and no estimate is presented as the amount spent | A spend figure with no label, or an estimate presented as the amount spent | A project that labels its figure an estimate must **not** be faulted for lacking a billed figure it never claimed |
-| R5 | Each cap or bound claim names its ceiling, each negligibility claim names its measurement, and each cost per unit names model and price date | A cap or bound claim, a negligibility claim, or a cost per unit missing what R5 requires it to name | A cost per unit that names model and price date, and a dated price-sheet rate kept as a historical figure, must **not** be faulted |
+| R5 | Each cap or bound claim names its ceiling, each negligibility claim names its measurement, and each cost per unit names model and price date, and workload where it depends on one | A cap or bound claim, a negligibility claim, or a cost per unit missing what R5 requires it to name (model, price date, and workload where it depends on one) | A provider price-sheet rate that names model and price date, and a dated rate kept as a historical figure, must **not** be faulted for lacking a workload |
 | R6 | No detector, rule, audit finding or generated report in this repository states a cost verdict from presence | A detector, rule, audit finding or report that states cost controlled, capped or bounded because a token limit, budget figure, rate limit or alert is present | Reporting that a token limit or budget figure was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads this subject's artifact and no fixture carries one, so R1 to R5 are enforced by review or not at all, and R6 holds today only because no such detector exists. The falsifiers in the table are available for manual review; what this release lacks is a detector that applies them. A record made stale by the event in the staleness table below does not satisfy the minimum test it was offered for until it is re-made.
@@ -169,8 +169,8 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 | R1 | A new spend subject or a change of billing account. |
 | R2 | A change to the ceiling's value, spend subject, period, enforcement point or behaviour, or to who can write it. |
 | R3 | A change of retry, fallback or loop policy, or an observed multiplier exceeding its limit. |
-| R4 | A change of provider price or of how the provider counts billed units. |
-| R5 | A change of model or price, for a cost per unit stated as the current cost of a call. |
+| R4 | A change of how the provider counts billed units, for an estimate computed from them. |
+| R5 | A change of model, price or workload, for a cost per unit stated as the current cost of a call; or a change to what the measurement named by a negligibility claim measured. |
 | R6 | A new detector, rule or report that touches cost. |
 
 ## Additions this standard makes beyond the source
