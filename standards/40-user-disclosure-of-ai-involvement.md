@@ -191,8 +191,9 @@ took, shows it.
 ## Validation, severity, and exemptibility
 
 **This standard has no catalog rules of its own in this release.**
-[Standard 6](06-standard-structure-and-rule-identity.md) R3 requires every standard to cite at least
-one rule or record why it does not; this is that record.
+[Plan 02 section 6](../artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md) requires
+every standard to cite at least one rule or record in its Validation section why it ships with none;
+this is that record.
 
 Three reasons, stated so a reader can disagree with any one of them:
 
@@ -312,7 +313,8 @@ settled by this document.
 
 [Standard 7](07-boundary-with-adjacent-standards.md) records that UIUXDesignStandards owns how a
 disclosure is presented and this pack whether one is owed; R2 there (link, do not copy) is why R4
-points and does not restate, and R4 there is why no `disclosure.*` id is minted here.
+points and does not restate; no `disclosure.*` id is minted here (Standard 6 R5 reserves the
+namespace, and Standard 7 R4 forbids only a colliding full id).
 
 item 39 (Transparency and System Documentation, unwritten on this base) governs the document a reader of the
 repository sees; this standard governs what a person using or affected by the system is told. They
@@ -325,8 +327,9 @@ and 34 (AI Incident Response) are named in Scope and are not restated.
 [Standard 1](01-ai-system-manifest.md) declares models and prompts and no disclosure; none is
 proposed. [Standard 13](13-personal-data-in-ai-systems.md) governs any personal data a capture of what
 a user saw would contain. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern
-applicability and non-lowering, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the
-requirement the Validation section's no-rule record answers.
+applicability and non-lowering, and [Standard 6](06-standard-structure-and-rule-identity.md) R3
+(each requirement carries a falsifier or is declared not-evaluable) is what the Tests section
+answers.
 
 Items 25, 28, 34, 37, 38 and 53 are not all written on this base; the lines drawn above are provisional
 until they are, and the later standards may legitimately move them.
