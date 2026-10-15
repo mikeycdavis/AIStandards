@@ -72,7 +72,7 @@ A hosted model's energy is almost never measured by its user. Substituting the p
 
 ### R3 — Name the account of an impact figure
 
-**An impact figure MUST name its account, and MUST NOT be presented as describing the current system when it was computed for an earlier model, period, workload or region.**
+**An impact figure MUST name its account, and MUST NOT be presented as describing the current system when it was computed for an earlier model, period, workload, region, assumption or conversion factor.**
 
 A grid intensity varies by region and by hour, and a model identifier can change behind an alias. A figure for last year's model on last year's grid is a statement about that, not about the system now running; a directly metered figure depends on no intensity and names none, and an assumption the figure does not use is not reported.
 
@@ -167,11 +167,11 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 
 | Requirement | Event that makes its record stale |
 | --- | --- |
-| R1 | A change of what the figure counts. |
-| R2 | A change of provider disclosure for the period the figure covers. |
-| R3 | A change of model, provider, region or hosting arrangement, for a figure presented as current. |
-| R4 | A change of the figure the claim names. |
-| R5 | A change of volume, model, grid or any other assumption the projection extrapolates from. |
+| R1 | Any change to anything this record names or relies on, including: a change of what the figure counts. |
+| R2 | Any change to anything this record names or relies on, including: a change of provider disclosure for the period the figure covers. |
+| R3 | Any change to anything this record names or relies on, including: a change of model, provider, region or hosting arrangement, for a figure presented as current. |
+| R4 | Any change to anything this record names or relies on, including: a change of the figure the claim names. |
+| R5 | Any change to anything this record names or relies on, including: a change of volume, model, grid or any other assumption the projection extrapolates from. |
 | R6 | A new detector, rule or report that touches environmental impact. |
 
 ## Additions this standard makes beyond the source
