@@ -110,7 +110,7 @@ This is a constraint on the framework, not on a project. A repository can show t
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | The boundary written beside each impact figure | The document or report carrying the figure | Human review |
-| R2 | The method, and each input's status with its model, or its source and disclosure revision or date | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
+| R2 | The method, and each input's status with, for an estimated input, its model and, for a reported input, its source and disclosure revision or date | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R3 | The account written beside each impact figure, and any current-system presentation checked against the figure's stated subject, period or workload and, where it names one, region | The report carrying the figure | Human review |
 | R4 | Each claim with the impact figure it names, the evidence that figure meets R1 to R3, and the separately reported offset and what it covers | The project's documentation and public statements | Human review |
 | R5 | Each projection, labelled, with its assumptions | The project's documentation | Human review |
@@ -171,7 +171,7 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 | R2 | A change of provider disclosure for the period the figure covers. |
 | R3 | A change of model, provider, region or hosting arrangement, for a figure presented as current. |
 | R4 | A change of the figure the claim names. |
-| R5 | A change of volume, model or grid that moves the projection's basis. |
+| R5 | A change of volume, model, grid or any other assumption the projection extrapolates from. |
 | R6 | A new detector, rule or report that touches environmental impact. |
 
 ## Additions this standard makes beyond the source
