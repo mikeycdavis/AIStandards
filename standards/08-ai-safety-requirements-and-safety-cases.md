@@ -39,12 +39,12 @@ as evidence inside that case; and the limit of what this framework can say about
 
 "Safety" here means harm to people, property, or the environment arising from the system operating as
 intended or failing to — a wrong, missing, late, or excessive output or effect. It does **not** cover,
-and this standard claims none of the ground of, five items that are unwritten in this release:
+and this standard claims none of the ground of, the following; of these, item 10 is now written as [Standard 10](10-human-oversight-and-intervention.md) and the others are unwritten in this release:
 
 - **Item 9, Misuse and Abuse Prevention** — which controls a system must have against deliberate
   misuse. It already owns `misuse.safety-controls-not-disabled`. A safety case may cite a misuse
   control as evidence; which controls are owed is item 9's to state.
-- **Item 10, Human Oversight and Intervention** — the general oversight obligation.
+- **Item 10, Human Oversight and Intervention** ([Standard 10](10-human-oversight-and-intervention.md)) — the general oversight obligation.
 - **Item 34, AI Incident Response** — what happens when a claim is contradicted in operation. This
   standard says only that such an event invalidates the case (see Exceptions and staleness).
 - **Item 35, Red Teaming** — how adversarial exercises are run and recorded. This standard says only
@@ -444,7 +444,7 @@ arise with no adversary present.
 
 Item 17, Evaluation Plans for Generative Systems, is unwritten; its shard `rules/eval.json` already
 carries `eval.no-fabricated-results`, which governs whether an evaluation result a case cites came from
-a real run. Items 9, 10, 34, 35 and 48 are unwritten and their ground is listed under Scope.
+a real run. Items 9, 34, 35 and 48 are listed under Scope as ground this standard does not claim; item 10 is written as [Standard 10](10-human-oversight-and-intervention.md).
 
 No ADR covers this standard. `artifacts/adr/` does not exist in this release.
 

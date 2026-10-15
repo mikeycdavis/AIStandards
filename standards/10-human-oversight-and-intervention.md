@@ -424,9 +424,8 @@ ids from colliding, and [Standard 2](02-ai-risk-tiering-and-applicability.md) R3
 applicability and non-lowering language used above.
 
 Items 34, 36, 46 and 48 are unwritten in this release; the lines drawn above are provisional until they
-are, and the later standards may legitimately move them. Several written standards state that item 10
-is unwritten; those statements are stale once this document is merged and are corrected by an
-integrator, not here. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
+are, and the later standards may legitimately move them. Standards 8, 9, 11 and 23, which said item 10 was unwritten, are updated in the same change to
+point here. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
 ## Implementation
 
