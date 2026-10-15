@@ -25,6 +25,7 @@ import { loadCatalog, assertBindings, coverage, CatalogError, REPO_ROOT } from "
 import { resolvePolicyPath, loadPolicy, assertVersionIdentity, applyPolicy, PolicyError, POLICY_BASENAME } from "./policy.mjs";
 import { evaluate, envelope, distinction, STATUS, DISPOSITION } from "./compliance.mjs";
 import { splitSource, isCode, extensionOf } from "./source.mjs";
+import { isStructuralScope, parseStructuralBytes } from "./structural.mjs";
 import { inspectScaffolding } from "./scaffolding.mjs";
 import { MANIFEST_NAMES, classifyManifest, manifestToolNames } from "./manifest.mjs";
 import { TOOLPERM_NAMES, classifyToolPermissions, compareToolNames } from "./toolperms.mjs";
@@ -68,6 +69,9 @@ function collectFiles(root) {
     excludedDirectories: [],
     frameworkExcludedDirectories: [],
     unreadableFiles: [],
+    // Filled by readStructuralFiles. Present from the start so the shape never depends on whether
+    // the pass ran: an absent field would read as "none failed" when it meant "not checked".
+    unparseableFiles: { total: 0, files: [], omitted: 0 },
   };
   const files = [];
 
@@ -113,6 +117,92 @@ function readText(root, rel) {
   }
 }
 
+// How many unparseable files the evidence surface lists. This bounds the REPORT, never the reading:
+// every file is parsed, the count is exact, and `omitted` says how many entries were not listed.
+// It is not a resource limit and says nothing about file size or time.
+const UNPARSEABLE_LIST_LIMIT = 50;
+// The same bound for the aliases and merge keys the reader saw and deliberately did not follow.
+const ALIAS_LIST_LIMIT = 50;
+
+// A file in structural scope, read for the structural reader. Never lossy: a read failure, a file past
+// the read bound, and bytes that are not UTF-8 are each a named failure, not a cut or repaired text.
+function readStructuralFile(root, rel) {
+  let bytes;
+  try {
+    const full = path.join(root, rel);
+    if (fs.statSync(full).size > MAX_BYTES) return { ok: false, file: rel, reason: "truncated" };
+    bytes = fs.readFileSync(full);
+  } catch {
+    return { ok: false, file: rel, reason: "read-failure" };
+  }
+  return parseStructuralBytes(rel, bytes);
+}
+
+// The anchor name of an undefined alias is the one place a file's own text reaches a failure record,
+// so it is carried only when it is a plain identifier.
+const SAFE_CODE = /^[A-Za-z0-9_.:-]{1,64}$/;
+
+function failureEntry(f) {
+  const entry = { file: f.file, reason: f.reason };
+  if (typeof f.code === "string" && SAFE_CODE.test(f.code)) entry.code = f.code;
+  if (Number.isInteger(f.documentIndex)) entry.documentIndex = f.documentIndex;
+  if (Number.isInteger(f.offset)) entry.offset = f.offset;
+  if (Number.isInteger(f.line)) entry.line = f.line;
+  if (Number.isInteger(f.column)) entry.column = f.column;
+  return entry;
+}
+
+// Reads every file in structural scope once. Trees are NOT retained: what is kept is the failure (so
+// a consumer can refuse to scan an unparseable file) and bounded evidence of what the reader saw and
+// did not follow. Findings from files that parsed are never affected by files that did not.
+function readStructuralFiles(run) {
+  const failures = new Map();
+  const failed = [];
+  const aliases = [];
+  const merges = [];
+  let aliasTotal = 0;
+  let mergeTotal = 0;
+  let parsed = 0;
+
+  for (const file of run.files) {
+    if (!isStructuralScope(file)) continue;
+    const outcome = readStructuralFile(run.root, file);
+    if (!outcome.ok) {
+      failures.set(file, outcome);
+      failed.push(failureEntry(outcome));
+      continue;
+    }
+    parsed += 1;
+    aliasTotal += outcome.aliases.length;
+    mergeTotal += outcome.merges.length;
+    for (const a of outcome.aliases) {
+      if (aliases.length < ALIAS_LIST_LIMIT) {
+        const at = outcome.locate(a.offset);
+        aliases.push({ file, documentIndex: a.documentIndex, name: a.name, offset: a.offset, line: at.line, column: at.column });
+      }
+    }
+    for (const m of outcome.merges) {
+      if (merges.length < ALIAS_LIST_LIMIT) {
+        const at = outcome.locate(m.offset);
+        merges.push({ file, documentIndex: m.documentIndex, offset: m.offset, line: at.line, column: at.column });
+      }
+    }
+  }
+
+  run.structural = { failures, parsed };
+  run.surface.unparseableFiles = {
+    total: failed.length,
+    files: failed.slice(0, UNPARSEABLE_LIST_LIMIT),
+    omitted: Math.max(0, failed.length - UNPARSEABLE_LIST_LIMIT),
+  };
+  run.structuralSurface = {
+    scope: [".yml", ".yaml", ".json"],
+    filesParsed: parsed,
+    aliasesNotFollowed: { total: aliasTotal, listed: aliases, omitted: aliasTotal - aliases.length },
+    mergeKeysNotApplied: { total: mergeTotal, listed: merges, omitted: mergeTotal - merges.length },
+  };
+}
+
 // ---------------------------------------------------------------------------------------------
 // The run
 // ---------------------------------------------------------------------------------------------
@@ -153,6 +243,8 @@ function createRun(root) {
     aiSurface: { manifest: null, promptAssets: [], toolDefinitions: [] },
     manifest: null,
     toolPermissions: null,
+    structural: { failures: new Map(), parsed: 0 },
+    structuralSurface: null,
 
     // The single writer. `rule` is null for descriptive findings, because binding an observation to
     // a rule would manufacture a verdict out of it.
@@ -722,6 +814,10 @@ function detectInlineSystemPrompt(run, withdrawn) {
   const hits = [];
   for (const file of run.files) {
     if (!isCode(file)) continue;
+    // A YAML or JSON file the structural reader could not read is NOT scanned lexically. Reading its
+    // text anyway would be a guess made after the parser refused, which is the guess the parser
+    // exists to stop making. It is reported below as unknown for these rules instead.
+    if (run.structural.failures.has(file)) continue;
     const read = readText(run.root, file);
     if (!read.ok) continue;
     const split = splitSource(read.text, file);
@@ -749,18 +845,37 @@ function detectInlineSystemPrompt(run, withdrawn) {
     if (gemini >= INLINE_THRESHOLD) hits.push(`${file} (${gemini} chars, systemInstruction parts shape)`);
   }
 
+  // Files that could not be read structurally. An unknown is recorded ALONGSIDE any violation: the
+  // violation stands (compliance keeps it over an unknown), and where nothing was found the unknown
+  // is what stops a clean-looking result from being a pass.
+  const unreadable = [...run.structural.failures.values()];
+  const unknownEvidence = unreadable.slice(0, 10).map((f) => `${f.file} (${f.reason})`);
+  const noteUnreadable = () => {
+    for (const rule of rules) {
+      run.observe({
+        rule,
+        unknown: true,
+        message: `${unreadable.length} YAML or JSON file(s) could not be read structurally, so absence of an inline prompt cannot be established for them.`,
+        evidence: unknownEvidence,
+      });
+    }
+  };
+
   if (hits.length > 0) {
     for (const rule of rules) {
       run.observe({ rule, violation: true, message: `Instruction literal of ${INLINE_THRESHOLD}+ characters passed inline at a model call site.`, evidence: hits.slice(0, 10) });
     }
+    if (unreadable.length > 0) noteUnreadable();
     return;
   }
+  if (unreadable.length > 0) noteUnreadable();
   if (withdrawn) {
     for (const rule of rules) {
       run.observe({ rule, unknown: true, message: "The walk was shortened by a framework exclusion, so absence of an inline prompt cannot be established.", evidence: run.surface.frameworkExcludedDirectories });
     }
     return;
   }
+  if (unreadable.length > 0) return;
   for (const rule of rules) {
     run.observe({ rule, message: "No long instruction literal found at a model call site. A prompt assembled from fragments or fetched at runtime would not be seen." });
   }
@@ -869,6 +984,7 @@ function runDetectors(run) {
   detectToolPermissions(run);
   detectPromptAssets(run);
   detectToolDefinitions(run);
+  readStructuralFiles(run);
 
   // Judgmental, full assurance.
   detectMissingManifest(run);
@@ -899,12 +1015,15 @@ function commandAudit(target, flags) {
   assertBindings(catalog, run.observations.map((o) => o.rule));
 
   const report = {
-    schemaVersion: "1.0",
+    // 1.1: additive. evidenceSurface.unparseableFiles and structuralSurface are new, and the closed
+    // schema admits them in the same change. validate's envelope did not change shape and stays 1.0.
+    schemaVersion: "1.1",
     standard: { id: "ai", version: FRAMEWORK_VERSION },
     project: path.basename(path.resolve(target)),
     auditedAt: new Date().toISOString(),
     notAVerdict: NOT_A_VERDICT,
     evidenceSurface: run.surface,
+    structuralSurface: run.structuralSurface,
     aiSurface: run.aiSurface,
     findings: run.findings,
   };
@@ -917,6 +1036,9 @@ function commandAudit(target, flags) {
     out.push(NOT_A_VERDICT);
     out.push("");
     out.push(`Files read: ${run.surface.filesCollected}`);
+    if (run.surface.unparseableFiles.total > 0) {
+      out.push(`YAML/JSON files that could not be read structurally (unknown, not passed): ${run.surface.unparseableFiles.total}`);
+    }
     if (run.surface.frameworkExcludedDirectories.length > 0) {
       out.push(`Excluded by this tool (completeness not established): ${run.surface.frameworkExcludedDirectories.join(", ")}`);
     }

@@ -62,8 +62,9 @@ These bind every phase and are not renegotiable by any of them.
    acceptance criteria, the criteria stand and the phase is re-planned.
 3. **Unknown is never a pass.** Unavailable, excluded, truncated or unreadable evidence withdraws the
    affected rule to `not-evaluated`. It never produces `passed`.
-4. **Zero third-party dependencies.** Node built-ins and local modules only. No lockfile. Structurally
-   enforced by CI having no install step.
+4. **No install-time or environment-resolved third-party dependency.** Node built-ins and local modules
+   only, plus vendored parser code, which is reviewed repository content whose identity, hashes and
+   licence are pinned. No lockfile. Structurally enforced by CI having no install step and by tests.
 5. **Target-relative policy.** A target's policy is resolved against the target, never against the
    AIStandards checkout. There is no fallback path.
 6. **Boundaries hold.** MachineLearningStandards owns reproducibility, provenance, evaluation and

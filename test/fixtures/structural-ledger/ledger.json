@@ -1,0 +1,195 @@
+{
+  "source": "AIStandards-structural-parser-packets.md section 8.1; accepted by AIStandards-structural-parser-decision-bundle.md sections D and G (owner approval 2026-10-07T00:29:48Z)",
+  "placeholder": "<L> is replaced by 250 characters before the case is run",
+  "entries": [
+    {
+      "id": "c01",
+      "group": "G1/C1: lexical finding today, file-scoped unknown under the structural reader",
+      "completedBy": "ST-57",
+      "label": "YAML invalid (unclosed flow) after valid long system",
+      "file": "p.yml",
+      "probeFile": "cases-c.json",
+      "content": "system: \"<L>\"\nbad: [unclosed\n"
+    },
+    {
+      "id": "c02",
+      "group": "G1/C1: lexical finding today, file-scoped unknown under the structural reader",
+      "completedBy": "ST-57",
+      "label": "YAML invalid (tab indent) with long system",
+      "file": "p.yml",
+      "probeFile": "cases-c.json",
+      "content": "top:\n\tsystem: \"<L>\"\n"
+    },
+    {
+      "id": "c04",
+      "group": "G1/C1: lexical finding today, file-scoped unknown under the structural reader",
+      "completedBy": "ST-57",
+      "label": "YAML invalid bad indent then long system",
+      "file": "p.yml",
+      "probeFile": "cases-c.json",
+      "content": "a: b\n  c: d\nsystem: \"<L>\"\n"
+    },
+    {
+      "id": "c05",
+      "group": "G1/C1: lexical finding today, file-scoped unknown under the structural reader",
+      "completedBy": "ST-57",
+      "label": "JSON trailing comma",
+      "file": "p.json",
+      "probeFile": "cases-c.json",
+      "content": "{\"system\": \"<L>\",}\n"
+    },
+    {
+      "id": "c07",
+      "group": "G1/C1: lexical finding today, file-scoped unknown under the structural reader",
+      "completedBy": "ST-57",
+      "label": "JSON truncated mid-document",
+      "file": "p.json",
+      "probeFile": "cases-c.json",
+      "content": "{\"system\": \"<L>\", \"x\": [1,2\n"
+    },
+    {
+      "id": "c08",
+      "group": "G1/C1: lexical finding today, file-scoped unknown under the structural reader",
+      "completedBy": "ST-57",
+      "label": "JSON single-quoted",
+      "file": "p.json",
+      "probeFile": "cases-c.json",
+      "content": "{'system': '<L>'}\n"
+    },
+    {
+      "id": "c12",
+      "group": "G1/C1: lexical finding today, file-scoped unknown under the structural reader",
+      "completedBy": "ST-57",
+      "label": "invalid UTF-8 bytes before long system",
+      "file": "p.yml",
+      "probeFile": "cases-c.json",
+      "bytesBase64": "//4Kc3lzdGVtOiAieHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eCIK"
+    },
+    {
+      "id": "g05",
+      "group": "G1/C1: lexical finding today, file-scoped unknown under the structural reader",
+      "completedBy": "ST-57",
+      "label": "partial recovery: valid block then invalid flow later (c01 analogue)",
+      "file": "p.yml",
+      "probeFile": "cases-g.json",
+      "content": "system: \"<L>\"\nbad: {a: [1,\n"
+    },
+    {
+      "id": "g06",
+      "group": "G1/C1: lexical finding today, file-scoped unknown under the structural reader",
+      "completedBy": "ST-57",
+      "label": "partial: invalid first, valid long system after (document unparseable top)",
+      "file": "p.yml",
+      "probeFile": "cases-g.json",
+      "content": "bad: {a: [1,\nsystem: \"<L>\"\n"
+    },
+    {
+      "id": "g07",
+      "group": "G1/C1: lexical finding today, file-scoped unknown under the structural reader",
+      "completedBy": "ST-57",
+      "label": "unparseable: duplicate anchor def + long system",
+      "file": "p.yml",
+      "probeFile": "cases-g.json",
+      "content": "a: &x 1\nb: &x 2\nsystem: \"<L>\"\n"
+    },
+    {
+      "id": "g08",
+      "group": "G1/C1: lexical finding today, file-scoped unknown under the structural reader",
+      "completedBy": "ST-57",
+      "label": "role+content where YAML is invalid between them",
+      "file": "p.yml",
+      "probeFile": "cases-g.json",
+      "content": "role: system\nbad: [\ncontent: \"<L>\"\n"
+    },
+    {
+      "id": "d09",
+      "group": "D1-vs-D2 with N1: measured on raw source today, would stop firing once measured in decoded code points",
+      "completedBy": "ST-58 and ST-59",
+      "label": "escapes: 300 raw chars decode to 50 (A x50)",
+      "file": "p.json",
+      "probeFile": "cases-d2.json",
+      "content": "{\"system\": \"\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\"}\n"
+    },
+    {
+      "id": "d09b",
+      "group": "D1-vs-D2 with N1: measured on raw source today, would stop firing once measured in decoded code points",
+      "completedBy": "ST-58 and ST-59",
+      "label": "escapes: A x40 (240 raw, 40 decoded)",
+      "file": "p.json",
+      "probeFile": "cases-d2.json",
+      "content": "{\"system\": \"\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\\u0041\"}\n"
+    },
+    {
+      "id": "d19",
+      "group": "D1-vs-D2 with N1: measured on raw source today, would stop firing once measured in decoded code points",
+      "completedBy": "ST-58 and ST-59",
+      "label": "JSON: 250 raw chars of \n escapes (125 decoded)",
+      "file": "p.json",
+      "probeFile": "cases-d2.json",
+      "content": "{\"system\": \"\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\"}\n"
+    },
+    {
+      "id": "b02",
+      "group": "newly found under the recommendations: claimed only if the owner says so",
+      "completedBy": "ST-58 and ST-59",
+      "label": "anchor on value",
+      "file": "p.yml",
+      "probeFile": "cases-b.json",
+      "content": "system: &a \"<L>\"\n"
+    },
+    {
+      "id": "b03",
+      "group": "newly found under the recommendations: claimed only if the owner says so",
+      "completedBy": "ST-58 and ST-59",
+      "label": "tag on value",
+      "file": "p.yml",
+      "probeFile": "cases-b.json",
+      "content": "system: !!str \"<L>\"\n"
+    },
+    {
+      "id": "d06",
+      "group": "newly found under the recommendations: claimed only if the owner says so",
+      "completedBy": "ST-58 and ST-59",
+      "label": "JSON key escaped system",
+      "file": "p.json",
+      "probeFile": "cases-d2.json",
+      "content": "{\"sys\\u0074em\": \"<L>\"}\n"
+    },
+    {
+      "id": "d07",
+      "group": "newly found under the recommendations: claimed only if the owner says so",
+      "completedBy": "ST-58 and ST-59",
+      "label": "YAML dq key escaped system",
+      "file": "p.yml",
+      "probeFile": "cases-d2.json",
+      "content": "\"sys\\x74em\": \"<L>\"\n"
+    },
+    {
+      "id": "d08",
+      "group": "newly found under the recommendations: claimed only if the owner says so",
+      "completedBy": "ST-58 and ST-59",
+      "label": "JSON role value escaped system + content long",
+      "file": "p.json",
+      "probeFile": "cases-d2.json",
+      "content": "{\"role\":\"\\u0073ystem\",\"content\":\"<L>\"}\n"
+    },
+    {
+      "id": "d17",
+      "group": "newly found under the recommendations: claimed only if the owner says so",
+      "completedBy": "ST-58 and ST-59",
+      "label": "YAML multi-line double-quoted folded literal 250",
+      "file": "p.yml",
+      "probeFile": "cases-d.json",
+      "content": "system: \"aaaa\n  bbb<L>\"\n"
+    },
+    {
+      "id": "d18",
+      "group": "newly found under the recommendations: claimed only if the owner says so",
+      "completedBy": "ST-58 and ST-59",
+      "label": "YAML plain multi-line scalar",
+      "file": "p.yml",
+      "probeFile": "cases-d.json",
+      "content": "system: aaaa\n  bbb<L>\n"
+    }
+  ]
+}
