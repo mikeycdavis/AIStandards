@@ -112,9 +112,10 @@ project has not observed and the provider has not documented is not written down
 
 ### R4 — Keep it consistent with the manifest, and say "unknown" where it is
 
-**The description MUST NOT contradict the system's manifest on the models, tools and data sources it
-declares, and where a fact is not known the description MUST say that it is unknown and who could
-establish it, rather than omitting the question or guessing.**
+**The description MUST NOT contradict the system's manifest on any fact both documents state — the
+models, tools and data sources, and equally the purpose, owner, prompt locations, lifecycle stage and
+autonomy tier where the manifest declares them — and where a fact is not known the description MUST
+say that it is unknown and who could establish it, rather than omitting the question or guessing.**
 
 The manifest is the structured declaration and the narrative says what the structure cannot. Two
 statements about the same system that disagree leave a reader unable to say which is current. An honest
@@ -195,13 +196,10 @@ Three reasons, stated so a reader can disagree with any one of them:
    Whether any of its requirements belongs in a rule at all, and in which reserved namespace, is not
    decided here.
 
-**Severity.** R1 to R5 are `manual-review` obligations in this release. R6 constrains this framework
-and has no validation type.
-
-**No severity is assigned to R1 to R5 in this release.** A severity belongs to a rule's finding, and
-no rule exists here to produce one. A failed manual review is a finding for the reviewer, made under
-the standards the project and its owner apply, not a framework finding; if a rule is later minted
-for any of these requirements its severity is decided then and recorded in its shard.
+**Severity.** R1 to R5 are `manual-review` obligations and a failed review of any of them is
+severity `error`; none is a `SHOULD`. R6 constrains this framework and has no validation type or
+project severity. These are the levels a rule would carry if one is minted; this release emits no
+framework finding at them.
 
 **Exemptibility.** R6 is not exemptible: no circumstance makes it reasonable for a scan to report an
 effect from a presence. R1 to R5 reach a system only where it has a system to describe. That is a
@@ -217,9 +215,9 @@ by a risk tier
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | A document states purpose, users, affected non-users and exclusions | The description exists only in a slide, a thread or someone's head, or is a document that omits any of the four | A short document, including a README passage, that answers all four and is findable must **not** be failed for brevity or form |
-| R2 | Each model, tool, source and approval point in the code appears in the description | A tool callable in code that the description never mentions | A system with no tools or retrieval, said to have none, must not be failed for the empty sections |
-| R3 | The model documentation is referenced by name and revision, or "none" is recorded | A paraphrase of a model card's limitations in the project's words | A reference that names a provider document and its revision, with nothing copied, must **not** be flagged |
-| R4 | No contradiction with the manifest; unknowns carry an owner | A model named in one place and a different one in the other | A section reading "unknown — the vendor does not say; ask the account owner" must **not** be treated as missing |
+| R2 | For each model, its role; the instructions that govern it and where they live; for each tool, its authority; each retrieval source; each approval point, all as they exist in the code | A tool callable in code that the description never mentions, or one named with no statement of its authority; a model with no role; instructions with no location | A system with no tools or retrieval, said to have none, must not be failed for the empty sections |
+| R3 | The model documentation is referenced by name and revision, or "none" is recorded and no capability or limitation is stated that the project has not established | A paraphrase of a model card's limitations in the project's words, or a capability or limitation asserted as fact beside "none" with no observation or provider document behind it | A reference that names a provider document and its revision, with nothing copied, must **not** be flagged |
+| R4 | No contradiction with the manifest on any fact both state; each unknown is recorded with who could establish it | A model, purpose, owner, prompt path, lifecycle stage or autonomy tier that differs between the two; a fact the project does not know that is omitted; a plausible guess written where the project did not know | A section reading "unknown — the vendor does not say; ask the account owner" must **not** be treated as missing |
 | R5 | An owner is named and a recent system change has a matching revision | A prompt changed twice since the description was last edited | A change with no effect on anything the description states needs no revision |
 | R6 | No detector or report here outputs a transparency verdict from presence | A detector that reported "documented" because a file was found | Reporting that a system description was *found*, as an observation with no verdict, is permitted |
 
@@ -267,7 +265,8 @@ owner-approved:
 - **R3**: that model documentation is referenced and not restated, and that capabilities are not
   invented. It applies Standard 7 R2 to this subject; the deference to MachineLearningStandards is the
   boundary review's.
-- **R4**: the consistency requirement with the manifest and the "unknown, and who could establish it"
+- **R4**: the consistency requirement with the manifest across every fact both documents state and
+the "unknown, and who could establish it"
   discipline.
 - **R5**: the owner and revision requirement.
 - **R6**, the constraint on this framework, in the same form as the equivalent requirement in
@@ -275,6 +274,8 @@ owner-approved:
   scaffold is not documentation.
 - **The exclusions in Scope** (model documentation, item 40, validation of the manifest, items 37 and
   38) as division lines, unconfirmed by anyone.
+- **The severity** in Validation (`error` for a failed review of R1 to R5), the level a rule would
+carry; it is this repository's judgment.
 - **The ruling that this standard ships with no catalog rules**, and its three reasons.
 - **The recheck of one sibling file** at the sibling checkout's HEAD, which the boundary review did not
   make.
