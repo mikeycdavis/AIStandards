@@ -75,11 +75,13 @@ no precedent to the review's.
 
 **A project that reports an impact figure MUST state its boundary — at least whether training is
 included, which operations are counted (inference, retrieval, storage, networking, end-user devices),
-and whether embodied hardware is included — and MUST NOT present a figure without one.**
+and whether embodied hardware is included — and MUST NOT present a figure without one, nor compare or
+ratio two figures with different boundaries without stating the difference.**
 
 Two correct figures with different boundaries differ by orders of magnitude. A per-query energy number
 for inference alone, set beside a total for a training run, is not a comparison. The requirement does
-not choose a boundary; it requires that the one used be written next to the figure.
+not choose a boundary; it requires that the one used be written next to the figure, and that a
+comparison across boundaries say so.
 
 ### R2 — Name the method and label each input as measured, estimated, reported or unknown
 
@@ -141,7 +143,7 @@ consumed. Reporting an impact from a presence would turn a setting into a measur
 | Failure | What it looks like | Requirement |
 | --- | --- | --- |
 | Figure without a boundary | A per-query energy number that does not say whether training is included | R1 |
-| Mixed boundaries compared | An inference-only figure set beside a training total | R1 |
+| Mixed boundaries compared | An inference-only figure set beside a training total as though comparable | R1 |
 | Unknown filled silently | A hosted model's energy taken from another model's published figure with no label | R2 |
 | Estimate presented as measurement | A figure computed from token counts and a published coefficient described as measured | R2 |
 | Method unnamed | A single number with no account of how inputs were combined | R2 |
@@ -219,7 +221,7 @@ by a risk tier (Standard 2 R3).
 | --- | --- | --- | --- |
 | R1 | A reported figure states whether training is in or out, which of inference, retrieval, storage, networking and end-user devices are counted, and whether embodied hardware is in or out | A number with no boundary, or one that states only some of the three | A figure that states "training excluded; inference counted, retrieval, storage, networking and end-user devices excluded; operational energy only, embodied hardware excluded" must **not** be faulted for the narrow boundary |
 | R2 | Each input has a status label and the method is named | An estimate described as measured, or an unknown replaced silently | A project that records its hosted model's energy as "unknown" and reports no figure must **not** be reported as failing R2 |
-| R3 | A figure names model or class, period and its assumptions, including the grid intensity and its date where the calculation uses one | A figure with a number and no subject, period or assumptions, or a calculated emissions figure with no grid intensity | A figure that names an old model and an old period, and says so, must **not** be flagged as stale |
+| R3 | A figure names model or class, period and its assumptions, including the grid intensity and its date where the calculation uses one | A figure with a number and no subject, period or assumptions, or a calculated emissions figure whose calculation uses a grid intensity and names none | A figure that names an old model and an old period, and says so, must **not** be flagged as stale |
 | R4 | A neutrality or low-impact claim cites the figure, with offsets reported separately | "Carbon-neutral" with the gross figure absent | A project that publishes a gross figure and separately lists an offset must **not** be flagged for having one |
 | R5 | A projection is labelled as one and names its assumptions | A projection with no projection label, or with no named assumptions | A labelled projection with assumptions must **not** be flagged for being uncertain |
 | R6 | No detector or report in this repository outputs an impact verdict from presence | A detector that reported low-impact because a region name was present | Reporting that a region setting was *found*, as an observation with no verdict, is permitted |
