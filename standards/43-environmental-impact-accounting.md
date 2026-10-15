@@ -189,16 +189,16 @@ Three reasons, stated so a reader can disagree with any one of them:
    mints no id; naming one is a decision for the owner. A proposed rule, if one is natural, is recorded
    in the pull request that introduced this document for per-rule approval, and not here.
 
-**Severity.** A reviewer's finding against R1, R2, R3 or R5 is reported at **warning** severity: the
-figure may still be honest, and what is missing is the account of it. A finding against R4 is reported
-at **error** severity, because it is a claim with nothing behind it and R4 is not exemptible. These
-levels are this repository's judgment, listed in Additions, and are not owner-approved. R1 to R5 are
-also `manual-review` obligations where a figure, claim or projection exists:
-that a boundary, method, assumptions and labels are present and agree with the claim is a reviewable
-record. Whether a figure or a projection is *correct* is **not-evaluable** and is not reported as
-reviewed. R6
-constrains this framework and has no validation type, because the thing it prohibits is a behaviour of
-the tool.
+**Severity.** The standard separates a missing account from an observed failure. A reviewer's
+finding that a record, statement or label the requirement asks for is missing or incomplete is reported
+at **warning** severity: the system may behave well, and what is missing is the account of it. A
+finding that review has *observed* a falsifier occurring in the system or its documentation — the
+behaviour or claim the requirement forbids actually present — is reported at **error** severity, as is
+any finding against R4, which concerns a claim or a control whose absence is itself the failure, and a
+violation of R6 by a detector or report. These levels are this repository's judgment, listed in
+Additions, and are not owner-approved. R1 to R5 are also `manual-review` obligations in this release;
+the validation type and the severity are different things. R6 constrains this framework and has no
+validation type, because the thing it prohibits is a behaviour of the tool.
 
 **Exemptibility.** R6 is not exemptible, for the reason R6 of
 [Standard 25](25-grounding-and-hallucination-control.md) is not. R4's prohibition on a neutrality or
@@ -233,11 +233,14 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 except. A project that knowingly does not meet one records that in its own documents; Standard 2's
 dispositions apply to the application of a rule, and this standard has none.
 
-**Attestations and expiry.** This release provides no attestation mechanism for these records, and no
-record under this standard expires on a schedule. [Standard 2](02-ai-risk-tiering-and-applicability.md)'s
-attestation and expiry machinery attaches to catalog rules, and none exists here; attestations are
-Phase 4 work. Review-staleness is event-driven only: a record is stale when one of the events below
-occurs, and nothing in this release detects that.
+**Attestations and expiry.** No attestation is produced for these records in this release.
+[Standard 6](06-standard-structure-and-rule-identity.md) R8 makes `manual-review` rules attestable by
+default and `not-evaluable` ones never attestable, but it governs catalog rules, none exists here, and
+the attestation mechanism itself is later work ([Standard 5](05-verdict-vocabulary.md) records the
+`attested` disposition as not yet produced). No record under this standard expires on a schedule;
+[Standard 2](02-ai-risk-tiering-and-applicability.md) R5's event-driven expiry concerns applicability
+declarations and does not apply to these records. Review-staleness is event-driven only: a record is
+stale when one of the events below occurs, and nothing in this release detects that.
 
 **What invalidates a recorded figure.** A figure that names a completed period remains a true statement
 about that period after any change below; it stops describing the system as it now runs, and it is
@@ -278,8 +281,9 @@ none of it owner-approved:
 - **R6**, the constraint on this framework, in the same form as the equivalent requirement in
   [Standard 25](25-grounding-and-hallucination-control.md) and
   [Standard 33](33-ai-observability.md).
-- **The severity assignments** (warning for R1, R2, R3 and R5; error for R4) and the statement that no
-  attestation or scheduled expiry exists in this release.
+- **The severity assignments** (warning for a missing account, error for an observed failure, for R4
+  and for a detector's violation of R6) and the statement that no attestation or scheduled expiry
+  exists in this release.
 - **That this standard sets no target, threshold or method**, and the exclusions in Scope as division
   lines, which no one has confirmed.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
