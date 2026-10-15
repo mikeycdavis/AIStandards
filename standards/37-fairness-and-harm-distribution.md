@@ -2,23 +2,18 @@
 
 An AI system's output is rarely wrong in the same way for everyone. A model that is right 95% of the
 time can be right 99% of the time for one group of people and 80% of the time for another, and the
-figure a project reports — the average — hides that gap by construction. "The system is fair" is a
-description of that hidden distribution, and it is not a requirement: it names no group, no harm, no
-measure, and no observation that would show the claim false.
+average hides that gap by construction. "The system is fair" is a description of that hidden
+distribution, and it is not a requirement: it names no group, no harm, no measure, and no observation
+that would show the claim false.
 
-Three different things are routinely run together, and this standard exists to keep them apart. A
-**harm** is something a person bears because of what the system output or did: a denied service, a
-wrong label, a worse answer, an exposure. A **disparity** is a difference in how often, or how
-severely, that harm falls on different groups. And **fairness** is a *judgment* about whether a
-disparity is acceptable — a judgment that depends on a chosen measure, a chosen comparison and a
-context, and that is not a number the system can emit by itself.
-
-The failure this standard is written against is taking the aggregate for the distribution, and a
-statement that a system was "tested for bias" for a finding that it treats groups acceptably.
+Three things are routinely run together. A **harm** is something a person bears because of what the
+system output or did. A **disparity** is a difference in how often or how severely a harm falls on
+different groups. **Fairness** is a judgment about whether a disparity is acceptable, and it depends on
+a chosen measure, a chosen comparison and a context; the system cannot emit it by itself.
 
 Source: item 37 of [`artifacts/prompts/ai-standards-spec.md`](../artifacts/prompts/ai-standards-spec.md),
-derived from the "fairness" token of the "Accessibility, fairness, transparency, and user disclosure"
-bullet of [`artifacts/prompts/original_prompt.md`](../artifacts/prompts/original_prompt.md).
+derived from the "fairness" token of the "Accessibility, fairness, transparency, and user
+disclosure" bullet of [`artifacts/prompts/original_prompt.md`](../artifacts/prompts/original_prompt.md).
 
 > **Numbering is frozen by the specification.** Item 37 of
 > [`artifacts/prompts/ai-standards-spec.md`](../artifacts/prompts/ai-standards-spec.md), which
@@ -28,406 +23,235 @@ bullet of [`artifacts/prompts/original_prompt.md`](../artifacts/prompts/original
 > after a search of nine packs found no owner, and that review's substantive half is human judgment and
 > carries `humanSignOff: null`. No maintainer of any adjacent pack has confirmed it.
 >
-> **The brief supplies one word and this standard supplies the rest.** The brief's bullet names
-> "fairness" and says nothing about what a system must do about it. The item is class `D` because its
-> subject token is the brief's own; the requirements below are this repository's judgment about that
-> subject, and the [Additions](#additions-this-standard-makes-beyond-the-source) section lists them
-> rather than describing them.
+> **The brief supplies one word and this standard supplies the rest.** The item is class `D` because
+> its subject token is the brief's own; the requirements are this repository's judgment, and the
+> [Additions](#additions-this-standard-makes-beyond-the-source) section lists them.
 
 ## Scope
 
-Applies to any AI system within this pack's scope as [Standard 1](01-ai-system-manifest.md) draws
-it — a repository that invokes a model, retrieves context for one, or acts on a model's output —
+Applies to any AI system within this pack's scope as [Standard 1](01-ai-system-manifest.md) draws it
 whose output or action affects people, directly or through a decision another person or system makes
 from it.
 
-Covers: naming who is affected and how; the measure and the comparison behind any fairness claim;
-reporting results by group instead of only in aggregate; how harm is distributed, including harm that
-moves rather than disappears when a mitigation is applied; a route for a disparate outcome to be
-raised; and the limit of what this framework can say about any of it.
+Terms, defined once and used verbatim below:
 
-Two terms, each defined here rather than by the brief:
-
-- An **affected group** is any set of people the system's output reaches that a project, a
-  regulator, an affected person or a reviewer could reasonably distinguish and compare: by a
-  characteristic the law protects in some jurisdiction, by language, by region, by device, by how
-  long they have used the system, or by any other division along which outcomes could differ. This
-  standard supplies no list. Which characteristics are protected is a matter of law and context, and
-  differs between jurisdictions.
-- A **harm distribution** is how a given harm falls across affected groups: how often, how severely,
-  and with what means of recourse.
+- **Fairness record** — for each output or decision a person bears a consequence from, the groups it
+  reaches, the harm, and who bears it, including people who are not users of the system.
+- **Fairness basis** — the measure used, the reason that measure was chosen, the groups compared, the
+  data it was computed from and the criterion applied, in a dated record that precedes the result.
+- **Fairness statement** — a statement that a system is fair, unbiased or equitable, or treats groups
+  equally, comparably or without bias.
+- **Group report** — a reported quality, error rate or outcome given for a recorded group together with
+  the size of the group it was computed on.
+- **Distribution record** — for each harm in the fairness record: which groups bear it and how, how
+  proxies were looked for, each proxy identified, and, where a mitigation reduces a harm for one group
+  by shifting it to another, the groups the shift falls on.
+- **Disparity route** — a way for affected people, operators and reviewers to report a suspected
+  disparate outcome, and a recorded disposition for each report, including one found well-founded.
+- **Fairness verdict** — a statement that a system is fair, unbiased or free of disparity, that an
+  evaluation of it was adequate, or that a mitigation works.
+- **Presence artifact** — a fairness document, a bias test, an evaluation tool, a declared group list
+  or a stated metric.
+- **Fairness stand-in** — a list of protected characteristics, a preferred measure or a numeric
+  threshold that would take the place of the project's own record.
+- **Framework output** — what a detector, catalog rule, audit finding or generated report of this
+  framework states.
 
 It does **not** cover, and claims none of the ground of:
 
-- **Item 38, Accessibility of AI Features** — whether people with disabilities can use the feature.
-  Unequal *usability* is item 38's subject; unequal *outcome* is this one's. A system can fail in
-  both ways, and each standard keeps its own half.
-- **Item 39, Transparency and System Documentation** and **item 40, User Disclosure of AI
-  Involvement** — what is documented and what a user is told. R1 below asks for a record of affected
-  groups and harms; it does not ask that the record be shown to a user.
-- **Personal data handling.** [Standard 13](13-personal-data-in-ai-systems.md) governs real personal
-data in prompts, traces, evaluation fixtures and model-adjacent stores. Whether a group attribute
-may lawfully be collected for a per-group measurement is a legal matter that no written standard of
-this pack governs; this standard does not restate Standard 13, and R3 records the limit where a
-group
-cannot be measured.
-- **Evaluation planning.** How an evaluation is planned, scored and reported is
-  [Standard 17](17-evaluation-plans-for-generative-systems.md). A per-group result is an evaluation
-  result and inherits those requirements.
-- **Legal compliance.** Whether a disparity is lawful in a jurisdiction is a legal question this
-  standard does not answer and must not be read as answering.
+- **Accessibility** and **user disclosure**, which are items 38 and 40; unequal *outcome* is this item,
+  and whether a person can use a feature is not.
+- **Documentation for a reader** of the repository, which is item 39.
+- **Personal data in prompts, traces and evaluation fixtures**, which is
+  [Standard 13](13-personal-data-in-ai-systems.md). Whether a group attribute may lawfully be collected
+  is a legal matter no written standard of this pack governs.
+- **Evaluation planning**, which is [Standard 17](17-evaluation-plans-for-generative-systems.md); a
+  group report is an evaluation result and inherits it.
+- **Legal compliance**, which this standard does not answer.
 
 **Boundary posture O — owned outright.** The boundary review lists this item among those searched
-across nine packs for an owner and not found. [Standard 7](07-boundary-with-adjacent-standards.md)
-records the ownership line "Fairness and harm distribution — AIStandards — Owns. No existing owner".
-The boundary review records no adjacent standard as evidence for this item, and none is cited here.
+across nine packs for an owner and not found; [Standard 7](07-boundary-with-adjacent-standards.md)
+records "Fairness and harm distribution — AIStandards — Owns. No existing owner". The review records
+no adjacent standard as evidence for this item, and none is cited here.
 
 ## Requirements
 
-### R1 — Name the affected groups and the harm before claiming anything about fairness
+### R1 — Keep a fairness record
 
-**A system whose output reaches people MUST record, for each kind of output or decision that a person
-bears a consequence from, which groups it is expected to reach, what harm an error or a poor outcome
-would be, and who would bear it, and MUST NOT describe a system as fair, unbiased or equitable without
-that record.**
+**A system whose output or action affects people MUST have a fairness record.**
 
-Fairness has no meaning without a subject. "Fair to whom, about what?" is the question every later
-requirement answers, and a system that cannot answer it has no basis for the claim and no basis for
-the test. The record may legitimately say that no individual-level consequence arises — a system that
-only reorders internal tickets — and that is a reasoned finding, not a gap; it is recorded as one.
+A record may legitimately say that no individual consequence arises; that is a finding, and it is
+recorded as one. It is a document, not a manifest field: `schemas/ai-system-manifest.schema.json` is
+closed and has no property for it.
 
-The record is a document, not a manifest field. `schemas/ai-system-manifest.schema.json` is closed and
-has no property for it, and nothing in this requirement asks an adopter to write a field that schema
-rejects.
+### R2 — Back every fairness statement with the record and the basis
 
-### R2 — Name the measure and the comparison behind any fairness or parity claim
+**A fairness statement MUST be accompanied by the fairness record and the fairness basis, and MUST NOT
+be made without them.**
 
-**A statement that a system is fair, unbiased or equitable, or treats groups equally, comparably or
-without bias, MUST name the measure used, the reason that measure was chosen, the groups compared, the
-data it was computed from and the threshold or criterion that was applied, and MUST NOT be stated as
-an unqualified property of the system. The measure and criterion MUST be recorded before the result
-they judge.**
+Fairness measures are not interchangeable and cannot all hold at once; which to prefer is the
+project's judgment, and this standard fixes neither a measure nor a threshold. A figure with no named
+measure is unreadable: it cannot be compared with the next run.
 
-Fairness measures are not interchangeable and, in general, cannot all hold at once: equal selection
-rates, equal error rates and equal calibration are different claims, and satisfying one can require
-violating another. Which to prefer is a judgment about the context, and it is the project's to make
-and to record. This standard does not choose a measure and does not fix a threshold; it asks that the
-choice be visible so that a reader can disagree with it.
+### R3 — Report by group
 
-A parity figure with no named measure is not wrong, it is unreadable: it cannot be compared with the
-next run, and it cannot be held to a claim.
+**Every reported quality, error rate or outcome MUST be given as a group report for each group in the
+fairness record that can be measured, and each group that cannot be measured MUST be stated as not
+measured, with the reason.**
 
-### R3 — Report results by group, and record where a group cannot be measured
+An aggregate is dominated by the largest group. "Not measured" is a finding about the evaluation; it
+is never presented as parity.
 
-**Where a system's quality, error rate or outcome is reported, the report MUST give the figure of
-each affected group recorded under R1 that can be measured, with the size of the group it was
-computed on, and MUST NOT be limited to an aggregate; where a group cannot be measured, the report
-MUST record that as a limit of the evaluation, with the reason, and MUST NOT present the absence of
-a measurement as parity.**
+### R4 — Keep a distribution record
 
-An aggregate is dominated by the largest group. A group that is a small fraction of the evaluation
-set can be wrong in most of its cases and move the headline by less than its noise. The requirement is
-the disaggregated figure, with group sizes, because a rate computed on a handful of cases is a
-different claim from one computed on thousands.
+**Each harm in the fairness record MUST have a distribution record.**
 
-A group often cannot be measured: the attribute was never collected, may not be lawfully collected,
-or may be collected only in a form that is itself unreliable. That is a real constraint and the
-requirement is only that it be stated. "No disparity found" is a finding about a measured group; for
-an unmeasured one the honest entry is "not measured", with the reason.
+Removing a sensitive attribute from the inputs does not remove it from the outcomes: a model finds
+correlates such as postcode, device or language whether or not anyone asked it to.
 
-Collecting or inferring a group attribute to do this is subject to the law that governs it, and,
-where the attribute is placed in prompts, traces, evaluation fixtures or other model-adjacent
-stores, to [Standard 13](13-personal-data-in-ai-systems.md). This requirement does
-not ask anyone to collect a sensitive attribute they may not, and it does not treat an inferred one as
-a record of the person's characteristic.
+### R5 — Provide a disparity route
 
-### R4 — Record how the harm is distributed, and where a mitigation moves it
+**A system whose output or action affects people SHOULD have a disparity route.**
 
-**A project MUST record, for each harm identified under R1, which groups bear it and how, MUST
-record how proxies were looked for and any proxy identified through which a group difference could
-reach an outcome without the group attribute being an input, and MUST record where
-a mitigation reduces a harm for one group by shifting it to another.**
+Pre-deployment measurement covers the groups a project thought of; the others are found by the people
+they happen to. Incident handling is item 34's subject (AI Incident Response, unwritten in this release).
 
-Removing a sensitive attribute from the inputs does not remove it from the outcomes: postcode, device,
-language and purchase history correlate with groups, and a model finds those correlations whether or
-not anyone asked it to. "The model does not use X" is a claim about inputs; the harm is a property of
-outputs.
+### R6 — This framework issues no fairness verdict and carries no fairness stand-in
 
-A mitigation is also a change, and a change has a distribution. A threshold lowered to reduce one
-group's false rejections raises another group's false acceptances; a filter that removes harmful
-output removes some groups' dialects more than others. Recording the shift is the requirement; the
-acceptability of it is a decision, and it is a human one.
+**No framework output MAY state a fairness verdict because a presence artifact is present, and no
+framework output MAY supply a fairness stand-in.**
 
-Harm also reaches people who are not the system's users — a person who is described, scored, searched
-for or identified by a system they never touched. R1 and R4 apply to them.
-
-### R5 — Provide a route by which a disparate outcome can be raised and examined
-
-**A system SHOULD give affected people, operators and reviewers a route by which a suspected
-disparate or unfair outcome can be reported, and SHOULD record what happens to such a report,
-including when it is found to be well-founded.**
-
-Pre-deployment measurement covers the groups and cases a project thought of. The cases it did not are
-found by the people they happen to, and a route that exists but ends in no action is a log line. This
-requirement is a SHOULD because what a route looks like depends on the system — a public interface, an
-internal review queue, an operator escalation — and because incident handling is its own subject
-(item 34, unwritten in this release). Where a report is found well-founded, the claim under R1 to R4
-that it contradicts no longer stands (see Exceptions and staleness).
-
-### R6 — This framework MUST NOT report a system fair, or a disparity absent, from the presence of something
-
-**No detector, rule, audit finding or generated report in this framework MAY state that a system is
-fair, unbiased or free of disparity, that a fairness or bias evaluation was adequate, or that a
-mitigation works, because a fairness document, a bias test, an evaluation tool, a declared group list
-or a stated metric is present in the repository. This framework MUST NOT supply a list of protected
-characteristics, a preferred measure or a numeric threshold that would stand in for the project's
-own record under R1 and R2.**
-
-This is a constraint on the framework, not on a project. A repository can show that a fairness
-document exists, that a bias-testing library is imported, or that a metric is named. It cannot show
-that the groups chosen were the groups that matter, that the data measured the people the system
-reaches, or that the system's behaviour in use resembles its behaviour in the test. Reporting a pass
-from any of them would turn the presence of an exercise into a verdict about people.
-
-The second sentence is a boundary of competence. Which attributes the law protects, and which measure
-is appropriate, are contextual and jurisdictional, and a framework that shipped a list or a threshold
-would present a judgment from one context as a standard for all of them.
-
-A fairness evaluation that has never been shown to detect a disparity is not demonstrated to work;
-it is shown by a disparity it finds in a case where one was put there. That is a note on project
-evidence, not a requirement.
+This is a constraint on the framework, not on a project. A repository can show that a fairness document
+exists; it cannot show that the groups chosen were the groups that matter, that the data measured the
+people the system reaches, or that behaviour in use resembles behaviour in the test. Which attributes
+the law protects and which measure suits a context are contextual and jurisdictional.
 
 ## Failure modes
 
-| Failure | What it looks like | Requirement |
-| --- | --- | --- |
-| Fairness without a subject | "Our system is fair" with no group, harm or decision named | R1 |
-| Harm unexamined because unnoticed | No record of who bears an error; the consequence is discovered by the person it fell on | R1 |
-| Unreadable parity | "Parity achieved" or "bias score 0.02, so unbiased" with no measure, groups, data or threshold | R2 |
-| Measure shopping | A measure chosen after the run because it passed, never recorded as a choice | R2 |
-| Aggregate as verdict | A single accuracy figure reported while one group's error rate is several times another's | R3 |
-| Unmeasured read as equal | No group-level figure exists and the report says no disparity was found | R3 |
-| Unmeasured group omitted without a stated limit | A recorded group has no figure and no entry saying it was not measured, or the entry gives no reason | R3 |
-| Tiny-group figure | A rate reported for a group of a few cases with no size alongside it | R3 |
-| Proxy not looked for | The sensitive attribute is dropped from inputs, no record shows proxies were looked for, and the outcome still tracks it | R4 |
-| Harm moved, reported as reduced | A mitigation lowers one group's rate and raises another's, and only the first is reported | R4 |
-| Non-user left out | The person scored or described by the system is not in any record | R1, R4 |
-| Route ending in nothing | Reports are received, logged and never examined | R5 |
-| Presence read as outcome | A framework report of "fair" because a fairness document or a bias library is present | R6 |
-| Framework-supplied list | A list of protected attributes, a preferred measure or a numeric threshold shipped by this framework | R6 |
+| Requirement | Failure |
+| --- | --- |
+| R1 | A system that scores, classifies, generates for or acts on people has no record of who bears its errors, or the people it describes but who never use it are in no record |
+| R2 | "The system is fair" with no record, or with a measure, groups, data or criterion missing, or a measure chosen after the result it passed |
+| R3 | An aggregate is reported while one group's error rate is several times another's; a group with no measurement is reported as parity; a group figure has no size |
+| R4 | A harm has no distribution record; the sensitive attribute is dropped from inputs and no record shows proxies were looked for |
+| R5 | No route exists, a route is closed to one audience, or reports are received and never examined |
+| R6 | A framework output declares a system fair because a fairness document is present, or ships a list, preferred measure or threshold |
 
 ## Evidence
 
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
-| R1 | A record of each output kind with its affected groups, harm and bearer, or a reasoned no-individual-consequence finding; for any fairness statement, that record | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | The measure, groups, data, criterion and the reason for the choice, for each fairness claim, in a dated record that precedes the result | The project's evaluation records and published statements | Human review |
-| R3 | Per-group results with group sizes, and a statement of each group that was not measured and why | The project's evaluation results ([Standard 17](17-evaluation-plans-for-generative-systems.md) governs a plan, if any) | Human review of the records |
-| R4 | The harm-by-group record, the proxies identified and how they were looked for, and, where a mitigation shifts harm, the groups the shift falls on | The project's analysis documents and evaluation results | Human review |
-| R5 | The route, and a record of what became of reports received | Project operations records | Human review |
-| R6 | The absence of any detector that reports fairness from presence | This repository's own detectors and tests | Code review; see Implementation |
+| R1 | The fairness record | A project document the project names; **no manifest or policy field exists for it** | Human review |
+| R2 | The fairness record and the fairness basis, dated before the result | The project's evaluation records and published statements | Human review |
+| R3 | The group reports and the not-measured entries with reasons | The project's evaluation results | Human review |
+| R4 | The distribution records | The project's analysis documents | Human review |
+| R5 | The disparity route and its dispositions | Project operations records | Human review |
+| R6 | The absence of any framework output of the kind R6 forbids | This repository's catalog, detectors, reports and tests | Code review |
 
-Evidence for R1 to R5 is a human-authored record. A document naming a group, a measure or a route
-establishes that the project wrote it down, and says nothing about whether the running system treats
-those groups as claimed; the reviewer reads what is claimed against the results that would show it.
-
-**Fairness of a running system is not evaluable from a repository.** A project's own account of its
-measurements is evidence about an earlier run, a particular population and a particular configuration.
-The property of the next response, to the next person, is not-evaluable.
+A document establishes only that the project wrote something down. Whether a running system treats
+groups as claimed is not-evaluable from a repository.
 
 ## Validation, severity, and exemptibility
 
 **This standard has no catalog rules of its own in this release.**
-[Plan 02 section 6](../artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md) requires
-every standard to cite at least one rule or record in its Validation section why it ships with none;
-this is that record.
+[Plan 02 section 6](../artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md) requires every
+standard to cite at least one rule or record in its Validation section why it ships with none; this is
+that record.
 
-Three reasons, stated so a reader can disagree with any one of them:
+1. **There is no artifact a rule could read.** Both schemas are closed and have no place for a fairness
+   record. Adding a field is a schema-versioning decision outside this slice (plan 02 section 8).
+2. **R2 to R5 concern analysis and behaviour, not files.** A detector reading source would test for a
+   presence artifact, which R6 forbids this framework to report as a result, and would have to carry a
+   fairness stand-in, which R6 also forbids.
+3. **No shard exists for the namespace.** `fairness` is a reserved segment in `scripts/catalog.mjs` with
+   no shard. This standard mints no id.
 
-1. **There is no artifact a rule could read.** A rule for R1 would look for a record of affected
-   groups and harms, and neither `schemas/ai-system-manifest.schema.json` nor
-   `schemas/ai-policy.schema.json` has a place to put one; both are closed. A rule failing every
-   project for omitting what no schema accepts would measure this framework's own incompleteness and
-   blame the project for it. Adding a schema field is a schema-versioning decision, outside this slice
-   (plan 02 section 8).
-2. **R2 to R5 concern analysis and behaviour, not files.** Whether a measure suits a context, whether a
-   group was the right one to compare, and whether a route leads to action are not properties of a
-   checkout. A detector reading source would be testing for the presence of an exercise, which R6
-   forbids this framework from reporting as a result, and any detector would have to embed a list of
-   groups or a threshold, which R6 also forbids.
-3. **No shard exists for the namespace.** `fairness` is a reserved segment in `scripts/catalog.mjs` and
-   has no shard. This standard mints no id and edits no shard. Whether a rule is wanted, which
-   validation type it would take and what it would read are decisions this release does not take.
+**Validation type and severity.**
 
-**Severity.** R1 to R4 are `manual-review` obligations and a failed review is severity `error`. R5
-is a `SHOULD`, also `manual-review`, and a failed review is `warning`. The inference-time property
-of a system treating groups as claimed is **not-evaluable**, is not the validation type of any
-requirement, and is not reported as reviewed. R6 constrains this framework and has no validation
-type or project severity, because the thing it prohibits is a behaviour of the tool. These are the
-levels a rule would carry if one is minted; this release emits no framework finding at them.
+| Requirement | Validation type | Severity |
+| --- | --- | --- |
+| R1, R2, R3, R4 | `manual-review` | `error` |
+| R5 | `manual-review` | `warning` |
+| R6 | none (a constraint on the framework) | none |
 
-**Exemptibility.** R6 is not exemptible: no project circumstance makes it reasonable for a scan to
-report an effect from a presence, or to apply one jurisdiction's list to another's. R1's prohibition
-on describing a system as fair without the record, and R2's prohibition on an unqualified fairness
-claim, are not exemptible either, because an exception would record a project as knowingly making a
-claim no evidence can support. Each remaining duty reaches a system only on its own condition: R1's
-record where output affects people; R2's duties where a fairness or parity statement is made; R3
-where results are reported; R4 for each harm identified under R1; R5, a SHOULD, where output affects
-people. Where a condition does not hold the duty does not arise. That is a scope condition, not a
+These are the levels a rule would carry if one is minted; this release emits no framework finding at
+them.
+
+**Exemptibility.** R6 is not exemptible, and neither is R2: an exception would record a project as
+knowingly making a claim no evidence can support. Each other requirement arises only on its own
+condition; where its condition does not hold it does not arise. That is a scope condition, not a
 disposition: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4's dispositions are recorded
-against catalog rules, this standard has none, and the policy schema offers no declaration for it.
-No level here is lowered by a risk tier (Standard 2 R3).
+against catalog rules, and this standard has none. No level here is lowered by a risk tier (Standard 2
+R3).
 
 ## Tests and falsifiers
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | Each output or decision a person bears a consequence from has a recorded group set, harm and bearer, covering people who are not users | Any such output or decision with no record of who bears an error; a person the system scores or describes who is in no record; a statement that the system is fair, unbiased or equitable with no R1 record | A system recording a reasoned "no individual consequence" finding must **not** be reported as missing a record |
-| R2 | A fairness claim names a measure, the reason it was chosen, the groups, the data and a criterion, in a record dated before the result it judges | "Fair", "equitable" or "bias-free" with any of them missing, a measure with no recorded reason for its selection, or a measure or criterion recorded only after the result it judged | A statement reporting a named measure on named groups with the number and no stronger claim must **not** be flagged |
-| R3 | A report carries per-group figures with sizes and states, with the reason, each recorded group that was not measured | An aggregate-only report where a recorded group was measurable; a report stating no disparity or parity for a group that has no measurement; a per-group figure with no group size; a recorded group with neither a figure nor a recorded not-measured entry with a reason | A report stating "not measured, attribute not lawfully collected" must **not** be read as a failure to evaluate; a group with a very small size reported as such is not a defect |
-| R4 | Each identified harm has a record of which groups bear it and how; every proxy the project has identified is recorded, with how proxies were looked for; where a mitigation reduces a harm for one group by shifting it to another, the shift is recorded with the groups it falls on | A harm with no record of who bears it; an identified proxy left unrecorded; no record of how proxies were looked for; a harm record that says who bears it and not how; a mitigation that shifts harm reported with its benefit to one group and no record of where the harm went | A project recording that no proxy was identified, with how it looked, must **not** be failed for the empty list; a system with no mitigation, or a mitigation with no harm shift, needs no shift record |
-| R5 | A route exists and a report received has a recorded disposition | No route exists; a route unavailable to one of affected people, operators or reviewers; a route that discards or never reads reports; a well-founded report with no recorded outcome | A system with no individual-level consequence (R1) must not be failed for having no route |
-| R6 | No detector, catalog rule, finding or report in this repository outputs a fairness verdict, an adequacy verdict for an evaluation, an effectiveness verdict for a mitigation, or a preferred measure, from presence, and none supplies a protected-attribute list or threshold | A detector, catalog rule or report that declared a system fair, adequate or effective because a bias-testing import or a fairness document was present, or that named a default measure, shipped a protected-attribute list, or applied a numeric threshold to a fairness or parity result or supplied one as a default for a project's own record | Reporting that a fairness document or library was *found*, as an observation with no verdict, is permitted |
+| R1 | A fairness record exists | Output or action that affects people with no fairness record | A record finding that no individual consequence arises is not a missing record |
+| R2 | Each fairness statement is accompanied by the fairness record and the fairness basis | A fairness statement without either | A statement of a named measure on named groups, with the number and no fairness statement, is not flagged |
+| R3 | Each reported figure is a group report for every measurable recorded group, and each other group is stated as not measured with the reason | An aggregate-only report where a recorded group was measurable; a recorded group with no figure and no not-measured entry; a not-measured group presented as parity; a figure with no size | A "not measured, attribute not lawfully collected" entry is not a failure to evaluate |
+| R4 | Each harm in the fairness record has a distribution record | A harm with none, or one lacking the proxy search or an identified proxy | A record of no proxy identified, with how it was looked for, is complete; a system with no mitigation shift needs no shift entry |
+| R5 | A disparity route exists | No route, or one closed to affected people, operators or reviewers, or a report with no recorded disposition | A system whose output affects nobody (R1) has no route to find |
+| R6 | No framework output states a fairness verdict from a presence artifact or supplies a fairness stand-in | A framework output that declared a system fair, adequate or effective because a presence artifact was found, or that shipped a list, preferred measure or threshold | Reporting that a presence artifact was *found*, as an observation with no verdict, is permitted |
 
-**No falsifier is automated in this release.** No rule reads a fairness artifact, so no detector
-checks R1 to R5; they are enforced by review or not at all, and the last requirement holds by
-construction. The falsifiers in the table are observable by a reviewer reading the record or the
-running system: they are manual, not absent. The negative controls state what review must not do to
-a project that has the right subject and does the right thing.
+**No falsifier is automated in this release.** No rule reads a fairness record, so no detector checks
+R1 to R5; they are held by review, and R6 holds today because no such framework output exists. The
+falsifiers are manual, not absent.
 
 ## Exceptions and staleness
 
-There is no policy-level exception mechanism in this release, because no rule exists to except;
-[Standard 2](02-ai-risk-tiering-and-applicability.md) R4's dispositions apply to the application of
-a rule, and this standard has none. A duty whose condition does not hold does not arise, and the
-project's own documents say why (see Validation); R1's and R2's prohibitions are not exemptible.
+There is no policy-level exception mechanism in this release, because no rule exists to except.
 
-**What invalidates a recorded group set, measure or result.** Each of these is a different subject, and
-a record made before the change describes the earlier one:
+| Requirement | Invalidated by |
+| --- | --- |
+| R1, R2, R3, R4 | A change of model, of training, retrieval or evaluation data, of the decision the output feeds or the threshold applied to it, of the people it reaches, or a mitigation; and a well-founded report of a disparity, which invalidates only the claim it contradicts |
+| R5 | A change in who the system reaches or in how reports are received |
+| R6 | Nothing: it constrains this repository |
 
-- a change of model identifier, or a model silently updated behind an alias
-  ([Standard 1](01-ai-system-manifest.md) R4 asks for the identifier to be pinned);
-- a change of training, fine-tuning, retrieval or evaluation data, or of how it was sampled;
-- a change of the decision the output feeds, the threshold applied to it, or the people it reaches —
-  a new region, language, customer segment or channel;
-- a mitigation, which changes the distribution it was meant to improve (R4);
-- a change in what the system does with a group attribute, or in what may lawfully be collected.
-
-**Staleness is asymmetric here.** A fairness record becomes false when a population or a configuration
-changes, and expanding to a new group of users is the edit nobody treats as a change to the system. A
-parity figure measured on last year's population describes last year's system. Nothing in this release
-detects the transition; the events above are a note to a future reader.
-
-**Contradicted by operation.** A report, complaint or observation of a disparate outcome that a
-project judges well-founded invalidates, until re-examined, only the specific claim or result under
-R1 to R4 that it contradicts; a report that confirms a recorded disparity corroborates the record,
-and unrelated records stand. What happens operationally is item 34's subject (AI Incident Response,
-unwritten in this
-release); this standard says only that the contradicted claim no longer stands.
+Nothing in this release detects the transition. Operational handling is item 34's subject.
 
 ## Additions this standard makes beyond the source
 
-**Nearly all of it.** The brief contributes one word, "fairness", inside a bullet of four subjects. It
-states no requirement, level or evidence for any of them. The item is class `D` because its subject
-token is derived from the brief; the requirements are not derived. Specifically authored here, none of
-it owner-approved:
+The brief contributes one word, "fairness", inside a bullet of four subjects. It states no
+requirement, level or evidence. Specifically authored here, none of it owner-approved:
 
-- **The invalidation list and the rule that a well-founded report invalidates the record** in
-Exceptions and staleness.
-- **R1 in full**: the requirement to record affected groups, harm and bearer, and the ruling that a
-  reasoned finding of no individual consequence is a legitimate record.
-- **R2 in full**, including the requirement to record why a measure was chosen and to record it
-before the result, and the ruling that
-a fairness claim is not exemptible when unqualified, and the
-  decision to leave the choice of measure and threshold to the project.
-- **R3 in full**: disaggregated reporting with group sizes, and the rule that an unmeasured group is
-  reported as unmeasured and not as parity.
-- **R4 in full**: the harm-by-group record, the proxy requirement and the requirement to record a
-  harm shifted by a mitigation. The extension to people who are not users is a choice.
-- **R5**: the route for raising a disparate outcome, and the choice to make it a `SHOULD`.
-- **R6**, the constraint on this framework, in the same form as the equivalent requirement in
-  [Standard 8](08-ai-safety-requirements-and-safety-cases.md),
-  [Standard 17](17-evaluation-plans-for-generative-systems.md) and
-  [Standard 25](25-grounding-and-hallucination-control.md), together with its additional prohibition
-  on supplying a protected-attribute list, a preferred measure or a threshold.
-- **The exclusions in Scope** (items 38, 39 and 40, personal data handling, evaluation planning and
-  legal compliance) as division lines. The specification lists items 38 to 40 under the same bullet;
-  where this standard stops and each begins is unconfirmed by anyone.
-- **The severities** in Validation (`error` for a failed `MUST` or `MUST NOT` requirement, `warning`
-for a `SHOULD`), the levels a rule would carry; they are this repository's judgment.
-- **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
-  decision not to name a rule id in the unsharded `fairness` namespace.
+- **Every defined term and R1 to R6**, including the rulings that "no individual consequence" is a
+  legitimate record, that a fairness basis is recorded before the result, that "not measured" is never
+  parity, that the harm of people who are not users is in scope, and that R2 is not exemptible.
+- **The severities and validation types** in Validation.
+- **The exclusions in Scope** as division lines, unconfirmed by anyone.
+- **The ruling that this standard ships with no catalog rules**, and the invalidation table.
 
-**Recorded as open, not answered here.** Whether the framework should ever supply a reference list of
-characteristics or a default measure as a non-binding aid, against R6's prohibition; whether R5's route
-belongs here or wholly to item 34; and whether a rule is wanted in the `fairness` namespace and what
-artifact it would read. Each needs an owner's ruling, and none is recorded in
-`artifacts/project-plan-breakdown/08-open-questions.md` by this document.
-
-Not authored here, and recorded so the reader does not credit this standard with it: the posture `O`
-and the ownership line in Standard 7 are the boundary review's and Standard 7's, not this document's.
+Not authored here: posture `O` and the ownership line in Standard 7.
 
 ## Relationship to other standards and ADRs
 
-[Standard 7](07-boundary-with-adjacent-standards.md) records the ownership line for this item. It
-mints no rule id and crosswalks nothing for it.
+[Standard 7](07-boundary-with-adjacent-standards.md) records the ownership line. R6 has the form of
+[Standard 8](08-ai-safety-requirements-and-safety-cases.md) R6, [Standard 17](17-evaluation-plans-for-generative-systems.md)
+R9 and [Standard 25](25-grounding-and-hallucination-control.md) R6. Standard 17 governs how a group
+report is planned, scored and reported. [Standard 1](01-ai-system-manifest.md) declares no affected
+group and none is proposed. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 governs
+non-lowering, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 (each requirement carries
+a falsifier or is declared not-evaluable) is what the Tests section answers.
 
-[Standard 13](13-personal-data-in-ai-systems.md) governs real personal data in evaluation fixtures
-and prompt and trace stores, which a per-group evaluation may touch; it does not govern whether a
-group attribute may be collected, and nothing here restates it.
-
-[Standard 17](17-evaluation-plans-for-generative-systems.md) governs how an evaluation is planned,
-scored and reported, and R2 and R3 rely on it for any figure a project reports. It is where the
-evaluated subject (R6 there) and the scorer (R7) are recorded.
-
-[Standard 25](25-grounding-and-hallucination-control.md) is the closest sibling in form: a standard
-about a property that no repository reading can establish, with a constraint on the framework in its
-last requirement.
-
-[Standard 8](08-ai-safety-requirements-and-safety-cases.md) R3 and R4 say how a safety case cites
-evidence. A per-group result or a harm record may be cited there, labelled by kind and revision; this
-standard does not say when a distribution of harm is acceptable.
-
-[Standard 1](01-ai-system-manifest.md) declares models, prompts and data sources; it declares no
-affected group and this standard proposes no field. [Standard 2](02-ai-risk-tiering-and-applicability.md)
-R3 and R4 govern the applicability and non-lowering language used above.
-[Standard 6](06-standard-structure-and-rule-identity.md) R3 (each requirement carries a falsifier or
-is declared not-evaluable) is what the Tests section answers.
-
-Items 38 (Accessibility of AI Features), 39 (Transparency and System Documentation), 40 (User
-Disclosure of AI Involvement) and 34 (AI Incident Response) are unwritten in this release; the lines
-drawn above are provisional until they are, and the later standards may legitimately move them.
-
-**Outside this pack.** No adjacent pack is cited: the boundary review found none that governs this
-subject. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
+Items 34, 38, 39 and 40 are unwritten on this base; the lines drawn above are provisional until they
+are. **Outside this pack:** no adjacent pack is cited, and no ADR covers this standard —
+`artifacts/adr/` does not exist in this release.
 
 ## Implementation
 
-**Normative. Nothing about R1 to R5 is enforced; R6 holds today because no such detector exists.**
-
-Stated as two separate lists, because a reader scanning one table will otherwise carry a proposal away
-as a capability.
-
-**Implemented today, and re-runnable now:**
+**Normative. Nothing about R1 to R5 is enforced; R6 holds today because no such framework output exists.**
 
 | Requirement | State |
 | --- | --- |
-| R6 | **Holds today because no such detector exists.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` evaluates fairness, bias or protected characteristics; `fairness` appears only as a reserved namespace segment in `scripts/catalog.mjs`, and no list or threshold of the kind R6 forbids is shipped. No test asserts the absence, so a future detector could break R6 without failing one |
-| This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's fairness |
+| R6 | No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` evaluates fairness, bias or protected characteristics; `fairness` appears only as a reserved namespace segment in `scripts/catalog.mjs`. No test asserts the absence |
+| This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test |
 
-**Proposed, and deliberately absent from this release. None of the following exists:**
+**Proposed, and deliberately absent. None of the following exists:** a declaration of affected groups
+with a place to live (a schema change); fixtures and a detector that runs project-supplied checks,
+which must carry no fairness stand-in; a test that no framework output states a fairness verdict from a
+presence artifact; and a rule id in the `fairness` namespace once an owner is decided.
 
-| Requirement | What would be needed | Why it is not here |
-| --- | --- | --- |
-| R1 | A declaration of affected groups and harms with a place to live: a schema change, or a named document a rule can find | Both schemas are closed; a change is a schema-versioning decision and Phase 2 section 8 puts it out of scope |
-| R2, R3, R4 | Fixtures with a disclosed and an undisclosed measure, and a detector that runs project-supplied checks | Phase 3 detector and evidence-availability work; the plan says detectors wait for the corpus. Any such detector must carry no group list or threshold of its own (R6) |
-| R5 | A way to find a route and its dispositions | Reading intent from free text is a heuristic, and a false positive teaches a project to write whatever passes |
-| R6 | A test asserting no detector emits a fairness verdict | Meaningful only once a detector exists for it to constrain |
-| Rule id | A reserved-namespace id and a shard, once an owner is decided | Not decided; this standard names none |
-
-**What no future release will implement.** A detector that reports a system fair, unbiased or free of
-disparity from the presence of a fairness document, a bias-testing library, a declared group list or a
-stated metric; and a framework-supplied list of protected characteristics or threshold applied to
-every project. R6 forecloses both, and the foreclosure is the point: the presence of an exercise is not
-an outcome for the people the system reaches, and a framework reporting one would put its authority
-behind a judgment that nothing in a repository can show.
+**What no future release will implement.** A framework output that states a fairness verdict from a
+presence artifact, or that supplies a fairness stand-in. R6 forecloses it.
