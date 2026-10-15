@@ -35,401 +35,181 @@ bullet of [`artifacts/prompts/original_prompt.md`](../artifacts/prompts/original
 
 ## Scope
 
-Applies to any AI system within this pack's scope as [Standard 1](01-ai-system-manifest.md) draws
-it — a repository that invokes a model, retrieves context for one, or acts on a model's output —
-whose model calls are paid for per unit of use, whether by a provider's invoice or by capacity the
-project has to provision for the call.
+Applies to any AI system within this pack's scope as [Standard 1](01-ai-system-manifest.md) draws it — a repository that invokes a model, retrieves context for one, or acts on a model's output — whose model calls are paid for per unit of use, whether by a provider's invoice or by capacity the project has to provision for the call.
 
-Covers: attributing spend to something a person owns; stating a budget and the behaviour at its
-ceiling; bounding the multipliers (retries, fallbacks, repeated calls outside an agent loop, completion length, carried history); what a stated cost
-figure must name; and the limit of what this framework can say about any of it.
+Covers: attributing spend to a spend subject; stating a ceiling and what happens at it; bounding multipliers; labelling spend figures billed or estimated; what a cost claim must name; and the limit of what this framework can say about any of it.
 
-Two terms, each defined here rather than by the brief:
+Terms, each defined once here and used verbatim below:
 
-- A **budget** is a ceiling on spend, tokens or calls over a stated subject and period: a request, a
-  run, a user, a tenant, a feature, a day. It is a number someone chose, not a quota the provider
-  happens to apply.
-- A **multiplier** is anything that causes one logical request to produce more than one billed call or
-  more billed units than the request alone implied: a retry, a fallback, a repeated call, a long or unbounded
-  completion, a growing conversation history. An agent loop's own step count is a multiplier too and is
-  bounded by Standard 23 R1, not here.
+- **Spend subject** — a feature, tenant, user, job, run, or the provider account itself where the project's budget or reported figure is stated over the account.
+- **Ceiling** — a number over a spend subject and a period at which the system acts.
+- **Multiplier** — a retry, a fallback, the repetition of a call outside an agent loop, and, where the charge is metered by tokens or time, completion length and carried conversation history.
+- **Spend figure** — any figure a project reports as an amount spent or as a cost per unit.
 
-It does **not** cover, and claims none of the ground of, the following:
+It does **not** cover, and claims none of the ground of:
 
-- **Step and tool-call budgets of an agent loop.** [Standard 23](23-agent-execution-security.md) R1
-  owns the bound on an agent's own steps and says that cost ceilings are this item's. A single
-  mechanism may serve both; this standard does not restate the loop bound.
-- **Abuse volume.** [Standard 9](09-misuse-and-abuse-prevention.md) R3 owns the bound against abusive
-  volume, and says one limit may serve both. This standard claims only the cost use.
-- **Latency.** Item 42, Latency Budgets for AI Interactions, owns time; it is unwritten in this
-  release.
-- **Environmental impact and provider portability.** Items 43 and 44 own them and are unwritten in this
-  release.
-- **The design of an evaluation plan.** [Standard 17](17-evaluation-plans-for-generative-systems.md)
-  governs it and nothing here restates it. The model calls an evaluation run makes are within this
-  standard's scope like any other, and owe R1 to R5 accordingly.
+- **Agent loop steps.** [Standard 23](23-agent-execution-security.md) R1 owns an agent's step and sub-agent bound and leaves cost ceilings to this item.
+- **Abuse volume.** [Standard 9](09-misuse-and-abuse-prevention.md) R3 owns the bound against abusive volume and says one limit may serve both; this standard claims only the cost use.
+- **Latency, environmental impact, provider portability.** Items 42, 43 and 44 own them and are unwritten in this release.
+- **The design of an evaluation plan.** [Standard 17](17-evaluation-plans-for-generative-systems.md) governs it; the model calls an evaluation run makes are in scope here like any other.
+
+**Boundary posture O — owned outright.** [`artifacts/boundary-review.json`](../artifacts/boundary-review.json) holds no evidence entry for this item, because an owned item has no counterpart to record. This document cites none and claims no adjacent pack's ground.
 
 ## Requirements
 
-### R1 — Attribute inference spend to a subject someone owns
+### R1 — Attribute spend to each spend subject the project names
 
-**A system that states a budget, or reports cost per subject, MUST record the spend of its model calls
-against the subject — a feature, a tenant, a user, a job or a run — at every granularity at which it
-states a budget or reports a cost figure, and MUST NOT leave
-spend attributable only to a provider account or invoice unless that account is itself the subject the
-budget or the reported figures are stated over. A system that states neither budgets nor per-subject
-figures owes no attribution under this requirement.**
+**A system that states a budget, or reports a spend figure, for a spend subject MUST record spend against that spend subject, and MUST show spend that fits none as its own unattributed amount.**
 
-A budget over a subject that spend cannot be attributed to is not a budget, it is an intention. The
-requirement does not fix the granularity; it asks that it match the one the budget is stated at. A
-project whose budget is stated per provider account, and whose spend is recorded per that account,
-meets it: the account is then the budget's subject. A provider account is not a subject when the
-budget is stated over something finer.
+A budget over a spend subject that spend cannot be attributed to is an intention, not a budget. The granularity is the project's; the requirement is that spend can be read back at every granularity it names, and that what cannot be attributed is shown as such and not folded into a subject it does not belong to.
 
-Spend that cannot be attributed is recorded as unattributed, with its amount, and is not folded into
-a subject it does not belong to.
+### R2 — Give each stated budget a ceiling that acts
 
-Attribution is a property of the records [Standard 33](33-ai-observability.md) R1 asks each call to
-leave. This standard adds the subject; it does not restate what a call record must contain.
+**A system that states a budget MUST apply it as a ceiling whose number, spend subject, period and enforcement point are recorded, whose behaviour at the ceiling is to refuse, queue, degrade, shorten or re-route the call or route it to a person, and whose value the system cannot raise.**
 
-### R2 — State each budget with its subject and period, and what happens at the ceiling
+An alert is a statement that someone will be told, not an action of the system; "continue and log" is not a behaviour at a ceiling. The enforcement point often lives in a gateway or deployment configuration, and it is the place that must be named, not that it be in the repository. [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1 prohibits an agent rewriting its own step budget and does not name a cost ceiling; a spend ceiling the system can raise is R2's case.
 
-**A system that states a budget, or applies a ceiling, for inference spend MUST state the ceiling as a
-number over a named subject and period, MUST record where in the call path it is enforced, and MUST define what the system
-does when it is reached. The behaviour at the ceiling MUST NOT be "continue and log".**
+### R3 — Bound every multiplier on its own
 
-The behaviours differ in what they cost a user, and the project chooses: refuse, queue, degrade to a
-cheaper path, shorten the output, route to a person. The requirement is that one exists, that it is
-written down, and that it is not an alert alone. An alert is a statement that someone will be told; it
-is not an action of the system.
+**A system MUST give each multiplier it has a limit of its own, in code or configuration, that is not merely the budget above it.**
 
-A ceiling often lives in a gateway, a provider console or deployment configuration rather than in the
-repository. The requirement is that the place be named, not that it be in the repository.
+A request budget does not bound a retry loop that spends it faster than anyone looks. A fallback is a multiplier twice over: it adds a call, and the call is frequently to a dearer model. That a different model answered is [Standard 33](33-ai-observability.md) R2's subject.
 
-**A ceiling the system can raise for itself during a run is not a bound on it, and MUST NOT be
-treated as the ceiling.** [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1 prohibits an
-agent rewriting its own step budget; it does not name a cost ceiling, and this standard does not
-extend it. The case of a spend ceiling the system can itself rewrite is R2's.
+### R4 — Say whether a spend figure is billed or estimated
 
-### R3 — Bound every multiplier
+**A project MUST label each spend figure it reports as billed or estimated, and MUST NOT present an estimate as the amount spent.**
 
-**A system MUST bound each multiplier on its model calls — retries, fallbacks, the repetition of any
-call that is not an agent loop, and, where the charge is metered by tokens or time, completion length
-and carried conversation history — and MUST NOT leave one governed only by the budget that sits above
-it. The step and sub-agent bound of an agent loop
-is [Standard 23](23-agent-execution-security.md) R1's and is not restated here.**
+An estimate computed from token counts and a price list is a model of the bill. It diverges when the price changes, a model is substituted, a count omits tokens the provider charges for, or a call is billed that the system never saw. For provisioned or owned capacity, "billed" means the capacity's accounting cost.
 
-A request budget does not bound a retry loop that spends it faster than anyone looks. The bounds need
-not be numerically the same as the budget in R2; they need to exist, one per multiplier the system has.
-Where a system has no instance of a multiplier (it never retries, it has no fallback), that is a
-statement the project can make; it is not a gap.
+### R5 — Name the support for a cost claim
 
-A fallback is a multiplier twice over: it adds a second call, and the second call is frequently to a
-more expensive model. Recording that a different model answered is
-[Standard 33](33-ai-observability.md) R2's subject, and this standard relies on it rather than
-restating it.
+**A project MUST NOT state that cost is capped or bounded without naming the ceiling (R2), MUST NOT state that it is negligible without naming the measurement, and MUST NOT state a cost per unit without naming the model identifier and the date of the price.**
 
-### R4 — Reconcile recorded spend against what was actually charged, and say how often
-
-**A project MUST NOT report a figure drawn only from its own estimates as the amount spent,
-whether or not it states a budget; and a project that states a budget MUST record how recorded spend is
-reconciled with the amount actually billed or, for provisioned or owned capacity, with the capacity's
-accounting cost or measured utilisation, and at what interval.**
-
-An estimate computed from token counts and a price list is a model of the bill. It diverges from the
-bill when the price changes, when a model is substituted, when a count excludes system or tool tokens
-the provider charges for, and when a call is billed that the system's own record never saw. The
-requirement is not that the two agree; it is that nobody believes they do without having looked.
-
-### R5 — Describe cost as a measured quantity with a named subject, model and price date
-
-**A project MUST NOT state or imply that inference cost is capped or bounded unless the statement
-names the enforcing mechanism (R2), and MUST NOT state or imply that it is negligible unless the
-statement names the measurement it rests on; and a stated cost per unit MUST name the model
-identifier and the date of the price it assumes, and, where the figure depends on a workload — a cost
-per request, per conversation or per job — the workload it was measured on.**
-
-A cost per request is a function of the model, its price on a date, the prompt and the output. It moves
-when any of them does, and a figure measured on last quarter's prompt describes last quarter's system.
-"Costs a few cents per conversation" is a claim with no subject. A provider's published price per
-million tokens depends on a model and a date and on no workload, and needs only those two.
-
-This requirement sets no threshold and no price.
+A cost per request is a function of the model, its price on a date, the prompt and the output; "costs a few cents per conversation" is a claim with no subject. This requirement sets no threshold and no price.
 
 ### R6 — This framework MUST NOT report cost controlled from the presence of a setting
 
-**No detector, rule, audit finding or generated report in this framework MAY state that a system's
-cost is controlled, capped or bounded because a token limit, a budget figure, a rate limit or an
-alert is present in the repository.**
+**No detector, rule, audit finding or generated report in this framework MAY state that a system's cost is controlled, capped or bounded because a token limit, a budget figure, a rate limit or an alert is present in the repository.**
 
-This is a constraint on the framework, not on a project. A repository can show that `max_tokens` is
-set, that a budget figure is written in a document, or that a limiter is configured. It cannot show
-that the value is the one used in production, that the limiter sits on the path a request takes, or that
-exhausting the budget does anything. Reporting a pass from any of them would turn the presence of a
-setting into a verdict about its effect.
-
-**A framework report that treats a ceiling as demonstrated because a setting is present is the
-presence-as-verdict this requirement forbids.** A ceiling is shown by observing the behaviour R2 defined
-for it — a call refused, degraded, queued, shortened, re-routed or routed to a person — at the ceiling,
-which is R2's record and not the framework's to infer.
+This is a constraint on the framework, not on a project. A repository can show that `max_tokens` is set or a limiter configured; it cannot show that the value is the one in production, that the limiter sits on the path a request takes, or that reaching the ceiling does anything. A ceiling is shown by the behaviour R2 defines for it at the ceiling, which is R2's record and not the framework's to infer.
 
 ## Failure modes
 
 | Failure | What it looks like | Requirement |
 | --- | --- | --- |
-| Spend unattributed | One provider invoice for a platform serving many features, with no way to say which spent it, while a budget or cost figure is stated per feature | R1 |
-| Budget over a subject nothing is attributed to | A per-tenant monthly figure in a plan; spend recorded only per API key | R1 |
-| Misattributed remainder | Unattributed spend folded into the largest subject so totals reconcile | R1 |
-| Alert as enforcement | A notification at 80% of budget and no action at 100% | R2 |
-| Continue and log | Budget exhaustion is recorded and the call proceeds unchanged, whether or not "continue and log" is the written-down behaviour | R2 |
-| Ceiling in an unnamed place | "The gateway handles it" with no record of which gateway or setting | R2 |
-| Self-raised ceiling | A budget read from configuration the system can raise during a run | R2 |
-| Uncapped retry | Retry-on-error with no maximum, each attempt billed | R3 |
-| Expensive fallback | A fallback to a larger model after a failure, with no bound on how often | R3 |
-| Unbounded output or history | Where billing is by tokens or time: no completion limit; a conversation resent in full every turn | R3 |
-| Estimate reported as spend | A figure computed from token counts presented as the amount spent | R4 |
-| Never reconciled | Estimates and invoice never compared, so divergence is not known | R4 |
-| Cap claim without mechanism | "Cost is capped" with nothing enforcing it | R5 |
-| Unattached unit cost | "Roughly $0.02 per request" naming none, or only some, of model, price date and (where it depends on one) workload | R5 |
-| Negligibility claim without measurement | "Inference cost is negligible" naming no measurement | R5 |
+| Spend not attributable to a named subject | A budget or reported figure is stated per tenant or feature and spend is recorded only per API key; or unattributed spend is folded into the largest subject | R1 |
+| Ceiling that does not act | A notification at 80% and no action at 100%; "continue and log"; a ceiling read from configuration the system can raise; or no named enforcement point | R2 |
+| Unbounded multiplier | A retry with no maximum; a fallback with no bound on how often; no completion limit or history bound where billing is by tokens or time; or a multiplier governed only by the budget above it | R3 |
+| Estimate presented as spend | A figure computed from token counts is shown as the amount spent, or a spend figure carries no label | R4 |
+| Cost claim without support | "Cost is capped" naming no ceiling; "negligible" naming no measurement; or "$0.02 per request" naming no model or price date | R5 |
 | Setting read as control | A framework report of "cost controlled" because a token limit is present | R6 |
-| Cap claim with no mechanism named | A project states that spend is capped and names no enforcing mechanism, configuration or run | R5 |
-| Ceiling reported as bounding spend by a framework | A detector or report states spend bounded because a limit setting is present | R6 |
 
 ## Evidence
 
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
-| R1 | The subject each model call's spend is attributed to, the unattributed remainder, and each granularity at which a budget is stated or a cost figure reported | A project document the project names, and the cost records it points at — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | Each budget as number, subject and period; where it is enforced; the behaviour at the ceiling as implemented in code or configuration; that the system cannot raise the ceiling's value (it is held where the system cannot write it, or the system can only lower it); and, where the ceiling has been reached, the record of that run | Project configuration and code, gateway configuration, and the records of a run | Human review of the records |
-| R3 | Each multiplier the system has and the bound on it, or the statement that it has none | Project code and configuration | Human review; a project's own test where one exists |
-| R4 | Where a budget is stated, the reconciliation of recorded spend with the billed amount, or with the capacity's accounting cost or utilisation, and its interval; for any published spend figure, its source, so a billed amount can be told from an estimate | Finance or operations records the project names | Human review |
-| R5 | Any published unit-cost figure, with model identifier and price date, and the workload where the figure depends on one (an aggregate billed total is R4's and needs only its source); any cap or bound claim with the enforcing mechanism it names (R2); any negligibility claim with the measurement it rests on | The project's documentation | Human review |
-| R6 | The absence of any detector, rule, audit finding or generated report that reports cost controlled from a setting or presence | This repository's own detectors and tests | Code review; see Implementation |
+| R1 | Spend per spend subject the project names, and the unattributed amount | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
+| R2 | The ceiling's number, spend subject, period and enforcement point; the behaviour as implemented in code or configuration; and where the system cannot raise the value | Project code and configuration, gateway configuration | Human review |
+| R3 | Each multiplier the system has and the limit of its own, or the statement that it has none | Project code and configuration, gateway configuration | Human review |
+| R4 | Each reported spend figure with its label and, for a billed figure, its source | The project's documentation and finance or operations records the project names | Human review |
+| R5 | Each published cost claim with the ceiling, measurement, or model and price date it names | The project's documentation | Human review |
+| R6 | The absence of any detector, rule, audit finding or generated report that reports cost controlled from a setting | This repository's own detectors and tests | Code review; see Implementation |
 
-Evidence for R1 to R5 is a human-authored record. A document naming a budget or a bound establishes
-that the project wrote it down and says nothing about whether the running system stops; the reviewer
-reads what is claimed against the code or configuration that would carry it out.
+Evidence for R1 to R5 is a human-authored record. A document naming a ceiling or a limit establishes that the project wrote it down and says nothing about whether the running system acts; the reviewer reads what is claimed against the code or configuration that would carry it out.
 
 ## Validation, severity, and exemptibility
 
 **This standard has no catalog rules of its own in this release.**
-The Phase 2 plan (`artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` section 6) asks that
-every standard cite at least one rule or record in its Validation section why it ships with none; this
-is that record. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is a different obligation,
-that each requirement state a falsifier or be declared not-evaluable, and the Tests and falsifiers
-section below answers it.
+The Phase 2 plan (`artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` section 6) asks that every standard cite at least one rule or record in its Validation section why it ships with none; this is that record. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is a different obligation, that each requirement state a falsifier or be declared not-evaluable, and the Tests and falsifiers section below answers it.
 
 Three reasons, stated so a reader can disagree with any one of them:
 
-1. **There is no artifact a rule could read.** A rule for R1 or R2 would look for a declared
-   attribution subject or budget, and neither `schemas/ai-system-manifest.schema.json` nor
-   `schemas/ai-policy.schema.json` has a place to put one; both are closed. A rule failing every project
-   for omitting what no schema accepts would measure this framework's own incompleteness and blame the
-   project for it. Adding a schema field is a schema-versioning decision, outside this slice (plan 02
-   section 8).
-2. **R3 to R5 concern behaviour and records, not files.** Whether a retry is bounded on the path a
-   request takes, whether recorded spend matches an invoice, and whether a figure was measured on the
-   shipped configuration are not properties of a checkout. A detector reading source would be testing
-   for the presence of a setting, which R6 forbids this framework from reporting as a result.
-3. **No rule namespace exists for it.** The `cost` namespace is reserved
-   ([Standard 7](07-boundary-with-adjacent-standards.md) names `cost.provider-portable` as a
-   later-phase id, which is item 44's) and has no shard. This standard mints no id; naming one is a
-   decision for the owner. A proposed rule, if one is natural, is recorded in the pull request that
-   introduced this document for per-rule approval, and not here, so that this document does not
-   describe a rule that does not exist.
+1. **There is no artifact a rule could read.** A rule for R1 or R2 would look for a declared spend subject or ceiling, and neither `schemas/ai-system-manifest.schema.json` nor `schemas/ai-policy.schema.json` has a place to put one; both are closed. A rule failing every project for omitting what no schema accepts would measure this framework's own incompleteness and blame the project for it. Adding a schema field is a schema-versioning decision, outside this slice (plan 02 section 8).
+2. **R3 to R5 concern behaviour and records, not files.** Whether a retry is bounded on the path a request takes, or a figure was labelled, is not a property of a checkout. A detector reading source would test for the presence of a setting, which R6 forbids this framework from reporting as a result.
+3. **No rule namespace exists for it.** The `cost` namespace is reserved ([Standard 7](07-boundary-with-adjacent-standards.md) names `cost.provider-portable` as a later-phase id, which is item 44's) and has no shard. This standard mints no id; a proposed rule, if one is natural, is recorded in the pull request that introduced this document for per-rule approval, and not here.
 
-**Severity.** A finding is reported at **warning** severity where a record, statement or label the
-requirement asks for is missing or incomplete, even where the Tests table lists that absence as a
-falsifier: the system may behave well, and what is missing is the account of it. A finding is reported at
-**error** severity for each of: a ceiling reached without the recorded behaviour, a defined behaviour that
-is continue-and-log or an alert alone, or a ceiling the system can raise for itself (R2); a multiplier
-with no bound of its own in code or configuration, including one governed only by the budget above it (R3); spend folded into a
-subject it does not belong to (R1); a cap, bound or negligibility claim with no mechanism or measurement
-(R5); an estimate presented as the amount spent (R4); or a violation of R6 by any detector, rule, audit finding or generated report. Every other
-finding is a warning, including a unit cost missing its model, price date or workload label (R5). The
-two lists do not overlap: each falsifier in the Tests table is assigned to exactly one. These levels are this repository's judgment, listed in Additions, and are not
-owner-approved. R1 to R5 are also `manual-review` obligations in this release; the validation type and
-the severity are different things. R6 constrains this framework and has no validation type, because the
-thing it prohibits is a behaviour of the tool.
+**Validation type.** R1 to R5 are `manual-review` obligations in this release; R6 constrains this framework and has no validation type, because the thing it prohibits is a behaviour of the tool. The validation type and the severity are different things.
 
-**Exemptibility.** R6 is not exemptible: no project circumstance makes it reasonable for a scan to
-report an effect from a presence, and a mechanism for excepting the prohibition would be
-self-defeating. R5's prohibitions on a cap or bound claim with no mechanism and on a negligibility claim with no measurement are likewise not exemptible, because an
-exception would record a project as knowingly making a claim nothing supports; a project that wishes
-to say something stronger must name the mechanism. R1 to R4 reach a system only where their subject
-exists — R2 only where a budget is stated or a ceiling applied, R3 only for the multipliers it has — and a system
-without that subject records, in its own documents, that the requirement does not reach it and why.
-This release has no policy mechanism for it: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4
-dispositions attach to catalog rules, and this standard has none. No detector in this release would
-contradict a false statement. No level here is lowered by a risk tier (Standard 2 R3).
+**Severity.** One level per requirement, assigned to the requirement as a whole and not to how a finding is phrased. These levels are this repository's judgment, listed in Additions, and are not owner-approved:
+
+| Requirement | Severity |
+| --- | --- |
+| R1 | warning |
+| R2 | error |
+| R3 | error |
+| R4 | error |
+| R5 | error |
+| R6 | error |
+
+**Exemptibility.** R6 is not exemptible: no project circumstance makes it reasonable for a scan to report an effect from a presence. R5 is not exemptible, because an exception would record a project as knowingly making a claim nothing supports. R1 to R4 reach a system only where their subject exists, and a system without that subject records, in its own documents, that the requirement does not reach it and why. This release has no policy mechanism for it: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4 dispositions attach to catalog rules, and this standard has none. No level here is lowered by a risk tier (Standard 2 R3).
 
 ## Tests and falsifiers
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | Spend can be read back from the system's own records at every granularity at which a budget is stated or a cost figure is reported, and spend that cannot be attributed appears as an unattributed amount | Spend recorded only per account or API key while budgets are stated, or cost figures reported, per tenant or per feature; or unattributed spend folded into a named subject | A system whose budgets are stated per account, and whose spend is recorded per account, must **not** be reported missing a per-user attribution |
-| R2 | The ceiling is stated with its number, subject and period, its enforcement point is named, the system cannot raise its value (it is held where the system cannot write it, or the system can only lower it), and the configured behaviour is implemented; where the ceiling has been reached, the run shows the behaviour recorded for it (refused, queued, degraded, shortened, re-routed or routed to a person) and the call not made as before | The ceiling is reached and the call proceeds unchanged, with at most an alert and none of the recorded behaviour; the ceiling's value is read from configuration the system can raise during a run; or a ceiling stated without number, subject or period, without a named enforcement point, or with no defined behaviour; or a defined behaviour at the ceiling that is to continue and log, or to alert alone | A system that states no budget and applies no ceiling is out of scope for R2, not failing it; a ceiling reached and acted on must not be flagged for also alerting; a ceiling value the system cannot raise (read-only, or lower-only) must not be flagged |
-| R3 | Each multiplier the system has has a stated bound; a reviewed static bound (a fixed completion limit, a retry maximum in configuration) establishes it without an execution record | A retry, fallback or repeated call with no maximum; no completion limit or history bound where billing is by tokens or time; or a multiplier governed only by the budget above it | A system that never retries, and says so, must **not** be reported as lacking a retry bound |
-| R4 | Where a budget is stated, a record of how spend is reconciled exists with its method and interval, and the reconciliation has been performed within that interval; with or without a budget, no estimate is reported as the amount spent | A figure drawn only from estimates is reported as the amount spent, a stated budget with no reconciliation, an overdue reconciliation, or a reconciliation with no stated interval | A project that states no budget must **not** be failed for lacking a reconciliation; a project that states a budget and labels its figure an estimate avoids the misreporting finding only, and still owes the reconciliation record and interval |
-| R5 | A published unit cost names model and price date, and workload where it depends on one; a cap or bound claim names the enforcing mechanism; a negligibility claim names its measurement | "Costs pennies per query"; a unit cost missing its model identifier, its price date or, where it depends on a workload, the workload; a figure presented as current whose model, price or workload has since changed; a cap claim with no mechanism; or "negligible" with no measurement | A statement of a measured figure with its model, date and workload, and no stronger claim, must **not** be flagged |
-| R6 | No detector, rule, audit finding or generated report in this repository states a cost verdict from presence | A detector, rule, audit finding or report that stated cost controlled, capped or bounded because a token limit, budget figure, rate limit or alert was present | Reporting that a token limit or budget figure was *found*, as an observation with no verdict, is permitted |
+| R1 | Spend can be read back for every spend subject a budget or spend figure names, and unattributed spend appears as its own amount | A named spend subject with no spend record, or unattributed spend folded into a named subject | A system whose budget and figures are stated per provider account, and whose spend is recorded per account, must **not** be faulted for lacking finer attribution |
+| R2 | The ceiling record is complete, its behaviour is one of those listed and is implemented, and the system cannot raise the value | A ceiling record missing a number, spend subject, period or enforcement point; a behaviour that is continue-and-log or an alert alone; or a value the system can raise | A system that states no budget is out of scope for R2; a ceiling the system can only lower, or cannot write, must **not** be faulted for that |
+| R3 | Each multiplier the system has has a limit of its own stated in code or configuration; a reviewed static limit establishes it without a run | A multiplier the system has with no limit of its own, including one governed only by the budget above it | A system that never retries or falls back, and says so, must **not** be faulted for lacking a retry limit |
+| R4 | Every reported spend figure carries a billed or estimated label, and no estimate is presented as the amount spent | A spend figure with no label, or an estimate presented as the amount spent | A project that labels its figure an estimate must **not** be faulted for lacking a billed figure it never claimed |
+| R5 | Each cap or bound claim names its ceiling, each negligibility claim names its measurement, and each cost per unit names model and price date | A cap or bound claim, a negligibility claim, or a cost per unit missing what R5 requires it to name | A cost per unit that names model and price date, and a dated price-sheet rate kept as a historical figure, must **not** be faulted |
+| R6 | No detector, rule, audit finding or generated report in this repository states a cost verdict from presence | A detector, rule, audit finding or report that states cost controlled, capped or bounded because a token limit, budget figure, rate limit or alert is present | Reporting that a token limit or budget figure was *found*, as an observation with no verdict, is permitted |
 
-**No falsifier is automated in this release.** No rule reads a cost artifact and no fixture carries
-one, so R1 to R5 are enforced by review or not at all, and R6 holds by construction. The negative
-controls state what review must not do to a project that has the right subject and does the right
-thing. **A requirement with no falsifier is a requirement nobody can be shown to have broken**, and that
-is the honest state of this standard.
+**No falsifier is automated in this release.** No rule reads this subject's artifact and no fixture carries one, so R1 to R5 are enforced by review or not at all, and R6 holds today only because no such detector exists. The falsifiers in the table are available for manual review; what this release lacks is a detector that applies them.
 
 ## Exceptions and staleness
 
-There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to
-except. A project that knowingly does not meet one records that in its own documents; Standard 2's
-dispositions apply to the application of a rule, and this standard has none.
+There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to except. A project that knowingly does not meet one records that in its own documents; Standard 2's dispositions apply to the application of a rule, and this standard has none.
 
-**Attestations and expiry.** No attestation is produced for these records in this release.
-[Standard 6](06-standard-structure-and-rule-identity.md) R8 makes `manual-review` rules attestable by
-default and `not-evaluable` ones never attestable, but it governs catalog rules, none exists here, and
-the attestation mechanism itself is later work ([Standard 5](05-verdict-vocabulary.md) records the
-`attested` disposition as not yet produced). No record under this standard expires on a schedule the framework sets; a reconciliation interval is the project's own under R4, and a reconciliation not repeated within it is stale;
-[Standard 2](02-ai-risk-tiering-and-applicability.md) R5's event-driven expiry concerns applicability
-declarations and does not apply to these records. Review-staleness is event-driven, except that a reconciliation not repeated within its own interval is
-stale; a record is otherwise stale when one of the events below occurs, and nothing in this release
-detects either.
+**Attestations and expiry.** No attestation is produced for these records in this release. [Standard 6](06-standard-structure-and-rule-identity.md) R8 makes `manual-review` rules attestable by default, but it governs catalog rules, none exists here, and the attestation mechanism itself is later work ([Standard 5](05-verdict-vocabulary.md) records the `attested` disposition as not yet produced). No record under this standard expires on a schedule; [Standard 2](02-ai-risk-tiering-and-applicability.md) R5's event-driven expiry concerns applicability declarations and does not apply to these records.
 
-**What invalidates a recorded measurement, unit cost, attribution, reconciliation, run record or bound.** A stated budget or bound is a limit
-someone chose; it is not made false by a change of model or price, and is revised by a decision or when
-the subject it limits changes. A *measurement* of spend, a *unit cost*, and the *sufficiency* of a bound
-are records about a configuration, and each event below makes the earlier record describe a different
-subject:
+**What makes a record stale.** One event per requirement; a record made before the event describes the earlier arrangement and no longer satisfies the requirement it was offered for until it is re-made. A reconciliation or measurement of spend is a record about one configuration.
 
-- a change of model identifier, or a model silently updated behind an alias
-  ([Standard 1](01-ai-system-manifest.md) R4 asks for the identifier to be pinned);
-- a change of the provider's price, or of how the provider counts billed units;
-- a change of the prompt, the retrieval parameters or the completion limit, each of which moves the
-  billed units per request;
-- a change of the retry, fallback or loop policy, or an observed retry, fallback or completion exceeding its stated bound;
-- a change to a ceiling's value, subject, period, enforcement point or behaviour, to who can write it, to
-  the history or truncation policy, or to provisioned capacity;
-- a new subject (a feature, tenant or billing account) or a change of billing account, which makes
-  earlier attribution and reconciliation records describe a different arrangement;
-- a change in traffic shape: a new class of user, or a feature that makes a call per item rather than
-  per request.
-
-**A stale record is treated as missing.** A record made stale by an event above, or a reconciliation not
-repeated within its interval, no longer satisfies the requirement it was offered for and is a missing
-account (warning) until re-examined, except an observed retry, fallback or completion exceeding its
-stated bound, which is an R3 failure (error); a unit cost presented as current whose model, price or workload has since changed, and
-an overdue reconciliation, are falsifiers of R5 and R4 respectively.
-
-**Staleness is asymmetric here.** A cost record becomes false when something that feeds the bill
-changes, and a price change at the provider is a change nobody in the project made. Nothing in this
-release detects the transition; the events above are a note to a future reader.
-
-**Contradicted by operation.** The recorded behaviour not occurring at the ceiling, or spend continuing
-past a hard ceiling (a refusal, a stop, or routing to a person) as though none applied, contradicts the record made under R2
-and invalidates it until re-examined. A soft ceiling (degrade, shorten, queue, re-route) may be crossed by the
-call that triggered it, and the final bill exceeding the figure by that call is not itself a
-contradiction; spend that keeps rising unaffected after the action is. What follows operationally is item 34's
-subject (AI Incident Response, unwritten in this release); this standard says only that the record no
-longer stands.
+| Requirement | Event that makes its record stale |
+| --- | --- |
+| R1 | A new spend subject or a change of billing account. |
+| R2 | A change to the ceiling's value, spend subject, period, enforcement point or behaviour, or to who can write it. |
+| R3 | A change of retry, fallback or loop policy, or an observed multiplier exceeding its limit. |
+| R4 | A change of provider price or of how the provider counts billed units. |
+| R5 | A change of model or price, for a cost per unit presented as current. |
+| R6 | A new detector, rule or report that touches cost. |
 
 ## Additions this standard makes beyond the source
 
-**Nearly all of it.** The brief contributes one word, "Cost", inside a bullet of four subjects. It
-states no requirement, level or evidence for any of them. The item is class `D` because its subject
-token is derived from the brief; the requirements are not derived. Specifically authored here, none of
-it owner-approved:
+**Nearly all of it.** The brief contributes one word, "Cost", inside a bullet of four subjects and states no requirement, level or evidence for it. The item is class `D` because its subject token is derived from the brief; the requirements are not derived. Specifically authored here, none of it owner-approved:
 
-- **R1 in full**: attribution of spend to a project-owned subject at the budget's granularity, and the
-  recording of unattributed spend as such rather than folded in.
-- **R2 in full**, including the ruling that behaviour at the ceiling must not be "continue and log",
-  that an alert alone is not an action, and that the enforcement point must be named even where it is
-  outside the repository.
-- **R3 in full**: the enumeration of multipliers (retries, fallbacks, repeated calls,
-  completion length, carried history), the requirement that each be bounded independently of the budget
-  above it, and the statement that having none is a legitimate answer.
-- **R4 in full**: reconciliation of recorded spend with the billed amount (or, for provisioned or owned
-  capacity, its accounting cost or utilisation), and its interval.
-- **R5's prohibition** on a cap or bound claim with no enforcing mechanism and a negligibility claim with no measurement, the names a
-  unit cost must carry (model, price date, and workload where one applies), and the ruling that it is not
-  exemptible. It sets no price and no
-  threshold.
-- **R6**, the constraint on this framework, in the same form as the equivalent requirement in
-  [Standard 25](25-grounding-and-hallucination-control.md) and
-  [Standard 33](33-ai-observability.md).
-- **The five exclusions in Scope** as division lines. The specification lists items 42 to 44 under the
-  same bullet; where this standard stops and each begins is unconfirmed by anyone, and the lines to
-  Standards 9 and 23 follow what those standards themselves say about item 41.
-- **The severity assignments** (warning for a missing account; error for a ceiling reached without the recorded behaviour or one the system can raise for itself, a
-  multiplier with no bound, spend folded into a subject it does not belong to, a cap, bound or
-  negligibility claim with no mechanism or measurement, an estimate presented as spend, and a violation
-  of R6 by any detector, rule, audit finding or report) and the statement that no attestation or scheduled expiry exists in this release.
-- **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
-  decision not to name a rule id in the unsharded `cost` namespace.
+- **R1 to R5 in full**, with the defined terms spend subject, ceiling, multiplier and spend figure, and the rulings that an alert is not an action, that "continue and log" is not a behaviour at a ceiling, and that a figure is labelled billed or estimated.
+- **R6**, the constraint on this framework, in the same form as the equivalent requirement in [Standard 25](25-grounding-and-hallucination-control.md) and [Standard 33](33-ai-observability.md).
+- **The four exclusions in Scope** as division lines; where this standard stops and items 42 to 44 begin is unconfirmed by anyone.
+- **The severity assignments** (one level per requirement, in Validation), the statement that no attestation or scheduled expiry exists in this release, and the staleness table.
+- **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the decision to name no rule id.
 
-Not authored here: Standard 23's statement that cost ceilings are this item's, and Standard 9's
-statement that one limit may serve both, are those standards' own and are cited, not restated.
+Not authored here: Standard 23's statement that cost ceilings are this item's, and Standard 9's statement that one limit may serve both, are those standards' own and are cited, not restated.
 
 ## Relationship to other standards and ADRs
 
-[Standard 7](07-boundary-with-adjacent-standards.md) records inference cost, token budgets and
-generative latency as owned by this pack with no existing owner, and lists `cost.provider-portable` as
-a later-phase id; that id concerns provider portability (item 44) and is not minted or claimed here.
-
-[Standard 23](23-agent-execution-security.md) R1 bounds an agent's steps and leaves cost ceilings to
-this item, noting that an aggregate limit is where item 41's budgets would sit.
-[Standard 51](51-agent-and-tool-execution-prohibitions.md) R1 prohibits an agent rewriting its own
-step budget; it does not name a cost ceiling. [Standard 9](09-misuse-and-abuse-prevention.md) R3 bounds abusive volume and
-says one limit may serve both purposes; this standard claims only the cost use.
-
-[Standard 33](33-ai-observability.md) R1 and R2 govern what a call record contains and the subject that
-served the call; R1 here adds attribution to them, and R3 relies on R2 for the recording of a
-substitution. Its R5 concerns records dropped for cost, which is a different spend from the one governed
-here.
-
-[Standard 11](11-autonomy-levels-and-delegated-authority.md) R3 requires budgets a system holds to be
-consistent with its declared tier; this standard does not restate it. [Standard 1](01-ai-system-manifest.md)
-declares models, and R5 depends on the identifier it asks to be pinned. It does not declare budgets, and
-no field is proposed by this standard. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4
-govern the applicability and non-lowering language used above.
-[Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the Tests and falsifiers
-section answers.
-
-Items 42 (Latency Budgets for AI Interactions), 43 (Environmental Impact Accounting) and 44
-(Operational Resilience, Degradation, and Provider Portability) are unwritten in this release; the lines
-drawn above are provisional until they are, and the later standards may legitimately move them.
-
-**Outside this pack.** The boundary review records no adjacent pack's standard as a precedent or
-adjacency for this item. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
+[Standard 7](07-boundary-with-adjacent-standards.md) records inference cost, token budgets and generative latency as owned by this pack with no existing owner. [Standard 23](23-agent-execution-security.md) R1 bounds an agent's steps and leaves cost ceilings to this item; [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1 prohibits an agent rewriting its own step budget and does not name a cost ceiling; [Standard 9](09-misuse-and-abuse-prevention.md) R3 bounds abusive volume. [Standard 33](33-ai-observability.md) R1 and R2 govern what a call record contains and the subject that served the call, and R1 here adds attribution to them. [Standard 1](01-ai-system-manifest.md) declares models and does not declare budgets; no field is proposed by this standard. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and non-lowering language used above, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the Tests section answers. Items 42 (Latency Budgets for AI Interactions), 43 (Environmental Impact Accounting) and 44 (Operational Resilience, Degradation, and Provider Portability) are unwritten in this release. **Outside this pack.** No adjacent pack's standard is recorded for this item. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
 ## Implementation
 
-**Normative. Nothing about R1 to R5 is enforced; R6 holds by construction.**
+**Normative. Nothing about R1 to R5 is enforced; R6 holds today only because no such detector exists.**
 
-Stated as two separate lists, because a reader scanning one table will otherwise carry a proposal away
-as a capability.
+Stated as two separate lists, because a reader scanning one table will otherwise carry a proposal away as a capability.
 
 **Implemented today, and re-runnable now:**
 
 | Requirement | State |
 | --- | --- |
-| R6 | **Holds by construction, not by assertion.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` has a concept of inference cost or budget in the sense of this standard. The rule `agent.step-budget-bounded` reads an agent's step budget, which [Standard 23](23-agent-execution-security.md) R1 states is not a cost ceiling; it is not a cost verdict. No test asserts the absence, so a future detector could break R6 without failing one |
-| This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's cost control |
+| R6 | **Holds today because no such detector exists; nothing prevents or tests one being added.** No detector, rule, audit finding or report in `scripts/`, `rules/` or `ai-policy.yml` has a concept of inference cost or budget in the sense of this standard. The rule `agent.step-budget-bounded` reads an agent's step budget, which [Standard 23](23-agent-execution-security.md) R1 states is not a cost ceiling; it is not a cost verdict. |
+| This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's practice |
 
 **Proposed, and deliberately absent from this release. None of the following exists:**
 
 | Requirement | What would be needed | Why it is not here |
 | --- | --- | --- |
-| R1, R2 | A place to declare attribution subjects and budgets: a schema change, or a named document a rule can find | Both schemas are closed; a change is a schema-versioning decision and Phase 2 section 8 puts it out of scope |
-| R3 | Detectors for unbounded retry, fallback and completion length, each language-specific | Phase 3 detector work; a literal-reading heuristic would report a presence, which R6 forbids as a verdict |
-| R4 | A convention for where reconciliation is recorded | The record is a finance or operations artifact outside the repository; this framework would be guessing |
-| R5 | A check that a published unit cost names a model, date and workload | Reading intent from free text is a heuristic, and a false positive teaches a project to write whatever passes |
-| R6 | A test asserting no detector emits a cost verdict | Meaningful only once a detector exists for it to constrain |
+| R1, R2 | A place to declare spend subjects and ceilings: a schema change, or a named document a rule can find | Both schemas are closed; a change is a schema-versioning decision and Phase 2 section 8 puts it out of scope |
+| R3 | Detectors for an unbounded retry, fallback or completion, each language-specific | Phase 3 detector work; a literal-reading heuristic would report a presence, which R6 forbids as a verdict |
+| R4, R5 | A check that a spend figure is labelled and a claim names its support | Reading intent from free text is a heuristic, and a false positive teaches a project to write whatever passes |
+| R6 | A test asserting no detector, rule, audit finding or report emits a cost verdict | None exists; it would be a regression guard even now, and is proposed here, not built |
 | Rule id | A reserved-namespace id and a shard, once an owner decides | Not decided; this standard names none |
 
-**What no future release will implement.** A detector that reports a system's cost controlled, capped or
-bounded from the presence of a token limit, a budget figure, a limiter configuration or an alert. R6
-forecloses it, and the foreclosure is the point: a presence is not an effect, and a framework reporting
-one would put its authority behind a property of the running system that nothing in a repository can
-show.
+**What no future release will implement.** A detector that reports a system's cost controlled, capped or bounded from the presence of a token limit, a budget figure, a limiter configuration or an alert. R6 forecloses it, and the foreclosure is the point: a presence is not an effect.
