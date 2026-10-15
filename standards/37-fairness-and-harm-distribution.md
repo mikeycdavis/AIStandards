@@ -403,7 +403,7 @@ subject. No ADR covers this standard — `artifacts/adr/` does not exist in this
 
 ## Implementation
 
-**Normative. Nothing about R1 to R5 is enforced; R6 holds by construction.**
+**Normative. Nothing about R1 to R5 is enforced; R6 holds today because no such detector exists.**
 
 Stated as two separate lists, because a reader scanning one table will otherwise carry a proposal away
 as a capability.
@@ -412,7 +412,7 @@ as a capability.
 
 | Requirement | State |
 | --- | --- |
-| R6 | **Holds by construction, not by assertion.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` evaluates fairness, bias or protected characteristics; `fairness` appears only as a reserved namespace segment in `scripts/catalog.mjs`, and no list or threshold of the kind R6 forbids is shipped. No test asserts the absence, so a future detector could break R6 without failing one |
+| R6 | **Holds today because no such detector exists.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` evaluates fairness, bias or protected characteristics; `fairness` appears only as a reserved namespace segment in `scripts/catalog.mjs`, and no list or threshold of the kind R6 forbids is shipped. No test asserts the absence, so a future detector could break R6 without failing one |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's fairness |
 
 **Proposed, and deliberately absent from this release. None of the following exists:**
