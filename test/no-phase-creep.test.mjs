@@ -105,7 +105,67 @@ test("the repository-wide scan decides relative specifiers against the repositor
   assert.deepEqual(url('export const u = new URL("data/x.json", import.meta.url);\n'), []);
   assert.notDeepEqual(url('export const u = new URL("../../data/x.json", import.meta.url);\n'), []);
   assert.notDeepEqual(url('export const u = new URL("file:///etc/passwd", import.meta.url);\n'), []);
-  assert.notDeepEqual(url('export const u = new URL("https://example.com/x.js", import.meta.url);\n'), []);
+  // any scheme other than file: names no file of this module, so its base is ignored (a stated limit: a network
+  // location is not a file system path; loading it would need fetch or a dynamic import, which are flagged)
+  assert.deepEqual(url('export const u = new URL("https://example.com/x.js", import.meta.url);\n'), []);
+  // file URLs name file system paths and stay subject to containment, in every spelling the URL parser accepts
+  const fileUrl = (p) => "file://" + (path.sep === "\\" ? "/" : "") + p.split(path.sep).join("/");
+  const insideFile = fileUrl(path.join(FAKE_ROOT, "scripts", "b.mjs"));
+  const outsideFile = fileUrl(path.join(os.tmpdir(), "outside-of-the-repository.mjs"));
+  const fileSpellings = (u) => ({
+    "plain": u,
+    "upper-case scheme": "FILE" + u.slice(4),
+    "mixed-case scheme": "FiLe" + u.slice(4),
+    "leading space": " " + u,
+    "trailing space": u + " ",
+    "embedded tab": u.slice(0, 2) + "\t" + u.slice(2),
+    "embedded newline": u.slice(0, 3) + "\n" + u.slice(3),
+    "leading control character": String.fromCharCode(1) + u,
+  });
+  for (const [label, lit] of Object.entries(fileSpellings(outsideFile))) {
+    for (const wrap of [(l) => "new URL(" + JSON.stringify(l) + ")", (l) => "new URL(" + JSON.stringify(l) + ", import.meta.url)", (l) => "new URL(" + JSON.stringify(l) + ", base)", (l) => "URL.parse(" + JSON.stringify(l) + ")", (l) => "fileURLToPath(" + JSON.stringify(l) + ")"]) {
+      assert.notDeepEqual(url("export const u = " + wrap(lit) + ";\n"), [], "outside file URL, " + label + ": " + wrap("x"));
+    }
+  }
+  for (const [label, lit] of Object.entries(fileSpellings(insideFile))) {
+    assert.deepEqual(url("export const u = new URL(" + JSON.stringify(lit) + ");\n"), [], "inside file URL, " + label);
+  }
+  assert.notDeepEqual(url('export const u = new URL("file:./x.mjs", base);\n'), [], "a relative-looking file URL");
+  assert.match(url('export const u = new URL(' + JSON.stringify(fileUrl(path.join(FAKE_ROOT, "scripts", "missing.mjs"))) + ");\n")[0], /does not exist/);
+  // URL.parse(input, base) resolves like the constructor, so it follows the constructor's rules
+  assert.deepEqual(url('export const u = URL.parse("./b.mjs", import.meta.url);\n'), []);
+  assert.deepEqual(url('export const u = URL.parse("https://example.com/");\n'), []);
+  for (const bad of ['URL.parse("../../outside.mjs", import.meta.url)', "URL.parse(input, import.meta.url)", 'URL.parse("./a.mjs", base)', 'URL.parse("./a.mjs")', "URL.parse()", "globalThis.URL.parse(input, base)", "const p = URL.parse", "URL.canParse(input, import.meta.url) && p(URL.parse)"]) {
+    assert.notDeepEqual(url("export const u = " + bad + ";\n"), [], bad);
+  }
+  // fileURLToPath, pathToFileURL and import.meta.resolve
+  assert.deepEqual(url('import { fileURLToPath } from "node:url";\nexport const here = fileURLToPath(import.meta.url);\n'), []);
+  assert.deepEqual(url('import { fileURLToPath } from "node:url";\nexport const d = fileURLToPath(new URL("./b.mjs", import.meta.url));\n'), []);
+  assert.deepEqual(url('import { pathToFileURL } from "node:url";\nexport const main = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;\n'), []);
+  assert.deepEqual(url('export const r = import.meta.resolve("./b.mjs");\n'), []);
+  assert.deepEqual(url('export const r = import.meta.resolve("node:fs");\n'), []);
+  for (const bad of [
+    "fileURLToPath(someUrl)",
+    "fileURLToPath(opts.url)",
+    "fileURLToPath(import.meta.url + x)",
+    'fileURLToPath("https://example.com/x")',
+    "fileURLToPath(new URL(x, import.meta.url))",
+    "const f = fileURLToPath",
+    "x = fileURLToPath;;(import.meta.url)",
+    "pathToFileURL(somePath)",
+    'pathToFileURL("./b.mjs")',
+    "pathToFileURL(somePath).href",
+    "import.meta.url === pathToFileURL(somePath).href",
+    "const g = pathToFileURL",
+    'import.meta.resolve("../../outside.mjs")',
+    'import.meta.resolve("package")',
+    "import.meta.resolve(name)",
+    "const r = import.meta.resolve",
+    'import.meta["resolve"]("./b.mjs")',
+    'import.meta["url"]',
+  ]) {
+    assert.notDeepEqual(url("export const u = " + bad + ";\n"), [], bad);
+  }
   assert.notDeepEqual(url('export const u = new URL("/etc/passwd", import.meta.url);\n'), []);
   // a root-relative URL is the file system root, not the repository, even when that path is inside it
   const rootRelative = "/" + path.join(FAKE_ROOT, "scripts", "b.mjs").split(path.sep).join("/");
@@ -177,8 +237,7 @@ test("the repository-wide scan decides relative specifiers against the repositor
     "a helper given an inside literal and import.meta.url": 'resolveHere("./b.mjs", import.meta.url)',
     "URL.createObjectURL": "URL.createObjectURL(blob)",
     "URL.revokeObjectURL": "URL.revokeObjectURL(objectUrl)",
-    "URL.parse": "URL.parse(text)",
-    "URL named in an import clause": 'import { URL, fileURLToPath } from "node:url";\nexport const f = fileURLToPath;',
+    "URL named in an import clause": 'import { URL, fileURLToPath } from "node:url";\nexport const f = fileURLToPath(import.meta.url);',
     "URL in a string": 'export const s = "new URL(x)";',
     "URL in a comment": "// new URL(x, import.meta.url)\nexport const a = 1;",
     "a longer identifier": "export const URLS = 1; export const MyURL = 2;",

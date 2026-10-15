@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Reading JavaScript source for module references and property-setting calls, shared by the vendor
 // isolation guard (vendor-yaml.test.mjs) and the repository-wide invariant-4 scan (no-phase-creep.test.mjs).
@@ -363,7 +364,7 @@ const CLOSERS = { "(": ")", "[": "]", "{": "}" };
 
 // The arguments of the call whose `(` is tokens[open]: an array of token arrays split at top-level
 // commas, or null when the delimiters do not balance. A trailing comma adds no argument.
-export function callArguments(tokens, open) {
+export function callArguments(tokens, open, info = null) {
   const stack = [];
   const args = [[]];
   for (let k = open + 1; k < tokens.length; k += 1) {
@@ -380,6 +381,7 @@ export function callArguments(tokens, open) {
           if (tk.v !== ")") return null;
           if (args.length > 1 && args[args.length - 1].length === 0) args.pop();
           if (args.length === 1 && args[0].length === 0) args.pop();
+          if (info) info.end = k;
           return args;
         }
         if (stack.pop() !== tk.v) return null;
@@ -499,8 +501,10 @@ function statementSpecifier(tokens, at, isImport) {
   return null;
 }
 
-// Members of URL that do not turn a path into a URL: they test, parse a complete URL string, or manage object URLs.
-const URL_STATIC_SAFE = ["canParse", "createObjectURL", "revokeObjectURL", "parse"];
+// Members of URL that do not turn a path into a URL: `canParse` only answers a boolean, and the object-URL
+// pair manages blob URLs. `URL.parse(input, base)` (Node 22.1+) resolves like the constructor, so it is read
+// with the constructor's rules, not exempted.
+const URL_STATIC_SAFE = ["canParse", "createObjectURL", "revokeObjectURL"];
 
 // The index of the `(` that opens the argument list when the `URL` identifier at `k` is the constructor of a
 // `new` expression (otherwise -1), in any spelling that keeps the name visible: `new URL(`, `new globalThis.URL(`, `new window.URL(`, `new (URL)(`, `new (self.URL)(`.
@@ -520,6 +524,34 @@ function isConstructedAt(tokens, k) {
   const before = tokens[start - 1];
   const isNew = before && before.t === "id" && before.v === "new" && punctAt(end + 1, "(") && !tokens[end + 1].syn;
   return isNew ? end + 1 : -1;
+}
+
+// Reads the argument list of a URL construction (or of `URL.parse`) as a whole and accepts only shapes that can
+// be justified:
+//   ("literal", import.meta.url)   a file next to this one: the literal is checked for containment
+//   ("file:...")                   a file URL names a file system path: checked for containment too
+//   ("scheme:...")                 any other absolute URL names no file of this module; its base is ignored
+// Everything else (a variable, member, call, template or concatenation for either argument, no arguments,
+// a third argument, a relative literal with another base or none, import.meta["url"], an alias of
+// import.meta.url) is unreadable: it cannot be shown to stay here.
+function readUrlConstruction(tokens, open, offset, specifiers, unreadable) {
+  const args = callArguments(tokens, open);
+  const bad = (why) => unreadable.push({ form: "url", specifier: `${why} at offset ${offset}` });
+  if (args === null) return bad("unparseable construction");
+  if (args.length === 0 || args.length > 2) return bad("construction with no arguments or with extra arguments");
+  if (!(args[0].length === 1 && args[0][0].t === "str")) return bad("non-literal first argument");
+  const literal = args[0][0].v;
+  // The URL parser strips leading and trailing C0 controls and spaces and deletes tabs and newlines, and the
+  // scheme is case-insensitive: decide on that form.
+  const normal = literal.replace(/[\t\n\r]/g, "").replace(/^[\u0000-\u0020]+|[\u0000-\u0020]+$/g, "");
+  if (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(normal)) {
+    if (/^file:/i.test(normal)) specifiers.push({ form: "file-url", specifier: literal });
+    return undefined;
+  }
+  if (args.length === 1) return bad("relative literal with no base");
+  if (args[1].map((t) => t.v).join("") === "import.meta.url") specifiers.push({ form: "url", specifier: literal });
+  else bad("base is not the literal import.meta.url");
+  return undefined;
 }
 
 // Whether the token at `k` is directly called: `x(...)` or `x?.(...)`.
@@ -570,37 +602,68 @@ export function moduleReferences(source) {
     const staticSafe = tokens[k + 1] && tokens[k + 1].t === "punct" && tokens[k + 1].v === "." && tokens[k + 2] && tokens[k + 2].t === "id" && URL_STATIC_SAFE.includes(tokens[k + 2].v);
     if (tk.t === "id" && tk.v === "URL" && !inClause.has(k) && !staticSafe) {
       const open = isConstructedAt(tokens, k);
-      if (open === -1) {
-        unreadable.push({ form: "url", specifier: `reference to URL that is not a literal construction at offset ${tk.s}` });
-      } else {
-        // The construction is read as a whole, and only the shape that can be justified is accepted:
-        //   new URL("literal", import.meta.url)   a file next to this one: the literal is checked
-        //   new URL("scheme:...")                 an absolute URL, which names no file of this module
-        //   new URL("scheme:...", anything)       the base is ignored for an absolute literal
-        // Everything else (a variable, member, call or template for the first argument or the base,
-        // concatenation, no arguments, a third argument, a relative literal with another base,
-        // import.meta["url"], an alias of import.meta.url) is unreadable: it cannot be shown to stay here.
+      const parseAt = tokens[k + 1] && tokens[k + 1].v === "." && tokens[k + 2] && tokens[k + 2].v === "parse" && tokens[k + 3] && tokens[k + 3].v === "(" && !tokens[k + 3].syn ? k + 3 : -1;
+      if (open !== -1) {
         urlConstructions.add(open);
-        const args = callArguments(tokens, open);
-        const isStr = (a) => a.length === 1 && a[0].t === "str";
-        const absolute = (v) => /^[A-Za-z][A-Za-z0-9+.-]*:/.test(v);
-        const bad = (why) => unreadable.push({ form: "url", specifier: `${why} at offset ${tk.s}` });
-        if (args === null) bad("unparseable construction");
-        else if (args.length === 0 || args.length > 2) bad("construction with no arguments or with extra arguments");
-        else if (!isStr(args[0])) bad("non-literal first argument");
-        else if (args.length === 1) {
-          if (!absolute(args[0][0].v)) bad("relative literal with no base");
-        } else if (args[1].map((t) => t.v).join("") === "import.meta.url") {
-          specifiers.push({ form: "url", specifier: args[0][0].v });
-        } else if (!absolute(args[0][0].v)) {
-          bad("base is not the literal import.meta.url");
+        readUrlConstruction(tokens, open, tk.s, specifiers, unreadable);
+      } else if (parseAt !== -1) {
+        urlConstructions.add(parseAt);
+        readUrlConstruction(tokens, parseAt, tk.s, specifiers, unreadable);
+      } else {
+        unreadable.push({ form: "url", specifier: `reference to URL that is not a literal construction at offset ${tk.s}` });
+      }
+    }
+    // fileURLToPath turns a file URL into a path and pathToFileURL a path into one. The module's own
+    // location (`fileURLToPath(import.meta.url)`), a literal file URL, a construction already read above
+    // and the entry-point test `pathToFileURL(x).href === import.meta.url` are the only justified uses.
+    if (tk.t === "id" && (tk.v === "fileURLToPath" || tk.v === "pathToFileURL") && !inClause.has(k)) {
+      if (!isCalledAt(tokens, k)) {
+        unreadable.push({ form: "url", specifier: `reference to ${tk.v} that is not a call at offset ${tk.s}` });
+      } else {
+        const open = tokens[k + 1].v === "(" ? k + 1 : k + 3;
+        const info = {};
+        const args = callArguments(tokens, open, info);
+        const joined = args === null ? "" : args.map((a) => a.map((t) => t.v).join("")).join(",");
+        if (args === null) {
+          unreadable.push({ form: "url", specifier: `unparseable ${tk.v} call at offset ${tk.s}` });
+        } else if (tk.v === "fileURLToPath") {
+          if (args.length === 1 && joined === "import.meta.url") {
+            // the module's own location
+          } else if (args.length === 1 && args[0].length === 1 && args[0][0].t === "str") {
+            specifiers.push({ form: "file-url", specifier: args[0][0].v });
+          } else if (args.length === 1 && args[0][0] && args[0][0].v === "new" && args[0][1] && args[0][1].v === "URL") {
+            // a construction, read on its own
+          } else {
+            unreadable.push({ form: "url", specifier: `fileURLToPath of something other than import.meta.url, a literal or a URL construction at offset ${tk.s}` });
+          }
+        } else {
+          const after = tokens.slice(info.end + 1, info.end + 12).map((t) => t.v).join("");
+          if (!/^\.href(?:===|!==|==|!=)import\.meta\.url/.test(after)) {
+            unreadable.push({ form: "url", specifier: `pathToFileURL outside the entry-point comparison at offset ${tk.s}` });
+          }
         }
+      }
+    }
+    // import.meta.resolve("x") resolves like an import (a relative literal is checked, a bare one is an
+    // offender, a non-literal is unreadable); any other way into import.meta is unreadable.
+    if (tk.t === "id" && tk.v === "import" && tokens[k + 1] && tokens[k + 1].v === "." && tokens[k + 2] && tokens[k + 2].v === "meta") {
+      const member = tokens[k + 3];
+      if (member && member.t === "punct" && member.v === "[") {
+        unreadable.push({ form: "url", specifier: `computed import.meta member at offset ${tk.s}` });
+      } else if (member && member.v === "." && tokens[k + 4] && tokens[k + 4].v === "resolve" && !(tokens[k + 5] && tokens[k + 5].v === "(" && !tokens[k + 5].syn)) {
+        unreadable.push({ form: "url", specifier: `import.meta.resolve that is not called at offset ${tk.s}` });
       }
     }
     if (tk.t !== "punct" || tk.v !== "(" || tk.syn) continue;
     // Any call whose second argument is `import.meta.url` resolves its first argument against this file,
     // whatever the callee is spelled: `new URL(x, import.meta.url)`, `new (URL)(...)`, `new g.URL(...)`,
     // a helper. A literal first argument is a reference to check; anything else is unreadable.
+    if (tokens[k - 1] && tokens[k - 1].v === "resolve" && tokens[k - 2] && tokens[k - 2].v === "." && tokens[k - 3] && tokens[k - 3].v === "meta" && tokens[k - 4] && tokens[k - 4].v === "." && tokens[k - 5] && tokens[k - 5].v === "import") {
+      const rargs = callArguments(tokens, k);
+      if (rargs === null) unreadable.push({ form: "resolve", specifier: `unparseable call at offset ${tokens[k].s}` });
+      else if (rargs.length >= 1 && rargs[0].length === 1 && rargs[0][0].t === "str") specifiers.push({ form: "resolve", specifier: rargs[0][0].v });
+      else unreadable.push({ form: "resolve", specifier: `non-literal at offset ${tokens[k].s}` });
+    }
     const urlArgs = urlConstructions.has(k) ? null : callArguments(tokens, k);
     if (urlArgs !== null && urlArgs[1]) {
       const base = urlArgs[1].map((t) => t.v).join("");
@@ -664,6 +727,19 @@ export function externalReferences(source, where) {
   const out = unreadable.map((u) => `${u.form} ${u.specifier}`);
   for (const { form, specifier } of specifiers) {
     if (specifier.startsWith("node:")) continue;
+    if (form === "file-url") {
+      // A file URL names a file system path: decide it like any other target, on its real path.
+      let target = null;
+      try {
+        target = fileURLToPath(new URL(specifier));
+      } catch {
+        target = null;
+      }
+      const placed = target === null ? "unresolvable" : place(target);
+      if (placed === "missing") out.push(`${form} ${specifier} does not exist, so containment cannot be proved`);
+      else if (placed !== "ok") out.push(`${form} ${specifier} is not a file inside the repository`);
+      continue;
+    }
     // `new URL(x, import.meta.url)` resolves x as a URL reference: a bare "data/x.json" is relative, and
     // an absolute URL (any scheme) is not a path in this repository.
     const urlForm = form === "url";
