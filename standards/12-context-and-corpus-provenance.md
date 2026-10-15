@@ -102,7 +102,7 @@ row and staleness line below, keyed by its number.
 **Each source in Scope MUST be declared with its name and kind.**
 
 The manifest has the place: `dataSources` lists `name`, `kind` (`retrieval-index`, `fine-tuning-set`,
-`evaluation-set`, `prompt-fixture`, `other`), `synthetic` and `provenance`. Until this standard no
+`evaluation-set`, `prompt-fixture`, `other`), `synthetic` (meaning as in Standard 13; not used by R5) and `provenance`. Until this standard no
 requirement asked for any of it to be filled in. A source reached by a path nobody listed is the usual
 case: the fixture directory added for one test, the folder the retrieval job also reads.
 
@@ -128,15 +128,20 @@ and delivery, a named author group and period.
 
 A source of three origins with one origin recorded has been described as the most reassuring of them.
 
-### R5 — Model-produced material is marked synthetic
+### R5 — Model authorship is recorded in the statement
 
-**A source known to contain material produced by a model MUST be declared `synthetic`.**
+**Where a source is known to contain material produced by a model, the statement MUST record that.**
 
-Synthetic material repeats its generator's errors with confidence and can be fed back into the system
-that made it; an evaluation set written by the model under test measures agreement with itself. A source
-a human edited from model output is still in part model-produced. `synthetic` is a boolean; where it is
-not known whether a model produced any of the material, `synthetic` is omitted and the unknown is
-recorded under R7, because `false` is a claim that no model produced it.
+Model-produced material repeats its generator's errors with confidence and can be fed back into the
+system that made it; an evaluation set written by the model under test measures agreement with itself.
+A source a human edited from model output is still in part model-produced. Where it is not known
+whether a model produced any of the material, that is recorded under R7.
+
+**The manifest's `synthetic` flag is not used for this.** `synthetic` keeps the meaning it has in
+[Standard 13](13-personal-data-in-ai-systems.md) (its definitions of real personal data and synthetic
+data, and its R1): data generated so that it describes no actual person. Model authorship neither requires nor
+implies it. A model paraphrase of real records is model-produced and describes real people; its
+statement carries the authorship and the flag stays absent or false by Standard 13's meaning.
 
 ### R6 — The generator is named
 
@@ -209,7 +214,7 @@ from a repository.
 | R2 | Gap in the record | A declared source with no statement at all |
 | R3 | Origin by adjective | `provenance: curated internal data` |
 | R4 | The reassuring part | A three-origin source described by its most trusted origin |
-| R5 | Model output as human | Generated Q&A pairs stored as "support team answers", or a self-grading evaluation set not marked synthetic |
+| R5 | Model output as human | Generated Q&A pairs stored as "support team answers", or a self-grading evaluation set whose statement does not record model authorship |
 | R6 | Generator unnamed | A known generating model absent from the statement |
 | R7 | Guess as origin | "Probably the 2023 export" written into the record |
 | R8 | Undated statement | A statement that does not say which snapshot or period it describes |
@@ -226,7 +231,7 @@ from a repository.
 | R2 | The statement for each declared source | The manifest's `provenance` or the document it names | Human review |
 | R3 | For each known component of origin, the original the statement points to | The statement and the project's production records | Human review |
 | R4 | The division of a multi-origin source by origin | The statement | Human review |
-| R5 | The `synthetic` declaration (or `synthetic` omitted with the unknown recorded under R7) set against how the material was made | The manifest and the production records | Human review |
+| R5 | The statement's record of model authorship (or the unknown recorded under R7) set against how the material was made | The statement and the project's production records | Human review |
 | R6 | The generator named where known | The statement | Human review |
 | R7 | Each component recorded as unknown, and what is known | The statement | Human review |
 | R8 | The revision, snapshot or period named, or, where the origin is unknown, the date the statement was written about | The statement | Human review |
@@ -293,7 +298,7 @@ No level is lowered by a risk tier (Standard 2 R3).
 | R2 | Each declared source carries a statement | A declared source with no statement | A statement "unknown, found at this path in this month" must **not** be failed for being unknown |
 | R3 | Each component of origin (producer, acquisition method, date) is stated when known or recorded as unknown under R7, and for each known component a reader can locate the original | A statement of only an adjective such as "internal" or "curated", or one omitting a known producer, acquisition method or date | A statement naming a system, an export and a date must **not** be failed for being short; a component recorded as unknown under R7 must **not** be failed for lacking its original |
 | R4 | A source of more than one origin is divided by origin in the statement | A multi-origin source described by one origin | A single-origin source must **not** be failed for lacking a division |
-| R5 | A source known to contain model output is `synthetic` | Model output with `synthetic` absent or false | A source known to be human-written and declared `synthetic: false` must **not** be flagged; a source of unknown authorship with `synthetic` omitted and the unknown recorded under R7 must **not** be failed |
+| R5 | A source known to contain model output has a statement that records it | Model output with a statement that does not record it | A source known to be human-written must **not** be flagged; a source of unknown authorship with the unknown recorded under R7 must **not** be failed; a source whose `synthetic` flag is absent or false but whose statement records model authorship must **not** be failed |
 | R6 | The generator is named where known | A known generator absent from the statement | A statement recording the generator as unknown under R7 must **not** be failed for lacking a name |
 | R7 | Each unknown component is stated as unknown with what is known | A guess recorded as an origin | A statement "unknown, found at this path in this month" must **not** be failed for being unknown |
 | R8 | The statement names a revision, snapshot or period | A statement with none | An unknown-origin statement dated to the day it was written about must **not** be failed for naming no revision |
@@ -341,7 +346,8 @@ level or evidence. Authored here, none of it owner-approved:
 - **The defined terms** source, provenance statement, origin, use and revisit event, and the scope
   limited to context, corpus, fixture and evaluation input.
 - **R1 to R4**: declaration, statement, origin to the extent known, and division by origin.
-- **R5 and R6**: marking model-produced material and naming the generator where known.
+- **R5 and R6**: recording model authorship in the statement and naming the generator where known;
+  and the ruling that `synthetic` keeps Standard 13's meaning and is not used for model authorship.
 - **R7 and R8**: unknown recorded as unknown, distinct from an absent statement; the statement names
   what it describes.
 - **R9**: the six revisit events and the recorded re-read.
@@ -401,7 +407,7 @@ standard — `artifacts/adr/` does not exist in this release.
 
 | Requirement | State |
 | --- | --- |
-| R1 to R8 (the place) | `dataSources` exists in `schemas/ai-system-manifest.schema.json` with `name`, `kind`, `synthetic` and `provenance`, and rejects other properties. The schema constrains shape; it does not require any entry or any value to be true |
+| R1 to R8 (the place) | `dataSources` exists in `schemas/ai-system-manifest.schema.json` with `name`, `kind`, `synthetic` (Standard 13's meaning, not R5's place) and `provenance`, and rejects other properties. The schema constrains shape; it does not require any entry or any value to be true |
 | R12 | No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` reads `dataSources` beyond schema conformance (`lifecycle.manifest-valid`) or reports provenance as a subject; `provenance` in `scripts/catalog.mjs` is the reserved namespace name. No test asserts the absence, so a future detector could break R12 without failing one |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs` and `scripts/inventory.mjs`. That a document exists is not evidence of any project's provenance |
 
