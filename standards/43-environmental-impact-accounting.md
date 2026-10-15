@@ -117,7 +117,8 @@ This requirement sets no threshold and does not define what "low" is.
 name the assumptions it extrapolates from.**
 
 Usage grows, models change and grids decarbonise or do not. A projection made at one volume describes
-that volume. The impact of a request not yet made is **not-evaluable** from a repository.
+that volume. Whether a projection will prove right is not a property of a repository; that it is
+labelled and states its assumptions is, and is what this requirement asks.
 
 ### R6 — This framework MUST NOT report environmental impact from the presence of a setting
 
@@ -154,7 +155,7 @@ consumed. Reporting an impact from a presence would turn a setting into a measur
 | R3 | The subject, period and assumptions, including grid intensity and its date | The report carrying the figure | Human review |
 | R4 | Any neutrality or low-impact claim, with the figure and the separately reported offset | The project's documentation and public statements | Human review |
 | R5 | Any projection, labelled, with its assumptions | The project's documentation | Human review |
-| R1 to R5 (the figure itself) | None obtainable from a repository | — | **Not-evaluable** |
+| The correctness of a figure, and of a projection, as a statement about energy actually used | None obtainable from a repository | — | **Not-evaluable** |
 | R6 | The absence of any detector that reports impact from a setting | This repository's own detectors and tests | Code review; see Implementation |
 
 Evidence for R1 to R5 is a human-authored record. A document stating a boundary and a method establishes
@@ -164,8 +165,11 @@ repository; this framework cannot observe the energy a model used.
 ## Validation, severity, and exemptibility
 
 **This standard has no catalog rules of its own in this release.**
-[Standard 6](06-standard-structure-and-rule-identity.md) R3 requires every standard to cite at least
-one rule or record why it does not; this is that record.
+The Phase 2 plan (`artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` section 6) asks that
+every standard cite at least one rule or record in its Validation section why it ships with none; this
+is that record. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is a different obligation,
+that each requirement state a falsifier or be declared not-evaluable, and the Tests and falsifiers
+section below answers it.
 
 Three reasons, stated so a reader can disagree with any one of them:
 
@@ -181,8 +185,10 @@ Three reasons, stated so a reader can disagree with any one of them:
    mints no id; naming one is a decision for the owner. A proposed rule, if one is natural, is recorded
    in the pull request that introduced this document for per-rule approval, and not here.
 
-**Severity.** R1 to R4 are `manual-review` obligations where a figure or claim exists. The figure
-itself, and R5's statement about future use, are **not-evaluable** and are not reported as reviewed. R6
+**Severity.** R1 to R5 are `manual-review` obligations where a figure, claim or projection exists:
+that a boundary, method, assumptions and labels are present and agree with the claim is a reviewable
+record. Whether a figure or a projection is *correct* is **not-evaluable** and is not reported as
+reviewed. R6
 constrains this framework and has no validation type, because the thing it prohibits is a behaviour of
 the tool.
 
@@ -191,10 +197,11 @@ the tool.
 low-impact claim with no figure behind it is likewise not exemptible, because an exception would record
 a project as knowingly making a claim nothing supports. R1 to R3 and R5 reach a system only where it
 reports a figure or a projection, and a system that makes no environmental claim of any kind may declare
-them not-applicable under [Standard 2](02-ai-risk-tiering-and-applicability.md) R4 with a reason and a
-`revisitWhen`. A project that has made no claim has nothing here to fail; one that later makes a claim
-is bound by these requirements from that point. No level here is lowered by a risk tier
-(Standard 2 R3).
+them out of scope by saying so in its own documents, with a reason. This release has no policy
+mechanism for it: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4 dispositions attach to
+catalog rules, and this standard has none. A project that has made no claim has nothing here to fail;
+one that later makes a claim is bound by these requirements from that point. No level here is lowered
+by a risk tier (Standard 2 R3).
 
 ## Tests and falsifiers
 
@@ -278,7 +285,7 @@ may reuse, and nothing here requires it.
 pinned. It declares no environmental field, and none is proposed by this standard.
 [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and
 non-lowering language used above. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the
-requirement the Validation section's no-rule record answers.
+requirement the Tests and falsifiers section answers.
 
 Items 41 and 44 are not part of this change; the lines drawn above are provisional until they are
 written, and the later standards may legitimately move them.
