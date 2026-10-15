@@ -61,8 +61,10 @@ Three terms, each defined here rather than by the brief:
 set. R2 reaches every system that reports a result on a set that a third-party-trained model could
 have seen, which includes a public benchmark published before the model's training cutoff or where
 the cutoff or training window is unknown, and a model the project fine-tunes from a third-party
-base; a set first published after every training cutoff that applies could not have been seen
-through training and R2 does not qualify its result (R1 records the dates that show it); what the project's own training pipeline introduces is MachineLearningStandards'
+base; a set whose items and answers the project records as not having been available by any route —
+private, circulated or published — before every training cutoff that applies could not have been
+seen through training, and R2 does not qualify its result; a publication date alone does not show
+that, and without the record the exposure is unknown and the result is qualified; what the project's own training pipeline introduces is MachineLearningStandards'
 ground (see below). R3 reaches systems that hold a held-out set. R4
 reaches a project that states a contamination check was run. R5 reaches systems that rely on a
 benchmark as evidence. R6 constrains this framework and reaches no consuming project. A system with
@@ -129,7 +131,8 @@ item 50 is still unwritten, and R3 below is a requirement, not one of its prohib
 ### R1 — The origin and exposure of an evaluation set are recorded
 
 **A system MUST record, for each evaluation set a reported result uses, where it came from, whether
-its content was public and from when, and the model identifiers a result on it was computed for.**
+its content was public and from when, any earlier circulation of its items or answers that the
+project knows of, and the model identifiers a result on it was computed for.**
 
 The model identifier is the one [Standard 1](01-ai-system-manifest.md) R4 asks the manifest to
 pin; without it a record of "published before the model's data was fixed" cannot be read, because
@@ -346,7 +349,7 @@ lowered by a risk tier (Standard 2 R3).
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | For one evaluation set, origin, public status with a date or "not published", and the model identifiers are all recoverable from the record | A result reported on a set with no exposure record, or a record naming no model | A set recorded as "not published" with a stated reason must **not** be failed for lacking a publication date |
-| R2 | A result on a public benchmark carries the qualification, and a provider statement is marked as the provider's | A result described as uncontaminated because a search found no overlap | A project that reports "exposure unknown" and the score must **not** be failed for not having excluded contamination |
+| R2 | A result on a public benchmark, or on a set whose pre-cutoff unavailability is not recorded under R1, carries the qualification, and a provider statement is marked as the provider's | A result described as uncontaminated because a search found no overlap | A project that reports "exposure unknown" and the score must **not** be failed for not having excluded contamination, and a result on a set recorded under R1 as unavailable by any route before every applicable cutoff must **not** be failed for lacking the qualification |
 | R3 | The held-out set is absent from public repositories and from prompts, and the routes relied on are recorded | The set in a repository that is public, or its items in a few-shot prompt | A set held in a private repository with no model-facing use must **not** be flagged for existing, and the held-out item presented to the model under evaluation to obtain its answer must **not** be flagged |
 | R4 | A reported check names its method, what it examined, and what a negative result does not show | "Checked, no contamination" with no method | A project that ran no check and says so must **not** be failed for not running one, and a negative result over the recorded complete training corpus of a model the project trained must **not** be failed for being described as a finding about its training data for the form of overlap the method detects; the same description claiming absence of paraphrase or translation is the falsifier |
 | R5 | A benchmark found saturated or defective is recorded as such and is reported with that qualification | A benchmark on which every candidate scores at the ceiling reported as a differentiator with no note | A benchmark still discriminating between candidates must **not** be flagged for being old or public |
