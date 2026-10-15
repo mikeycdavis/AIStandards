@@ -49,10 +49,9 @@ Terms, defined once and used verbatim below:
   proxies were looked for, each proxy identified, and, where a mitigation reduces a harm for one group
   by shifting it to another, the groups the shift falls on.
 - **Disparity route** — a way for affected people, operators and reviewers to report a suspected
-  disparate outcome, with a recorded disposition for each report, including one found well-founded. A
+  disparate outcome, with a recorded disposition for each report received and, where a report is found well-founded, that finding. A
   disparity is a difference in how often or how severely a harm falls on different groups.
-- **Fairness verdict** — a fairness statement, or a statement that an evaluation of a system was
-  adequate or that a mitigation works.
+- **Fairness verdict** — a fairness statement, a statement that disparity is absent, a statement that an evaluation of a system was adequate, or a statement that a mitigation works.
 - **Presence artifact** — a fairness document, a bias test, an evaluation tool, a declared group list
   or a stated metric.
 - **Fairness stand-in** — a list of protected characteristics, a preferred measure or a numeric
@@ -211,7 +210,7 @@ There is no policy-level exception mechanism in this release, because no rule ex
 | Requirement | Invalidated by |
 | --- | --- |
 | R1 | A change of model, of the decision the output feeds, or of the people it reaches |
-| R2 | A change of model, of the data the figure was computed from, or of the criterion; and a well-founded report that contradicts the statement |
+| R2 | A change of model, of the measure, of the groups compared, of the data the figure was computed from, or of the criterion; and a well-founded report that contradicts the statement |
 | R3 | A change of model, of evaluation data, or of the groups in the fairness record |
 | R4 | A change of model, of the people reached, or a mitigation; and a well-founded report that contradicts a distribution record |
 | R5 | A change in who the system reaches or in how reports are received |
