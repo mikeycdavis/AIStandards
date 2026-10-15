@@ -57,8 +57,7 @@ Three terms, each defined here rather than by the brief:
 - A **benchmark** is a public benchmark or any evaluation set a project uses as a stand-in for a
   capability it cares about, as opposed to a set built from its own task.
 
-**Where each requirement reaches.** R1 reaches every system that reports a result on an evaluation
-set. R2 reaches every system that reports a result on a set that a third-party-trained model could
+**Where each requirement reaches.** R1 reaches every system that holds an evaluation set or reports a result on one. R2 reaches every system that reports a result on a set that a third-party-trained model could
 have seen, which includes a public benchmark published before the model's training cutoff or where
 the cutoff or training window is unknown, and a model the project fine-tunes from a third-party
 base. What the project's own training pipeline introduces is MachineLearningStandards' ground (see
@@ -159,8 +158,9 @@ rejects: the record is a document the project names, and which document is the p
 
 **Where an evaluated model, or a model it was fine-tuned from, was trained by a party other than
 the project and could have been trained on the evaluation set, or whose items or answers could have
-reached the model in its context at evaluation time through retrieval, browsing or tools, a result
-MUST be reported with that qualification, and MUST NOT be reported as free of contamination because
+reached the model in its context at evaluation time by any route — retrieval, browsing, tools, or
+being placed directly in a system prompt, example or message — a result MUST be reported with that
+qualification, and MUST NOT be reported as free of contamination because
 no contamination was found.**
 
 A model the project trains entirely itself from data it holds is outside this trigger; what its
@@ -312,7 +312,7 @@ repository at all."
 
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
-| R1 | For each evaluation set a result uses: origin, public status with a date or "not published", and the model identifiers the result is for | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
+| R1 | For each evaluation set the system holds or a result uses: origin, public status with a date or "not published", any known earlier circulation, the model identifiers a result is for, and where R2's exception is wanted, the unavailability record with its basis | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R2 | The reported result with its qualification, and the provider statements or cutoff relied on, each marked as the provider's claim | The evaluation report and the project's notes on the provider | Human review |
 | R2 (exposure) | None obtainable from a repository | — | **Not-evaluable** |
 | R3 | The routes the project relied on being closed, and the terms it read for each provider the set was sent to | A project document the project names | Human review |
@@ -372,8 +372,8 @@ lowered by a risk tier (Standard 2 R3).
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | For one evaluation set, origin, public status with a date or "not published", and the model identifiers are all recoverable from the record | A result reported on a set with no exposure record, or a record naming no model | A set recorded as "not published" with a stated reason must **not** be failed for lacking a publication date |
-| R2 | A result on a public benchmark, on a set whose pre-cutoff unavailability is not recorded under R1, or where items or answers could reach the model in context at evaluation time, carries the qualification, and a provider statement is marked as the provider's | A result described as uncontaminated because a search found no overlap; a result on a public benchmark, or on a set with no R1 unavailability record, reported with no exposure qualification; a provider's filter statement reported as fact | A project that reports "exposure unknown" and the score must **not** be failed for not having excluded contamination, and a result on a set recorded under R1, with its basis, as unavailable by any route before every applicable cutoff must **not** be failed for lacking the qualification for exposure through training, provided no context-time exposure applies |
+| R1 | For one held or used evaluation set, origin, public status with a date or "not published", known earlier circulation, and the model identifiers are all recoverable from the record | A held or used set with no exposure record, or a record naming no model | A set recorded as "not published" with a stated reason must **not** be failed for lacking a publication date |
+| R2 | Unless the set is recorded under R1, with its basis, as unavailable by any route before every applicable cutoff and no context-time exposure applies: a result on a public benchmark carries the qualification; so does a result where items or answers could reach the model in context by any route, and a provider statement is marked as the provider's | A result described as uncontaminated because a search found no overlap; a result with no R1 unavailability record, or with context-time exposure, reported with no exposure qualification; a provider's filter statement reported as fact | A project that reports "exposure unknown" and the score must **not** be failed for not having excluded contamination, and a result on a set recorded under R1, with its basis, as unavailable by any route before every applicable cutoff must **not** be failed for lacking the qualification for exposure through training, provided no context-time exposure applies |
 | R3 | The held-out set is absent from public repositories, and from prompts, examples, fine-tuning sets and shared stores other than the item presented to the model under evaluation to obtain its answer; the routes relied on and each provider's or judge's terms are recorded | The set in a repository that is public, or its items in a few-shot prompt | A set held in a private repository with no model-facing use must **not** be flagged for existing, and the held-out item presented to the model under evaluation to obtain its answer must **not** be flagged |
 | R4 | A reported check names its method, what it examined, and what a negative result does not show | "Checked, no contamination" with no method | A project that ran no check and says so must **not** be failed for not running one, and a negative result over the recorded complete training corpus of a model the project trained from scratch must **not** be failed for being described as a finding about its training data for the form of overlap the method detects; the same description claiming absence of paraphrase or translation, or a fine-tuned model's fine-tuning corpus described as its whole training data, is the falsifier |
 | R5 | A benchmark found saturated or defective is recorded as such and is reported with that qualification | A benchmark on which every candidate scores at the ceiling, or that no longer stands in for the capability the project cares about, reported as a differentiator with no note | A benchmark still discriminating between candidates must **not** be flagged for being old or public |
