@@ -115,10 +115,10 @@ is warranted is a risk judgment this standard does not make.
 
 ### R2 — The overseer is shown what the judgment needs
 
-**At each oversight point before an effect, the overseer MUST be presented with the proposed output
-or action, the inputs it was made from or a route to them, and any signal the system holds that its
-output is uncertain or ungrounded; and what is presented MUST NOT be limited to a summary composed
-by the system whose output is under review.**
+**At each oversight point, the overseer MUST be presented with the output or action — as proposed,
+before an effect, or as it took effect, after the fact — the inputs it was made from or a route to
+them, and any signal the system holds that its output is uncertain or ungrounded; and what is
+presented MUST NOT be limited to a summary composed by the system whose output is under review.**
 
 A review of a one-line description of an action that the system wrote about itself is a review of the
 system's account of itself. The concrete case is a diff presented as "minor formatting changes", or an
@@ -206,10 +206,15 @@ which it is.
 
 ### R7 — This framework MUST NOT report a system overseen from the presence of an oversight artifact
 
-**No detector, rule, audit finding or generated report in this framework MAY state that a system is
+**No detector, audit finding or generated report in this framework MAY state that a system is
 subject to human oversight, that an overseer is able to intervene, or that oversight is effective,
 because a review step, an approval record, a runbook, a role name, an approval UI or a dashboard is
 present in the repository.**
+
+This constrains verdicts the framework reports, not the catalog's statement of what a human reviewer is
+asked to confirm. A `manual-review` rule such as Standard 11's `oversight.intervention-path-declared`
+states an obligation and leaves the judgment to a reviewer; it reports nothing from presence, and no
+detector or report in this framework treats a runbook's presence as that rule passing.
 
 A repository can show that a document names a role, that an approval file exists, or that a
 confirmation dialog is called. It cannot show that the role is held, that the person saw what the
@@ -246,7 +251,7 @@ requirement in [Standard 8](08-ai-safety-requirements-and-safety-cases.md),
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | The recorded overseers, by person or by role with holders, for each oversight point, and the statement of what each point is independent of | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | A sample of what the overseer is shown at an oversight point, set against what the system will do | The review interface or its description, and the system's code that produces it | Human review |
+| R2 | A sample of what the overseer is shown at an oversight point, set against what the system will do or did | The review interface or its description, and the system's code that produces it | Human review |
 | R3 | The overseer's available actions at each oversight point, and the behaviour of the system on a decline or stop | The interface, the code that handles the outcome, and a demonstration | Human review |
 | R4 | The recorded timing of each oversight point (before the effect or after), and the stated window where after | A project document the project names | Human review |
 | R5 | The counts described, per period, or a statement that none are kept | The project's own records | Human review |
@@ -301,7 +306,7 @@ rule minted, so that a consumer classifies it consistently.
 | R4 | manual-review | error for presenting an after-the-fact point as before the effect; warning for omitting the intervention window (`SHOULD`) | yes, as R1 | the clause that an after-the-fact point is not described as pre-effect: no; the rest: yes |
 | R5 (a zero read as evidence of good behaviour, `MUST`) | manual-review | error | yes, as R1 | yes |
 | R5 (the record exists, `SHOULD`) | manual-review | warning | yes, as R1 | yes |
-| R5 (the reason for a zero) | not-evaluable | none reported; not scored | yes, as R1 | not attestable |
+| R5 (the reason for a zero) | not-evaluable | none reported; not scored | yes, as R1 | not applicable; not attestable |
 | R6 | manual-review | warning for the `SHOULD` design change, error for presenting review as item-by-item beyond capacity | yes, as R1 | the clause that review is not presented as item-by-item beyond capacity: no; the rest: yes |
 | R7 | manual-review (code review of this repository, since it constrains this framework) | error for this repository's changes; not applicable to a consuming project | not applicable | no |
 
@@ -347,8 +352,10 @@ knowingly does not meet one records that in its own documents.
 
 **Attestation.** None exists in this release (item 4, Phase 4). Under
 [Standard 6](06-standard-structure-and-rule-identity.md) R8 a `manual-review` rule defaults to
-attestable; if a rule were minted, R1 to R6 would be attestable except the clauses marked not
-exemptible above, and the reason for a zero in R5 is not attestable.
+attestable, and attestability is independent of exemptibility: if a rule were minted, R1 to R6 would be
+attestable, including the clauses marked not exemptible above, since non-exemptibility bars approving a
+known breach and not supplying human evidence of compliance. The reason for a zero in R5 is
+not-evaluable and cannot be attested.
 
 **What invalidates a recorded oversight arrangement.** Each of these changes who is overseeing or
 what they can do, and an arrangement recorded before the change describes the earlier system:
