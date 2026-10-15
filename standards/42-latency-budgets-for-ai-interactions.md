@@ -99,14 +99,19 @@ the table below.
 The limit often lives in a gateway or client configuration rather than in code. The requirement is that
 the place be named.
 
-### R3 — Count retries and fallbacks against the budget
+### R3 — Give a retrying interaction a deadline, and count every attempt against it
 
-**Where a system retries a call or falls back to another model, the time spent on every attempt MUST
-be counted against the interaction's budget, and a retry or fallback MUST NOT be started when the
-remaining budget cannot cover it.**
+**Where a system retries a call or falls back to another model, it MUST state a deadline for the whole
+interaction — a hard limit, distinct from the percentile objective of R1 — or a time allotted to each
+attempt, MUST count the time spent on every attempt against it, and MUST NOT start a retry or fallback
+whose own time limit (R2) exceeds what remains.**
 
-A per-call timeout of ten seconds with three retries is a thirty-second interaction that nobody
-declared. The multiplier is the same one that affects cost; the bound on its count is the subject of
+A percentile objective such as "p95 under two seconds" permits some requests to run longer; it is a
+statement about a population, and it leaves no "remaining time" for one request to consume. The deadline
+is what a single interaction is held to, and it is the project's choice, including whether it is much
+larger than the objective. A system that retries with no deadline of its own has a deadline anyway: the
+sum of its attempts. A per-call timeout of ten seconds with three retries is a thirty-second interaction
+that nobody declared. The multiplier is the same one that affects cost; the bound on its count is the subject of
 item 41, and this requirement concerns only the time it adds. That a different model answered is
 [Standard 33](33-ai-observability.md) R2's subject, and this standard relies on it.
 
@@ -151,7 +156,8 @@ shown by a call it cut short.
 | Wait as behaviour | The limit is reached and the system keeps waiting, or hangs the caller | R2 |
 | Orphaned call | The caller gives up at the limit; the underlying call continues and is billed | R2 |
 | Hidden stack of retries | Three attempts at ten seconds in an interaction declared as ten | R3 |
-| Retry past the budget | A retry started with less time left than a call takes | R3 |
+| Retry past the deadline | A retry started with less time left than its own limit | R3 |
+| Objective read as deadline | A percentile objective used as the per-request cutoff, so the tail the objective permits is cut off, or never stated as a separate deadline | R1, R3 |
 | Wrong-path measurement | A figure from short prompts on an idle endpoint, quoted for production | R4 |
 | Unattached figure | "p95 is 1.8 s" naming no model, prompt revision or workload | R4 |
 | Unqualified claim | "Real-time" or "instant" with no budget behind it | R5 |
@@ -164,10 +170,9 @@ shown by a call it cut short.
 | --- | --- | --- | --- |
 | R1 | Each budget as interaction, point of measurement and percentile | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R2 | The limit and where it is applied, the behaviour at it, and a run in which it was reached | Project code, configuration and the records of a run | Human review of the records |
-| R3 | Retry and fallback policy, and how remaining budget is checked before an attempt | Project code and configuration | Human review; a project's own test where one exists |
+| R3 | Retry and fallback policy, the interaction deadline or per-attempt allotment, and how what remains is checked before an attempt | Project code and configuration | Human review; a project's own test where one exists |
 | R4 | A reported figure with interaction, percentile, model, prompt revision and workload | The project's documentation and measurement records | Human review |
 | R5 | Any published latency claim with the budget and measurement behind it | The project's documentation | Human review |
-| R5 (the time of a future request) | None obtainable from a repository | — | **Not-evaluable** |
 | R6 | The absence of any detector that reports latency from a setting | This repository's own detectors and tests | Code review; see Implementation |
 
 Evidence for R1 to R5 is a human-authored record. A document naming a budget or a limit establishes
@@ -177,8 +182,11 @@ claims; the reviewer reads what is claimed against the code or configuration tha
 ## Validation, severity, and exemptibility
 
 **This standard has no catalog rules of its own in this release.**
-[Standard 6](06-standard-structure-and-rule-identity.md) R3 requires every standard to cite at least
-one rule or record why it does not; this is that record.
+The Phase 2 plan (`artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` section 6) asks that
+every standard cite at least one rule or record in its Validation section why it ships with none; this
+is that record. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is a different obligation,
+that each requirement state a falsifier or be declared not-evaluable, and the Tests and falsifiers
+section below answers it.
 
 Three reasons, stated so a reader can disagree with any one of them:
 
@@ -188,7 +196,7 @@ Three reasons, stated so a reader can disagree with any one of them:
    measure this framework's own incompleteness and blame the project for it. Adding a schema field is a
    schema-versioning decision, outside this slice (plan 02 section 8).
 2. **R2 to R5 concern behaviour and records, not files.** Whether a limit is on the call a request
-   takes, whether remaining budget is checked before a retry, and whether a figure was measured on the
+   takes, whether remaining time is checked before a retry, and whether a figure was measured on the
    shipped path are not properties of a checkout. A detector reading source would test for the presence
    of a setting, which R6 forbids this framework from reporting as a result.
 3. **No rule namespace exists for it.** No shard holds a latency or performance namespace, and this
@@ -196,18 +204,18 @@ Three reasons, stated so a reader can disagree with any one of them:
    it against the `performance.*` ids another pack already uses. A proposed rule, if one is natural, is
    recorded in the pull request that introduced this document for per-rule approval, and not here.
 
-**Severity.** R1 to R5 are `manual-review` obligations in this release. R5's statement about a future
-request is **not-evaluable** and is not reported as reviewed. R6 constrains this framework and has no
+**Severity.** R1 to R5 are `manual-review` obligations in this release. How long a future request will take is not
+a property of a repository, and no requirement here asks a reviewer to establish it. R6 constrains this framework and has no
 validation type, because the thing it prohibits is a behaviour of the tool.
 
 **Exemptibility.** R6 is not exemptible, for the reason R6 of
 [Standard 25](25-grounding-and-hallucination-control.md) is not. R5's prohibition on an unqualified
 claim is likewise not exemptible, because an exception would record a project as knowingly making a
 claim nothing supports. R1 to R4 reach a system only where their subject exists — R3 only where it
-retries or falls back — and a system without that subject may declare the requirement not-applicable
-under [Standard 2](02-ai-risk-tiering-and-applicability.md) R4 with a reason and a `revisitWhen`. No
-detector in this release would contradict a false declaration. No level here is lowered by a risk tier
-(Standard 2 R3).
+retries or falls back — and a system without that subject records, in its own documents, that the requirement does not reach it
+and why. This release has no policy mechanism for it: [Standard 2](02-ai-risk-tiering-and-applicability.md)
+R4 dispositions attach to catalog rules, and this standard has none. No detector in this release would
+contradict a false statement. No level here is lowered by a risk tier (Standard 2 R3).
 
 ## Tests and falsifiers
 
@@ -215,7 +223,7 @@ detector in this release would contradict a false declaration. No level here is 
 | --- | --- | --- | --- |
 | R1 | A stated budget names interaction, point of measurement and percentile | "Fast" or "under two seconds" with none of the three | A budget stated as complete-answer p95 for a named interaction, with no first-token figure, must **not** be reported as missing one it never claimed |
 | R2 | A call that exceeds the limit is cut and handled as recorded | The limit is reached and the call hangs the caller, or proceeds as before | A system whose only model call is a background step nobody waits on is out of scope for R2, not failing it |
-| R3 | A retry is declined when the remaining budget cannot cover it | Three attempts at the per-call limit inside an interaction declared at one | A system that never retries or falls back, and says so, must **not** be failed for lacking a remaining-budget check |
+| R3 | A retry is declined when the interaction's remaining deadline is shorter than its own limit | Three attempts at the per-call limit inside an interaction with a deadline of one | A system that never retries or falls back, and says so, must **not** be failed for lacking a deadline; a request that exceeds a p95 objective but is inside its deadline must **not** be reported as a violation of R3 |
 | R4 | A reported figure names interaction, percentile, model, prompt revision and workload | A figure with a number and nothing else | A figure on a named workload that says it was measured on an idle endpoint must **not** be flagged for admitting it |
 | R5 | A published claim names the budget and measurement | "Real-time" or "instant" with neither | A statement of a measured figure on a named workload and no stronger claim must **not** be flagged |
 | R6 | No detector or report in this repository outputs a latency verdict from presence | A detector that reported a bound because a timeout argument was present | Reporting that a timeout setting was *found*, as an observation with no verdict, is permitted |
@@ -262,8 +270,9 @@ it owner-approved:
   and the refusal to fix a number.
 - **R2 in full**: a time limit on every call someone waits on, a named enforcement place, and the
   ruling that the behaviour at the limit must not be to wait.
-- **R3 in full**: counting retries and fallbacks against the interaction's budget and declining an
-  attempt the remaining budget cannot cover.
+- **R3 in full**: a per-interaction deadline or per-attempt allotment distinct from the percentile
+  objective, counting retries and fallbacks against it, and declining an attempt the remainder cannot
+  cover.
 - **R4 in full**: the five things a reported figure must name, and the requirement that it be measured
   on the path users take.
 - **R5's prohibition** on "real-time" and similar claims with no budget behind them, and the ruling that
@@ -298,7 +307,7 @@ latency under load and is not claimed here.
 pinned. It does not declare budgets, and no field is proposed by this standard.
 [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and
 non-lowering language used above. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the
-requirement the Validation section's no-rule record answers.
+requirement the Tests and falsifiers section answers.
 
 Items 41 (Inference Cost and Budget Control), 43 (Environmental Impact Accounting) and 44 (Operational
 Resilience, Degradation, and Provider Portability) are not part of this change; the lines drawn above are
