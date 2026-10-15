@@ -135,9 +135,9 @@ there ([Standard 7](07-boundary-with-adjacent-standards.md) R2).
 ### R5 — Keep what was shown, and revise the decision when the system changes
 
 **Where a disclosure was presented or is owed, a project MUST be able to show what was presented, in
-the form users received it, at a given time, and MUST revise the decision under R1 and R3 when a
-model, a use of the output, or an
-audience changes.**
+the form users received it, at a given time, and MUST revise the decision under R1 and R3, and
+replace the capture, when a model, a prompt, a use of the output, an audience, the interface that
+presents the disclosure, or the law that applies changes.**
 
 A decision recorded as "owed, shown" is a claim about the interface at the time. Without the shipped
 text and where it appeared, a later review cannot tell whether it was shown, and a change to the
@@ -210,13 +210,14 @@ Three reasons, stated so a reader can disagree with any one of them:
    `scripts/catalog.mjs`). This standard names no id and edits no shard; whether to place a rule there,
    with what meaning, is a decision this release does not take.
 
-**Severity.** R1 to R5 are each `manual-review` obligations, established from the project's record,
-the capture required by R5 and the specified point of disclosure; a failed review of any of them is
-severity `error`. Whether a particular person actually received a disclosure at run time is a
-property of the running system. It is **not-evaluable** from a repository, it is not the validation
-type of any requirement here, and it is not reported as reviewed. R6 constrains this framework and
-has no validation type or project severity. These are the levels a rule would carry if one is
-minted; this release emits no framework finding at them.
+**Severity.** R1 to R5 are each `manual-review` obligations, and a failed review of any of them is
+severity `error`. R2's reach is reviewed from the specified point of disclosure and the captures R5
+requires, which are repository evidence; an owed disclosure missing from a captured path is an R2
+violation. A repository cannot show that every person on every path received a disclosure, so a
+clean review is a statement about the specified and captured paths and is not reported as proof of
+receipt; receipt by a given person at run time is **not-evaluable** and is not claimed. R6
+constrains this framework and has no validation type or project severity. These are the levels a
+rule would carry if one is minted; this release emits no framework finding at them.
 
 **Exemptibility.** R6 is not exemptible: no circumstance makes it reasonable for a scan to report an
 effect from a presence. R1, R3 and R5 reach a system only where output or action reaches a person
