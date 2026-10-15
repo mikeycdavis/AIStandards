@@ -99,9 +99,10 @@ rejects.
 
 ### R2 — Name the measure and the comparison behind any fairness or parity claim
 
-**A statement that a system treats groups equally, comparably or without bias MUST name the measure
-used, the groups compared, the data it was computed from and the threshold or criterion that was
-applied, and MUST NOT be stated as an unqualified property of the system.**
+**A statement that a system is fair, unbiased or equitable, or treats groups equally, comparably or
+without bias, MUST name the measure used, the reason that measure was chosen, the groups compared, the
+data it was computed from and the threshold or criterion that was applied, and MUST NOT be stated as
+an unqualified property of the system.**
 
 Fairness measures are not interchangeable and, in general, cannot all hold at once: equal selection
 rates, equal error rates and equal calibration are different claims, and satisfying one can require
@@ -114,8 +115,9 @@ next run, and it cannot be held to a claim.
 
 ### R3 — Report results by group, and record where a group cannot be measured
 
-**Where a system's quality, error rate or outcome is reported, the report MUST NOT be limited to an
-aggregate when an affected group recorded under R1 can be measured; and where a group cannot be
+**Where a system's quality, error rate or outcome is reported, the report MUST give each group's figure
+with the size of the group it was computed on, MUST NOT be limited to an aggregate when an affected
+group recorded under R1 can be measured; and where a group cannot be
 measured, the report MUST record that as a limit of the evaluation and MUST NOT present the absence
 of a measurement as parity.**
 
@@ -248,15 +250,12 @@ Three reasons, stated so a reader can disagree with any one of them:
    has no shard. This standard mints no id and edits no shard. Whether a rule is wanted, which
    validation type it would take and what it would read are decisions this release does not take.
 
-**Severity.** R1 to R4 are `manual-review` obligations in this release; R5 is a `SHOULD` and is
-reviewed, not required. The inference-time property of a system treating groups as claimed is
-**not-evaluable** and is not reported as reviewed. R6 constrains this framework and has no validation
-type, because the thing it prohibits is a behaviour of the tool.
-
-**No severity is assigned to R1 to R5 in this release.** A severity belongs to a rule's finding, and
-no rule exists here to produce one. A failed manual review is a finding for the reviewer, made under
-the standards the project and its owner apply, not a framework finding; if a rule is later minted
-for any of these requirements its severity is decided then and recorded in its shard.
+**Severity.** R1 to R4 are `manual-review` obligations and a failed review is severity `error`. R5
+is a `SHOULD`, also `manual-review`, and a failed review is `warning`. The inference-time property
+of a system treating groups as claimed is **not-evaluable**, is not the validation type of any
+requirement, and is not reported as reviewed. R6 constrains this framework and has no validation
+type or project severity, because the thing it prohibits is a behaviour of the tool. These are the
+levels a rule would carry if one is minted; this release emits no framework finding at them.
 
 **Exemptibility.** R6 is not exemptible: no project circumstance makes it reasonable for a scan to
 report an effect from a presence, or to apply one jurisdiction's list to another's, and a mechanism
@@ -276,11 +275,11 @@ by a risk tier
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | An output kind that affects people has a recorded group set, harm and bearer | A system that scores or classifies people with no record of who bears an error | A system recording a reasoned "no individual consequence" finding must **not** be reported as missing a record |
-| R2 | A fairness claim names a measure, the groups, the data and a criterion | "Fair" or "bias-free" with none of them | A statement reporting a named measure on named groups with the number and no stronger claim must **not** be flagged |
+| R2 | A fairness claim names a measure, the reason it was chosen, the groups, the data and a criterion | "Fair", "equitable" or "bias-free" with any of them missing, or a measure with no recorded reason for its selection | A statement reporting a named measure on named groups with the number and no stronger claim must **not** be flagged |
 | R3 | A report carries per-group figures with sizes, or states which group was not measured and why | An aggregate-only report where a recorded group was measurable | A report stating "not measured, attribute not lawfully collected" must **not** be read as a failure to evaluate; a group with a very small size reported as such is not a defect |
-| R4 | A mitigation's effect is recorded on each group, and at least one proxy is considered | A mitigation reported with its benefit to one group and no recorded effect on another | A project recording that no proxy was identified, with how it looked, must **not** be failed for the empty list |
+| R4 | Each identified harm has a record of which groups bear it and how; every proxy the project knows of is recorded; a mitigation's effect is recorded on each group | A harm with no record of who bears it; a known proxy left unrecorded; a mitigation reported with its benefit to one group and no recorded effect on another | A project recording that no proxy was identified, with how it looked, must **not** be failed for the empty list; a system with no mitigation needs no mitigation record |
 | R5 | A route exists and a report received has a recorded disposition | A route that discards or never reads reports | A system with no individual-level consequence (R1) must not be failed for having no route |
-| R6 | No detector or report in this repository outputs a fairness verdict from presence, or supplies a protected-attribute list or threshold | A detector that reported fair because a bias-testing import was present | Reporting that a fairness document or library was *found*, as an observation with no verdict, is permitted |
+| R6 | No detector or report in this repository outputs a fairness verdict, an adequacy verdict for an evaluation, an effectiveness verdict for a mitigation, or a preferred measure, from presence, and none supplies a protected-attribute list or threshold | A detector that reported fair, adequate or effective because a bias-testing import or a fairness document was present, or that named a default measure | Reporting that a fairness document or library was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a fairness artifact, so no detector
 checks R1 to R5; they are enforced by review or not at all, and the last requirement holds by
@@ -324,7 +323,8 @@ it owner-approved:
 
 - **R1 in full**: the requirement to record affected groups, harm and bearer, and the ruling that a
   reasoned finding of no individual consequence is a legitimate record.
-- **R2 in full**, including the ruling that a fairness claim is not exemptible when unqualified, and the
+- **R2 in full**, including the requirement to record why a measure was chosen, and the ruling that
+a fairness claim is not exemptible when unqualified, and the
   decision to leave the choice of measure and threshold to the project.
 - **R3 in full**: disaggregated reporting with group sizes, and the rule that an unmeasured group is
   reported as unmeasured and not as parity.
@@ -339,6 +339,8 @@ it owner-approved:
 - **The exclusions in Scope** (items 38, 39 and 40, personal data handling, evaluation planning and
   legal compliance) as division lines. The specification lists items 38 to 40 under the same bullet;
   where this standard stops and each begins is unconfirmed by anyone.
+- **The severities** in Validation (`error` for a failed `MUST` or `MUST NOT` requirement, `warning`
+for a `SHOULD`), the levels a rule would carry; they are this repository's judgment.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
   decision not to name a rule id in the unsharded `fairness` namespace.
 
