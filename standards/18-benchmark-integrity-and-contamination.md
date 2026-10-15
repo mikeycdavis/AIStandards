@@ -149,7 +149,8 @@ public rather than assume it.
 The record concerns exposure, not authorship. "Public from 2024-03" and "never published, held in a
 private repository" are both complete answers; "unknown" is a third complete answer, for the date
 and for earlier circulation alike, and is better than a guess. **A record that is absent is not a
-record that the set is private.**
+record that the set is private.** A provider's stated training cutoff,
+where the record relies on one, is recorded as the provider's claim.
 
 The manifest's `dataSources` entry of kind `evaluation-set` carries only `synthetic` and a free
 `provenance` string, with no field for public exposure or its date. Nothing here asks an adopter to
@@ -312,7 +313,7 @@ repository at all."
 
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
-| R1 | For each evaluation set held or used: origin, public status with a date or "not published", any known earlier circulation (or "unknown"), the model identifiers a result is for with the base model of a fine-tune, and where the exception is wanted the unavailability record with its basis | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
+| R1 | For each evaluation set held or used: origin, public status with a date or "not published", any known earlier circulation (or "unknown"), the model identifiers a result is for with the base model of a fine-tune, a provider's stated cutoff marked as the provider's claim, and where the exception is wanted the unavailability record with its basis | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R2 | The reported result with its qualification; the provider statements, cutoff and unavailability record relied on, each marked as the provider's claim or the project's; the routes by which items or answers could reach the model's context | The evaluation report and the project's notes on the provider | Human review |
 | R2 (exposure) | None obtainable from a repository | — | **Not-evaluable** |
 | R3 | The project-held material and where it lives; the routes relied on being closed; each provider's or judge's terms relied on | A project document the project names, the repository and its hosting settings | Human review |
