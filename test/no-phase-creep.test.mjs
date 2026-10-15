@@ -457,7 +457,7 @@ test("the Phase 2 tooling built so far exists, and the rest of Phase 2 does not"
 });
 
 test("only the standards written so far exist", () => {
-  // The guard is not that the corpus is frozen — Phase 2 writes the remaining 45. It is that a
+  // The guard is not that the corpus is frozen — Phase 2 writes the remaining 35. It is that a
   // standard arrives deliberately, by being added here, rather than by appearing unnoticed.
   const present = fs.readdirSync(path.join(REPO, "standards")).filter((f) => f.endsWith(".md")).sort();
   assert.deepEqual(present, [
