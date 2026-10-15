@@ -100,7 +100,7 @@ This is a constraint on the framework, not on a project. A repository can show t
 | Spend not attributable to a named spend subject | A budget or reported figure is stated per tenant or feature and spend is recorded only per API key; or unattributed spend is folded into the largest spend subject | R1 |
 | Ceiling that does not act | A notification at 80% and no action at 100%; "continue and log"; a ceiling read from configuration the system can raise; or no named enforcement point | R2 |
 | Unbounded multiplier | A retry with no maximum; a fallback with no bound on how often; no completion limit or history bound where billing is by tokens or time; or a multiplier governed only by the budget above it | R3 |
-| Estimate presented as spend | A figure computed from token counts is shown as the amount spent, or a spend figure carries no label | R4 |
+| Estimate presented as spend | A figure computed from token counts is shown as the amount spent; a spend figure carries no label; or a figure labelled billed names no invoice or capacity-accounting source | R4 |
 | Cost claim without support | "Cost is capped" naming no ceiling; "negligible" naming no measurement; or "$0.02 per request" naming no model, price date or workload | R5 |
 | Setting read as control | A framework report of "cost controlled" because a token limit is present | R6 |
 
