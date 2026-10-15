@@ -185,7 +185,11 @@ Three reasons, stated so a reader can disagree with any one of them:
    mints no id; naming one is a decision for the owner. A proposed rule, if one is natural, is recorded
    in the pull request that introduced this document for per-rule approval, and not here.
 
-**Severity.** R1 to R5 are `manual-review` obligations where a figure, claim or projection exists:
+**Severity.** A reviewer's finding against R1, R2, R3 or R5 is reported at **warning** severity: the
+figure may still be honest, and what is missing is the account of it. A finding against R4 is reported
+at **error** severity, because it is a claim with nothing behind it and R4 is not exemptible. These
+levels are this repository's judgment, listed in Additions, and are not owner-approved. R1 to R5 are
+also `manual-review` obligations where a figure, claim or projection exists:
 that a boundary, method, assumptions and labels are present and agree with the claim is a reviewable
 record. Whether a figure or a projection is *correct* is **not-evaluable** and is not reported as
 reviewed. R6
@@ -211,7 +215,7 @@ by a risk tier (Standard 2 R3).
 | R2 | Each input has a status label and the method is named | An estimate described as measured, or an unknown replaced silently | A project that records its hosted model's energy as "unknown" and reports no figure must **not** be reported as failing R2 |
 | R3 | A figure names model or class, period and grid assumption with date | A figure with a number and no subject, period or region | A figure that names an old model and an old period, and says so, must **not** be flagged as stale |
 | R4 | A neutrality or low-impact claim cites the figure, with offsets reported separately | "Carbon-neutral" with the gross figure absent | A project that publishes a gross figure and separately lists an offset must **not** be flagged for having one |
-| R5 | A projection is labelled as one and names its assumptions | A forecast written in the present tense | A labelled projection with assumptions must **not** be flagged for being uncertain |
+| R5 | A projection is labelled as one and names its assumptions | A projection with no projection label, or with no named assumptions | A labelled projection with assumptions must **not** be flagged for being uncertain |
 | R6 | No detector or report in this repository outputs an impact verdict from presence | A detector that reported low-impact because a region name was present | Reporting that a region setting was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads an accounting artifact and no fixture
@@ -224,6 +228,12 @@ honest state of this standard.
 There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to
 except. A project that knowingly does not meet one records that in its own documents; Standard 2's
 dispositions apply to the application of a rule, and this standard has none.
+
+**Attestations and expiry.** This release provides no attestation mechanism for these records, and no
+record under this standard expires on a schedule. [Standard 2](02-ai-risk-tiering-and-applicability.md)'s
+attestation and expiry machinery attaches to catalog rules, and none exists here; attestations are
+Phase 4 work. Review-staleness is event-driven only: a record is stale when one of the events below
+occurs, and nothing in this release detects that.
 
 **What invalidates a recorded figure.** Each is a different subject, and a record made before the change
 describes the earlier one:
@@ -262,6 +272,8 @@ none of it owner-approved:
 - **R6**, the constraint on this framework, in the same form as the equivalent requirement in
   [Standard 25](25-grounding-and-hallucination-control.md) and
   [Standard 33](33-ai-observability.md).
+- **The severity assignments** (warning for R1, R2, R3 and R5; error for R4) and the statement that no
+  attestation or scheduled expiry exists in this release.
 - **That this standard sets no target, threshold or method**, and the exclusions in Scope as division
   lines, which no one has confirmed.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
