@@ -67,7 +67,8 @@ It does **not** cover, and claims none of the ground of, the following:
 - **Gates for externally visible actions** — item 46, unwritten in this release.
 - **What the system must never do to its overseers.** Item 48, Safety and Oversight Prohibitions, is
   the negative face of this item's token in the specification and is unwritten. This standard states
-  the positive obligations and mints no prohibition; see Q23 below.
+  the positive obligations and mints no forbidden-level prohibition beyond R3's clause that a decline or
+  stop sticks; see Q23 below.
 - **Records of what the system did**, and the investigation of what went wrong. Item 36
   (Auditability of AI Actions) and item 34 (AI Incident Response) are unwritten in this release.
 - **Whether the overseer is entitled to see the data they are shown.** That is item 16 (Access
@@ -213,8 +214,9 @@ present in the repository.**
 
 This constrains verdicts the framework reports, not the catalog's statement of what a human reviewer is
 asked to confirm. A `manual-review` rule such as Standard 11's `oversight.intervention-path-declared`
-states an obligation and leaves the judgment to a reviewer; it reports nothing from presence, and no
-detector or report in this framework treats a runbook's presence as that rule passing.
+states an obligation and leaves the judgment to a reviewer; today it only ever reports skipped or
+not-evaluated, and no detector or report in this framework treats a runbook's presence as that rule
+passing. The tension between its title and its description is recorded under Q24.
 
 A repository can show that a document names a role, that an approval file exists, or that a
 confirmation dialog is called. It cannot show that the role is held, that the person saw what the
@@ -223,8 +225,8 @@ those would put this framework's authority behind a property of an organisation,
 does not contain.
 
 Whether oversight is available, informed and exercised is an operational fact about people and a
-running system. It is **not-evaluable** from a repository. This is the form of the equivalent
-requirement in [Standard 8](08-ai-safety-requirements-and-safety-cases.md),
+running system. It is **not-evaluable** from a repository. This is adapted from the equivalent
+requirement, which also names a rule, in [Standard 8](08-ai-safety-requirements-and-safety-cases.md),
 [Standard 17](17-evaluation-plans-for-generative-systems.md),
 [Standard 33](33-ai-observability.md) and [Standard 25](25-grounding-and-hallucination-control.md).
 
@@ -303,10 +305,10 @@ rule minted, so that a consumer classifies it consistently.
 | R1 | manual-review | error | yes, where there is no oversight point | the independence condition: no; the rest: yes |
 | R2 | manual-review | error | yes, as R1 | yes |
 | R3 | manual-review | error | yes, as R1 | the requirement that a decline or stop stick: no; the rest: yes |
-| R4 | manual-review | error for presenting an after-the-fact point as before the effect; warning for omitting the intervention window (`SHOULD`) | yes, as R1 | the clause that an after-the-fact point is not described as pre-effect: no; the rest: yes |
-| R5 (a zero read as evidence of good behaviour, `MUST`) | manual-review | error | yes, as R1 | yes |
+| R4 | manual-review | error for presenting an after-the-fact point as before the effect, or for recording no timing where the effect can precede the overseer; warning for omitting the intervention window (`SHOULD`) | yes, as R1 | the clause that an after-the-fact point is not described as pre-effect: no; the rest: yes |
+| R5 (a zero read as evidence of good behaviour, `MUST`) | manual-review | error | yes, as R1 | no |
 | R5 (the record exists, `SHOULD`) | manual-review | warning | yes, as R1 | yes |
-| R5 (the reason for a zero) | not-evaluable | none reported; not scored | yes, as R1 | not applicable; not attestable |
+| R5 (the reason for a zero) | not-evaluable | none reported; not scored | yes, as R1 | exemptible (a not-evaluable rule cannot be non-exemptible); not attestable |
 | R6 | manual-review | warning for the `SHOULD` design change, error for presenting review as item-by-item beyond capacity | yes, as R1 | the clause that review is not presented as item-by-item beyond capacity: no; the rest: yes |
 | R7 | manual-review (code review of this repository, since it constrains this framework) | error for this repository's changes; not applicable to a consuming project | not applicable | no |
 
@@ -315,7 +317,8 @@ repository's own changes.
 
 **Exemptibility.** R7 is not exemptible: no project circumstance makes it reasonable for a scan to
 report oversight from a presence, and a mechanism for excepting the prohibition would be
-self-defeating. R1's independence condition, R3's requirement that a decline or stop stick, R4's
+self-defeating. R1's independence condition, R3's requirement that a decline or stop stick, R5's requirement that a zero
+not be read as good behaviour, R4's
 requirement not to describe an after-the-fact point as pre-effect and R6's requirement not to present
 review as item-by-item beyond capacity are likewise not exemptible, because an exception would record a
 project as knowingly describing a system as overseen that its overseers cannot change. R1 to R6 reach
@@ -331,10 +334,10 @@ release would contradict a false declaration. No level here is lowered by a risk
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Each oversight point names a person or a role with at least one holder, and no listed overseer is a component the system, or an agent acting for the requester, controls | A role with no holder, or an approval generated by the system or by an automated agent acting for the requesting party | A reviewer who is the system's operator and is named must **not** be failed for that |
-| R2 | From the decision point the overseer can reach the concrete artifact or action, the inputs it was made from (or a route to them), and any uncertainty signal the system holds | A decision screen that shows only a description the system wrote, or that hides the inputs or a held uncertainty signal | A summary that links to the full artifact must **not** be flagged for being a summary |
-| R3 | Before an effect, a decline stops the action and the system does not re-submit it by another path, and an editable output can be corrected; after the fact, a reversible effect can be corrected or reversed; where the system runs over time, the overseer can pause it and stop it, and it does not resume or re-queue without them | An action that proceeds after a decline, or a decline overwritten by a retry; an editable output with no correction path; a running system that cannot be paused or stopped by the overseer; a run that resumes after a stop without the overseer | A `propose` system whose output is simply not applied must **not** be failed for lacking a decline button |
-| R4 | Each point whose effect can precede the overseer is recorded as after the fact, is not described as before, and the window within which an intervention can still change the outcome is stated (its absence is the warning) | A next-day review described as pre-effect (error); an after-the-fact point with no stated window (warning) | A stated after-the-fact design must **not** be failed for its timing alone (Standard 45 R3 separately governs irreversible actions) |
-| R5 | Counts per period exist, including stops; a statement that none are kept is reported as the warning, not as a pass | A claim that oversight "works" resting on a record with no interventions and no explanation, or on no record | A system with a recorded, explained zero must **not** be flagged |
+| R2 | From the decision or review point the overseer can reach the concrete artifact or action, the inputs it was made from (or a route to them), and any uncertainty signal the system holds | A decision or review screen that shows only a description the system wrote, or that hides the inputs or a held uncertainty signal | A summary that links to the full artifact must **not** be flagged for being a summary |
+| R3 | Before an effect, a decline stops the action and the system does not re-submit it by another path, and an editable output can be corrected; after the fact, a reversible effect can be corrected or reversed; where the system runs over time, the overseer can pause it and stop it, and it does not resume or re-queue without them | An action that proceeds after a decline, or a decline overwritten by a retry; an editable output with no correction path; a running system that cannot be paused or stopped by the overseer; a run that resumes after a stop without the overseer; an after-the-fact point at which a reversible effect cannot be corrected or reversed | A `propose` system whose output is simply not applied must **not** be failed for lacking a decline button |
+| R4 | Each point whose effect can precede the overseer is recorded as after the fact, is not described as before, and the window within which an intervention can still change the outcome is stated (its absence is the warning) | A next-day review described as pre-effect (error); a point whose effect can precede the overseer with no recorded timing (error); an after-the-fact point with no stated window (warning) | A stated after-the-fact design must **not** be failed for its timing alone (Standard 45 R3 separately governs irreversible actions) |
+| R5 | Counts per period exist, including stops; a statement that none are kept is reported as the warning, not as a pass | A claim that oversight "works" resting on a record with no interventions and no explanation | A system with a recorded, explained zero must **not** be flagged |
 | R6 | The reviewer can compare the volume and time allotted with the aggregate capacity of the holders, the claim fits them, and where the volume exceeds the aggregate capacity the design change chosen (added reviewers, sampling, batching, escalation criteria or narrowed authority) is stated | Item-by-item review claimed for a volume the assigned holders together cannot review (error); capacity exceeded with no design change or remedy stated (warning) | A stated sampling design with a rate must **not** be flagged as weaker oversight; a queue divided among enough holders to review every item must **not** be failed for its volume |
 | R7 | No detector or report in this repository outputs an oversight verdict from presence | A detector that reported "overseen" because an approval file existed | Reporting that an approval file was *found*, as an observation with no verdict, is permitted |
 
@@ -355,7 +358,8 @@ knowingly does not meet one records that in its own documents.
 attestable, and attestability is independent of exemptibility: if a rule were minted, R1 to R6 would be
 attestable, including the clauses marked not exemptible above, since non-exemptibility bars approving a
 known breach and not supplying human evidence of compliance. The reason for a zero in R5 is
-not-evaluable and cannot be attested.
+not-evaluable and cannot be attested. R7, if minted, would carry `attestable: false`: it constrains this
+framework and no project can attest to it.
 
 **What invalidates a recorded oversight arrangement.** Each of these changes who is overseeing or
 what they can do, and an arrangement recorded before the change describes the earlier system:
@@ -366,7 +370,11 @@ what they can do, and an arrangement recorded before the change describes the ea
 - a change in how quickly the effect follows the output, which moves the timing recorded in R4;
 - a tool added, or an existing tool gaining a side effect, which creates an oversight point nobody
   recorded;
-- a change of declared autonomy tier under [Standard 11](11-autonomy-levels-and-delegated-authority.md).
+- a change to the code or path that handles a decline, pause or stop;
+- an automated approver or agent becoming able to supply an approval at an oversight point;
+- a change of declared autonomy tier under [Standard 11](11-autonomy-levels-and-delegated-authority.md);
+- a detector or report being added that states oversight as a result, which invalidates the reading of R7
+  above.
 
 **Staleness is not a calendar.** An arrangement does not expire with time; it stops being true when one
 of the above happens, and nobody is prompted. Nothing in this release detects the transition; the
@@ -397,7 +405,8 @@ Specifically authored here, none of it owner-approved:
   be called what it is, and the `SHOULD` statement of the window.
 - **R5's counts and the ruling that a zero is a finding to explain**; its `SHOULD` level.
 - **R6's capacity requirement** and its deliberate refusal to state a number.
-- **R7**, the constraint on this framework, in the same form as the equivalent requirement in
+- **R7**, the constraint on this framework, adapted from the equivalent requirement (which also names a
+  rule; R7 omits it, see R7) in
   [Standard 8](08-ai-safety-requirements-and-safety-cases.md),
   [Standard 17](17-evaluation-plans-for-generative-systems.md),
   [Standard 25](25-grounding-and-hallucination-control.md) and
@@ -413,12 +422,15 @@ Not authored here: the posture `O` and the search that supports it are the bound
 **Open questions, recorded and not answered** (Q23 to Q25 in
 [`artifacts/project-plan-breakdown/08-open-questions.md`](../artifacts/project-plan-breakdown/08-open-questions.md)):
 
-- **Q23.** Is the prohibitive form — a system must not disable, evade, degrade or retry past its
+- **Q23.** Is the remaining prohibitive form — a system must not disable, evade or degrade its
   overseers — item 48's, as the specification's "negative face of `human oversight`" suggests, or is it
-  stated here? This standard states positive obligations only and relies on R3's "a decline must
-  stick" as the sole must-not-adjacent clause.
+  stated here? This standard states positive obligations and relies on R3's clause that a decline or stop
+  sticks; the remaining prohibitive form (disable, evade, degrade) is the open part.
 - **Q24.** Should the general intervention capability (R3) and the halt record (Standard 11 R4) be one
-  rule or two, and in which standard's shard does it live?
+  rule or two, and in which standard's shard does it live? Relatedly, the title of
+  `oversight.intervention-path-declared` ("A human can halt the system") says more than its description
+  (a committed document names the halt path), which R7 would not allow a report to state from a
+  runbook's presence.
 - **Q25.** Is R1's exclusion of a model-instance reviewer from the meaning of "overseer" what the owner
   wants, given that automated review may be a legitimate control?
 
@@ -440,7 +452,8 @@ approver is shown and may do; it decides no gate.
 evidence in a safety case, and [Standard 9](09-misuse-and-abuse-prevention.md) and
 [Standard 23](23-agent-execution-security.md) each record this item as the general obligation they do
 not claim. Item 26 (unwritten) will define what an uncertainty signal is, which R2 asks to be shown, and
-[Standard 25](25-grounding-and-hallucination-control.md) R2 what a grounded output is.
+[Standard 25](25-grounding-and-hallucination-control.md)'s Scope defines ungrounded output and its R2 the
+signal that carries it.
 [Standard 13](13-personal-data-in-ai-systems.md) governs what a stored or sent record may contain;
 entitlement to view it is item 16's. [Standard 7](07-boundary-with-adjacent-standards.md) R4 and R5 order conflicts and keep
 ids from colliding, and [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the
@@ -468,7 +481,7 @@ as a capability.
 
 | Requirement | What would be needed | Why it is not here |
 | --- | --- | --- |
-| R1, R4 | A place to record overseers and timing: a schema change, or a named document a rule can find | Both schemas are closed; a change is a schema-versioning decision and Phase 2 section 8 puts it out of scope |
+| R1, R4 | A place to record overseers and timing: a schema change, or a named document a rule can find | Both schemas are closed; a change is a schema-versioning decision and plan 02 section 8 records the same boundary for risk-tier fields, the same reasoning applying, so it is out of scope for this slice |
 | R2, R3, R5, R6 | A way to read a project's own review interface and decision records | The form is the project's; a repository scan cannot read a queue or a person, and Phase 3 detector and evidence-availability work follows the corpus |
 | Rule ids | An owner decision on Q23 and Q24, and a shard placement | Not decided; this standard names none |
 | R7 | A test asserting no detector emits an oversight verdict | Meaningful only once a detector exists for it to constrain |

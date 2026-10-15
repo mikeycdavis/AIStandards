@@ -313,8 +313,8 @@ quantifying uncertainty or holding a comparison's conditions identical.
 
 The specification lists item 48 (Safety and Oversight Prohibitions) as the negative face of the
 `human oversight` token. Standard 10 states the positive obligations only; its R3 requires that a
-decline stick, which is the only requirement near a must-never form. Whether "a system must not
-disable, evade, degrade or retry past its overseers" is item 48's prohibition, or belongs in Standard
+decline or stop stick, which is the one must-not clause it states. Whether the remaining prohibitive
+form, "a system must not disable, evade or degrade its overseers", is item 48's prohibition, or belongs in Standard
 10, is undecided. **Not resolved here, because item 48 is unwritten and the placement decides which
 standard owns a forbidden-level requirement.** **Impact if unanswered:** a prohibition may be written
 twice or in neither place.
@@ -325,7 +325,8 @@ Standard 11 R4 (rule `oversight.intervention-path-declared`) asks for a committe
 `execute` and `autonomous` systems. Standard 10 R3 asks for the general capability to decline and, where the output can be edited, correct
 before an effect, to correct or reverse a reversible effect after the fact, and, where the system runs over
 time, to pause and stop. Whether a rule for the general capability would duplicate or
-widen Standard 11's, and in which shard it lives, is undecided. **Not resolved here, because it
+widen Standard 11's, and in which shard it lives, is undecided. The title of that rule ("A human can
+halt the system") also says more than its description (a committed document names the halt path). **Not resolved here, because it
 changes an existing rule's scope.** **Impact if unanswered:** no rule covers the general capability;
 both requirements are manual review.
 

@@ -536,11 +536,13 @@ harm and what stands in the way. The two may share a document, and neither subst
 exercise, and [Standard 45](45-approval-gates.md) gates the individual actions a misuse case may try to
 cause; either may be named as a control under R1.
 
+[Standard 10](10-human-oversight-and-intervention.md) (the general oversight obligation) and written
+standards 13 (whose `privacy.no-unredacted-prompt-logging` governs R4's records) and 23 are cited
+under Scope.
+
 Unwritten items this standard defers to, by specification number: item 4 (exceptions, which R2's
 exemptibility needs); item 16 (who may use the system at all); items 22 and 24 (tool and retrieval
-security); written standards 13 (whose `privacy.no-unredacted-prompt-logging` governs R4's records) and 23
-are cited above;
-item 34 (what follows a misuse incident); item 35 (the adversarial exercises R5 names); item 41 (budget
+security); item 34 (what follows a misuse incident); item 35 (the adversarial exercises R5 names); item 41 (budget
 mechanisms R3's bounds may share); and item 48 (prohibitions on bullet 1's ground, whose relationship to
 `misuse prevention` the specification does not record).
 

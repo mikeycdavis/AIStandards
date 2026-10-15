@@ -506,6 +506,9 @@ specifically.** The two are not reconciled, and [Standard 51](51-agent-and-tool-
 against, and R5's `gate.no-self-approval` is adjacent to [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1. Its Relationship section names this
 standard as the owner of sandboxing, which this document does not address; see Scope.
 
+[Standard 10](10-human-oversight-and-intervention.md) (the general oversight obligation) is cited under
+Scope.
+
 Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 16 (who may use a model, context or tool); item 22 (tool security,
 and whether tool output other than fetched content is within [Standard 51](51-agent-and-tool-execution-prohibitions.md) R2); item 24 (retrieval supply
 chain); item 35 (the exercise [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1's rule names); item 36 (the record of what an
