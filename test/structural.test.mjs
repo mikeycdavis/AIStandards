@@ -398,20 +398,62 @@ test("YAML: a verbatim tag containing commas is one token, in block and flow con
   }
 });
 
-test("YAML: a tag whose spelling cannot be recovered is flagged resolved, never reported as written", () => {
-  // A comment between the tag and its node hides the spelling from a backwards read.
-  const r = parseStructuralText("t.yml", "a: !!str # note\n  1\n", "yaml");
-  let tag;
-  walk(root(r), (n) => { if (n.tag) tag = n.tag; });
-  assert.equal(tag.resolved, true);
-  assert.equal(tag.offset, null);
-  assert.equal(tag.source, "tag:yaml.org,2002:str");
-  // A comment that ends in `>` after a verbatim tag is not part of the tag, and hides its spelling.
+test("YAML: properties separated from their node by comments keep their written spelling and offset", () => {
+  const cases = [
+    ["a: !!str # note\n  1\n", [["1", "!!str", null]]],
+    ["a: &x # note\n  1\n", [["1", null, "x"]]],
+    ["a: &x !!str # note\n  1\n", [["1", "!!str", "x"]]],
+    ["a: !!str &x # note\n  1\n", [["1", "!!str", "x"]]],
+    ["a: &x # one\n  !!str # two\n  1\n", [["1", "!!str", "x"]]],
+    ["a: !!str # one\n  # two\n\n  # three\n  1\n", [["1", "!!str", null]]],
+    ["a: !<tag:yaml.org,2002:str> # note\n  1\n", [["1", "!<tag:yaml.org,2002:str>", null]]],
+    ["a: !!str # note with > and < and !x and &y\n  1\n", [["1", "!!str", null]]],
+    ["a: [!!str # note\n  1]\n", [["1", "!!str", null]]],
+    ["a: {k: &y # note\n  v}\n", [["v", null, "y"]]],
+    ["a: [&x # c\n  !local # d\n  1, *x]\n", [["1", "!local", "x"]]],
+    ["- !!str # note\n  1\n- &z # note\n  2\n", [["1", "!!str", null], ["2", null, "z"]]],
+    ["'a #b': !!str # note\n  1\n", [["1", "!!str", null]]],
+    ['"a #b": &x # note\n  1\n', [["1", null, "x"]]],
+    ["a: !a#b 1\n", [["1", "!a#b", null]]],
+    ["a: &x#y !!str # note\n  1\n", [["1", "!!str", "x#y"]]],
+    ['"a \\" #b": !!str # note\n  1\n', [["1", "!!str", null]]],
+    ["a: !!str\t# tab before the comment\n  1\n", [["1", "!!str", null]]],
+    ["!!map # note\na: 1\n", [[undefined, "!!map", null]]],
+  ];
+  for (const [text, expected] of cases) {
+    const r = parseStructuralText("t.yml", text, "yaml");
+    assert.equal(r.ok, true, text);
+    const seen = [];
+    walk(root(r), (n) => {
+      if (n.tag === undefined && n.anchor === undefined) return;
+      seen.push([n.value, n.tag?.source ?? null, n.anchor?.name ?? null]);
+      if (n.tag) {
+        assert.equal(n.tag.resolved, undefined, text + ": the written spelling is recovered, not flagged resolved");
+        assert.equal(text.slice(n.tag.offset, n.tag.offset + n.tag.source.length), n.tag.source, text + ": offset points at the spelling");
+      }
+      if (n.anchor) {
+        assert.notEqual(n.anchor.offset, null, text + ": anchor offset recovered");
+        assert.equal(text.slice(n.anchor.offset, n.anchor.offset + 1 + n.anchor.name.length), "&" + n.anchor.name, text + ": anchor offset");
+      }
+    });
+    assert.deepEqual(seen, expected, text);
+  }
+  // text that only looks like properties is not read as properties
+  const r = parseStructuralText("t.yml", "a: 1 # !!str note\nb: 2\n", "yaml");
+  walk(root(r), (n) => assert.equal(n.tag, undefined, "a comment's words are not a tag"));
+  const lone = parseStructuralText("t.yml", "a: &x 1 # &y\nb: !!int # &z\n  2\n", "yaml");
+  const names = [];
+  walk(root(lone), (n) => { if (n.anchor) names.push(n.anchor.name); });
+  assert.deepEqual(names, ["x"]);
+});
+
+test("YAML: a tag that cannot be located in the text is flagged resolved, never reported as written", () => {
+  // A verbatim tag followed by a comment that ends in ">" must not have the comment folded into it.
   const hidden = parseStructuralText("t.yml", "a: !<t> # x>\n  1\n", "yaml");
   let hiddenTag;
   walk(root(hidden), (n) => { if (n.tag) hiddenTag = n.tag; });
-  assert.equal(hiddenTag.resolved, true);
-  assert.equal(hiddenTag.offset, null);
+  assert.equal(hiddenTag.source, "!<t>");
+  assert.equal(hiddenTag.offset, 3);
   assert.ok(!hiddenTag.source.includes("#"), "the comment is not folded into the tag");
   const written = parseStructuralText("t.yml", "a: [!!str 1]\n", "yaml");
   walk(root(written), (n) => { if (n.tag) assert.equal(n.tag.resolved, undefined, "a recovered spelling is not flagged"); });

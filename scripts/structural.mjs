@@ -375,13 +375,44 @@ const isWs = (c) => c === " " || c === "\t" || c === "\n" || c === "\r";
 const FLOW_INDICATORS = "[]{},";
 const MERGE_TAG = "tag:yaml.org,2002:merge";
 
+// Where a comment begins on the line [lineStart, end): a `#` at the start of the line or after a blank, outside
+// quotes (a `#` inside `"a #b"` or `'a #b'` is scalar text). -1 when there is none.
+function commentStart(text, lineStart, end) {
+  let quote = null;
+  for (let i = lineStart; i < end; i += 1) {
+    const c = text[i];
+    if (quote === null) {
+      if (c === '"' || c === "'") quote = c;
+      else if (c === "#" && (i === lineStart || isWs(text[i - 1]))) return i;
+    } else if (quote === '"' && c === "\\") {
+      i += 1;
+    } else if (c === quote) {
+      quote = null;
+    }
+  }
+  return -1;
+}
+
+// Moves back from `pos` over blanks, line breaks and comments (a comment runs from `#` to the end of its
+// line), so that properties separated from their node by a comment are still found.
+function skipBackBlanksAndComments(text, pos) {
+  let end = pos;
+  for (;;) {
+    while (end > 0 && isWs(text[end - 1])) end -= 1;
+    if (end === 0) return end;
+    const lineStart = text.lastIndexOf("\n", end - 1) + 1;
+    const cs = commentStart(text, lineStart, end);
+    if (cs === -1) return end;
+    end = cs;
+  }
+}
+
 function propsBefore(text, start, anchorName, hasTag) {
   let anchor = null;
   let tag = null;
   let pos = start;
   for (let guard = 0; guard < 8 && (anchorName !== null && anchor === null || hasTag && tag === null); guard += 1) {
-    let end = pos;
-    while (end > 0 && isWs(text[end - 1])) end -= 1;
+    const end = skipBackBlanksAndComments(text, pos);
     // A property can directly follow a flow indicator with no blank between (`[!!str 1]`, `{k: &a 1}`,
     // `[a,!t b]`). Flow indicators cannot occur inside an anchor name or a tag, so a flow indicator
     // ends the word as a blank does.
