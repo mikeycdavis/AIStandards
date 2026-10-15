@@ -166,11 +166,11 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 
 | Requirement | Event that makes its record stale |
 | --- | --- |
-| R1 | A new type or granularity of spend subject, or a change of billing account or attribution scheme. |
-| R2 | A change to the ceiling's value, spend subject, period, enforcement point or behaviour, or to who can write it. |
-| R3 | A change of retry, fallback or repeated-call policy outside an agent loop, a change of the billing basis (flat per call to metered by tokens or time), or an observed multiplier exceeding its limit. |
-| R4 | A change of how the provider counts billed units, for an estimate computed from them. |
-| R5 | A change of model, price or workload, for a cost per unit stated as the current cost of a call; a change to what the measurement named by a negligibility claim measured; or a change to the ceiling a cap claim names. |
+| R1 | Any change to anything this record names or relies on, including: a new type or granularity of spend subject, or a change of billing account or attribution scheme. |
+| R2 | Any change to anything this record names or relies on, including: a change to the ceiling's value, spend subject, period, enforcement point or behaviour, or to who can write it. |
+| R3 | Any change to anything this record names or relies on, including: a change of retry, fallback or repeated-call policy outside an agent loop, a change of the billing basis (flat per call to metered by tokens or time), or an observed multiplier exceeding its limit. |
+| R4 | Any change to anything this record names or relies on, including: a change of how the provider counts billed units, for an estimate computed from them. |
+| R5 | Any change to anything this record names or relies on, including: a change of model, price or workload, for a cost per unit stated as the current cost of a call; a change to what the measurement named by a negligibility claim measured; or a change to the ceiling a cap claim names. |
 | R6 | A new detector, rule or report that touches cost. |
 
 ## Additions this standard makes beyond the source
