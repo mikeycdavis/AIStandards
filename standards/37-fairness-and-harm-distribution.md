@@ -35,31 +35,18 @@ from it.
 
 Terms, defined once and used verbatim below:
 
-- **Fairness record** — for each output or decision that affects a person, the groups it reaches, the
-  harm, and who bears it, including people who are not users of the system; it may conclude that no
-  individual consequence arises.
+- **Fairness record** — for each output or action that affects a person, directly or through a decision another person or system makes from it, the groups it reaches, the harm, and who bears it, including people who are not users of the system; it may conclude that no individual consequence arises.
 - **Fairness basis** — the measure used, the reason that measure was chosen, the groups compared, the
   data it was computed from and the criterion applied, in a dated record that precedes the result.
-- **Fairness statement** — a statement that a system is fair, unbiased or equitable, or treats groups
-  equally, comparably or without bias.
-- **Group report** — a reported quality, error rate or outcome given, for every group in the fairness
-  record, either as a figure with the size of the group it was computed on or as "not measured" with the
-  reason; a group that was not measured is never presented as parity.
-- **Distribution record** — for each harm in the fairness record: which groups bear it and how, how
-  proxies were looked for, each proxy identified, and, where a mitigation reduces a harm for one group
-  by shifting it to another, the groups the shift falls on.
-- **Disparity route** — a way for affected people, operators and reviewers to report a suspected
-  disparate outcome, with a recorded disposition for each report received and, where a report is found well-founded, that finding. A
-  disparity is a difference in how often or how severely a harm falls on different groups.
+- **Fairness statement** — a statement that a system, model, component or output is fair, unbiased, equitable or non-discriminatory, does not disadvantage a group, or treats people or groups equally, comparably or without bias.
+- **Group report** — a reported quality, error rate, harm rate, measure of disparity or outcome given, for every group in the fairness record or named in a distribution record, either as a figure with the size of the group it was computed on or as "not measured" with the reason; a group that was not measured is never presented as parity, and where the fairness record names no group the figure is labelled an aggregate.
+- **Distribution record** — for each harm in the fairness record: which groups bear it and how, how proxies were looked for, each proxy identified, and, where a mitigation shifts a harm to another group, to people outside any group in the fairness record, or into a different harm, where the shift falls.
+- **Disparity route** — a way for affected people, operators and reviewers to report a suspected harm or disparity, with a recorded disposition for each report received and, where a report is found well-founded, that finding.
 - **Fairness verdict** — a fairness statement, a statement that disparity is absent, a statement that an evaluation of a system was adequate, or a statement that a mitigation works.
-- **Presence artifact** — a fairness document, a bias test, an evaluation tool, a declared group list
-  or a stated metric.
-- **Fairness stand-in** — a list of protected characteristics, a preferred measure or a numeric
-  threshold that would take the place of the project's own record.
-- **Framework output** — what a detector, catalog rule, audit finding or generated report of this
-  framework states.
-- **Prohibited framework output** — a framework output that states a fairness verdict because a
-  presence artifact is present, or that supplies a fairness stand-in.
+- **Presence artifact** — a fairness document, a bias test, an evaluation tool, a declared group list, a stated metric, or a project's own fairness record, fairness basis or group report.
+- **Fairness stand-in** — a list of protected characteristics, a preferred measure, a reference dataset or benchmark, or a numeric threshold that would take the place of the project's own record.
+- **Framework output** — what a detector, catalog rule, audit finding or generated report of this framework states, or any other message, score or status it emits.
+- **Prohibited framework output** — a framework output that states a fairness verdict, whatever its basis, or that supplies a fairness stand-in.
 
 It does **not** cover, and claims none of the ground of:
 
@@ -82,15 +69,15 @@ no adjacent standard as evidence for this item, and none is cited here.
 
 ### R1 — Keep a fairness record
 
-**A system whose output or action affects people MUST have a fairness record.**
+**A system whose output or action affects people MUST have a fairness record that covers each such output or action.**
 
 A record may legitimately say that no individual consequence arises; that is a finding, and it is
 recorded as one. It is a document, not a manifest field: `schemas/ai-system-manifest.schema.json` is
 closed and has no property for it.
 
-### R2 — Back every fairness statement with the record and the basis
+### R2 — Back every fairness verdict with the record and the basis
 
-**A fairness statement MUST be accompanied by the fairness record and the fairness basis.**
+**A fairness verdict MUST be accompanied by the fairness record and the fairness basis.**
 
 Fairness measures are not interchangeable and cannot all hold at once; which to prefer is the
 project's judgment, and this standard fixes neither a measure nor a threshold. A figure with no named
@@ -130,8 +117,8 @@ the law protects and which measure suits a context are contextual and jurisdicti
 
 | Requirement | Failure |
 | --- | --- |
-| R1 | Output or action that affects people with no fairness record, or people affected who never use the system in no record |
-| R2 | A fairness statement without the fairness record or the fairness basis, including a basis dated after the result it judged |
+| R1 | Output or action that affects people that the fairness record does not cover, including people affected who never use the system |
+| R2 | A fairness verdict without the fairness record or the fairness basis, including a basis dated after the result it judged |
 | R3 | A reported figure that is not a group report: an aggregate only, a group with neither a figure nor a not-measured entry with its reason, a figure with no size, or a group not measured presented as parity |
 | R4 | A harm in the fairness record with no distribution record, or one missing an element of its definition |
 | R5 | No disparity route, a route closed to affected people, operators or reviewers, or a report with no recorded disposition |
@@ -146,7 +133,7 @@ the law protects and which measure suits a context are contextual and jurisdicti
 | R3 | The group reports and the not-measured entries with reasons | The project's evaluation results | Human review |
 | R4 | The distribution records | The project's analysis documents | Human review |
 | R5 | The disparity route and its dispositions | Project operations records | Human review |
-| R6 | The absence of any prohibited framework output | The catalog, detectors, rules and reports of this framework, and their tests | Code review |
+| R6 | The absence of any prohibited framework output | The catalog, detectors, rules and reports of this framework | Code review |
 
 A document establishes only that the project wrote something down. Whether a running system treats
 groups as claimed is not-evaluable from a repository.
@@ -192,8 +179,8 @@ R3).
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | A fairness record exists | Output or action that affects people with no fairness record | A fairness record that concludes no individual consequence arises is a fairness record |
-| R2 | Each fairness statement is accompanied by the fairness record and the fairness basis | A fairness statement without either, or with a fairness basis dated after the result | A statement of a named measure on named groups, with the number and no fairness statement, is not flagged |
+| R1 | Each output or action that affects people is covered by the fairness record | Output or action that affects people, including people who never use the system, that the fairness record does not cover | A fairness record that concludes no individual consequence arises is a fairness record |
+| R2 | Each fairness verdict is accompanied by the fairness record and the fairness basis | A fairness verdict without either, or with a fairness basis dated after the result | A statement of a named measure on named groups, with the number and no fairness verdict, is not flagged |
 | R3 | Each reported figure is a group report | A reported figure that is not a group report | A "not measured, attribute not lawfully collected" entry is a group report |
 | R4 | Each harm in the fairness record has a distribution record | A harm with no distribution record, or one missing an element of its definition | A distribution record of no proxy identified, with how proxies were looked for, and no mitigation shift, is complete |
 | R5 | A disparity route exists | No disparity route, one closed to affected people, operators or reviewers, or a report with no recorded disposition | A disparity route that has received no reports is a disparity route |
@@ -209,12 +196,12 @@ There is no policy-level exception mechanism in this release, because no rule ex
 
 | Requirement | Invalidated by |
 | --- | --- |
-| R1 | A change of model, of the decision the output feeds, or of the people it reaches |
-| R2 | A change of model, of the measure, of the groups compared, of the data the figure was computed from, or of the criterion; and a well-founded report that contradicts the statement |
-| R3 | A change of model, of evaluation data, or of the groups in the fairness record |
-| R4 | A change of model, of the people reached, or a mitigation; and a well-founded report that contradicts a distribution record |
-| R5 | A change in who the system reaches or in how reports are received |
-| R6 | Nothing: it constrains this repository |
+| R1 | A change of model, of the output or action, of the decision it feeds, of the harm or who bears it, or of the people it reaches; and a well-founded report that contradicts the fairness record |
+| R2 | A change of model, of the measure, of the reason it was chosen or the context of use, of the groups compared, of the data the figure was computed from, of the criterion, or of the fairness record; and a well-founded report that contradicts the verdict |
+| R3 | A change of model, of evaluation data, of the quantity reported, of the reason a group was not measured, of the size of a group, or of the groups in the fairness record; and a well-founded report that contradicts a group report |
+| R4 | A change of model, of the input features or data, of the people reached, of the harm, of how proxies were looked for, or a mitigation; and a well-founded report that contradicts a distribution record |
+| R5 | A change in who the system reaches, in its operators or reviewers, in how reports are received, or in how dispositions and findings are recorded |
+| R6 | A change to the catalog, detectors, rules or reports of this framework |
 
 A well-founded report invalidates only the claim it contradicts. Nothing in this release detects the
 transition. Operational handling is item 34's subject.
@@ -255,6 +242,7 @@ are. **Outside this pack:** no adjacent pack is cited, and no ADR covers this st
 
 | Requirement | State |
 | --- | --- |
+| R1 to R5 | Not enforced; held by review |
 | R6 | No framework output in `scripts/`, `rules/` or `ai-policy.yml` evaluates fairness, bias or protected characteristics; `fairness` appears only as a reserved namespace segment in `scripts/catalog.mjs`. No test asserts the absence |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test |
 
