@@ -41,14 +41,12 @@ Terms, defined once and used verbatim below:
 - **Disclosure deadline** — for a person who interacts with or relies on the output, no later than that
   interaction or reliance; for a person concerned by a decision or action who does not interact, no
   later than the earlier of the point at which the decision or action is taken and the point at which it
-  is communicated; for any other person to whom output is delivered or who is exposed to the output or action, no later than that delivery or exposure.
+  is communicated; for a person an output concerns without any decision, action or delivery to them, no later than the point at which the output is produced or first used; for any other person to whom output is delivered or who is exposed to the output or action, no later than that delivery or exposure.
 - **Disclosure capture** — a dated copy of what was presented, in the form users received it, with the point in the interaction or delivery at which it was presented.
 - **Disclosure verdict** — a statement that a system discloses AI involvement, that a disclosure is
   adequate or timely, or that the system complies with a disclosure obligation.
-- **Presentation evidence** — what shows a presented disclosure can be perceived and understood.
 - **Listed change** — a change of model, prompt, use of the output, audience (including a channel,
-  region or language), the interface that presents the disclosure, the owner's presentation standards,
-  the project's presentation evidence, or the law that applies.
+  region or language), the interface that presents the disclosure, or the law that applies.
 - **Framework output** — what a detector, catalog rule, audit finding or generated report of this
   framework states.
 - **Presence artifact** — a notice string, a label, a policy page or a declaration.
@@ -102,20 +100,12 @@ Without the shipped text and where it appeared, a later review cannot tell wheth
 change to the interface can remove it without anyone changing the decision. A decision recorded "not
 owed" has no notice to capture.
 
-### R4 — Keep presentation evidence under the owner's standards
-
-**A project that presents a disclosure MUST show its presentation evidence under the
-UIUXDesignStandards standards it names.**
-
-Deciding that a disclosure is owed and presenting it so it can be perceived are two obligations owned by
-two packs; the disclosure decision is not presentation evidence.
-
-### R5 — Keep the record current
+### R4 — Keep the record current
 
 **On each listed change the disclosure decision MUST be revised, or recorded as re-examined and
 affirmed, with its date.**
 
-### R6 — This framework states no disclosure verdict from a presence artifact
+### R5 — This framework states no disclosure verdict from a presence artifact
 
 **No framework output MAY state a disclosure verdict because a presence artifact is present.**
 
@@ -130,9 +120,8 @@ what.
 | R1 | No disclosure decision exists, or the disclosure decision records notice to the operator as notice to the person concerned |
 | R2 | A disclosure that is owed reaches the person after the disclosure deadline |
 | R3 | A disclosure was presented and there is no disclosure capture, or the capture predates a listed change and was neither replaced nor re-confirmed |
-| R4 | A project that presents a disclosure has presentation evidence under no named UIUXDesignStandards standard |
-| R5 | A listed change occurred and the disclosure decision was neither revised nor recorded as re-examined and affirmed |
-| R6 | A framework output states a disclosure verdict because a presence artifact is present |
+| R4 | A listed change occurred and the disclosure decision was neither revised nor recorded as re-examined and affirmed |
+| R5 | A framework output states a disclosure verdict because a presence artifact is present |
 
 ## Evidence
 
@@ -141,9 +130,8 @@ what.
 | R1 | The disclosure decision | A project document the project names; **no manifest or policy field exists for it** | Human review |
 | R2 | The point at which the disclosure appears relative to the disclosure deadline, from the specified point, the disclosure captures and, for a person who does not interact, a sample of what is sent or delivered | The project's interface, its disclosure captures and its operations records | Human review |
 | R3 | The disclosure capture, with its re-confirmation or replacement dates | Version control and the project's records | Human review |
-| R4 | The named UIUXDesignStandards standards and the presentation evidence under them | The project's interface and accessibility records | Human review, by the owner's standards |
-| R5 | The dated revision or re-examination records of the disclosure decision | Version control and the project's records | Human review |
-| R6 | The absence of any framework output that states a disclosure verdict from a presence artifact | The catalog, detectors, rules and reports of this framework, and their tests | Code review |
+| R4 | The dated revision or re-examination records of the disclosure decision | Version control and the project's records | Human review |
+| R5 | The absence of any framework output that states a disclosure verdict from a presence artifact | The catalog, detectors, rules and reports of this framework, and their tests | Code review |
 
 A document establishes that the project wrote a decision down; only a capture of what a person saw
 shows it. That a given person received a disclosure at run time is not-evaluable from a repository and
@@ -159,8 +147,8 @@ that record.
 1. **There is no artifact a rule could read.** Both schemas are closed and have no place for a
    disclosure decision; adding one is a schema-versioning decision outside this slice (plan 02
    section 8).
-2. **R2, R3 and R5 concern what a person saw, not what a file says.** A detector reading source would
-   test for a presence artifact, which R6 forbids this framework to report as a result.
+2. **R2, R3 and R4 concern what a person saw, not what a file says.** A detector reading source would
+   test for a presence artifact, which R5 forbids this framework to report as a result.
 3. **No id is minted and the namespace is crowded.** `disclosure` is a reserved segment of this pack
    that FinancialStandards also uses (`SHARED_SEGMENTS` in `scripts/catalog.mjs`; seven ids per
    Standard 7 R4). Whether to place a rule there, with what meaning, is not decided here.
@@ -173,17 +161,16 @@ that record.
 | R2 | `manual-review` | `error` |
 | R3 | `manual-review` | `error` |
 | R4 | `manual-review` | `error` |
-| R5 | `manual-review` | `error` |
-| R6 | none (a constraint on the framework) | none |
+| R5 | none (a constraint on the framework) | none |
 
 R2's reach is reviewed from the specified point of disclosure and the disclosure captures R3 requires,
 which are repository evidence; an owed disclosure missing from a captured path is an R2 violation. A clean review
 is a statement about those paths and is not proof of receipt. These are the levels a rule would carry
 if one is minted; this release emits no framework finding at them.
 
-**Exemptibility.** R6 is not exemptible. Each other requirement arises only on its condition: R1 where
+**Exemptibility.** R5 is not exemptible. Each other requirement arises only on its condition: R1 where
 output or action reaches a person outside the team (the condition in Scope); R2 where a disclosure is
-owed; R3 and R4 where a disclosure was presented; R5 wherever R1 applies. Where a condition does not
+owed; R3 where a disclosure was presented; R4 wherever R1 applies. Where a condition does not
 hold the requirement does not arise. That is a scope condition, not a disposition:
 [Standard 2](02-ai-risk-tiering-and-applicability.md) R4's dispositions are recorded against catalog
 rules, and this standard has none. No level here is lowered by a risk tier (Standard 2 R3).
@@ -193,14 +180,13 @@ rules, and this standard has none. No level here is lowered by a risk tier (Stan
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Each such kind of output or action has a disclosure decision | Output or action that reaches a person outside the team with no disclosure decision, or a disclosure decision that treats notice to the operator as notice to the person concerned | A disclosure decision "not owed — suggestion the user accepts or rejects in the act" is a disclosure decision |
-| R2 | The specified point of disclosure, or the point in a disclosure capture, is no later than the disclosure deadline | The point falls after the disclosure deadline, or none is specified | A disclosure at the first point of interaction, in whatever form, is not failed for its form here |
+| R2 | A disclosure capture, or the sample R2's evidence names for a person who does not interact, shows the disclosure presented no later than the disclosure deadline | The presented point falls after the disclosure deadline, none is shown on the reviewed path, or the notice was specified but never presented | A disclosure at the first point of interaction, in whatever form, is not failed for its form here |
 | R3 | Each presented disclosure has a disclosure capture, replaced or re-confirmed on each listed change | A presented disclosure with no disclosure capture, or one neither replaced nor re-confirmed after a listed change | A project that presents no disclosure has nothing to capture |
-| R4 | A project that presents a disclosure names UIUXDesignStandards standards and its presentation evidence sits under them | A project that presents a disclosure and names none | A project that cites the named UIUXDesignStandards standards for its presentation evidence is not flagged |
-| R5 | After each listed change the disclosure decision is revised or dated as re-examined and affirmed | A listed change with neither | A change outside the listed changes needs no entry |
-| R6 | No framework output states a disclosure verdict because a presence artifact is present | A framework output that did so because a presence artifact was found | Reporting that a presence artifact was *found*, as an observation with no disclosure verdict, is not a disclosure verdict |
+| R4 | After each listed change the disclosure decision is revised or dated as re-examined and affirmed | A listed change with neither | A change outside the listed changes needs no entry |
+| R5 | No framework output states a disclosure verdict because a presence artifact is present | A framework output that did so because a presence artifact was found | Reporting that a presence artifact was *found*, as an observation with no disclosure verdict, is not a disclosure verdict |
 
 **No falsifier is automated in this release.** No rule reads a disclosure decision, so no detector
-checks R1 to R5; they are held by review, and R6 holds today because no such framework output exists.
+checks R1 to R4; they are held by review, and R5 holds today because no such framework output exists.
 The falsifiers are manual, not absent.
 
 ## Exceptions and staleness
@@ -212,9 +198,8 @@ There is no policy-level exception mechanism in this release, because no rule ex
 | R1 | A listed change |
 | R2 | A listed change, or a revision of the disclosure decision |
 | R3 | A listed change, or a revision of the disclosure decision |
-| R4 | A listed change; a revision of the disclosure decision; or a replaced disclosure capture |
-| R5 | A listed change |
-| R6 | Nothing: it constrains this repository |
+| R4 | A listed change |
+| R5 | Nothing: it constrains this repository |
 
 A person's report that they did not know AI was involved, in a case where the record says they were
 told, contradicts the record until it is re-examined. The decision is written once and the interface
@@ -227,7 +212,7 @@ handling is item 34's subject (AI Incident Response, unwritten in this release).
 The brief contributes two words, "user disclosure", inside a bullet of four subjects. It states no
 requirement, level or evidence. Specifically authored here, none of it owner-approved:
 
-- **Every defined term and R1 to R6**, including that "not owed" with a reason is a legitimate decision
+- **Every defined term and R1 to R4**, including that "not owed" with a reason is a legitimate decision
   while an absent decision is not; the deadline for non-interacting and passive recipients; that notice
   to the operator is not notice to the person; that an unshown disclosure is not demonstrated; and the
   listed changes.
@@ -250,8 +235,7 @@ each deception case, and whether either is non-exemptible, needs an owner's ruli
 by this document.
 
 [Standard 7](07-boundary-with-adjacent-standards.md) records that UIUXDesignStandards owns how a
-disclosure is presented and this pack whether one is owed; R2 there (link, do not copy) is why R4
-points and does not restate, and no `disclosure.*` id is minted here (Standard 6 R5 reserves the
+disclosure is presented and this pack whether one is owed; R2 there (link, do not copy) is why presentation is not restated here, and no `disclosure.*` id is minted here (Standard 6 R5 reserves the
 namespace, and Standard 7 R4 forbids only a colliding full id). Item 39 is Transparency and System Documentation
 per the specification and is unwritten on this base. [Standard 13](13-personal-data-in-ai-systems.md) governs
 any personal data a capture would contain. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3
@@ -266,12 +250,12 @@ No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
 ## Implementation
 
-**Normative. Nothing about R1 to R5 is enforced; R6 holds today because no such framework output exists.**
+**Normative. Nothing about R1 to R4 is enforced; R5 holds today because no such framework output exists.**
 
 | Requirement | State |
 | --- | --- |
-| R1 to R5 | Not enforced; held by review |
-| R6 | No detector, rule or report in `scripts/`, `rules/`, `test/` or `templates/` states a disclosure verdict. No test asserts the absence |
+| R1 to R4 | Not enforced; held by review |
+| R5 | No detector, rule or report in `scripts/`, `rules/`, `test/` or `templates/` states a disclosure verdict. No test asserts the absence |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test |
 
 **Proposed, and deliberately absent. None of the following exists:** a place for the disclosure decision
@@ -280,5 +264,5 @@ work, needing a running system); and a test that no framework output states a di
 presence artifact.
 
 **What no future release will implement.** A framework output that states a system discloses AI
-involvement, or that a disclosure is adequate, timely or compliant, from a presence artifact. R6
+involvement, or that a disclosure is adequate, timely or compliant, from a presence artifact. R5
 forecloses it.
