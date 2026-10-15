@@ -73,8 +73,8 @@ It does **not** cover, and claims none of the ground of, the following:
 ### R1 — Attribute inference spend to a subject someone owns
 
 **A system that states a budget, or reports cost per subject, MUST record the spend of its model calls
-against the subject — a feature, a tenant, a user, a job or a run — at the granularity its budgets are
-stated at or, where it states none, at the granularity of the figures it reports, and MUST NOT leave
+against the subject — a feature, a tenant, a user, a job or a run — at every granularity at which it
+states a budget or reports a cost figure, and MUST NOT leave
 spend attributable only to a provider account or invoice unless that account is itself the subject the
 budget or the reported figures are stated over. A system that states neither budgets nor per-subject
 figures owes no attribution under this requirement.**
@@ -197,7 +197,7 @@ queued, shortened or re-routed — at the ceiling.
 | R2 | Each budget as number, subject and period; where it is enforced; the behaviour at the ceiling as implemented in code or configuration; and, where the ceiling has been reached, the record of that run | Project configuration and code, gateway configuration, and the records of a run | Human review of the records |
 | R3 | Each multiplier the system has and the bound on it, or the statement that it has none | Project code and configuration | Human review; a project's own test where one exists |
 | R4 | The reconciliation of recorded spend with the billed amount, or with the capacity's accounting cost or utilisation, and its interval | Finance or operations records the project names | Human review |
-| R5 | Any published cost figure, with model identifier and price date, and the workload where the figure depends on one | The project's documentation | Human review |
+| R5 | Any published cost figure, with model identifier and price date, and the workload where the figure depends on one; any cap or bound claim with the enforcing mechanism it names (R2); any negligibility claim with the measurement it rests on | The project's documentation | Human review |
 | R6 | The absence of any detector that reports cost controlled from a setting | This repository's own detectors and tests | Code review; see Implementation |
 
 Evidence for R1 to R5 is a human-authored record. A document naming a budget or a bound establishes
@@ -263,7 +263,7 @@ contradict a false statement. No level here is lowered by a risk tier (Standard 
 | R2 | The ceiling is stated with its subject and period, its enforcement point is named, and the configured behaviour is implemented; where the ceiling has been reached, the run shows the behaviour recorded for it (refused, queued, degraded, shortened, re-routed or routed to a person) and the call not made as before | The ceiling is reached, an alert is raised, and the call proceeds | A system with no ceiling applied is out of scope for R2, not failing it; a ceiling reached and acted on must not be flagged for also alerting |
 | R3 | Each multiplier the system has has a stated bound; a reviewed static bound (a fixed completion limit, a retry maximum in configuration) establishes it without an execution record | A retry or fallback with no maximum, or a bound that restarts on exhaustion | A system that never retries, and says so, must **not** be reported as lacking a retry bound |
 | R4 | A reconciliation exists with an interval and a result | Only estimates are reported as spend | A project that states no budget must **not** be failed for lacking a reconciliation; a project that states a budget and labels its figure an estimate avoids the misreporting finding only, and still owes the reconciliation record and interval |
-| R5 | A published unit cost names model and price date, and workload where it depends on one | "Costs pennies per query", or a cap claim with no mechanism | A statement of a measured figure with its model, date and workload, and no stronger claim, must **not** be flagged |
+| R5 | A published unit cost names model and price date, and workload where it depends on one; a cap or bound claim names the enforcing mechanism; a negligibility claim names its measurement | "Costs pennies per query", a cap claim with no mechanism, or "negligible" with no measurement | A statement of a measured figure with its model, date and workload, and no stronger claim, must **not** be flagged |
 | R6 | No detector or report in this repository outputs a cost verdict from presence | A detector that reported cost controlled because a token limit was present | Reporting that a token limit or budget figure was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a cost artifact and no fixture carries
