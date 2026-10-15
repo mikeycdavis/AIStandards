@@ -57,7 +57,8 @@ Two terms, each defined here rather than by the brief:
 
 It does **not** cover, and claims none of the ground of, the following:
 
-- **The use of a source to train, fine-tune, validate or calibrate a model the project operates.**
+- **The use of a source to train, fine-tune, validate, evaluate or calibrate a model the project
+  operates.**
   MachineLearningStandards owns that, per the boundary review's recorded owner; see the posture note.
   The same source used as context stays in Scope (R6).
 - **Whether anyone agreed to the use, and on what terms.** Item 14, Consent and Licensing, is
@@ -165,15 +166,17 @@ corpus found in a shared drive, a fixture inherited from a previous team and an 
 author left are common, and "unknown, found at this path in this month" is a true and useful record.
 It tells the next reader that the source is untrusted rather than reassuring them with a guess.
 
-**Absence of a statement is not the same as "unknown".** One is a gap in the record; the other is a
-fact about the source. Both are findings under R1, differently.
+**Absence of a statement is not the same as "unknown".** One is a gap in the record and is a finding
+under R1; the other is a fact about the source, and a source declared with a statement that its origin
+is unknown satisfies R1 and R5 and is read as an untrusted source, not as a defect in the record.
 
 ### R6 — Say how each source is used, and where it develops the project's own model, defer
 
-**A project MUST record, for each source, whether the source itself is used only as context, fixture
-or evaluation input, or is also used to train, fine-tune, validate or calibrate a model the project
-operates, and for any use of the second kind this standard MUST NOT be offered as satisfying
-MachineLearningStandards' dataset provenance and versioning requirements.**
+**A project MUST record, for each source, whether the source itself is used only as context or
+fixture input or to evaluate a model the project does not operate, or is also used to train,
+fine-tune, validate, evaluate or calibrate a model the project operates, and for any use of the second
+kind this standard MUST NOT be offered as satisfying MachineLearningStandards' dataset provenance and
+versioning requirements.**
 
 The split is by what the *source* is used for, not by who trained the model that consumes it. A
 retrieval corpus read at inference time by a model the project trained itself is context, and is in
@@ -248,7 +251,7 @@ Three reasons, stated so a reader can disagree with any one of them:
    or missing value is decidable and would be a genuine structural check, as
    `oversight.autonomy-tier-declared` is for Standard 11. It is not added here because whether such a
    rule is wanted, at which level, and whether it is this pack's or the ML pack's where `fine-tuning-set`
-   appears, is a decision recorded as Q-A and Q-B below, not a side effect of writing this document. The
+   appears, is a decision recorded as Q26 and Q27 below, not a side effect of writing this document. The
    owner's per-rule approval is the route; a proposed rule is in the pull request.
 2. **R2 to R5 concern whether a statement is true and current.** That is a property of how material was
    obtained and how a source has changed since, not of source text. A detector reading the repository
@@ -290,7 +293,7 @@ release would contradict a false declaration. No level here is lowered by a risk
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Every path the system and its tests read as data corresponds to a declared source | A directory read by the retrieval job that no declaration names | A source declared and not currently read must **not** be failed for that |
-| R2 | A reader can locate the original from the statement | A statement consisting of an adjective such as "internal" or "curated" | A statement naming a system, an export and a date must **not** be failed for being short |
+| R2 | For each component of origin that is known, a reader can locate the original from the statement; each component that is not known is stated as unknown under R5 | A statement consisting of an adjective such as "internal" or "curated" | A statement naming a system, an export and a date must **not** be failed for being short |
 | R3 | A source containing model output is `synthetic` and names its generator | A source of generated pairs declared human-authored | A human-written source declared `synthetic: false` must **not** be flagged |
 | R4 | The statement names a revision or period, and a new ingestion path prompts a re-read | A statement older than an ingestion path it does not mention | A source whose statement names its snapshot and has taken no additions must **not** be flagged for age |
 | R5 | An unknown origin is stated as unknown, with what is known | A guess recorded as an origin | A statement "unknown, found at this path" must **not** be failed for being unknown |
@@ -366,18 +369,17 @@ it owner-approved:
 Not authored here: the posture `B`, the owner division and the two sibling files cited are the
 boundary review's. The statement of the review's reasoning as an inference is this document's.
 
-**Open questions, recorded and not answered** (to be numbered in
-`artifacts/project-plan-breakdown/08-open-questions.md` by whoever integrates; this change edits
-neither that file nor any count document):
+**Open questions, recorded and not answered** (Q26 to Q28 in
+[`artifacts/project-plan-breakdown/08-open-questions.md`](../artifacts/project-plan-breakdown/08-open-questions.md)):
 
-- **Q-A.** Should a structural rule require `dataSources[].provenance` to be present for each declared
+- **Q26.** Should a structural rule require `dataSources[].provenance` to be present for each declared
   source, as Standard 11 did for `autonomyTier`, and if so is it this pack's rule when the entry's kind
   is `fine-tuning-set`? The field exists and no rule reads it.
-- **Q-B.** Standard 13 says "training-data provenance is item 12's" while the boundary review gives
+- **Q27.** Standard 13 says "training-data provenance is item 12's" while the boundary review gives
   training data to MachineLearningStandards and item 12 to retrieval corpora, fixtures and evaluation
   sets. Which is intended? This standard follows the review and records the discrepancy; Standard 13
   is not edited here.
-- **Q-C.** Where does provenance end and consent and licensing (item 14) begin, for a statement that
+- **Q28.** Where does provenance end and consent and licensing (item 14) begin, for a statement that
   names a licence?
 
 ## Relationship to other standards and ADRs
@@ -386,7 +388,7 @@ neither that file nor any count document):
 R1 to R3 land; this standard asks that the field be used and says what a statement in it must contain.
 [Standard 13](13-personal-data-in-ai-systems.md) R1 asks whether a fixture holds real personal data,
 which is a different question about the same source; its remark on training-data provenance is
-Q-B here. [Standard 17](17-evaluation-plans-for-generative-systems.md) records an evaluated subject;
+Q27 here. [Standard 17](17-evaluation-plans-for-generative-systems.md) records an evaluated subject;
 where an evaluation set is one, its origin is this standard's and what it is measured against is
 that one's. [Standard 25](25-grounding-and-hallucination-control.md) asks what an output rests on, and
 a retrieved passage's origin is the input to that question without being its answer.
@@ -425,7 +427,7 @@ as a capability.
 
 | Requirement | What would be needed | Why it is not here |
 | --- | --- | --- |
-| R1 (presence of a statement) | A structural rule over `dataSources[].provenance`, and an owner decision on Q-A | Decidable and useful; adding it is a catalog decision outside this slice, and it would test presence only |
+| R1 (presence of a statement) | A structural rule over `dataSources[].provenance`, and an owner decision on Q26 | Decidable and useful; adding it is a catalog decision outside this slice, and it would test presence only |
 | R2 to R5 | A way to read a project's own production records | The form is the project's; Phase 3 detector and evidence-availability work follows the corpus |
 | R6 | A place to record each source's use: a schema change or a named document a rule can find | Both schemas are closed; a change is a schema-versioning decision and Phase 2 section 8 puts it out of scope |
 | R7 | A test asserting no detector emits a provenance verdict | Meaningful only once a detector exists for it to constrain |

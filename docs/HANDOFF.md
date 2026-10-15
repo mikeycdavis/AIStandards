@@ -617,7 +617,7 @@ starting rather than trusting this section. Candidates, all inferred rather than
 **Q22 and Q7 are the open questions most likely to matter next.** Q22 decides whether this pack states
 any evaluation requirement for systems MachineLearningStandards does not reach, and cannot be answered
 without that pack's maintainers or an owner decision to author on its ground. Q7 is the only open
-question that changes an already-written standard's wording. Q9 to Q12 and Q15 to Q21 are also open
+question that changes an already-written standard's wording. Q9 to Q12, Q15 to Q21 and Q26 to Q28 are also open
 (see §8).
 
 Completing the adoption slice does not complete Phase 2: 35 standards, nine missing shards and the
