@@ -33,6 +33,19 @@ function filesUnder(dir) {
   return out;
 }
 
+// Every entry named node_modules at any depth under `dir` (an absolute path), outside .git: a directory, a
+// link or a file. It is reported and not descended into. The walk does not follow links.
+function nodeModulesUnder(dir, base = dir) {
+  const out = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === ".git") continue;
+    const full = path.join(dir, entry.name);
+    if (entry.name === "node_modules") out.push(path.relative(base, full).split(path.sep).join("/"));
+    else if (entry.isDirectory()) out.push(...nodeModulesUnder(full, base));
+  }
+  return out.sort();
+}
+
 const DEPENDENCY_KEYS = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies", "bundledDependencies", "bundleDependencies", "workspaces", "overrides", "resolutions"];
 const LIFECYCLE = ["preinstall", "install", "postinstall", "prepare", "prepublish", "prepublishOnly", "prepack", "postpack"];
 const LOCKFILES = ["package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb", "bun.lock"];
@@ -48,7 +61,38 @@ test("invariant 4: no lockfile, no installed modules and no registry configurati
   const offenders = all.filter((f) => LOCKFILES.includes(path.basename(f)) || path.basename(f) === ".npmrc" || path.basename(f) === ".yarnrc" || path.basename(f) === ".yarnrc.yml");
   assert.deepEqual(offenders, [], "a lockfile or registry configuration resolves dependencies from the environment");
   assert.ok(!exists("node_modules"), "node_modules must not exist");
+  assert.deepEqual(nodeModulesUnder(REPO), [], "an installed-modules directory at any depth is an environment-resolved dependency");
   assert.ok(!exists("vendor"), "vendored code lives under scripts/vendor, which the pinned archive includes; a repository-root vendor/ would not be");
+});
+
+test("the installed-modules scan itself: a node_modules at any depth is reported, .git is not searched", () => {
+  const tree = fs.mkdtempSync(path.join(os.tmpdir(), "aistd-nm-"));
+  try {
+    const mk = (rel, file = false) => {
+      const full = path.join(tree, ...rel.split("/"));
+      if (file) {
+        fs.mkdirSync(path.dirname(full), { recursive: true });
+        fs.writeFileSync(full, "x");
+      } else {
+        fs.mkdirSync(full, { recursive: true });
+      }
+    };
+    mk("scripts/ok.mjs", true);
+    mk("test/fixtures/data.json", true);
+    assert.deepEqual(nodeModulesUnder(tree), []);
+    mk("node_modules/pkg/index.js", true);
+    mk("scripts/node_modules/x/index.js", true);
+    mk("test/fixtures/node_modules/y/index.js", true);
+    mk("docs/a/b/c/node_modules", false);
+    mk("tools/node_modules", true);
+    mk(".git/node_modules/z/index.js", true);
+    assert.deepEqual(nodeModulesUnder(tree), ["docs/a/b/c/node_modules", "node_modules", "scripts/node_modules", "test/fixtures/node_modules", "tools/node_modules"]);
+    // reported, not descended into: a node_modules inside a node_modules is not listed again
+    mk("scripts/node_modules/x/node_modules/deep/index.js", true);
+    assert.equal(nodeModulesUnder(tree).filter((r) => r.startsWith("scripts/")).length, 1);
+  } finally {
+    fs.rmSync(tree, { recursive: true, force: true });
+  }
 });
 
 test("invariant 4: every runtime import under scripts/ is a node: builtin or a local module", () => {
