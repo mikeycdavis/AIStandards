@@ -97,8 +97,9 @@ rejects.
 ### R2 — Where a disclosure is owed, it MUST reach the person no later than interaction or reliance
 
 **A disclosure that is owed MUST reach the person no later than the point at which they interact or
-rely, and, for a person who does not interact with the system (R3), no later than the point at which
-the decision or action concerning them is taken or communicated.**
+rely, and, for a person who does not interact with the system, no later than the point at which the
+decision or action concerning them is taken or communicated (R3) or, for any other person-facing
+output delivered to them, no later than its delivery or their exposure to it.**
 
 Timing is a property of the decision, not of presentation: a notice shown after the person has acted
 on the output is a record of an omission. Where in the interface it appears, and how it is made
@@ -184,7 +185,7 @@ capture of what a user saw.
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | A record per person-facing output kind: owed or not, to whom, why | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | The point in the interaction, or for a non-interacting subject the point of the decision or action, at which the disclosure appears, relative to interaction, reliance or that decision | The project's interface and a captured example | Human review |
+| R2 | The point in the interaction, or for a non-interacting subject the point of the decision, action, delivery or exposure, at which the disclosure appears, relative to interaction, reliance or that decision | The project's interface and a captured example | Human review |
 | R3 | The decision for each AI-assisted decision about a person, and what that person receives | The project's documents and a sample of what is sent | Human review |
 | R4 | The reference to the owner's standards, and the project's own presentation evidence under them | The project's accessibility and interface records | Human review, by the owner's standards |
 | R5 | Where a disclosure was presented, a capture of the shipped disclosure and its date; in every case, the revision history of the decision | Version control and the project's records | Human review |
@@ -244,7 +245,7 @@ is lowered by a risk tier (Standard 2 R3).
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Each person-facing output kind has an owed-or-not decision with the person it is owed to and a reason | A system that emits generated messages in a person's name with no record of the question | A recorded "not owed — suggestion the user accepts or rejects in the act" must **not** be failed |
-| R2 | The disclosure is no later than interaction or reliance on the path a user takes; for a subject who does not interact, the sample of what is sent (R3) shows it no later than the decision or action concerning them | The specified or captured point of disclosure falls after interaction or reliance, or after the decision for a non-interacting subject, or none is specified | A disclosure delivered at the first point of interaction, in whatever form the owner's standards allow, must **not** be failed for its form here |
+| R2 | The disclosure is no later than interaction or reliance on the path a user takes; for a subject who does not interact, the sample of what is sent (R3) or delivered shows it no later than the decision, action, delivery or exposure | The specified or captured point of disclosure falls after interaction or reliance, or after the decision, delivery or exposure for a non-interacting subject, or none is specified | A disclosure delivered at the first point of interaction, in whatever form the owner's standards allow, must **not** be failed for its form here |
 | R3 | An AI-assisted decision about a person records whether that person, and not only the operator, is told, and what the person receives | A decision about a person with no record of whether they are told, or a record that treats notice to the operator as notice to the person | A decision recorded "not told, reason" is a recorded decision, not a failure of this requirement |
 | R4 | The project names the owner's standards its presentation evidence sits under, and does not offer this decision as that evidence | "Disclosure is in the footer" offered as showing it can be perceived, or a project that presents a disclosure and names no owner standard | A project that cites the owner's standards by name for its presentation evidence must **not** be flagged |
 | R5 | After each listed change the decision is revised or dated as re-examined and affirmed; where a disclosure was presented, a dated capture of the shipped notice exists and is replaced or re-confirmed | A decision neither revised nor recorded as re-examined across a model, prompt, use, audience, interface, owner-standard, presentation-evidence or law change; a presented disclosure with no capture, or a capture neither replaced nor re-confirmed after one | A decision recorded "not owed" has no notice to capture and must **not** be failed for lacking one; a system whose notice never changed needs one capture plus a dated re-confirmation on each listed change, not a new capture per release |
