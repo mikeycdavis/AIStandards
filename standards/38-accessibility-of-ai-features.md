@@ -56,10 +56,9 @@ on this base).
 
 **Boundary posture D — deferred.** The boundary review's reasoning is that this pack MUST NOT mint an
 accessibility rule, and that the item exists to record the obligation and name the owner. The evidence
-it records is nineteen rule ids across the three standards above. They were rechecked against
-UIUXDesignStandards `7bff2e9` (the sibling checkout's HEAD on 2026-10-14, read through git objects):
-the set of `accessibility.*` ids in its `rules/` is identical to the nineteen recorded. That is a
-recheck of one set, not a refresh of the foreign-namespace inventory.
+it records is nineteen rule ids across the three standards above. They are as the boundary review
+and `artifacts/foreign-namespace-inventory.json` record them (pinned 2026-09-04); nothing is claimed
+here about the sibling pack's current state.
 
 ## Requirements
 
@@ -214,8 +213,6 @@ requirements are not derived. Specifically authored here, none of it owner-appro
 - **The ruling that this standard ships with no catalog rules**, and the three reasons for it.
 - **The two withdrawn candidate additions**, recorded under Requirements as open observations, and
   the choice not to make them requirements.
-- **The recheck of the owner's rule ids** at the sibling checkout's HEAD, which the boundary review did
-  not make.
 
 Not authored here: the posture `D`, the owner and the nineteen rule ids are the boundary review's.
 
