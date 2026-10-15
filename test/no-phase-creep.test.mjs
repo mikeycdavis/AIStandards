@@ -476,6 +476,7 @@ test("only the standards written so far exist", () => {
     "23-agent-execution-security.md",
     "25-grounding-and-hallucination-control.md",
     "33-ai-observability.md",
+    "41-inference-cost-and-budget-control.md",
     "45-approval-gates.md",
     "51-agent-and-tool-execution-prohibitions.md",
   ]);
