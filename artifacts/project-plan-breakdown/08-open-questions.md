@@ -312,7 +312,7 @@ quantifying uncertainty or holding a comparison's conditions identical.
 ### Q23 — Is the prohibitive form of human oversight item 48's, or stated in Standard 10?
 
 The specification lists item 48 (Safety and Oversight Prohibitions) as the negative face of the
-`human oversight` token. Standard 10 states the positive obligations only; its R3 requires that a
+`human oversight` token. Standard 10 states the positive obligations only; its R5 requires that a
 decline or stop stick, which is the one must-not clause it states. Whether the remaining prohibitive
 form, "a system must not disable, evade or degrade its overseers", is item 48's prohibition, or belongs in Standard
 10, is undecided. **Not resolved here, because item 48 is unwritten and the placement decides which
@@ -322,9 +322,9 @@ twice or in neither place.
 ### Q24 — Are the general intervention capability and Standard 11's halt record one rule or two?
 
 Standard 11 R4 (rule `oversight.intervention-path-declared`) asks for a committed halt record for
-`execute` and `autonomous` systems. Standard 10 R3 asks for the general capability to decline and, where the output can be edited, correct
-before an effect, to correct or reverse a reversible effect after the fact, and, where the system runs over
-time, to pause and stop. Whether a rule for the general capability would duplicate or
+`execute` and `autonomous` systems. Standard 10 R4 asks for the intervention capabilities that apply at every oversight point: decline and,
+where the output can be edited, correct before an effect; correct or reverse a reversible effect after
+the fact; and, where the system runs over time, pause and stop. Whether a rule for the general capability would duplicate or
 widen Standard 11's, and in which shard it lives, is undecided. The title of that rule ("A human can
 halt the system") also says more than its description (a committed document names the halt path). **Not resolved here, because it
 changes an existing rule's scope.** **Impact if unanswered:** no rule covers the general capability;
@@ -332,7 +332,8 @@ both requirements are manual review.
 
 ### Q25 — Should a model-instance reviewer ever count as an overseer?
 
-Standard 10 R1 does not count a process the system or the requesting party controls as an overseer,
+Standard 10 R2 does not count a component the system, or an automated agent acting for the requesting
+party, controls as an overseer,
 including a second instance of a model configured by the same operator. Automated review may be a
 legitimate control, and the owner may want it to count in some arrangements. **Not resolved here,
 because it is a judgment about what oversight means.** **Impact if unanswered:** a project using

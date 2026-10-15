@@ -553,7 +553,7 @@ governance until a sign-off exists.
    vendored hashes are checkout-independent, and that vendor-only rule is the owner's answer: no repository-wide
    rule is added. Revisit only when a second byte-pinned artifact appears outside `scripts/vendor/`. Packet: `F:\Repos\StandardsPortfolio-evidence\aistandards-125-q8-packet-2026-10-14.md`.
 6. **Whether the substantive authored content of Standards 08, 09, 10, 13, 17 and 23 stands.** Each discloses every
-   authored element in its Additions section — for 10, its definitions of overseer, intervention and oversight point, R1's independence condition, R3's decline-must-stick and R4's before/after-effect separation, R5's counts, R6's capacity requirement and the decision to ship no rule; for 08, that safety cases are not graded by risk
+   authored element in its Additions section — for 10, its defined terms (overseer, oversight point, decision material, intervention capability, aggregate capacity), R2's independence condition, R5's intervention-binds, R6's before/after-the-fact separation, R8 and R9's counts and zero-as-finding, R10 and R11's capacity requirement and the decision to ship no rule; for 08, that safety cases are not graded by risk
    tier; for 09, the definitions of misuse and abuse, reading jailbreak attempts as Standard 21's
    subject, and R3 as `SHOULD`; for 13, its definitions of personal, real and synthetic data and of a
    model-adjacent store, its readings of R3 to R5, and R6; for 23, its definitions of an agent execution loop, an agent and
