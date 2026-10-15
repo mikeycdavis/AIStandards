@@ -154,7 +154,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | R5 | Each cap or bound claim names its ceiling, each negligibility claim names its measurement, and each cost per unit names model and price date | A cap or bound claim, a negligibility claim, or a cost per unit missing what R5 requires it to name | A cost per unit that names model and price date, and a dated price-sheet rate kept as a historical figure, must **not** be faulted |
 | R6 | No detector, rule, audit finding or generated report in this repository states a cost verdict from presence | A detector, rule, audit finding or report that states cost controlled, capped or bounded because a token limit, budget figure, rate limit or alert is present | Reporting that a token limit or budget figure was *found*, as an observation with no verdict, is permitted |
 
-**No falsifier is automated in this release.** No rule reads this subject's artifact and no fixture carries one, so R1 to R5 are enforced by review or not at all, and R6 holds today only because no such detector exists. The falsifiers in the table are available for manual review; what this release lacks is a detector that applies them.
+**No falsifier is automated in this release.** No rule reads this subject's artifact and no fixture carries one, so R1 to R5 are enforced by review or not at all, and R6 holds today only because no such detector exists. The falsifiers in the table are available for manual review; what this release lacks is a detector that applies them. A record made stale by the event in the staleness table below does not satisfy the minimum test it was offered for until it is re-made.
 
 ## Exceptions and staleness
 
