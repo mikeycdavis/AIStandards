@@ -514,6 +514,12 @@ normative here is authored, and none of it has owner approval:
 
 ## Relationship to other standards and ADRs
 
+[Standard 12](12-context-and-corpus-provenance.md) governs where a corpus or fixture came from; this standard asks only whether its content is about
+real people.
+
+[Standard 12](12-context-and-corpus-provenance.md) governs where a corpus or fixture came from; this standard asks only whether its content is about
+real people.
+
 [Standard 1](01-ai-system-manifest.md) draws the scope this standard applies within. Its manifest
 schema's `dataSources` entries can declare a `kind` — including `prompt-fixture` and
 `evaluation-set` — and a `synthetic` flag, which R1 treats as a claim; the schema has no field for R4's

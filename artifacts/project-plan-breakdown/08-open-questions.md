@@ -309,6 +309,10 @@ either authors requirements on ground that pack owns or needs its maintainers' r
 unanswered:** for such systems, no requirement covers justifying a metric by the cost of error,
 quantifying uncertainty or holding a comparison's conditions identical.
 
+*Q23 to Q25 are reserved by PR #128 (Standard 10).*
+
+*Q23 to Q25 are reserved by PR #128 (Standard 10).*
+
 ### Q26 — Should a structural rule require a provenance statement for each declared data source?
 
 `dataSources[].provenance` exists in the manifest schema as a free-text string and no rule reads it,
@@ -322,7 +326,7 @@ list no sources, or sources with no origin, and every check passes.
 
 Standard 13 says "training-data provenance is item 12's". The boundary review gives training data to
 MachineLearningStandards and item 12 to retrieval corpora, prompt fixtures and evaluation sets.
-Standard 12 follows the review and does not edit Standard 13. **Not resolved here, because it
+Standard 12 follows the review and does not edit Standard 13's remark. **Not resolved here, because it
 concerns what another pack's scope reaches.** **Impact if unanswered:** the two standards disagree on
 the owner of training-data provenance.
 
