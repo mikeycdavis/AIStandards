@@ -36,332 +36,180 @@ operational resilience" bullet of
 
 ## Scope
 
-Applies to any AI system within this pack's scope as [Standard 1](01-ai-system-manifest.md) draws
-it — a repository that invokes a model, retrieves context for one, or acts on a model's output —
-where the project states, reports or publishes a figure or a claim about the environmental impact of
-that use: energy, emissions, water, or hardware.
+Applies to any AI system within this pack's scope as [Standard 1](01-ai-system-manifest.md) draws it — a repository that invokes a model, retrieves context for one, or acts on a model's output — where the project states, reports or publishes a figure or a claim about the environmental impact of that use: energy, emissions, water, or hardware.
 
-Covers: the boundary of what is accounted; the method and the status of each input; how a reported
-figure is described; claims of neutrality or low impact; and the limit of what this framework can say
-about any of it.
+Covers: the boundary of an impact figure; how its inputs and method are labelled; what else it must name; claims of neutrality or low impact; projections; and the limit of what this framework can say about any of it. It sets no target, threshold or method, and asks no project to reduce anything.
 
-Two terms, each defined here rather than by the brief:
+Terms, each defined once here and used verbatim below:
 
-- An **impact figure** is any number or qualitative claim about energy, emissions, water or hardware
-  attributed to the project's use of models.
-- A **boundary** is the list of what the figure includes and excludes: inference only or also
-  training; the model host's data centre only or also networking and end-user devices; operational
-  energy only or also embodied hardware.
+- **Impact figure** — any number or qualitative claim about energy, emissions, water or hardware attributed to the project's use of models.
+- **Boundary** — whether training is included, which of inference, retrieval, storage, networking and end-user devices are counted, and whether embodied hardware is included.
+- **Inputs** — what an impact figure is computed from; each has a status: measured by the project, estimated from a named model, reported by a named source with its disclosure revision or date, or unknown.
+- **Account** — its subject (the model identifier or class), its period or workload, and its assumptions; for a calculation that uses a grid or region intensity, that intensity and its date; for any other figure, the conversion factors it relies on.
 
-It does **not** cover, and claims none of the ground of, the following:
+It does **not** cover, and claims none of the ground of:
 
-- **Whether a project should reduce its impact**, or by how much. This standard sets no target.
-- **Spend.** Item 41, Inference Cost and Budget Control, owns cost. Cost and energy are correlated and
-  are not the same quantity; neither stands in for the other here.
+- **Whether a project should reduce its impact**, or by how much; this standard sets no target.
+- **Spend.** Item 41, Inference Cost and Budget Control, owns cost; cost and energy are correlated and are not the same quantity.
 - **Provider resilience and portability.** Item 44 owns it.
-- **Impact outside AI use**, such as a project's general infrastructure, unless the figure claims to
-  include it.
+- **Impact outside AI use**, such as general infrastructure, unless the figure claims to include it.
 
-**Boundary posture O — owned outright.** The boundary review records that no pack in the portfolio
-mentions environmental impact, and that the item's validation type is not-evaluable. This document
-accepts that record for what a repository can establish — the *correctness* of an energy, emissions or
-water figure — and narrows it there: that a boundary, method, assumptions and labels are present beside
-a figure is a reviewable record, so R1 to R5 are `manual-review` obligations (see Validation). It adds
-no precedent to the review's.
+**Boundary posture O — owned outright.** The boundary review records that no pack in the portfolio mentions environmental impact and that the item's validation type is not-evaluable. This document accepts that record for what a repository can establish — the correctness of an energy, emissions or water figure — and narrows it there: that a boundary, inputs, method and account are present beside a figure is a reviewable record, so R1 to R5 are `manual-review` obligations. It adds no precedent to the review's.
 
 ## Requirements
 
 ### R1 — State the boundary of every impact figure
 
-**A project that reports an impact figure MUST state its boundary — at least whether training is
-included, which operations are counted (inference, retrieval, storage, networking, end-user devices),
-and whether embodied hardware is included — and MUST NOT present a figure without one, nor compare or
-ratio two figures with different boundaries without stating the difference.**
+**An impact figure MUST state its boundary.**
 
-Two correct figures with different boundaries differ by orders of magnitude. A per-query energy number
-for inference alone, set beside a total for a training run, is not a comparison. The requirement does
-not choose a boundary; it requires that the one used be written next to the figure, and that a
-comparison across boundaries say so.
+Two correct figures with different boundaries differ by orders of magnitude. A comparison or ratio across boundaries is not a comparison unless it says so. The requirement does not choose a boundary; it requires that the one used be written next to the figure.
 
-### R2 — Name the method and label each input as measured, estimated, reported or unknown
+### R2 — Label each input and name the method
 
-**Each input to an impact figure MUST be labelled by its status — measured by the project, estimated
-by the project from a stated model, reported by a provider or third party, or unknown — and the method
-that combines them MUST be named. A reported input MUST name its source and the revision or date of the
-disclosure it is taken from. An input that is not available MUST be recorded as unknown and
-MUST NOT be replaced by a figure for another model, region or period without saying so.**
+**An impact figure MUST give the status of each input and name the method that combines them, and an unavailable input MUST be recorded as unknown and not replaced by another figure without saying so.**
 
-A hosted model's energy is almost never measured by its user. Substituting the published figure of a
-different, similarly sized model is a common and defensible estimate, and the requirement is that it
-be called one. An unknown that is carried as unknown is accounting; an unknown filled with a plausible
-number and no label is the failure.
+A hosted model's energy is almost never measured by its user. Substituting the published figure of a similarly sized model is a defensible estimate, and the requirement is that it be called one. An unknown carried as unknown is accounting; an unknown filled with a plausible number and no label is the failure.
 
-### R3 — Name the subject, period and assumptions
+### R3 — Name the account of an impact figure
 
-**A reported figure MUST name the model identifier or class it applies to, the period or workload it
-was computed over, and the assumptions it depends on: where the calculation uses a grid or region
-intensity (an emissions figure derived from energy, or an energy figure estimated from a region's
-supply), that intensity and its date; and for any other figure the conversion factors it relies on. A
-figure from a direct measurement, such as a metered quantity of energy, depends on no intensity and
-names none. An assumption the figure does not use is not reported. A figure computed for an earlier
-model, period or region MUST NOT be presented as describing the current system.**
+**An impact figure MUST name its account, and MUST NOT be presented as describing the current system when it was computed for an earlier model, period or region.**
 
-Grid intensity varies by region and by hour, and a model identifier can change behind an alias. A figure
-for last year's model on last year's grid is a statement about that, not about the system now running.
+A grid intensity varies by region and by hour, and a model identifier can change behind an alias. A figure for last year's model on last year's grid is a statement about that, not about the system now running; a directly metered figure depends on no intensity and names none, and an assumption the figure does not use is not reported.
 
-### R4 — Do not claim neutrality, or low impact, without the figure and its boundary behind it
+### R4 — Support a neutrality or low-impact claim
 
-**A project MUST NOT state or imply that its AI use is carbon-neutral, net-zero, green or low-impact
-unless the statement names the figure (R1 to R3) and any offset or credit is reported separately from
-the gross figure, with what it covers.**
+**A project MUST NOT state or imply that its AI use is carbon-neutral, net-zero, green or low-impact unless the statement names an impact figure that meets R1 to R3 and reports any offset separately from the gross figure with what it covers.**
 
-An offset is a claim about something else that happened elsewhere. It does not change what the
-operation consumed. The requirement is not that offsets be avoided; it is that the gross figure not
-disappear into them.
+An offset is a claim about something else that happened elsewhere; it does not change what the operation consumed. The requirement is not that offsets be avoided; it is that the gross figure not disappear into them. It sets no threshold and does not define "low".
 
-This requirement sets no threshold and does not define what "low" is.
+### R5 — Label a projection and name its assumptions
 
-### R5 — A figure for the future is an estimate, and is called one
+**A statement about the impact of a planned or projected use MUST be labelled a projection and MUST name every assumption it extrapolates from.**
 
-**A statement about the impact of a planned or projected use MUST be labelled a projection and MUST
-name the assumptions it extrapolates from.**
-
-Usage grows, models change and grids decarbonise or do not. A projection made at one volume describes
-that volume. Whether a projection will prove right is not a property of a repository; that it is
-labelled and states its assumptions is, and is what this requirement asks.
+Usage grows, models change and grids decarbonise or do not; a projection made at one volume describes that volume. Whether a projection will prove right is not a property of a repository; that it is labelled and states its assumptions is, and is what this requirement asks.
 
 ### R6 — This framework MUST NOT report environmental impact from the presence of a setting
 
-**No detector, rule, audit finding or generated report in this framework MAY state a system's
-environmental impact, or that it is efficient or low-impact, because a region name, a model name, a
-quantisation flag, a caching layer or a declaration is present in the repository.**
+**No detector, rule, audit finding or generated report in this framework MAY state a system's environmental impact, or that it is efficient or low-impact, because a region name, a model name, a quantisation flag, a caching layer or a declaration is present in the repository.**
 
-This is a constraint on the framework, not on a project. A repository can show that a region string
-names a "low-carbon" region or that a smaller model is configured. It cannot show what the system
-consumed. Reporting an impact from a presence would turn a setting into a measurement.
+This is a constraint on the framework, not on a project. A repository can show that a region string names a "low-carbon" region or that a smaller model is configured; it cannot show what the system consumed. Reporting an impact from a presence would turn a setting into a measurement.
 
 ## Failure modes
 
 | Failure | What it looks like | Requirement |
 | --- | --- | --- |
-| Figure without a boundary | A per-query energy number that does not say whether training is included | R1 |
-| Mixed boundaries compared | An inference-only figure set beside a training total as though comparable | R1 |
-| Unknown filled silently | A hosted model's energy taken from another model's published figure with no label | R2 |
-| Estimate presented as measurement | A figure computed from token counts and a published coefficient described as measured | R2 |
-| Method unnamed | A single number with no account of how inputs were combined | R2 |
-| Input unlabelled | An input with no status (measured, estimated, reported or unknown) | R2 |
-| Estimate with no stated model | An input labelled estimated that names no model it was estimated from | R2 |
-| Reported input without provenance | An input "reported by a provider" naming no source, or no disclosure revision or date | R2 |
-| Stale or foreign basis | A figure for an earlier model, period or region presented as describing the current system | R3 |
-| Grid assumed silently | A calculated emissions figure or region-supply-based energy estimate whose calculation uses a grid intensity that it does not name, or names without its date | R3 |
-| Subject missing | A figure that names no model or class | R3 |
-| Period or workload missing | A figure that names neither the period nor the workload it was computed over | R3 |
-| Conversion factor unnamed | A non-grid figure (water, fuel, hardware) that relies on a conversion factor it does not name | R3 |
-| Neutrality by offset alone | "Carbon-neutral AI" with the gross figure absent | R4 |
-| Low-impact claim with no figure | "Efficient" or "green" used as a description, naming no figure | R4 |
-| Offset without coverage | An offset or credit listed with no statement of what it covers | R4 |
-| Offset netted into the gross | Only a net figure after offsets is reported, the gross absent | R4 |
-| Projection stated as fact | A forecast of next year's impact written as a present result | R5 |
-| Projection without stated assumptions | A labelled forecast naming none, or only some, of the assumptions it extrapolates from | R5 |
+| Figure without a boundary | A per-query energy number, or a claim such as "our water use increased", that does not say whether training is included, what is counted, or whether hardware is included | R1 |
+| Input without a status or a source | An input with no status; an estimate described as measured; an estimate naming no model; a "reported" input naming no source or revision or date; an unknown replaced silently; or no method named | R2 |
+| Figure without its account | A figure naming no model, no period or workload, or only some of the assumptions or conversion factors it relies on; a calculated figure using a grid intensity it does not name or date; or an earlier figure presented as current | R3 |
+| Claim without a supporting figure | "Carbon-neutral" or "green" naming no figure, naming a figure that fails R1 to R3, or reporting only a net figure; an offset with no stated coverage | R4 |
+| Projection without label or assumptions | A forecast written as a present result, or a labelled forecast naming none, or only some, of the assumptions it extrapolates from | R5 |
 | Setting read as impact | A framework report of "low-impact" because a region name or a small model is configured | R6 |
 
 ## Evidence
 
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
-| R1 | The boundary written beside each reported figure and, for any comparison or ratio, the stated difference in boundaries | The document or report carrying the figure | Human review |
-| R2 | The method, each input's status, the model each estimated input is estimated from, and the source and revision of each reported input | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R3 | The subject, period and assumptions, including grid intensity and its date where the calculation uses one | The report carrying the figure | Human review |
-| R4 | Any neutrality or low-impact claim, with the figure and the separately reported offset and what the offset covers | The project's documentation and public statements | Human review |
-| R5 | Any projection, labelled, with its assumptions | The project's documentation | Human review |
-| The correctness of a figure, and of a projection, as a statement about energy actually used | None obtainable from a repository | — | **Not-evaluable** |
+| R1 | The boundary written beside each impact figure | The document or report carrying the figure | Human review |
+| R2 | The method, and each input's status with its model, or its source and disclosure revision or date | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
+| R3 | The account written beside each impact figure, and any current-system presentation checked against the figure's stated model, period and region | The report carrying the figure | Human review |
+| R4 | Each claim with the impact figure it names, the evidence that figure meets R1 to R3, and the separately reported offset and what it covers | The project's documentation and public statements | Human review |
+| R5 | Each projection, labelled, with its assumptions | The project's documentation | Human review |
 | R6 | The absence of any detector, rule, audit finding or generated report that reports impact from a setting or presence | This repository's own detectors and tests | Code review; see Implementation |
 
-Evidence for R1 to R5 is a human-authored record. A document stating a boundary and a method establishes
-that the project wrote them down. Whether the figure is correct is not established by any record in a
-repository; this framework cannot observe the energy a model used.
+Evidence for R1 to R5 is a human-authored record. A document stating a boundary, inputs and a method establishes that the project wrote them down. Whether the figure is correct is not established by any record in a repository, and is not-evaluable; this framework cannot observe the energy a model used.
 
 ## Validation, severity, and exemptibility
 
 **This standard has no catalog rules of its own in this release.**
-The Phase 2 plan (`artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` section 6) asks that
-every standard cite at least one rule or record in its Validation section why it ships with none; this
-is that record. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is a different obligation,
-that each requirement state a falsifier or be declared not-evaluable, and the Tests and falsifiers
-section below answers it.
+The Phase 2 plan (`artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` section 6) asks that every standard cite at least one rule or record in its Validation section why it ships with none; this is that record. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is a different obligation, that each requirement state a falsifier or be declared not-evaluable, and the Tests and falsifiers section below answers it.
 
 Three reasons, stated so a reader can disagree with any one of them:
 
-1. **There is no artifact a rule could read.** A rule for R1 or R2 would look for a declared boundary
-   or method, and neither `schemas/ai-system-manifest.schema.json` nor `schemas/ai-policy.schema.json`
-   has a place to put one; both are closed. A rule failing every project for omitting what no schema
-   accepts would measure this framework's own incompleteness and blame the project for it. Adding a
-   schema field is a schema-versioning decision, outside this slice (plan 02 section 8).
-2. **The subject is a quantity this framework cannot observe.** Energy and emissions are not
-   properties of a checkout. A detector could only read a setting, which R6 forbids this framework from
-   reporting as a result. The boundary review records the same: the item is not-evaluable.
-3. **No rule namespace exists for it.** No shard holds an environmental namespace, and this standard
-   mints no id; naming one is a decision for the owner. A proposed rule, if one is natural, is recorded
-   in the pull request that introduced this document for per-rule approval, and not here.
+1. **There is no artifact a rule could read.** A rule for R1 or R2 would look for a declared boundary or method, and neither `schemas/ai-system-manifest.schema.json` nor `schemas/ai-policy.schema.json` has a place to put one; both are closed. A rule failing every project for omitting what no schema accepts would measure this framework's own incompleteness and blame the project for it. Adding a schema field is a schema-versioning decision, outside this slice (plan 02 section 8).
+2. **The subject is a quantity this framework cannot observe.** Energy and emissions are not properties of a checkout. A detector could only read a setting, which R6 forbids this framework from reporting as a result; the boundary review records the same.
+3. **No rule namespace exists for it.** No shard holds an environmental namespace, and this standard mints no id; naming one is a decision for the owner. A proposed rule, if one is natural, is recorded in the pull request that introduced this document for per-rule approval, and not here.
 
-**Severity.** Every requirement here asks for a record, statement or label, so a finding against R1,
-R2, R3 or R5 is reported at **warning** severity: the figure may still be honest, and what is missing is
-the account of it. A finding against R4, which prohibits a claim made with nothing behind it, is
-reported at **error** severity, as is a violation of R6 by any detector, rule, audit finding or generated report. The assignment is per requirement
-and does not depend on how the finding is phrased. These levels are this repository's judgment, listed
-in Additions, and are not owner-approved. R1 to R5 are also `manual-review` obligations where a
-figure, claim or projection exists; the validation type and the severity are different things.
-Whether a figure or a projection is *correct* is **not-evaluable** and is not reported as reviewed. R6
-constrains this framework and has no validation type, because the thing it prohibits is a behaviour of
-the tool.
+**Validation type.** R1 to R5 are `manual-review` obligations in this release; R6 constrains this framework and has no validation type, because the thing it prohibits is a behaviour of the tool. The validation type and the severity are different things.
 
-**Exemptibility.** R6 is not exemptible, for the reason R6 of
-[Standard 25](25-grounding-and-hallucination-control.md) is not. R4's prohibition on a neutrality or
-low-impact claim with no figure behind it is likewise not exemptible, because an exception would record
-a project as knowingly making a claim nothing supports. R1 to R3 and R5 reach a system only where it
-reports a figure or a projection, and a system that makes no environmental claim of any kind may declare
-them out of scope by saying so in its own documents, with a reason. This release has no policy
-mechanism for it: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4 dispositions attach to
-catalog rules, and this standard has none. A project that has made no claim has nothing here to fail;
-one that later makes a claim is bound by these requirements from that point. No level here is lowered
-by a risk tier (Standard 2 R3).
+**Severity.** One level per requirement, assigned to the requirement as a whole and not to how a finding is phrased. These levels are this repository's judgment, listed in Additions, and are not owner-approved:
+
+| Requirement | Severity |
+| --- | --- |
+| R1 | warning |
+| R2 | warning |
+| R3 | warning |
+| R4 | error |
+| R5 | warning |
+| R6 | error |
+
+**Exemptibility.** R6 is not exemptible, for the reason R6 of [Standard 25](25-grounding-and-hallucination-control.md) is not. R4 is not exemptible, because an exception would record a project as knowingly making a claim nothing supports. R1 to R3 and R5 reach a system only where it reports a figure or a projection, and a system that makes no environmental claim of any kind records, in its own documents, that they do not reach it and why. This release has no policy mechanism for it: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4 dispositions attach to catalog rules, and this standard has none. No level here is lowered by a risk tier (Standard 2 R3).
 
 ## Tests and falsifiers
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | A reported figure states whether training is in or out, which of inference, retrieval, storage, networking and end-user devices are counted, and whether embodied hardware is in or out; any comparison or ratio between figures states the difference in their boundaries | A number or a qualitative impact claim (for example "water use increased") with no boundary, one that states only some of the three, or a comparison or ratio of figures with different boundaries that does not say so | A figure that states "training excluded; inference counted, retrieval, storage, networking and end-user devices excluded; operational energy only, embodied hardware excluded" must **not** be faulted for the narrow boundary |
-| R2 | Each input has a status label, an input labelled estimated names the model it is estimated from, a reported input names its source and disclosure revision or date, and the method is named | An estimate described as measured; an unknown replaced silently; an input with no status label; a figure with no named method; an input labelled estimated that names no model; or a "reported" input with no source, or with a source but no disclosure revision or date | A project that records its hosted model's energy as "unknown" and reports no figure must **not** be reported as failing R2 |
-| R3 | A figure names model or class, period or workload, and its assumptions, including the grid intensity and its date where the calculation uses one | A figure that omits its subject, its period or workload, or its assumptions (each independently); a calculated emissions figure or region-supply-based energy estimate whose calculation uses a grid intensity and names none, or names one without its date; a figure that names some but not all of the assumptions or conversion factors it relies on (for a non-grid calculation, such as a fuel-to-emissions factor); or a figure for an earlier model, period or region presented as describing the current system | A figure that names an old model and an old period, and says so, must **not** be flagged as stale; a directly metered energy figure that names no grid intensity, and a figure that omits assumptions it does not use, must **not** be faulted for either |
-| R4 | A neutrality or low-impact claim cites the figure, which itself meets R1 to R3, with offsets reported separately and what each covers | Any claim of carbon-neutral, net-zero, green or low-impact, stated or implied, with the gross figure absent or not named, or naming a figure that fails any of R1 to R3 (a missing boundary, subject, period or workload, assumptions, input status label, method, estimation model, or reported-input source); an offset with no stated coverage; or an offset netted into the gross figure so that only the net is reported | A project that publishes a gross figure and separately lists an offset must **not** be flagged for having one |
-| R5 | A projection is labelled as one and names its assumptions | A projection with no projection label, with no named assumptions, or naming only some of the assumptions its calculation relies on | A labelled projection with assumptions must **not** be flagged for being uncertain |
-| R6 | No detector, rule, audit finding or generated report in this repository states an impact verdict from presence | A detector, rule, audit finding or report that stated an environmental impact, or that the system is efficient or low-impact, because a region name, model name, quantisation flag, caching layer or declaration was present | Reporting that a region setting was *found*, as an observation with no verdict, is permitted |
+| R1 | Each impact figure, numeric or qualitative, states whether training is included, which operations are counted, and whether embodied hardware is included | An impact figure, numeric or qualitative, that states none or only some of the three parts of its boundary | A figure that states "training excluded; inference counted; retrieval, storage, networking and end-user devices excluded; embodied hardware excluded" must **not** be faulted for the narrow boundary |
+| R2 | Each input has a status; an estimated input names its model; a reported input names its source and disclosure revision or date; an unavailable input is recorded as unknown; and the method is named | An input with no status, an estimate described as measured, an estimate naming no model, a reported input with no source or no revision or date, an unknown replaced silently, or no method named | A project that records its hosted model's energy as unknown and reports no figure must **not** be faulted under R2 |
+| R3 | Each impact figure names its subject, its period or workload, every assumption or conversion factor it uses (with a grid intensity and its date where the calculation uses one), and is not presented as current when computed for an earlier basis | An impact figure omitting its subject, its period and workload, or any assumption or conversion factor it uses; a grid intensity used but not named or dated; or an earlier figure presented as describing the current system | A figure that names an old model and an old period, and says so, and a directly metered figure that names no grid intensity, must **not** be faulted |
+| R4 | Each claim names an impact figure that meets R1 to R3, and any offset is reported separately from the gross figure with what it covers | A claim of carbon-neutral, net-zero, green or low-impact, stated or implied, naming no figure or one that fails R1 to R3, with the gross figure absent, or an offset netted into it or with no stated coverage | A project that publishes a gross figure meeting R1 to R3 and separately lists an offset with its coverage must **not** be faulted for having one |
+| R5 | Each projection is labelled as one and names every assumption its calculation relies on | A projection with no projection label, with no named assumptions, or naming only some of the assumptions its calculation relies on | A labelled projection with its assumptions must **not** be faulted for being uncertain |
+| R6 | No detector, rule, audit finding or generated report in this repository states an impact verdict from presence | A detector, rule, audit finding or report that states an environmental impact, or that the system is efficient or low-impact, because a region name, model name, quantisation flag, caching layer or declaration is present | Reporting that a region setting was *found*, as an observation with no verdict, is permitted |
 
-**No falsifier is automated in this release.** No rule reads an accounting artifact and no fixture
-carries one, so R1 to R5 are enforced by review or not at all, and R6 holds today only because no such detector exists. The
-falsifiers in the table are available for manual review; what this release lacks is a detector that
-applies them. **A requirement nobody can be shown to have broken is a requirement with no falsifier**,
-and each requirement above has one.
+**No falsifier is automated in this release.** No rule reads this subject's artifact and no fixture carries one, so R1 to R5 are enforced by review or not at all, and R6 holds today only because no such detector exists. The falsifiers in the table are available for manual review; what this release lacks is a detector that applies them.
 
 ## Exceptions and staleness
 
-There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to
-except. A project that knowingly does not meet one records that in its own documents; Standard 2's
-dispositions apply to the application of a rule, and this standard has none.
+There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to except. A project that knowingly does not meet one records that in its own documents; Standard 2's dispositions apply to the application of a rule, and this standard has none.
 
-**Attestations and expiry.** No attestation is produced for these records in this release.
-[Standard 6](06-standard-structure-and-rule-identity.md) R8 makes `manual-review` rules attestable by
-default and `not-evaluable` ones never attestable, but it governs catalog rules, none exists here, and
-the attestation mechanism itself is later work ([Standard 5](05-verdict-vocabulary.md) records the
-`attested` disposition as not yet produced). No record under this standard expires on a schedule;
-[Standard 2](02-ai-risk-tiering-and-applicability.md) R5's event-driven expiry concerns applicability
-declarations and does not apply to these records. Review-staleness is event-driven only: a record presented as current, or a projection, is
-stale when one of the events below occurs, and nothing in this release detects that.
+**Attestations and expiry.** No attestation is produced for these records in this release. [Standard 6](06-standard-structure-and-rule-identity.md) R8 makes `manual-review` rules attestable by default, but it governs catalog rules, none exists here, and the attestation mechanism itself is later work ([Standard 5](05-verdict-vocabulary.md) records the `attested` disposition as not yet produced). No record under this standard expires on a schedule; [Standard 2](02-ai-risk-tiering-and-applicability.md) R5's event-driven expiry concerns applicability declarations and does not apply to these records.
 
-**What invalidates a recorded figure.** A figure that names a completed period remains a true statement
-about that period after any change below; it stops describing the system as it now runs, and it is
-stale only where it is presented as current or is a projection whose basis has changed. Each of the
-following is a different subject, and a record made before the change describes the earlier one:
+**What makes a record stale.** One event per requirement; a record made before the event describes the earlier arrangement and no longer satisfies the requirement it was offered for until it is re-made. A figure for a completed period stays a true statement about that period after a prospective change, and is stale only where it is presented as current; a retrospective correction of the disclosure it rests on invalidates the figure itself.
 
-- a change of model identifier, or a model silently updated behind an alias
-  ([Standard 1](01-ai-system-manifest.md) R4 asks for the identifier to be pinned);
-- a change of provider, region or hosting arrangement, or of the grid intensity of the region;
-- a change going forward in how the provider reports or estimates energy, or the withdrawal of a figure
-  for a period the record does not cover (a revision or withdrawal for the covered period is a
-  retrospective correction, below);
-- a change of prompt, output length, caching or batching, each of which changes the work done per request;
-- a change of volume, which moves a projection's basis.
-
-**Staleness.** A figure presented as current also becomes stale through changes outside the project: a
-grid's mix and a provider's hardware are changes nobody in the project made. Nothing in this release
-detects the transition; the events above are a note to a future reader.
-
-**Contradicted by operation.** A prospective change (the events above) makes an earlier figure describe
-something other than the current system; it does not make a completed-period figure false. A
-*retrospective* correction — a provider's revised or withdrawn disclosure for the period the figure
-covers, or a measurement that departs from an estimate the project published for that period —
-contradicts the record itself and invalidates it until re-examined. This
-standard says only that the record no longer stands.
+| Requirement | Event that makes its record stale |
+| --- | --- |
+| R1 | A change of what the figure counts. |
+| R2 | A change of provider disclosure for the period the figure covers. |
+| R3 | A change of model, provider, region or hosting arrangement, for a figure presented as current. |
+| R4 | A change of the figure the claim names. |
+| R5 | A change of volume, model or grid that moves the projection's basis. |
+| R6 | A new detector, rule or report that touches environmental impact. |
 
 ## Additions this standard makes beyond the source
 
-**Nearly all of it.** The brief contributes two words, "environmental impact", inside a bullet of four
-subjects. It states no requirement, level or evidence for them. The item is class `D` because its
-subject token is derived from the brief; the requirements are not derived. Specifically authored here,
-none of it owner-approved:
+**Nearly all of it.** The brief contributes two words, "environmental impact", inside a bullet of four subjects and states no requirement, level or evidence for them. The item is class `D` because its subject token is derived from the brief; the requirements are not derived. Specifically authored here, none of it owner-approved:
 
-- **R1 in full**: the requirement that every figure carry a boundary, and the three boundary
-  questions (training, operations counted, embodied hardware).
-- **R2 in full**: the four-way status of an input (measured, estimated, reported, unknown), the
-  naming of the method, and the ruling that an unavailable input is recorded as unknown and not
-  silently substituted.
-- **R3 in full**: the three things a figure must name, including grid intensity and its date.
-- **R4 in full**: the prohibition on neutrality or low-impact claims with no figure behind them, the
-  separate reporting of offsets, and the ruling that it is not exemptible.
-- **R5 in full**: labelling a projection as one.
-- **R6**, the constraint on this framework, in the same form as the equivalent requirement in
-  [Standard 25](25-grounding-and-hallucination-control.md) and
-  [Standard 33](33-ai-observability.md).
-- **The severity assignments** (warning for R1, R2, R3 and R5; error for R4 and for a violation of R6 by any detector, rule, audit finding or
-  report) and the statement that no attestation or scheduled expiry exists in this release.
-- **The exemptibility rulings** (R6 and R4 not exemptible; R1 to R3 and R5 declarable out of scope in the
-  project's own documents) and **the staleness events and the retrospective-correction ruling**.
-- **That this standard sets no target, threshold or method**, and the exclusions in Scope as division
-  lines, which no one has confirmed.
-- **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
-  decision not to name a rule id.
+- **R1 to R5 in full**, with the defined terms impact figure, boundary, inputs and account, the four-way input status, the rule that an unavailable input is recorded as unknown, the ban on presenting an earlier figure as current, and the offset-reporting rule.
+- **R6**, the constraint on this framework, in the same form as the equivalent requirement in [Standard 25](25-grounding-and-hallucination-control.md) and [Standard 33](33-ai-observability.md).
+- **That this standard sets no target, threshold or method**, and the exclusions in Scope as division lines, which no one has confirmed.
+- **The severity assignments** (one level per requirement, in Validation), the statement that no attestation or scheduled expiry exists in this release, and the staleness table.
+- **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the decision to name no rule id.
 
-Not authored here: the posture, and the observation that the item is not-evaluable, are the boundary
-review's.
+Not authored here: the posture, and the observation that the item is not-evaluable, are the boundary review's.
 
 ## Relationship to other standards and ADRs
 
-[Standard 7](07-boundary-with-adjacent-standards.md) lists the subjects this pack owns and the packs
-that own the others; the boundary review records that no pack in the portfolio mentions environmental
-impact, so this item has no counterpart to defer to or crosswalk.
-
-[Standard 33](33-ai-observability.md) governs what a call record carries; R2 and R3 here depend on
-that record for the model that served a call and do not restate it. Item 41, Inference Cost and Budget
-Control, governs spend; a project that attributes spend per subject has the grouping an impact figure
-may reuse, and nothing here requires it.
-
-[Standard 1](01-ai-system-manifest.md) declares models, and R3 depends on the identifier it asks to be
-pinned. It declares no environmental field, and none is proposed by this standard.
-[Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and
-non-lowering language used above. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the
-requirement the Tests and falsifiers section answers.
-
-Items 41 and 44 are not part of this change; the lines drawn above are provisional until they are
-written, and the later standards may legitimately move them.
-
-**Outside this pack.** No adjacent pack's standard is recorded for this subject. No ADR covers this
-standard — `artifacts/adr/` does not exist in this release.
+[Standard 7](07-boundary-with-adjacent-standards.md) lists the subjects this pack owns and the packs that own the others; the boundary review records that no pack in the portfolio mentions environmental impact, so this item has no counterpart to defer to or crosswalk. [Standard 33](33-ai-observability.md) governs what a call record carries; R2 and R3 here depend on that record for the model that served a call and do not restate it. Item 41, Inference Cost and Budget Control, governs spend. [Standard 1](01-ai-system-manifest.md) declares models and declares no environmental field; none is proposed by this standard. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and non-lowering language used above, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the Tests section answers. Items 41 and 44 are not part of this change. **Outside this pack.** No adjacent pack's standard is recorded for this subject. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
 ## Implementation
 
 **Normative. Nothing about R1 to R5 is enforced; R6 holds today only because no such detector exists.**
 
-Stated as two separate lists, because a reader scanning one table will otherwise carry a proposal away
-as a capability.
+Stated as two separate lists, because a reader scanning one table will otherwise carry a proposal away as a capability.
 
 **Implemented today, and re-runnable now:**
 
 | Requirement | State |
 | --- | --- |
-| R6 | **Holds today because no such detector exists; nothing prevents or tests one being added.** No detector, rule, audit finding or report in `scripts/`, `rules/` or `ai-policy.yml` has a concept of environmental impact, energy or emissions. No test asserts the absence, so a future detector could break R6 without failing one |
-| This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's accounting |
+| R6 | **Holds today because no such detector exists; nothing prevents or tests one being added.** No detector, rule, audit finding or report in `scripts/`, `rules/` or `ai-policy.yml` has a concept of environmental impact, energy or emissions. |
+| This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's practice |
 
 **Proposed, and deliberately absent from this release. None of the following exists:**
 
 | Requirement | What would be needed | Why it is not here |
 | --- | --- | --- |
-| R1 to R3 | A place to declare a boundary, method and assumptions: a schema change, or a named document a rule can find | Both schemas are closed; a change is a schema-versioning decision and Phase 2 section 8 puts it out of scope |
+| R1 to R3 | A place to declare a boundary, inputs and account: a schema change, or a named document a rule can find | Both schemas are closed; a change is a schema-versioning decision and Phase 2 section 8 puts it out of scope |
 | R4, R5 | A check that a published claim names its figure, or that a projection is labelled | Reading intent from free text is a heuristic, and a false positive teaches a project to write whatever passes |
 | R6 | A test asserting no detector, rule, audit finding or report emits an impact verdict | None exists; it would be a regression guard even now, and is proposed here, not built |
 | Rule id | A reserved-namespace id and a shard, once an owner decides | Not decided; this standard names none |
 
-**What no future release will implement.** A detector that reports a system's environmental impact, or
-that it is efficient or low-impact, from the presence of a region name, a model name, a quantisation
-flag or a declaration. R6 forecloses it, and the foreclosure is the point: a presence is not a
-measurement, and a framework reporting one would put its authority behind a quantity that nothing in a
-repository can show.
+**What no future release will implement.** A detector that reports a system's environmental impact, or that it is efficient or low-impact, from the presence of a region name, a model name, a quantisation flag or a declaration. R6 forecloses it, and the foreclosure is the point: a presence is not a measurement.
