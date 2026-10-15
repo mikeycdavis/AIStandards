@@ -38,346 +38,173 @@ operational resilience" bullet of
 
 ## Scope
 
-Applies to any AI system within this pack's scope as [Standard 1](01-ai-system-manifest.md) draws
-it — a repository that invokes a model, retrieves context for one, or acts on a model's output —
-that depends on a model, a provider, a retrieval store or a tool service it does not itself operate,
-or that operates a model or other AI-specific service whose host can fail.
+Applies to any AI system within this pack's scope as [Standard 1](01-ai-system-manifest.md) draws it — a repository that invokes a model, retrieves context for one, or acts on a model's output — that depends on a model, a provider, a retrieval store or a tool service it does not itself operate, or that operates a model or other AI-specific service whose host can fail.
 
-Covers: knowing each dependency, external or self-operated, and what happens when it fails; the degraded service the
-system gives and whether it says so; what a fallback must not do; keeping provider-specific behaviour
-replaceable; exercising the arrangements; and the limit of what this framework can say about any of
-it.
+Covers: knowing each dependency and what happens under each condition; the degraded mode and its signal; what a fallback must not do; keeping provider-specific behaviour behind an abstraction; exercising the arrangements; and the limit of what this framework can say about any of it.
 
-Two terms, each defined here rather than by the brief:
+Terms, each defined once here and used verbatim below:
 
-- A **dependency** is a service or host whose failure or change alters what the system produces and
-  that is either external to the project, or is a model host or other AI-specific service the project
-  itself operates: a model endpoint or the host a self-served model runs on, an embedding service, a
-  vector store, a tool API, a moderation service. The project's ordinary infrastructure (its
-  databases, queues and application servers) is not a dependency in this sense; Scope excludes it.
-- A **degraded mode** is a defined, reduced service the system gives when a dependency is unavailable,
-  slow, rate-limited or changed, which may be to decline.
+- **Dependency** — a service or host whose failure or change alters what the system produces and that is either external to the project, or is a model host or other AI-specific service the project operates: a model endpoint or the host a self-served model runs on, an embedding service, a vector store, a tool API, a moderation service. The project's ordinary infrastructure is not a dependency in this sense.
+- **Condition** — one of: unavailable, slow, rate-limited, changed.
+- **Degraded mode** — a defined, reduced service the system gives under a condition, which may be to decline.
+- **Fallback** — a model, provider or path the system uses when its primary path is in a condition.
+- **Exercise** — a test, a drill or an observed real event in which a degraded mode or fallback ran, with its date and result.
 
-It does **not** cover, and claims none of the ground of, the following:
+It does **not** cover, and claims none of the ground of:
 
-- **Ordinary service reliability** — availability targets, redundancy of the project's own
-  infrastructure, backup — which is general engineering and not specific to AI use.
-- **Rolling a release back.** Item 32, Rollback and Recovery, owns reverting a change this project made.
-  A dependency failing is not a project change.
-- **Time.** Item 42 owns latency budgets; a timeout is a degradation trigger here and a budget there.
-- **Spend.** Item 41 owns cost; a fallback to a dearer model is a cost multiplier there.
+- **Ordinary service reliability** — availability targets, redundancy of the project's own infrastructure, backup — which is general engineering.
+- **Rolling a release back.** Item 32 owns reverting a change this project made; a dependency failing is not a project change.
+- **Time and spend.** Item 42 owns latency budgets and item 41 owns cost; a timeout is a condition trigger here and a budget there.
 - **Responding to an incident**, which is item 34's.
 
-**Boundary posture X — owned canonically here, with a precedent.** The boundary review upholds the
-plan's recommendation to claim the item. It records one precedent and only this:
-
-- **EngineeringStandards, `standards/01-human-and-ai-operability.md`, rule `ai.provider-neutral`** —
-  required level, severity `error`, validation type `code-analysis`, not non-exemptible. Its
-  description: model providers sit behind an abstraction so capabilities remain stable when the model
-  changes. The review's reasoning is that provider lock-in is an operational-resilience concern and the
-  brief names resilience, and that this pack mints `cost.provider-portable` while the ES rule stays in
-  ES.
-
-This standard crosswalks to that rule for R4 only, as a **semantic** correspondence and never as a
-reuse of its id. The precedent says nothing about the other five requirements here; they have none in
-that pack, and the review records no other.
-
-The precedent was read at EngineeringStandards `3b1b18d` on 2026-10-14. The standard's own text, R4
-"Provider neutrality", says application domain logic **SHOULD NOT** depend directly on a specific
-provider, while the rule record has level `required` and severity `error`. That difference is observed
-and not resolved here; which governs is that pack's to say.
+**Boundary posture X — owned canonically here, with a precedent.** The boundary review upholds the plan's recommendation to claim the item and records one precedent, only this: EngineeringStandards, `standards/01-human-and-ai-operability.md`, rule `ai.provider-neutral` (required level, severity `error`, validation type `code-analysis`, not non-exemptible; description: model providers sit behind an abstraction so capabilities remain stable when the model changes). This standard crosswalks to it for R4 only, as a **semantic** correspondence and never as a reuse of its id; [Standard 7](07-boundary-with-adjacent-standards.md) R3 lists `cost.provider-portable` as the later-phase id for it, which is neither minted nor claimed here. The precedent was read at EngineeringStandards `3b1b18d` on 2026-10-14. That standard's own text says application domain logic **SHOULD NOT** depend directly on a specific provider while the rule record has level `required` and severity `error`; the difference is observed and not resolved here, and which governs is that pack's to say. **No human sign-off is recorded or claimed**: `humanSignOff` is `null`.
 
 ## Requirements
 
-### R1 — Name each dependency, external or self-operated, and what its failure does
+### R1 — Record each dependency's behaviour under each condition
 
-**A system MUST record each dependency, as defined in Scope, whose failure or change alters what it
-produces, and for each MUST record what the system does under each of four conditions: unavailable,
-slow, rate-limited and changed.**
+**The project MUST record, for each dependency, what the system does under each condition.**
 
-A dependency not enumerated is a failure nobody planned for. The record is a document, not a manifest
-field: `schemas/ai-system-manifest.schema.json` is closed and declares `models`, `tools` and
-`dataSources`, but not failure behaviour. [Standard 1](01-ai-system-manifest.md) declares the models; this
-requirement adds what happens when one is gone, and does not restate the declaration.
+A dependency not enumerated is a failure nobody planned for. The record is a document, not a manifest field: `schemas/ai-system-manifest.schema.json` is closed and declares `models`, `tools` and `dataSources`, but not failure behaviour. [Standard 1](01-ai-system-manifest.md) declares the models; this requirement adds what happens when one is in a condition.
 
-### R2 — Define the degraded mode, and say when the system is in it
+### R2 — Make each reduced service a signalled degraded mode
 
-**For each dependency in R1, and for each of its four conditions that results in reduced service, the
-system MUST define a degraded mode, which MAY be to decline, and MUST make it detectable to the caller
-or downstream process when a response was produced in a degraded mode. A system MUST NOT present a
-degraded response in the same form as a full one.**
+**Each behaviour recorded under R1 that gives reduced service MUST be a degraded mode, and a response produced in a degraded mode MUST carry a signal that a full response does not.**
 
-A fallback to a smaller model, a retrieval step that returned nothing, a tool that timed out and was
-skipped: each produces a response of the usual shape. If the difference is only in a trace nobody reads,
-the user and the downstream process cannot discount it. What the distinction is *named* is the
-project's choice. Where the degraded system would otherwise **act**, an unavailable, timed-out or
-indeterminate approval mechanism does not proceed; that is [Standard 45](45-approval-gates.md) R6's
-subject and is not restated. Any other indeterminate dependency is governed by R1 and R2 here.
+A fallback to a smaller model, a retrieval step that returned nothing, a tool that timed out and was skipped each produce a response of the usual shape; if the difference is only in a trace nobody reads, the user and the downstream process cannot discount it. What the signal is *named* is the project's choice. Where the degraded system would otherwise act, an unavailable, timed-out or indeterminate approval mechanism does not proceed; that is [Standard 45](45-approval-gates.md) R6's subject and is not restated.
 
-### R3 — A fallback must not weaken the controls the primary path carries
+### R3 — Keep the primary path's controls on a fallback
 
-**A fallback model, provider or path MUST NOT be used for an interaction unless the controls the
-primary path applies — such as redaction, prompt and
-instruction handling, output checks and logging — apply to it too, or the system declines; and the
-project MUST state how each of those controls applies to the fallback.**
+**A fallback MUST NOT serve an interaction without the controls the primary path applies, and the system MUST decline instead.**
 
-A fallback is a second path through the system, and it is the one least reviewed. A secondary provider
-that is not under the data-handling arrangement of the first, a fallback model that is not behind the
-output check, a path that skips redaction because "it's only for outages": each satisfies resilience by
-dropping the control the primary carries. That the substitution happened is recorded under
-[Standard 33](33-ai-observability.md) R2; this requirement concerns what the substitute is allowed to
-do.
+A fallback is a second path through the system and the one least reviewed: a secondary provider not under the first's data-handling arrangement, a model not behind the output check, a path that skips redaction "because it is only for outages". That the substitution happened is [Standard 33](33-ai-observability.md) R2's subject; this requirement concerns what the substitute is allowed to do.
 
-### R4 — Keep provider-specific behaviour replaceable, and say what replacement would require
+### R4 — Keep provider-specific behaviour behind an abstraction
 
-**Provider-specific behaviour SHOULD live at integration boundaries behind an abstraction, and a project
-that claims a provider can be replaced MUST state what would have to change and MUST NOT rest the claim
-on the existence of the abstraction alone.**
+**Provider-specific behaviour SHOULD sit at an integration boundary behind an abstraction.**
 
-This is the requirement the EngineeringStandards precedent corresponds to. It is written at SHOULD
-because that standard's text is, and the difference from the rule record's level is noted in Scope. The
-second half is this standard's addition: an interface with one implementation is a plan, not
-portability. Behaviours that differ across providers — tokenisation, context length, tool-calling shape,
-refusal behaviour, output format — are what make a swap a change of system, and the claim is about
-those.
+This is the requirement the EngineeringStandards precedent corresponds to, written at SHOULD because that standard's text is. A provider SDK imported inside a domain module is the signal it exists to catch. An interface with one implementation is a plan, not portability, and nothing here asks a project to claim otherwise.
 
-### R5 — Exercise the degraded and fallback paths, and record that they ran
+### R5 — Exercise each degraded mode and fallback, and keep the result current
 
-**Each degraded mode and each fallback MUST be exercised — in a test, a drill or an observed real
-event — and the project MUST record when and with what result and state how often it will be exercised
-again; a path that has never been exercised, whose latest recorded exercise is older than its stated
-interval, whose latest exercise did not show the expected degraded or fallback behaviour, or that has
-changed since its latest exercise (any event listed under Exceptions and staleness), MUST NOT be
-described as available.**
+**Each degraded mode and each fallback MUST be exercised with its date and result recorded and an interval stated, and MUST NOT be described as available unless its latest exercise succeeded within that interval and postdates the latest change to the path.**
 
-A fallback that has never run has an unknown failure rate, and the usual way to find it out is the
-outage it was written for. The interval is the project's choice; the requirement is that one is stated
-and that a dated result is on the record.
+A fallback that has never run has an unknown failure rate, and the usual way to find it out is the outage it was written for. The interval is the project's choice; an exercise that ran before a change to the path says nothing about the path as it now is.
 
 ### R6 — This framework MUST NOT report resilience or portability from the presence of an arrangement
 
-**No detector, rule, audit finding or generated report in this framework MAY state that a system is
-resilient, degrades safely or is provider-portable because a fallback setting, a second provider name, a
-retry policy or an adapter interface is present in the repository.**
+**No detector, rule, audit finding or generated report in this framework MAY state that a system is resilient, degrades safely or is provider-portable because a fallback setting, a second provider name, a retry policy or an adapter interface is present in the repository.**
 
-This is a constraint on the framework, not on a project. A repository can show that a fallback model is
-named or that an interface exists. It cannot show that the fallback is reachable, that it carries the
-controls (R3), or that a second implementation would work. Reporting a pass from a presence would turn
-an arrangement into a verdict about an effect.
-
-**A fallback that exists and has never been shown to run is not demonstrated to work.** It is shown by
-a request it served.
+This is a constraint on the framework, not on a project. A repository can show that a fallback model is named or that an interface exists; it cannot show that the fallback is reachable, that it carries the controls, or that a second implementation would work. A fallback is shown by a request it served, which is R5's record and not the framework's to infer.
 
 ## Failure modes
 
 | Failure | What it looks like | Requirement |
 | --- | --- | --- |
-| Unenumerated dependency | A moderation or embedding service whose outage nobody planned for | R1 |
-| Failure behaviour left to the exception | No record of what the system does on provider failure; the behaviour is whatever the HTTP client's default does | R1 |
-| Silent degradation | A response from a weaker model, or with no retrieved context, returned in the usual form | R2 |
-| Distinction kept in a trace only | The degraded flag exists in telemetry; the caller never receives it | R2 |
-| Degraded mode that acts | A system with a tool that proceeds when its approval mechanism is unavailable or indeterminate; reported and severity-assigned under [Standard 45](45-approval-gates.md) R6, not restated here | Standard 45 R6 |
-| Fallback outside the controls | A secondary provider with no redaction, no output check, or different data terms | R3 |
-| Fallback chosen for availability only | Failing over to an unreviewed model because it is up, and serving without a control the primary path applies | R3 |
-| Unstated swap cost | "We can switch providers" with no account of what behaves differently | R4 |
-| Never-run fallback | A failover path last exercised never, found broken in the outage | R5 |
+| Dependency without a recorded behaviour | A retrieval or moderation service, or a self-hosted model's host, with no record under one or more conditions; or "whatever the HTTP client's default does" | R1 |
+| Reduced service without a signal | A response from a weaker model, or with no retrieved context, returned in the usual form; or a reduced behaviour recorded under R1 that is not a defined degraded mode | R2 |
+| Fallback outside the controls | A fallback that serves an interaction without redaction, output check or logging that the primary path applies | R3 |
+| Provider behaviour in domain logic | A provider SDK call or a provider-specific request shape embedded in domain logic | R4 |
+| Path without a current exercise | A fallback that has never run, whose latest exercise failed, is overdue, or predates a change to the path, and is still described as available; or an exercise record with no result or interval | R5 |
 | Arrangement read as resilience | A framework report of "resilient" because a fallback model is configured | R6 |
-| Abstraction offered as portability | An interface presented as portability that has never carried a second provider, with no replacement list | R4 |
 
 ## Evidence
 
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
-| R1 | Each dependency and its failure behaviour | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | Each degraded mode and, where it produces a response, the field, header or shape that carries it with a sample of a degraded response; for a mode that declines, a captured declined outcome and the record that the decline is the mode | The project's output contract and a captured example | Human review |
-| R3 | The controls on the primary path and a statement of how each applies to the fallback | Project code, configuration and data-handling terms | Human review |
-| R4 | The boundary where provider-specific behaviour sits; and, where the project claims the provider can be replaced, the stated list of what replacement would change | Project code and documentation | Human review |
-| R5 | The date and result of each exercise of a degraded or fallback path, and the stated interval; an exercise record without a result is incomplete | Test records, drill records or incident records | Human review of the records |
-| R6 | The absence of any detector, rule, audit finding or generated report that reports resilience from a setting or presence | This repository's own detectors and tests | Code review; see Implementation |
+| R1 | Each dependency and its behaviour under each of the four conditions | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
+| R2 | Each degraded mode, the field, header or shape that carries its signal, and a retained sample of a degraded response (or, for a declining mode, a captured declined outcome) | The project's output contract and a captured example | Human review |
+| R3 | The primary path's controls and, for each, where it applies on the fallback path | Project code, configuration and data-handling terms | Human review |
+| R4 | Where provider-specific calls and request shapes sit, and the abstraction in front of them | Project code and documentation | Human review |
+| R5 | The date, result and stated interval of each exercise, and the date of the latest change to the path | Test records, drill records or incident records | Human review |
+| R6 | The absence of any detector, rule, audit finding or generated report that reports resilience from a presence | This repository's own detectors and tests | Code review; see Implementation |
 
-Evidence for R1 to R5 is a human-authored record. A document naming a fallback establishes that the
-project wrote it down and says nothing about whether the running system takes it; the reviewer reads
-what is claimed against the code, configuration and records that would carry it out.
+Evidence for R1 to R5 is a human-authored record. A document naming a fallback establishes that the project wrote it down and says nothing about whether the running system takes it; the reviewer reads what is claimed against the code, configuration and records that would carry it out.
 
 ## Validation, severity, and exemptibility
 
 **This standard has no catalog rules of its own in this release.**
-The Phase 2 plan (`artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` section 6) asks that
-every standard cite at least one rule or record in its Validation section why it ships with none; this
-is that record. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is a different obligation,
-that each requirement state a falsifier or be declared not-evaluable, and the Tests and falsifiers
-section below answers it.
+The Phase 2 plan (`artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` section 6) asks that every standard cite at least one rule or record in its Validation section why it ships with none; this is that record. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is a different obligation, that each requirement state a falsifier or be declared not-evaluable, and the Tests and falsifiers section below answers it.
 
 Three reasons, stated so a reader can disagree with any one of them:
 
-1. **There is no artifact a rule could read.** A rule for R1 or R2 would look for a declared dependency
-   inventory or degraded mode, and neither `schemas/ai-system-manifest.schema.json` nor
-   `schemas/ai-policy.schema.json` has a place to put one; both are closed. A rule failing every project
-   for omitting what no schema accepts would measure this framework's own incompleteness and blame the
-   project for it. Adding a schema field is a schema-versioning decision, outside this slice (plan 02
-   section 8).
-2. **R2, R3 and R5 concern behaviour and records, not files.** Whether a degraded response is
-   distinguishable on the path a request takes, whether a fallback is behind the controls, and whether it
-   ever ran are not properties of a checkout. A detector would test for the presence of a setting, which
-   R6 forbids this framework from reporting as a result.
-3. **The crosswalked rule is not this pack's to re-mint, and its id is not decided.**
-   [Standard 7](07-boundary-with-adjacent-standards.md) R3 lists `cost.provider-portable` as a
-   *later-phase* id corresponding to `ai.provider-neutral`. No `cost` shard exists, and this standard
-   adds none, so that id is neither minted nor claimed here. Whether R4 becomes a rule, under that id or
-   another, is the owner's decision; a proposal, if one is natural, is recorded in the pull request that
-   introduced this document for per-rule approval.
+1. **There is no artifact a rule could read.** A rule for R1 or R2 would look for a declared dependency inventory or degraded mode, and neither `schemas/ai-system-manifest.schema.json` nor `schemas/ai-policy.schema.json` has a place to put one; both are closed. A rule failing every project for omitting what no schema accepts would measure this framework's own incompleteness and blame the project for it. Adding a schema field is a schema-versioning decision, outside this slice (plan 02 section 8).
+2. **R2, R3 and R5 concern behaviour and records, not files.** Whether a degraded response is signalled on the path a request takes, whether a fallback is behind the controls, and whether it ever ran are not properties of a checkout. A detector would test for the presence of a setting, which R6 forbids this framework from reporting as a result.
+3. **The crosswalked rule's id is not this standard's to mint here.** [Standard 7](07-boundary-with-adjacent-standards.md) R3 lists `cost.provider-portable` as the later-phase id corresponding to `ai.provider-neutral`; no `cost` shard exists and this standard adds none, so that id is neither minted nor claimed. Whether R4 becomes a rule under that id is the owner's decision; a proposal, if one is natural, is recorded in the pull request that introduced this document for per-rule approval.
 
-**Severity.** A finding is reported at **error** severity when review observes one of: a fallback
-serving an interaction without a control the primary path applies (R3); a degraded response presented in
-the form of a full one (R2); a degraded mode or fallback described as available that has never been
-exercised, whose latest exercise is older than its stated interval, failed, or predates a change to the
-path (R5); or a violation of R6 by any detector, rule, audit finding or generated report. **Every other finding is reported at warning
-severity**, including a missing or incomplete record, statement or label (R1 to R5), a missing
-statement of how a fallback's controls apply, and provider-specific behaviour embedded in domain logic
-under R4's abstraction clause, which is a SHOULD. The assignment is exhaustive and does not depend on
-how the finding is phrased. These levels are this repository's judgment, listed in Additions, and are
-not owner-approved. R1 to R5 are also `manual-review` obligations in this release; the validation type
-and the severity are different things. R6 constrains this framework and has no validation type, because
-the thing it prohibits is a behaviour of the tool.
+**Validation type.** R1 to R5 are `manual-review` obligations in this release; R6 constrains this framework and has no validation type, because the thing it prohibits is a behaviour of the tool. The validation type and the severity are different things.
 
-**Exemptibility.** R6 is not exemptible, for the reason R6 of
-[Standard 25](25-grounding-and-hallucination-control.md) is not. R3 is not lowered by an outage: a
-fallback that drops a control is the case the requirement exists for, and a project that cannot apply
-the control on the fallback declines rather than recording an exception. R1, R2, R4 and R5 reach a
-system only where its dependencies and fallbacks exist, and a system without that subject records, in
-its own documents, that the requirement does not reach it and why. This release has no policy mechanism
-for it: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4 dispositions attach to catalog rules,
-and this standard has none. No detector in this release would contradict a false statement. No level
-here is lowered by a risk tier (Standard 2 R3).
+**Severity.** One level per requirement, assigned to the requirement as a whole and not to how a finding is phrased. These levels are this repository's judgment, listed in Additions, and are not owner-approved:
+
+| Requirement | Severity |
+| --- | --- |
+| R1 | warning |
+| R2 | error |
+| R3 | error |
+| R4 | warning |
+| R5 | error |
+| R6 | error |
+
+**Exemptibility.** R6 is not exemptible, for the reason R6 of [Standard 25](25-grounding-and-hallucination-control.md) is not. R3 admits no exception and is met by declining. R1, R2, R4 and R5 reach a system only where its dependencies and fallbacks exist, and a system without that subject records, in its own documents, that the requirement does not reach it and why. This release has no policy mechanism for it: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4 dispositions attach to catalog rules, and this standard has none. No level here is lowered by a risk tier (Standard 2 R3).
 
 ## Tests and falsifiers
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | Each dependency, including a self-served model's host, has a recorded behaviour for each of the four conditions: unavailable, slow, rate-limited, changed | A dependency in use with no record, or a record that omits any of the four conditions (unavailable, slow, rate-limited, changed) | A system whose record states, for the model dependency, that the degraded mode under each condition is to decline, recorded as its degraded mode, must **not** be reported missing a degraded mode |
-| R2 | Every R1 condition that results in reduced service is defined as a degraded mode, and a response produced in a degraded mode carries the recorded field, header or distinct response shape that a full response does not, and a retained sample of a degraded response (or, for a declining mode, a captured declined outcome) exists | A reduced-service behaviour in the R1 record that is not defined as a degraded mode, no such signal recorded, the signal absent from a degraded response (comparing the generated text of the two does not establish a signal), or no sample of a degraded response (for a declining mode, no captured declined outcome) | A system whose recorded degraded mode is to decline must **not** be failed for lacking a separate marker on responses it never produces in a degraded form; a system that declines without recording the decline as its degraded mode fails R2 |
-| R3 | A request served by the fallback passes through the controls of the primary, or is declined, and a statement of how each control applies to the fallback exists | A fallback that serves an interaction without a control the primary path applies (no redaction, no output check); or no statement of how each primary-path control applies to the fallback | A fallback behind the same controls must **not** be flagged for being a different model |
-| R4, replacement claim | A stated list of what replacement would change exists beside the claim | "Provider-agnostic" with one adapter and no list | A project that makes no portability claim and says so must **not** be failed for lacking a replacement list |
-| R4, abstraction | Provider-specific calls and request shapes sit at an integration boundary behind an interface | Provider-specific behaviour (a provider SDK call, a provider-specific request shape) embedded in domain logic | A provider SDK used only inside the adapter or integration module must **not** be flagged |
-| R5 | A dated record of an exercise, with its result, and a stated interval, exist for each degraded mode and each fallback; and the path is not described as available unless the latest exercise falls within the interval, shows the expected behaviour, and postdates the latest change to the path | A degraded mode or fallback with no record of ever running, no stated interval, or no result; or one described as available whose latest exercise is older than its interval, failed to show the expected behaviour, or predates a change to the path | A degraded mode exercised only in a test, and recorded as such, must **not** be flagged for not having been used in production |
-| R6 | No detector, rule, audit finding or generated report in this repository states a resilience verdict from presence | A detector, rule, audit finding or report that stated a system resilient, degrading safely or provider-portable because a fallback setting, second provider name, retry policy or adapter interface was present | Reporting that a fallback setting was *found*, as an observation with no verdict, is permitted |
+| R1 | Each dependency has a recorded behaviour under each of unavailable, slow, rate-limited and changed | A dependency in use with no record, or a record that omits any of the four conditions | A record stating that the behaviour under each condition is to decline is a complete R1 record and must **not** be faulted |
+| R2 | Each reduced-service behaviour in the R1 record is a defined degraded mode, a degraded response carries the recorded signal, and a retained sample or captured declined outcome exists | A reduced-service behaviour not defined as a degraded mode, no signal recorded, a signal absent from a degraded response, or no retained sample or captured declined outcome | A system whose recorded degraded mode is to decline must **not** be faulted for lacking a marker on responses it never produces in a degraded form |
+| R3 | A request served by a fallback passes through every control the primary path applies, or is declined | A fallback serving an interaction without a control the primary path applies | A fallback behind the same controls must **not** be faulted for being a different model |
+| R4 | Provider-specific calls and request shapes sit at an integration boundary behind an interface | Provider-specific behaviour embedded in domain logic | A provider SDK used only inside the adapter or integration module must **not** be faulted |
+| R5 | Each degraded mode and fallback has a dated exercise record with a result and a stated interval; and it is not described as available unless the latest exercise succeeded within the interval and postdates the latest change to the path | A degraded mode or fallback with no exercise, no result or no stated interval; or one described as available whose latest exercise failed, is overdue, or predates a change to the path | A path not described as available, and a degraded mode exercised only in a test and recorded as such, must **not** be faulted for lacking a production use |
+| R6 | No detector, rule, audit finding or generated report in this repository states a resilience verdict from presence | A detector, rule, audit finding or report that states a system resilient, degrading safely or provider-portable because a fallback setting, second provider name, retry policy or adapter interface is present | Reporting that a fallback setting was *found*, as an observation with no verdict, is permitted |
 
-**No falsifier is automated in this release.** No rule reads a resilience artifact and no fixture
-carries one, so R1 to R5 are enforced by review or not at all, and R6 holds by construction. **A
-requirement with no falsifier is a requirement nobody can be shown to have broken**, and that is the
-honest state of this standard.
+**No falsifier is automated in this release.** No rule reads this subject's artifact and no fixture carries one, so R1 to R5 are enforced by review or not at all, and R6 holds today only because no such detector exists. The falsifiers in the table are available for manual review; what this release lacks is a detector that applies them.
 
 ## Exceptions and staleness
 
-There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to
-except. A project that knowingly does not meet R1, R2, R4 or R5 records that in its own documents; R3 admits no
-exception and is met by declining; Standard 2's
-dispositions apply to the application of a rule, and this standard has none.
+There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to except. A project that knowingly does not meet one records that in its own documents; Standard 2's dispositions apply to the application of a rule, and this standard has none.
 
-**Attestations and expiry.** No attestation is produced for these records in this release.
-[Standard 6](06-standard-structure-and-rule-identity.md) R8 makes `manual-review` rules attestable by
-default and `not-evaluable` ones never attestable, but it governs catalog rules, none exists here, and
-the attestation mechanism itself is later work ([Standard 5](05-verdict-vocabulary.md) records the
-`attested` disposition as not yet produced). No record under this standard expires on a schedule;
-[Standard 2](02-ai-risk-tiering-and-applicability.md) R5's event-driven expiry concerns applicability
-declarations and does not apply to these records. Review-staleness is event-driven only: a record is
-stale when one of the events below occurs, and nothing in this release detects that.
+**Attestations and expiry.** No attestation is produced for these records in this release. [Standard 6](06-standard-structure-and-rule-identity.md) R8 makes `manual-review` rules attestable by default, but it governs catalog rules, none exists here, and the attestation mechanism itself is later work ([Standard 5](05-verdict-vocabulary.md) records the `attested` disposition as not yet produced). No record under this standard expires on a schedule; [Standard 2](02-ai-risk-tiering-and-applicability.md) R5's event-driven expiry concerns applicability declarations and does not apply to these records.
 
-**What invalidates a recorded dependency inventory, degraded mode, exercise, statement of fallback controls or replacement list.** Each is a different
-subject, and a record made before the change describes the earlier one:
+**What makes a record stale.** One event per requirement; a record made before the event describes the earlier arrangement and no longer satisfies the requirement it was offered for until it is re-made. An exercise that ran before a change describes the earlier path.
 
-- a change of model identifier, or a model silently updated behind an alias
-  ([Standard 1](01-ai-system-manifest.md) R4 asks for the identifier to be pinned);
-- a provider's deprecation, change of terms, rate limits or data-handling arrangement;
-- the addition of a dependency, tool or retrieval store, or a change in what a tool returns;
-- a change to the controls on the primary path, which a fallback must now match (R3);
-- a change of the retry, fallback or timeout policy.
-
-**Staleness is asymmetric here.** A resilience record becomes false when the primary path gains a
-control the fallback does not have, and a provider's change is one nobody in the project made. Nothing
-in this release detects the transition; the events above are a note to a future reader. An exercise
-that ran before such a change says nothing about the path as it now is.
-
-**Contradicted by operation.** An outage in which the system failed in a way the record did not
-describe, or a fallback that proved unavailable, contradicts the record and invalidates it until
-re-examined. What follows operationally is item 34's subject (AI Incident Response, unwritten in this
-release); this standard says only that the record no longer stands.
+| Requirement | Event that makes its record stale |
+| --- | --- |
+| R1 | The addition of a dependency, or a change in what a dependency returns or in its terms. |
+| R2 | A change of the model or provider that produces the response. |
+| R3 | A change to the controls on the primary path, or to the fallback policy. |
+| R4 | A change of provider or of the integration boundary. |
+| R5 | Any change to the path since the latest exercise: a model, provider, terms, primary-path control or fallback policy. |
+| R6 | A new detector, rule or report that touches resilience. |
 
 ## Additions this standard makes beyond the source
 
-**Nearly all of it.** The brief contributes two words, "operational resilience", inside a bullet of four
-subjects. It states no requirement, level or evidence for them, and the specification's title adds
-"degradation" and "provider portability". The item is class `D` because its subject token is derived
-from the brief; the requirements are not derived. Specifically authored here, none of it
-owner-approved:
+**Nearly all of it.** The brief contributes two words, "operational resilience", inside a bullet of four subjects and states no requirement, level or evidence for them, and the specification's title adds "degradation" and "provider portability". The item is class `D` because its subject token is derived from the brief; the requirements are not derived. Specifically authored here, none of it owner-approved:
 
-- **R1 in full**: the dependency inventory and the recorded failure behaviour.
-- **R2 in full**: the defined degraded mode (which may be to decline), its detectability downstream, and
-  the ruling that a degraded response must not be presented in the form of a full one.
-- **R3 in full**: that a fallback must not weaken the controls of the primary path, that where it
-  would, the system declines, and that the project states how each control applies to the fallback.
-- **R4's second half**: the requirement to state what replacement would change, and the ruling that an
-  abstraction alone is not a portability claim. The first half corresponds to the EngineeringStandards
-  precedent and is written at its SHOULD.
-- **R5 in full**: exercising degraded and fallback paths and recording when.
-- **R6**, the constraint on this framework, in the same form as the equivalent requirement in
-  [Standard 25](25-grounding-and-hallucination-control.md) and
-  [Standard 33](33-ai-observability.md).
-- **The exclusions in Scope** as division lines. Where this standard stops and items 32, 34, 41 and 42
-  begin is unconfirmed by anyone.
-- **The recheck of the precedent** at EngineeringStandards `3b1b18d` on 2026-10-14, including the
-  observation that the standard's text and the rule record differ in level, which the boundary review
-  did not make.
-- **The severity assignments** (error for an observed fallback serving without a primary-path control,
-  an observed degraded response in full form, a path described as available that was never exercised, is overdue, failed, or predates a change to the path,
-  and a violation of R6 by any detector, rule, audit finding or report; warning for every other finding) and the statement that no
-  attestation or scheduled expiry exists in this release.
-- **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
-  decision to mint no id.
+- **R1 to R5 in full**, with the defined terms dependency, condition, degraded mode, fallback and exercise, the four conditions, the ruling that a reduced response must be signalled, that a fallback must not weaken the primary path's controls, and that an exercise must postdate the latest change to the path.
+- **R6**, the constraint on this framework, in the same form as the equivalent requirement in [Standard 25](25-grounding-and-hallucination-control.md) and [Standard 33](33-ai-observability.md).
+- **The exclusions in Scope** as division lines; where this standard stops and items 32, 34, 41 and 42 begin is unconfirmed by anyone. **The recheck of the precedent** at EngineeringStandards `3b1b18d` on 2026-10-14, including the observed difference in level between that standard's text and its rule record, which the boundary review did not make.
+- **The severity assignments** (one level per requirement, in Validation), the statement that no attestation or scheduled expiry exists in this release, and the staleness table.
+- **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the decision to name no rule id.
 
-Not authored here: the classification of `ai.provider-neutral` as a precedent and the posture itself are
-the boundary review's, and its `humanSignOff` is `null`.
+Not authored here: the classification of `ai.provider-neutral` as a precedent and the posture itself are the boundary review's, and its `humanSignOff` is `null`.
 
 ## Relationship to other standards and ADRs
 
-[Standard 7](07-boundary-with-adjacent-standards.md) R3 records the crosswalk between
-`cost.provider-portable` (a later-phase id, neither minted nor claimed here) and
-EngineeringStandards' `ai.provider-neutral`. It is a correspondence of subject, not of id.
-
-[Standard 45](45-approval-gates.md) R6 requires a gate to fail closed; R2 here defers to it for any
-degraded mode that would otherwise act. [Standard 33](33-ai-observability.md) R2 and R3 govern the
-record of which subject served a call and of outcomes that are not success; R2 and R3 here rely on them
-and do not restate them. [Standard 23](23-agent-execution-security.md) governs the controls on agent
-execution that a fallback path must also carry (R3).
-
-[Standard 1](01-ai-system-manifest.md) declares models, tools and data sources, and R1 depends on that
-declaration. It does not declare failure behaviour, and no field is proposed by this standard.
-[Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and
-non-lowering language used above. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the
-requirement the Tests and falsifiers section answers.
-
-Items 32 (Rollback and Recovery), 34 (AI Incident Response), 41 (Inference Cost and Budget Control) and
-42 (Latency Budgets for AI Interactions) are not part of this change; the lines drawn above are
-provisional until they are written, and the later standards may legitimately move them.
-
-**Outside this pack.** EngineeringStandards' `ai.provider-neutral` is named in Scope with what the
-boundary review recorded about it. It is a crosswalk to this pack's R4 only, in the sense above, and no
-maintainer of that pack has confirmed the reading. No ADR covers this standard — `artifacts/adr/` does
-not exist in this release.
+[Standard 7](07-boundary-with-adjacent-standards.md) R3 records the crosswalk between `cost.provider-portable` (a later-phase id, neither minted nor claimed here) and EngineeringStandards' `ai.provider-neutral`; it is a correspondence of subject, not of id. [Standard 45](45-approval-gates.md) R6 requires an approval mechanism to fail closed; R2 here defers to it for any degraded mode that would otherwise act. [Standard 33](33-ai-observability.md) R2 and R3 govern the record of which subject served a call and of outcomes that are not success; R2 and R3 here rely on them and do not restate them. [Standard 23](23-agent-execution-security.md) governs the controls on agent execution that a fallback path must also carry (R3). [Standard 1](01-ai-system-manifest.md) declares models, tools and data sources and does not declare failure behaviour; no field is proposed by this standard. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and non-lowering language used above, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the Tests section answers. Items 32, 34, 41 and 42 are not part of this change. **Outside this pack.** EngineeringStandards' `ai.provider-neutral` is named in Scope with what the boundary review recorded about it; it is a crosswalk to R4 only, and no maintainer of that pack has confirmed the reading. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
 ## Implementation
 
-**Normative. Nothing about R1 to R5 is enforced; R6 holds by construction.**
+**Normative. Nothing about R1 to R5 is enforced; R6 holds today only because no such detector exists.**
 
-Stated as two separate lists, because a reader scanning one table will otherwise carry a proposal away
-as a capability.
+Stated as two separate lists, because a reader scanning one table will otherwise carry a proposal away as a capability.
 
 **Implemented today, and re-runnable now:**
 
 | Requirement | State |
 | --- | --- |
-| R6 | **Holds by construction, not by assertion.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` emits a verdict about model, provider or dependency fallback, degradation or portability. No test asserts the absence, so a future detector could break R6 without failing one |
-| This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's resilience |
+| R6 | **Holds today because no such detector exists; nothing prevents or tests one being added.** No detector, rule, audit finding or report in `scripts/`, `rules/` or `ai-policy.yml` emits a verdict about model, provider or dependency fallback, degradation or portability. |
+| This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's practice |
 
 **Proposed, and deliberately absent from this release. None of the following exists:**
 
@@ -385,12 +212,8 @@ as a capability.
 | --- | --- | --- |
 | R1, R2 | A place to declare dependencies and degraded modes: a schema change, or a named document a rule can find | Both schemas are closed; a change is a schema-versioning decision and Phase 2 section 8 puts it out of scope |
 | R3, R5 | Fixtures with a fallback served and a control applied, and a detector that runs project-supplied checks | Phase 3 detector and evidence-availability work |
-| R4 | A detector for provider SDK use inside domain modules, and the rule id that would carry it | Language-specific, and the id (`cost.provider-portable` or another) is the owner's decision; it would report a presence unless it also read a recorded replacement list |
-| R6 | A test asserting no detector emits a resilience verdict | Meaningful only once a detector exists for it to constrain |
-| Rule id | A reserved-namespace id and a shard, once an owner decides | Not decided; this standard names none and mints none |
+| R4 | A detector for provider SDK use inside domain modules, and the rule id that would carry it | Language-specific, and the id (`cost.provider-portable` per Standard 7 R3, or another) is the owner's decision; it would report a presence unless it also read a recorded abstraction |
+| R6 | A test asserting no detector, rule, audit finding or report emits a resilience verdict | None exists; it would be a regression guard even now, and is proposed here, not built |
+| Rule id | A reserved-namespace id and a shard, once an owner decides | Not decided; this standard names none |
 
-**What no future release will implement.** A detector that reports a system resilient, degrading safely
-or provider-portable from the presence of a fallback setting, a second provider name, a retry policy or
-an adapter interface. R6 forecloses it, and the foreclosure is the point: an arrangement is not an
-effect, and a framework reporting one would put its authority behind a property of the running system
-that nothing in a repository can show.
+**What no future release will implement.** A detector that reports a system resilient, degrading safely or provider-portable from the presence of a fallback setting, a second provider name, a retry policy or an adapter interface. R6 forecloses it, and the foreclosure is the point: an arrangement is not an effect.
