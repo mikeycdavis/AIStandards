@@ -142,8 +142,9 @@ model-generated, and says so.
 ### R4 — The statement tracks the source as it changes
 
 **A provenance statement MUST name the revision, snapshot or period it describes, and MUST be
-revisited when material is added to, removed from or replaced in the source by a path or process the
-statement does not name, when the source is regenerated, re-filtered or re-chunked by a different
+revisited when that revision, snapshot or period is advanced or replaced (unless the statement says
+it covers the new contents), when material is added to, removed from or replaced in the source by a
+path or process the statement does not name, when the source is regenerated, re-filtered or re-chunked by a different
 process, when the system that produced the material changes, when the source is put to a use the
 statement did not contemplate, or when the terms under which it was obtained change.**
 
@@ -232,8 +233,8 @@ verdict, remains permitted.
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | The list of sources, set against what the system and its tests actually read | `dataSources` in `ai-system.yml`, and the code and configuration that read data | Human review |
-| R2 | The statement for each source, and the original it points to | The manifest's `provenance` or the project document it names | Human review |
-| R3 | The `synthetic` declaration and the generator named, set against how the material was made | The manifest and the project's own production records | Human review |
+| R2 | The statement for each source; for each known component of origin, the original it points to, and for each unknown component the R5 record | The manifest's `provenance` or the project document it names | Human review |
+| R3 | The `synthetic` declaration and the generator named where known (an unknown generator recorded as unknown under R5), set against how the material was made | The manifest and the project's own production records | Human review |
 | R4 | The revision or period each statement names, and the list of ingestion paths | The manifest or named document, and the ingestion configuration | Human review |
 | R5 | Each statement that says "unknown", and what it records instead | The same | Human review |
 | R6 | The recorded use or uses of each source | A project document the project names — **no manifest field exists for it; see Implementation** | Human determination |
@@ -303,8 +304,8 @@ release would contradict a false declaration. No level here is lowered by a risk
 | --- | --- | --- | --- |
 | R1 | Every path the system and its tests read as data corresponds to a declared source, and each declared source carries a statement | A directory read by the retrieval job that no declaration names; a declared source with no statement | A source declared and not currently read must **not** be failed for that |
 | R2 | For each component of origin that is known, a reader can locate the original from the statement; each component that is not known is stated as unknown under R5 | A statement consisting of an adjective such as "internal" or "curated" | A statement naming a system, an export and a date must **not** be failed for being short |
-| R3 | A source containing model output is `synthetic` and names its generator | A source of generated pairs declared human-authored | A human-written source declared `synthetic: false` must **not** be flagged |
-| R4 | The statement names a revision or period, and each listed event (a path or process not named, regeneration or re-filtering by a different process, a changed producing system, a new use, changed terms) prompts a re-read | A statement older than an event it does not mention | A source whose statement names its snapshot and has had none of those events must **not** be flagged for age |
+| R3 | A source containing model output is `synthetic` and names its generator where known, or records the generator as unknown under R5 | A source of generated pairs declared human-authored | A human-written source declared `synthetic: false` must **not** be flagged; a source of known model output whose generator is recorded as unknown must **not** be failed for lacking a name |
+| R4 | The statement names a revision or period, and each listed event (a named revision, snapshot or period advanced or replaced, a path or process not named, regeneration or re-filtering by a different process, a changed producing system, a new use, changed terms) prompts a re-read | A statement older than an event it does not mention | A source whose statement names its snapshot and has had none of those events must **not** be flagged for age |
 | R5 | An unknown origin is stated as unknown, with what is known | A guess recorded as an origin | A statement "unknown, found at this path" must **not** be failed for being unknown |
 | R6 | The recorded use is present for each source and not derived from a `kind` value or a file name | A use inferred from the presence of a `fine-tuning-set` entry | A source recorded as used both as context and for fine-tuning, with a reason, must **not** be treated as hedging; a corpus read by the project's own model and not used to train it must **not** be failed |
 | R7 | No detector or report in this repository outputs a provenance verdict from presence | A detector that reported a source's origin established because a `provenance` string was non-empty | Reporting that a field was *found*, as an observation with no verdict, is permitted |
@@ -331,8 +332,10 @@ statement of origin is true, and the truth of a statement is not attestable.
 **What invalidates a recorded provenance statement.** Each of these changes what the source is, and a
 statement made before the change describes the earlier source:
 
-- material added to or removed from a source by a path the statement did not name — a connector, an
-  upload, a sync, a re-export;
+- the revision, snapshot or period the statement names being advanced or replaced, including by a job
+  the statement already describes, unless the statement says it covers the new contents;
+- material added to, removed from or replaced in a source by a path or process the statement did not
+  name — a connector, an upload, a sync, a re-export;
 - the source being regenerated, re-filtered or re-chunked by a different process;
 - a change of the system that produced the material, including a change of the generating model;
 - the source being used for a purpose the statement did not contemplate, such as a retrieval corpus
