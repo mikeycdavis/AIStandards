@@ -50,7 +50,7 @@ Two terms, each defined here rather than by the brief:
   run, a user, a tenant, a feature, a day. It is a number someone chose, not a quota the provider
   happens to apply.
 - A **multiplier** is anything that causes one logical request to produce more than one billed call or
-  more billed units than the request alone implied: a retry, a fallback, a loop iteration, a sub-agent,
+  more billed units than the request alone implied: a retry, a fallback, a repeated call, an agent step,
   a long or unbounded completion, a growing conversation history.
 
 It does **not** cover, and claims none of the ground of, the following:
@@ -111,9 +111,10 @@ mentioned here only so the two are not read as separate.
 
 ### R3 — Bound every multiplier
 
-**A system MUST bound each multiplier on its model calls — retries, fallbacks, loop iterations,
-sub-agents, completion length and carried conversation history — and MUST NOT leave one governed only
-by the budget that sits above it.**
+**A system MUST bound each multiplier on its model calls — retries, fallbacks, completion length and
+carried conversation history, and the repetition of any call that is not an agent loop — and MUST NOT
+leave one governed only by the budget that sits above it. The step and sub-agent bound of an agent loop
+is [Standard 23](23-agent-execution-security.md) R1's and is not restated here.**
 
 A request budget does not bound a retry loop that spends it faster than anyone looks. The bounds need
 not be numerically the same as the budget in R2; they need to exist, one per multiplier the system has.
@@ -262,7 +263,7 @@ contradict a false statement. No level here is lowered by a risk tier (Standard 
 | R1 | Spend can be read back from the system's own records at every granularity at which a budget is stated or a cost figure is reported | Spend recorded only per account or API key while budgets are stated, or cost figures reported, per tenant or per feature | A system whose budgets are stated per account, and whose spend is recorded per account, must **not** be reported missing a per-user attribution |
 | R2 | The ceiling is stated with its subject and period, its enforcement point is named, and the configured behaviour is implemented; where the ceiling has been reached, the run shows the behaviour recorded for it (refused, queued, degraded, shortened, re-routed or routed to a person) and the call not made as before | The ceiling is reached and the call proceeds unchanged, with at most an alert and none of the recorded behaviour | A system with no ceiling applied is out of scope for R2, not failing it; a ceiling reached and acted on must not be flagged for also alerting |
 | R3 | Each multiplier the system has has a stated bound; a reviewed static bound (a fixed completion limit, a retry maximum in configuration) establishes it without an execution record | A retry or fallback with no maximum, or a bound that restarts on exhaustion | A system that never retries, and says so, must **not** be reported as lacking a retry bound |
-| R4 | A reconciliation exists with an interval and a result | Only estimates are reported as spend | A project that states no budget must **not** be failed for lacking a reconciliation; a project that states a budget and labels its figure an estimate avoids the misreporting finding only, and still owes the reconciliation record and interval |
+| R4 | Where a budget is stated, a reconciliation exists with an interval and a result; with or without a budget, no estimate is reported as the amount spent | Only estimates are reported as spend, or a stated budget with no reconciliation | A project that states no budget must **not** be failed for lacking a reconciliation; a project that states a budget and labels its figure an estimate avoids the misreporting finding only, and still owes the reconciliation record and interval |
 | R5 | A published unit cost names model and price date, and workload where it depends on one; a cap or bound claim names the enforcing mechanism; a negligibility claim names its measurement | "Costs pennies per query", a cap claim with no mechanism, or "negligible" with no measurement | A statement of a measured figure with its model, date and workload, and no stronger claim, must **not** be flagged |
 | R6 | No detector, rule, audit finding or generated report in this repository states a cost verdict from presence | A detector, rule (a rule that treats a presence as establishing the property), audit finding or report that reported cost controlled because a token limit was present | Reporting that a token limit or budget figure was *found*, as an observation with no verdict, is permitted |
 
@@ -323,7 +324,7 @@ it owner-approved:
 - **R2 in full**, including the ruling that behaviour at the ceiling must not be "continue and log",
   that an alert alone is not an action, and that the enforcement point must be named even where it is
   outside the repository.
-- **R3 in full**: the enumeration of multipliers (retries, fallbacks, loop iterations, sub-agents,
+- **R3 in full**: the enumeration of multipliers (retries, fallbacks, repeated calls,
   completion length, carried history), the requirement that each be bounded independently of the budget
   above it, and the statement that having none is a legitimate answer.
 - **R4 in full**: reconciliation of recorded spend with the billed amount (or, for provisioned or owned
