@@ -1,8 +1,9 @@
 // The structural reader as the audit and validate commands use it (ST-57, #119).
 //
 // What is pinned here is the OUTCOME contract of decision D, observed through the real CLI:
-//   * a YAML or JSON file the reader cannot read is file-scoped unknown. It is never a pass, never a
-//     finding, and its text is not scanned lexically as a fallback;
+//   * a YAML or JSON file the reader cannot read is, for the inline-prompt rules, file-scoped unknown. It is
+//     never a pass, never a finding, and its text is not scanned lexically as a fallback by those rules
+//     (Standard 9 stays lexical and still scans it: case H, ST-49);
 //   * findings from files that parsed stand, whatever else failed;
 //   * the failure is reported on an additive, bounded `unparseableFiles` evidence surface, and that
 //     surface ships in the same change as the closed schema that has to admit it;

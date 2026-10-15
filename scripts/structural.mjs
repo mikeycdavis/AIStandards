@@ -8,9 +8,10 @@
 //
 // WHAT IT IS NOT. It is a reader, not a detector. It decides nothing about prompts, safety controls
 // or any rule; it returns a tree, and it returns a FAILURE as a value when it cannot. A file this
-// module cannot read is file-scoped unknown, never a pass and never a finding, and there is no
-// fallback to lexical scanning, because a guess made after the parser has refused is the guess the
-// parser was introduced to stop making.
+// module cannot read is returned as a failure, which a consumer treats as file-scoped unknown, never a
+// pass and never a finding. This module has no fallback to lexical scanning, because a guess made after
+// the parser has refused is the guess the parser was introduced to stop making. Which CONSUMERS keep a
+// lexical path is documented in docs/structural-reader.md (Standard 9 does, until ST-49).
 //
 // SCOPE. `.yml`, `.yaml` and `.json`, matched case-insensitively on the file name. Nothing is sniffed
 // from content. JSONC, JSON5, JSONL/NDJSON, templates, Markdown fences, notebooks, extensionless files

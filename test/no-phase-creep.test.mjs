@@ -17,7 +17,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { REPO, cli, validate, fixture } from "./helpers.mjs";
-import { externalReferences } from "./js-references.mjs";
+import { externalReferences, directCallTexts } from "./js-references.mjs";
 
 const read = (rel) => fs.readFileSync(path.join(REPO, rel), "utf8");
 const exists = (rel) => fs.existsSync(path.join(REPO, rel));
@@ -95,12 +95,315 @@ test("the installed-modules scan itself: a node_modules at any depth is reported
   }
 });
 
+// INVARIANT 4, THE CONTRACT. In a first-party runtime script the only permitted ways to bring in code are
+// static imports of node: builtins and of relative paths that land inside the repository (and the literal
+// forms of the same). Everything that can start a process, run source text, load native code or change how
+// modules load is an offender, whatever its spelling (the full statement is at DYNAMIC_CODE_NAMES in
+// js-references.mjs), unless the FILE is on this reviewed allowlist. An entry names the file, why it needs
+// the capability, the loader-capable modules it may import, and the EXACT calls to them that were read: any
+// other call, or an edit of one of these, no longer matches and the test fails until it is reviewed again.
+const RUNTIME_ALLOWLIST = [
+  {
+    file: "scripts/test.mjs",
+    reason: "the test runner starts one child process, node --test over the suite files, and nothing else",
+    modules: ["node:child_process"],
+    names: ["spawnSync"],
+    calls: [
+      'spawnSync ( process . execPath , [ "--test" , "--test-concurrency=1" , . . . FILES . map ( ( f ) = > path . join ( TEST_DIR , f ) ) ] , { stdio : "inherit" , cwd : REPO } , )',
+    ],
+  },
+];
+
+// Every JavaScript runtime file under <root>/scripts (.mjs, .js and .cjs, at any depth, node_modules reported
+// separately) scanned for references that leave the repository or cannot be read, with the allowlist applied.
+const RUNTIME_FILE = /\.(mjs|js|cjs)$/;
+function runtimeOffenders(root, allowlist = RUNTIME_ALLOWLIST) {
+  const out = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === ".git" || entry.name === "node_modules") continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (RUNTIME_FILE.test(entry.name)) {
+        const rel = path.relative(root, full).split(path.sep).join("/");
+        const text = fs.readFileSync(full, "utf8");
+        // The vendored tree is pinned content with its own ambient-access guard (vendor-yaml.test.mjs): it keeps
+        // the import and URL rules here, and is exempt from the dynamic-code rules, which first-party scripts keep.
+        const vendored = rel.startsWith("scripts/vendor/");
+        let found = externalReferences(text, { file: full, root, dynamicCode: !vendored });
+        const allowed = allowlist.find((e) => e.file === rel);
+        if (allowed) {
+          found = found.filter((o) => !allowed.modules.some((m) => o.startsWith("import " + m + " is a loader-capable module")));
+          const calls = directCallTexts(text, allowed.names);
+          if (JSON.stringify(calls) !== JSON.stringify(allowed.calls)) found.push("the reviewed calls changed: " + JSON.stringify(calls));
+        }
+        for (const o of found) out.push(rel + ": " + o);
+      }
+    }
+  };
+  if (fs.existsSync(path.join(root, "scripts"))) walk(path.join(root, "scripts"));
+  return out.sort();
+}
+
 test("invariant 4: every runtime import under scripts/ is a node: builtin or a local module", () => {
-  const offenders = [];
-  for (const file of filesUnder("scripts").filter((f) => /\.(mjs|js|cjs)$/.test(f))) {
-    for (const o of externalReferences(read(file), { file: path.join(REPO, file), root: REPO })) offenders.push(`${file}: ${o}`);
+  assert.deepEqual(runtimeOffenders(REPO), [], "a bare import specifier is a third-party dependency resolved from the environment");
+});
+
+test("the allowlist is short, named, and each entry is reviewed: a reason, an existing file, exact calls", () => {
+  assert.ok(RUNTIME_ALLOWLIST.length <= 3, "the allowlist is meant to stay short; a new entry is a decision");
+  for (const e of RUNTIME_ALLOWLIST) {
+    assert.ok(typeof e.reason === "string" && e.reason.length > 20, e.file + " needs a reason");
+    assert.ok(exists(e.file), e.file + " must exist");
+    assert.ok(e.modules.length > 0 && e.names.length > 0 && e.calls.length > 0, e.file + " must record the modules, names and exact calls");
   }
-  assert.deepEqual(offenders, [], "a bare import specifier is a third-party dependency resolved from the environment");
+});
+
+test("an allowlisted file keeps only its reviewed calls; any other call or other construct is an offender", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "aistd-allow-"));
+  try {
+    const put = (rel, text) => {
+      const full = path.join(root, ...rel.split("/"));
+      fs.mkdirSync(path.dirname(full), { recursive: true });
+      fs.writeFileSync(full, text);
+    };
+    const list = [{ file: "scripts/run.mjs", reason: "starts the one reviewed child process", modules: ["node:child_process"], names: ["spawnSync"], calls: ['spawnSync ( "git" , [ "status" ] )'] }];
+    const header = 'import { spawnSync } from "node:child_process";\n';
+    put("scripts/run.mjs", header + 'spawnSync("git", ["status"]);\n');
+    assert.deepEqual(runtimeOffenders(root, list), []);
+    // the same module in an unlisted file
+    put("scripts/other.mjs", header + 'spawnSync("git", ["status"]);\n');
+    assert.ok(runtimeOffenders(root, list).some((o) => o.startsWith("scripts/other.mjs: import node:child_process is a loader-capable module")));
+    fs.rmSync(path.join(root, "scripts", "other.mjs"));
+    // an edited call, an extra call, and another construct in the allowlisted file
+    put("scripts/run.mjs", header + 'spawnSync("git", ["status", "--short"]);\n');
+    assert.ok(runtimeOffenders(root, list).some((o) => o.includes("the reviewed calls changed")), "an edited call");
+    put("scripts/run.mjs", header + 'spawnSync("git", ["status"]);\nspawnSync("git", ["log"]);\n');
+    assert.ok(runtimeOffenders(root, list).some((o) => o.includes("the reviewed calls changed")), "an extra call");
+    put("scripts/run.mjs", header + 'spawnSync("git", ["status"]);\neval("1");\n');
+    assert.ok(runtimeOffenders(root, list).some((o) => o.includes("reference to eval")), "another construct");
+    put("scripts/run.mjs", 'import { spawnSync } from "node:child_process";\nimport { fork } from "node:worker_threads";\nspawnSync("git", ["status"]);\n');
+    assert.ok(runtimeOffenders(root, list).some((o) => o.includes("node:worker_threads is a loader-capable module")), "another loader-capable module");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("the runtime scan covers .cjs, .js and .mjs at any depth and reports code that could hide a loader", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "aistd-runtime-"));
+  try {
+    const put = (rel, text) => {
+      const full = path.join(root, ...rel.split("/"));
+      fs.mkdirSync(path.dirname(full), { recursive: true });
+      fs.writeFileSync(full, text);
+    };
+    put("scripts/ok.mjs", 'import fs from "node:fs";\nexport const a = fs;\n');
+    put("scripts/lib/ok.cjs", 'const p = require("node:path");\nmodule.exports = p;\n');
+    assert.deepEqual(runtimeOffenders(root), []);
+    put("scripts/a.cjs", 'const x = require("package");\n');
+    put("scripts/lib/deep/b.js", 'const x = eval(\'require("package")\');\n');
+    put("scripts/c.mjs", 'import "package";\n');
+    put("scripts/lib/d.cjs", "const f = new Function(\"return require\");\n");
+    const found = runtimeOffenders(root);
+    for (const file of ["scripts/a.cjs", "scripts/lib/deep/b.js", "scripts/c.mjs", "scripts/lib/d.cjs"]) {
+      assert.ok(found.some((o) => o.startsWith(file + ":")), file + " must be reported: " + JSON.stringify(found));
+    }
+    assert.ok(!found.some((o) => o.startsWith("scripts/ok.mjs") || o.startsWith("scripts/lib/ok.cjs")));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("dynamic-code loaders are unreadable references: eval, Function, vm, timers given source, child_process evaluating source, eval workers", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-dyn", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-dyn"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src, where);
+  const must = {
+    "eval of a require": 'const x = eval(\'require("package")\');',
+    "indirect eval": 'const x = (0, eval)("1");',
+    "eval as a value": "const e = eval;",
+    "new Function": 'const f = new Function("return 1");',
+    "Function without new": 'const f = Function("a", "return a");',
+    "Function through globalThis": 'const f = new globalThis.Function("return 1");',
+    "computed eval": 'const e = globalThis["eval"];',
+    "the constructor of a function": 'const f = (() => {}).constructor("return 1");',
+    "vm.runInThisContext": 'const v = vm.runInThisContext("1");',
+    "vm.runInNewContext": 'const v = vm.runInNewContext("1", {});',
+    "vm.runInContext": "const v = vm.runInContext(code, ctx);",
+    "vm.Script": 'const s = new vm.Script("1");',
+    "a Script constructed": 'const s = new Script("1");',
+    "vm.compileFunction": 'const f = vm.compileFunction("return 1");',
+    "vm.SourceTextModule": "const m = new vm.SourceTextModule(src);",
+    "importScripts": 'importScripts("https://example.com/x.js");',
+    "setTimeout with a string": 'setTimeout("doIt()", 10);',
+    "setInterval with a template": "setInterval(" + String.fromCharCode(96) + "doIt()" + String.fromCharCode(96) + ", 10);",
+    "setTimeout with a concatenated string": 'setTimeout("do" + name + "()", 10);',
+    "a worker with eval: true": 'new Worker("require(\'package\')", { eval: true });',
+    "node -e through execSync": 'execSync("node -e \'1\'");',
+    "node --eval through spawnSync": 'spawnSync(process.execPath, ["--eval", "1"]);',
+    "node -p through execFileSync": 'execFileSync("node", ["-p", "1"]);',
+    "node --print=code": 'spawn("node", ["--print=1"]);',
+    "fork with -e": 'fork("x.js", ["-e", "1"]);',
+    "qualified child_process call": 'cp.execSync("node -e 1");',
+    // the three findings Codex raised at b795b60, as regressions of the contract
+    "optional computed access on globalThis": 'const [name] = ["Function"]; globalThis?.[name]("return import(\'package\')")();',
+    "a string produced by an unlisted call, in a process argument": 'execFileSync(process.execPath, ["x--require".match(/.{9}$/)[0], "package"]);',
+    "a destructured constructor": 'const { constructor: C } = (() => {}); C("return import(\'package\')")();',
+    "a destructured constructor with other bindings": "const { a, constructor: C } = fn;",
+    "a worker_threads import": 'import { Worker } from "node:worker_threads";',
+    "a vm import": 'import vm from "node:vm";',
+    "a module import (createRequire, register)": 'import Module from "node:module";',
+    "a bare child_process import": 'import { exec } from "child_process";',
+    "a dynamic import of a loader-capable module": 'const cp = await import("node:child_process");',
+    "a require of a loader-capable module": 'const cp = require("child_process");',
+    "process.binding": 'const b = process.binding("natives");',
+    "dlopen": 'process.dlopen(module, file);',
+    "Module._load": 'Module._load("package");',
+    "a timer given a named callback (it may hold source text)": "setInterval(tick, 10);",
+    "an unbalanced timer call": 'setTimeout("x", 1;',
+    // positively classified or unreadable: parenthesised, quoted, computed, aliased and passed-on spellings
+    "a parenthesised constructor called": 'const f = (fn.constructor)("return 1")();',
+    "a doubly parenthesised constructor": 'const f = ((fn.constructor))("return 1")();',
+    "constructor.call": 'const f = fn.constructor.call(null, "return 1");',
+    "constructor.apply": 'const f = fn.constructor.apply(null, ["return 1"]);',
+    "constructor.bind": 'const C = fn.constructor.bind(null);',
+    "the constructor held": "const C = fn.constructor;",
+    "the constructor passed on": "make(fn.constructor);",
+    "the constructor of the constructor": 'const f = fn.constructor.constructor("return 1");',
+    "a quoted eval option": 'new Worker("require(\'package\')", {"eval": true});',
+    "a single-quoted eval option": "new Worker(code, { 'eval': true });",
+    "a quoted eval option after other options": 'new Worker(code, { stdout: true, "eval": true });',
+    "Reflect.get of constructor": 'const f = Reflect.get(fn, "constructor")("return 1");',
+    "Reflect.apply of a quoted name": 'Reflect.apply(g["eval"], null, ["1"]);',
+    "a computed child-process call": 'cp["execSync"](\'node -e "1"\');',
+    "a computed child-process call, benign command": 'cp["execSync"]("git status");',
+    "a parenthesised child-process call": '(execSync)("node -e 1");',
+    "a parenthesised timer": '(setTimeout)("doIt()", 1);',
+    "a child-process function held": "const r = execSync;",
+    "a child-process function passed on": "run(spawnSync);",
+    "a timer passed on": "wait(setTimeout);",
+    "a computed member called, name from an array": 'for (const n of ["eval"]) globalThis[n]("1");',
+    "a computed member called, name built by concatenation": 'globalThis["ev" + "al"]("1");',
+    "a computed member called, name held": 'const k = "constructor"; fn[k]("return 1")();',
+    "a computed member called optionally": "obj[name]?.(1);",
+    "a computed member constructed": "new registry[name](1);",
+    "a computed member of a call result called": "make()[name](1);",
+    "computed access on globalThis with a built key": 'const f = globalThis[name];',
+    "computed access on process with a built key": "const f = process[name];",
+    "computed access on module with a built key": "const f = module[name];",
+    "NODE_OPTIONS set for a child": 'spawnSync(process.execPath, [file], { env: { NODE_OPTIONS: "--require package" } });',
+    "NODE_OPTIONS assigned": 'process.env.NODE_OPTIONS = "--import package";',
+    "NODE_PATH assigned": 'process.env.NODE_PATH = dir;',
+    "NODE_OPTIONS as a quoted key": 'run({ "NODE_OPTIONS": x });',
+    "a template command with -e": "execSync(" + String.fromCharCode(96) + "node -e ${code}" + String.fromCharCode(96) + ");",
+    "a template option": "execFileSync(process.execPath, [" + String.fromCharCode(96) + "--require=${pkg}" + String.fromCharCode(96) + "]);",
+    "a template argument with a flag-free prefix": "spawnSync(cmd, [" + String.fromCharCode(96) + "${flag}" + String.fromCharCode(96) + "]);",
+    "a command built with +": 'execSync("node " + flag + " x.js");',
+    "an option built with +": 'execFileSync(process.execPath, ["--req" + "uire", "package"]);',
+    "a command joined from an array": 'execSync(["node", flag].join(" "));',
+    "an option concatenated": 'execFileSync("node", [].concat(flags, ["x.js"]));',
+    "an option built with replace": 'execFileSync("node", [name.replace("a", "-r")]);',
+    "a computed property name built by concatenation": 'new Worker("require(\'package\')", { ["ev" + "al"]: true });',
+    "a computed property name from a variable": "new Worker(code, { [key]: true });",
+    "a literal computed property name": 'new Worker(code, { ["eval"]: true });',
+    "a literal computed property name after another key": 'new Worker(code, { stdout: true, ["eval"]: true });',
+    "a computed method name": "const o = { [name]() {} };",
+    "node --require preload": 'execFileSync(process.execPath, ["--require", "package"]);',
+    "node -r preload": 'execFileSync(process.execPath, ["-r", "package"]);',
+    "node --require=preload": 'spawnSync(process.execPath, ["--require=package", "x.js"]);',
+    "node --import preload": 'execFileSync(process.execPath, ["--import", "package"]);',
+    "node --import=preload": 'spawn(process.execPath, ["--import=package"]);',
+    "node --loader": 'execFileSync("node", ["--loader", "package", "x.js"]);',
+    "node --experimental-loader=": 'fork("x.js", [], { execArgv: ["--experimental-loader=package"] });',
+    "node --input-type": 'execFileSync("node", ["--input-type=module", "x.mjs"]);',
+    "node --env-file": 'execFileSync("node", ["--env-file=.env", "x.js"]);',
+    "node --experimental-default-type": 'execFileSync("node", ["--experimental-default-type=module", "x.js"]);',
+    "a bare dash (stdin)": 'execFileSync("node", ["-"]);',
+    "a preload flag in a command string": 'exec("node app.js -r package", cb);',
+    "a quoted preload flag in a command string": 'execSync(\'node "--require" package\');',
+    "an unknown option on another program": 'execFileSync("git", ["log", "--format=%H"]);',
+    "a test-runner flag with a non-numeric value": 'spawnSync(process.execPath, ["--test-concurrency=x"]);',
+    "a renamed child-process import": 'import { execSync as run } from "node:child_process";\nrun("node -e 1");',
+    "a renamed timer import": 'import { setTimeout as later } from "node:timers";\nlater("code", 1);',
+    "a string-named child-process import": 'import { "execSync" as run } from "node:child_process";\nrun("node -e 1");',
+    "a renamed re-export": 'export { execSync as run } from "node:child_process";',
+    "a destructured rename": 'const { execSync: run } = cp;',
+    "a name string in an object value": 'const o = { kind: "eval" };',
+    "a name string as an argument": 'lookup("Function");',
+    "vm.SyntheticModule": "const m = new vm.SyntheticModule(names, fn);",
+    "a timer given a template with an interpolation": "setTimeout(" + String.fromCharCode(96) + "do${name}()" + String.fromCharCode(96) + ", 1);",
+    "setImmediate with a string": 'setImmediate("doIt()");',
+    "node --print as a separate argument": 'execFileSync("node", ["--print", "1"]);',
+    "node --eval=code": 'spawnSync("node", ["--eval=1"]);',
+    "exec with node -e": 'exec("node -e 1", cb);',
+    "a double-quoted flag in a command string": 'execSync(\'node "-e" "require(\\"package\\")"\');',
+    "a single-quoted flag in a command string": 'execSync("node \'-e\' \'1\'");',
+    "a flag quoted in the middle": 'execSync("node --ev\'al\' 1");',
+    "a flag with its value attached and quoted": 'execSync(\'node -e"1"\');',
+    "a backslash-escaped flag": 'execSync("node \\\\-e 1");',
+    "-p with its value attached": 'execSync("node -p1");',
+    "--print quoted": 'execSync("node \\"--print\\" 1");',
+    "the constructor called optionally": 'const f = (() => {}).constructor?.("return import(\'package\')")();',
+    "the constructor reached by optional chaining": 'const f = fn?.constructor("return 1");',
+    "a computed constructor called": 'const f = fn["constructor"]("return 1");',
+    "a computed constructor called optionally": 'const f = fn["constructor"]?.("return 1");',
+    "execFile with -e": 'execFile("node", ["-e", "1"], cb);',
+  };
+  // Child-process calls are reachable only through a loader-capable module, which is denied by default. Each of
+  // these cases (kept from earlier review rounds as regressions) therefore also gets the import it would need.
+  const withImport = (src) => (/\b(exec|execSync|execFile|execFileSync|spawn|spawnSync|fork|cp)\b/.test(src) ? 'import * as cp from "node:child_process";\n' + src : src);
+  // every loader-capable module (an independent list), in every importing form, with and without node:
+  for (const m of ["child_process", "worker_threads", "vm", "module", "cluster", "repl", "inspector", "wasi", "v8", "trace_events", "async_hooks"]) {
+    for (const spec of [m, "node:" + m]) {
+      for (const form of ['import x from "' + spec + '";', 'import "' + spec + '";', 'export * from "' + spec + '";', 'const x = await import("' + spec + '");', 'const x = require("' + spec + '");']) {
+        assert.notDeepEqual(refs(form + "\n"), [], "loader-capable module: " + form);
+      }
+    }
+  }
+  // every name that runs source text or reaches a loader (an independent list), as an identifier and as a string
+  for (const n of ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH", "dlopen", "_load", "_resolveFilename"]) {
+    assert.notDeepEqual(refs("const v = x." + n + ";\n"), [], "name as identifier: " + n);
+    assert.notDeepEqual(refs('const v = o["' + n + '"];\n'), [], "name as string: " + n);
+    assert.notDeepEqual(refs('const o = { "' + n + '": 1 };\n'), [], "name as quoted key: " + n);
+  }
+  // timers: only a function expression is permitted as the first argument
+  for (const t of ["setTimeout", "setInterval", "setImmediate"]) {
+    assert.notDeepEqual(refs(t + '("code()", 1);\n'), [], t + " with source");
+    assert.notDeepEqual(refs(t + "(callback, 1);\n"), [], t + " with a name");
+    assert.deepEqual(refs(t + "(() => {}, 1);\n"), [], t + " with an arrow");
+    assert.deepEqual(refs(t + "(function () {}, 1);\n"), [], t + " with a function expression");
+    assert.deepEqual(refs(t + "(async function () {}, 1);\n"), [], t + " with an async function expression");
+    assert.deepEqual(refs(t + "(async () => {}, 1);\n"), [], t + " with an async arrow");
+  }
+  for (const [label, src] of Object.entries(must)) assert.notDeepEqual(refs(withImport(src) + "\n"), [], "must be an offender: " + label);
+  const may = {
+    "a timer given a function": "setTimeout(() => {}, 10);",
+    "a timer given a function expression with a block": "setInterval(function () { tick(); }, 10);",
+    "the word eval in a string": 'const s = "do not eval this";',
+    "the word eval in a comment": "// eval(x)\nconst a = 1;",
+    "a class constructor method": "class A { constructor(x) { this.x = x; } }",
+    "a constructor compared": "if (value.constructor === Foo) {}",
+    "a constructor inequality": "if (value.constructor !== Foo) {}",
+    "the name of a constructor read": "const n = value.constructor.name;",
+    "a list of names that includes eval and constructor": 'const names = ["promptsec", "eval", "constructor", "Function"];',
+    "a nested list of names": 'const groups = [["a", "eval"], ["exec"]];',
+    "a regular expression exec": "const m = re.exec(text);",
+    "exec on a regex literal with string building": 'const m = /^a+/.exec(text.slice(1) + tail);',
+    "exec on a regex literal with a template": "const m = /a/.exec(" + String.fromCharCode(96) + "${x}" + String.fromCharCode(96) + ");",
+    "an optional-chained constructor name": "const n = obj?.constructor?.name;",
+    "an indexed read": "const x = items[i];",
+    "a list of names in a call, followed by a colon in a ternary": 'const l = cond ? ["eval", "exec"] : ["x"];',
+    "a computed property name with a numeric literal": "const o = { [0]: a, [1]: b };",
+    "a computed property name with a plain string literal key": 'const o = { ["kind"]: 1 };',
+    "an indexed call with a numeric literal": "const r = steps[0](input);",
+    "an indexed call of a table with a literal key": 'const r = handlers["start"](1);',
+    "an indexed read of a global with a literal key": 'const v = process["argv"];',
+    "an array literal after return": "function f() { return [a, b]; }",
+    "an array literal as an argument": "run([a, b], c);",
+    "a quoted non-flag in a command string": "execSync('git log \"HEAD\" docs');",
+    "an identifier containing the word": "const evaluate = 1; const Functions = 2; const myeval = 3;",
+    "the namespace string eval in a list": 'const names = ["promptsec", "eval"];',
+    "a class with a Script name that is not constructed": "const Script = 1;",
+  };
+  for (const [label, src] of Object.entries(may)) assert.deepEqual(refs(src + "\n"), [], "must be accepted: " + label);
 });
 
 // A file at <root>/scripts/a.mjs, for the scan's own tests. The injected file system says every path exists
