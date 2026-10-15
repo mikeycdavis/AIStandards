@@ -60,8 +60,10 @@ Three terms, each defined here rather than by the brief:
 
 **Where each requirement reaches.** R1 to R5 reach every system that makes a robustness claim or
 evaluates under perturbation. R6 constrains this framework and reaches no consuming project. A
-system with none of a requirement's subject may declare that rule not-applicable under
-[Standard 2](02-ai-risk-tiering-and-applicability.md) R4, with a reason and a `revisitWhen`.
+system with none of a requirement's subject has nothing to meet: this standard defines no catalog
+rule, so there is no rule id under which [Standard 2](02-ai-risk-tiering-and-applicability.md) R4's
+not-applicable declaration could be made, and none is asked for. The project says in its own
+evaluation record that the subject does not exist, with the reason.
 
 It does **not** cover, and claims none of the ground of, the following:
 
@@ -76,7 +78,7 @@ It does **not** cover, and claims none of the ground of, the following:
   them; this standard says what a plan must cover where robustness is claimed, which Standard 17
   leaves to this item.
 - **When regressions are tested and what difference fails a change** (item 20, unwritten), and
-  **contamination** ([Standard 18](18-benchmark-integrity-and-contamination.md)).
+  **contamination** (item 18, Benchmark Integrity and Contamination).
 - **Reproducibility under nondeterminism** (item 31, unwritten). R3 asks that a perturbation be
   reproducible; whether a hosted model's answers repeat is item 31's subject.
 - **Operational resilience** — latency, failover, outage behaviour. A system's tolerance of a
@@ -144,15 +146,17 @@ is stated here because robustness work is where derived items are made in quanti
 ### R4 — Report per class, and name the worst
 
 **A robustness result MUST be reported for each class separately, MUST name the class with the
-largest degradation, and MUST NOT be presented only as one aggregate over classes.**
+largest degradation, and MUST NOT be presented only as one aggregate over classes. The number of variants behind each
+class's result MUST be stated.**
 
 An average over fifteen classes in which fourteen are untouched and one collapses reports a system
 that has a small problem. The class that collapses is the one a user in that class meets, and for
 that user the system is not robust. The aggregate may be given beside the per-class results; it may
 not replace them.
 
-Where the number of variants in a class is small enough that its result could be noise, the report
-says how many there were. This standard does not set a count.
+The number of variants behind each class's result is stated for every class, not only small ones,
+because whether a count is small enough to be noise is the reader's judgment to make and the reader
+cannot make it without the number. This standard does not set a minimum count.
 
 ### R5 — A claim of robustness reaches only what was tested
 
@@ -252,9 +256,10 @@ report a system robust from a presence, and a mechanism for excepting the prohib
 self-defeating. R5's ban on an unbounded claim is likewise not exemptible, because an exception
 would record a project as knowingly publishing a claim its test does not support. R1 to R4 reach a
 system only where it makes a robustness claim or evaluates under perturbation, and a system without
-that subject may declare the requirement not-applicable under
-[Standard 2](02-ai-risk-tiering-and-applicability.md) R4 with a reason and a `revisitWhen`. No
-detector in this release would contradict a false declaration. No level here is lowered by a risk
+that subject records the absence and its reason in its own evaluation record. There is no policy
+declaration for it: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4's not-applicable
+disposition applies to a catalog rule id, and this standard has none. No detector in this release
+would contradict a false record. No level here is lowered by a risk
 tier (Standard 2 R3).
 
 ## Tests and falsifiers
@@ -317,7 +322,7 @@ here, none of it owner-approved:
 - **R6**, the constraint on this framework, in the same form as the equivalent requirement in
   [Standard 8](08-ai-safety-requirements-and-safety-cases.md),
   [Standard 17](17-evaluation-plans-for-generative-systems.md),
-  [Standard 18](18-benchmark-integrity-and-contamination.md),
+  item 18 (Benchmark Integrity and Contamination),
   [Standard 25](25-grounding-and-hallucination-control.md) and
   [Standard 33](33-ai-observability.md).
 - **The exclusions in Scope** as division lines, including the line between robustness to ordinary
@@ -334,7 +339,7 @@ Not authored here, and recorded so the reader does not credit this standard with
 [Standard 17](17-evaluation-plans-for-generative-systems.md) assigns "what an evaluation must
 cover" to this item. R1 to R5 are that coverage for the case where robustness is claimed, and they
 sit inside Standard 17's plan (R1), subject (R6), scorer (R7) and held-out set (R4) requirements,
-restating none. [Standard 18](18-benchmark-integrity-and-contamination.md) governs exposure of an
+restating none. Item 18 (Benchmark Integrity and Contamination) governs exposure of an
 evaluation set to a model; R3 here governs variants a project derives. [Standard 21](21-prompt-and-instruction-security.md),
 [Standard 51](51-agent-and-tool-execution-prohibitions.md) and
 [Standard 9](09-misuse-and-abuse-prevention.md) own the adversarial ground this standard excludes.
