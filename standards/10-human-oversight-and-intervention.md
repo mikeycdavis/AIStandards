@@ -70,9 +70,10 @@ It does **not** cover, and claims none of the ground of, the following:
   the positive obligations and mints no prohibition; see Q23 below.
 - **Records of what the system did**, and the investigation of what went wrong. Item 36
   (Auditability of AI Actions) and item 34 (AI Incident Response) are unwritten in this release.
-- **Whether the overseer is entitled to see the data they are shown.** That is
-  [Standard 13](13-personal-data-in-ai-systems.md) and item 16 (Access Control for Models, Context,
-  and Tools, unwritten). Everything below is subject to them and none of it relaxes them.
+- **Whether the overseer is entitled to see the data they are shown.** That is item 16 (Access
+  Control for Models, Context, and Tools, unwritten). [Standard 13](13-personal-data-in-ai-systems.md)
+  states what records may hold and gives how personal data is shown to a user to
+  UIUXDesignStandards. Everything below is subject to them and none of it relaxes them.
 - **Safety cases** and the properties they argue for, which are
   [Standard 8](08-ai-safety-requirements-and-safety-cases.md)'s; a case may cite an oversight
   arrangement as evidence, and which arrangement is owed is this standard's.
@@ -95,7 +96,8 @@ Validation), so none can collide (Standard 7 R4).
 
 **Where a system claims human oversight at an oversight point, the project MUST record who the
 overseers are — by person or by a role with named holders — and MUST NOT count as an overseer any
-process, account or component that the system, or the party requesting the action, controls.**
+process, account or component that the system, or an automated agent acting for the party requesting
+the action, controls.**
 
 "A human reviews it" is a claim with no subject. In an incident the question is *which* human, and a
 role nobody holds is the usual answer. A role is acceptable where people hold it; an unattended
@@ -125,17 +127,20 @@ actually do, or the concrete artifact, from where they decide.
 
 Uncertainty belongs here because an overseer who is not told the system was unsure approves at the
 same rate as one who is told nothing: the information that would have changed the decision exists and
-was withheld by the interface. What counts as an uncertainty signal is
-[Standard 25](25-grounding-and-hallucination-control.md)'s subject, not this one's.
+was withheld by the interface. What counts as an uncertainty signal is item 26's subject (Uncertainty Expression and Abstention,
+unwritten, posture B); whether an output is grounded is
+[Standard 25](25-grounding-and-hallucination-control.md)'s.
 
 ### R3 — The overseer can intervene, not only observe
 
-**At every oversight point, the overseer MUST be able to decline the output and, where the output can
-be edited, to correct it, and where the system runs over time MUST be able to pause and to stop it; and the system MUST NOT be able to
-reverse, retry past or silently re-queue an overseer's decline or stop.**
+**At every oversight point before an effect, the overseer MUST be able to decline the output and,
+where the output can be edited, to correct it; at an after-the-fact point, MUST be able to correct or
+reverse the effect where it is reversible; where the system runs over time, MUST be able to pause and
+to stop it; and the system MUST NOT be able to reverse, retry past or silently re-queue an overseer's
+decline or stop.**
 
 An oversight function whose only action is "approve" is a logging function with a button. Declining
-must be a first-class outcome with the same standing as approving, and a decline must stick: a
+must be a first-class outcome with the same standing as approving, and a decline or stop must stick: a
 system that, on decline, re-submits the same action through another path has turned oversight into a
 delay.
 
@@ -215,6 +220,7 @@ does not contain.
 Whether oversight is available, informed and exercised is an operational fact about people and a
 running system. It is **not-evaluable** from a repository. This is the form of the equivalent
 requirement in [Standard 8](08-ai-safety-requirements-and-safety-cases.md),
+[Standard 17](17-evaluation-plans-for-generative-systems.md),
 [Standard 33](33-ai-observability.md) and [Standard 25](25-grounding-and-hallucination-control.md).
 
 ## Failure modes
@@ -255,19 +261,21 @@ the reviewer reads the document against the interface, the code and a sample of 
 ## Validation, severity, and exemptibility
 
 **This standard has no catalog rules of its own in this release.**
-[Standard 6](06-standard-structure-and-rule-identity.md) R3 requires every standard to cite at least
-one rule or record why it does not; this is that record.
+Section 6 of [plan 02](../artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md) requires
+every standard to cite at least one rule or record in its Validation section why it ships with none;
+this is that record.
 
 Four reasons, stated so a reader can disagree with any one of them:
 
-1. **There is no artifact a rule could read.** A rule for R1 or R4 would look for a recorded set of
-   overseers or a timing, and neither `schemas/ai-system-manifest.schema.json` nor
-   `schemas/ai-policy.schema.json` has a place for one; both are closed. A rule failing every project
-   for omitting what no schema accepts would measure this framework's own incompleteness and blame the
-   project for it. Adding a schema field is a schema-versioning decision, outside this slice
-   (plan 02 section 8).
+1. **There is no artifact an automated rule could read.** A structural rule for R1 or R4 would look for
+   a recorded set of overseers or a timing, and neither `schemas/ai-system-manifest.schema.json` nor
+   `schemas/ai-policy.schema.json` has a place for one; both are closed. Such a rule would fail every
+   project for omitting what no schema accepts and would measure this framework's own incompleteness.
+   Adding a schema field is a schema-versioning decision; plan 02 section 8 records the same boundary
+   for risk-tier fields. A `manual-review` rule needs no schema field, and whether one is wanted rests
+   on reasons 3 and 4 and the owner's per-rule decision.
 2. **R2, R3, R5 and R6 concern people and a running system.** What an overseer is shown, whether a
-   decline is honoured and how many items reach one person are properties of an interface, an
+   decline is honoured and how many items reach the overseers are properties of an interface, an
    organisation and a queue, not of source text. A detector reading source would test for the presence
    of an approval function, which R7 forbids this framework from reporting as a result.
 3. **The nearest rules are Standard 11's, and are not extended.** `oversight.intervention-path-declared`
@@ -289,11 +297,12 @@ rule minted, so that a consumer classifies it consistently.
 | --- | --- | --- | --- | --- |
 | R1 | manual-review | error | yes, where there is no oversight point | the independence condition: no; the rest: yes |
 | R2 | manual-review | error | yes, as R1 | yes |
-| R3 | manual-review | error | yes, as R1 | the requirement that a decline stick: no; the rest: yes |
-| R4 | manual-review | error for presenting an after-the-fact point as before the effect; warning for omitting the intervention window (`SHOULD`) | yes, as R1 | yes |
+| R3 | manual-review | error | yes, as R1 | the requirement that a decline or stop stick: no; the rest: yes |
+| R4 | manual-review | error for presenting an after-the-fact point as before the effect; warning for omitting the intervention window (`SHOULD`) | yes, as R1 | the clause that an after-the-fact point is not described as pre-effect: no; the rest: yes |
+| R5 (a zero read as evidence of good behaviour, `MUST`) | manual-review | error | yes, as R1 | yes |
 | R5 (the record exists, `SHOULD`) | manual-review | warning | yes, as R1 | yes |
 | R5 (the reason for a zero) | not-evaluable | none reported; not scored | yes, as R1 | not attestable |
-| R6 | manual-review | warning for the `SHOULD` design change, error for presenting review as item-by-item | yes, as R1 | yes |
+| R6 | manual-review | warning for the `SHOULD` design change, error for presenting review as item-by-item beyond capacity | yes, as R1 | the clause that review is not presented as item-by-item beyond capacity: no; the rest: yes |
 | R7 | manual-review (code review of this repository, since it constrains this framework) | error for this repository's changes; not applicable to a consuming project | not applicable | no |
 
 R7 constrains a behaviour of the tool, which a consuming project cannot breach; it is reviewed in this
@@ -301,11 +310,13 @@ repository's own changes.
 
 **Exemptibility.** R7 is not exemptible: no project circumstance makes it reasonable for a scan to
 report oversight from a presence, and a mechanism for excepting the prohibition would be
-self-defeating. R1's independence condition and R3's requirement that a decline stick are likewise not
-exemptible, because an exception would record a project as knowingly describing a system as overseen
-that its overseers cannot change. R2, R4, R5 and R6 reach a system only where their subject exists, and
-a system with no oversight point may declare the requirement not-applicable under
-[Standard 2](02-ai-risk-tiering-and-applicability.md) R4 with a reason and a `revisitWhen`. A system
+self-defeating. R1's independence condition, R3's requirement that a decline or stop stick, R4's
+requirement not to describe an after-the-fact point as pre-effect and R6's requirement not to present
+review as item-by-item beyond capacity are likewise not exemptible, because an exception would record a
+project as knowingly describing a system as overseen that its overseers cannot change. R1 to R6 reach
+a system only where its subject exists: a system with no oversight point records in its own documents
+that none exists and what would create one, which is the shape of a
+[Standard 2](02-ai-risk-tiering-and-applicability.md) R4 declaration should a rule be minted. A system
 that has no oversight point is not thereby overseen; it should say what it is. No detector in this
 release would contradict a false declaration. No level here is lowered by a risk tier
 (Standard 2 R3).
@@ -314,26 +325,30 @@ release would contradict a false declaration. No level here is lowered by a risk
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | Each oversight point names a person or a role with at least one holder, and names what it is independent of | A role with no holder, or an approval generated by the system or by the requesting party | A reviewer who is the system's operator and is named must **not** be failed for that |
+| R1 | Each oversight point names a person or a role with at least one holder, and no listed overseer is a component the system, or an agent acting for the requester, controls | A role with no holder, or an approval generated by the system or by an automated agent acting for the requesting party | A reviewer who is the system's operator and is named must **not** be failed for that |
 | R2 | From the decision point the overseer can reach the concrete artifact or action, the inputs it was made from (or a route to them), and any uncertainty signal the system holds | A decision screen that shows only a description the system wrote, or that hides the inputs or a held uncertainty signal | A summary that links to the full artifact must **not** be flagged for being a summary |
-| R3 | A decline stops the action and the system does not re-submit it by another path; where the output can be edited, the overseer can correct it; where the system runs over time, the overseer can pause it and stop it | An action that proceeds after a decline, or a decline overwritten by a retry; an editable output with no correction path; a running system that cannot be paused or stopped by the overseer | A `propose` system whose output is simply not applied must **not** be failed for lacking a decline button |
-| R4 | The timing of each point is recorded, an after-the-fact point is not described as before, and the window within which an intervention can still change the outcome is stated (its absence is the warning) | A next-day review described as pre-effect (error); an after-the-fact point with no stated window (warning) | A stated after-the-fact design for a low-impact, reversible action must **not** be failed for its timing alone |
+| R3 | Before an effect, a decline stops the action and the system does not re-submit it by another path, and an editable output can be corrected; after the fact, a reversible effect can be corrected or reversed; where the system runs over time, the overseer can pause it and stop it, and it does not resume or re-queue without them | An action that proceeds after a decline, or a decline overwritten by a retry; an editable output with no correction path; a running system that cannot be paused or stopped by the overseer; a run that resumes after a stop without the overseer | A `propose` system whose output is simply not applied must **not** be failed for lacking a decline button |
+| R4 | Each point whose effect can precede the overseer is recorded as after the fact, is not described as before, and the window within which an intervention can still change the outcome is stated (its absence is the warning) | A next-day review described as pre-effect (error); an after-the-fact point with no stated window (warning) | A stated after-the-fact design must **not** be failed for its timing alone (Standard 45 R3 separately governs irreversible actions) |
 | R5 | Counts per period exist, including stops; a statement that none are kept is reported as the warning, not as a pass | A claim that oversight "works" resting on a record with no interventions and no explanation, or on no record | A system with a recorded, explained zero must **not** be flagged |
-| R6 | The volume and time allotted are recorded, the claim fits them, and where the volume exceeds the aggregate capacity the design change chosen (added reviewers, sampling, batching, escalation criteria or narrowed authority) is stated | Item-by-item review claimed for a volume the assigned holders together cannot review (error); capacity exceeded with no design change or remedy stated (warning) | A stated sampling design with a rate must **not** be flagged as weaker oversight; a queue divided among enough holders to review every item must **not** be failed for its volume |
+| R6 | The reviewer can compare the volume and time allotted with the aggregate capacity of the holders, the claim fits them, and where the volume exceeds the aggregate capacity the design change chosen (added reviewers, sampling, batching, escalation criteria or narrowed authority) is stated | Item-by-item review claimed for a volume the assigned holders together cannot review (error); capacity exceeded with no design change or remedy stated (warning) | A stated sampling design with a rate must **not** be flagged as weaker oversight; a queue divided among enough holders to review every item must **not** be failed for its volume |
 | R7 | No detector or report in this repository outputs an oversight verdict from presence | A detector that reported "overseen" because an approval file existed | Reporting that an approval file was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads an oversight record and no fixture
-carries one, so R1 to R6 are enforced by review or not at all, and R7 holds by construction. The
+carries one, so each falsifier above is applied by review or not at all for R1 to R6, and R7 holds by construction. The
 negative controls state what review must not do to a project that has the right subject and does the
-right thing. **A requirement with no falsifier is a requirement nobody can be shown to have broken**,
+right thing. **A falsifier nobody applies is a requirement nobody can be shown to have broken**,
 and that is the honest state of this standard.
 
 ## Exceptions and staleness
 
 There is no policy-level exception mechanism for R1 to R6 in this release, because no rule exists to
-except, and the exception mechanism of Standard 4 is Phase 4 work and not implemented. A project that
-knowingly does not meet one records that in its own documents; Standard 2's dispositions apply to the
-application of a rule, and this standard has none.
+except, and the exception mechanism of item 4 is Phase 4 work and not implemented. A project that
+knowingly does not meet one records that in its own documents.
+
+**Attestation.** None exists in this release (item 4, Phase 4). Under
+[Standard 6](06-standard-structure-and-rule-identity.md) R8 a `manual-review` rule defaults to
+attestable; if a rule were minted, R1 to R6 would be attestable except the clauses marked not
+exemptible above, and the reason for a zero in R5 is not attestable.
 
 **What invalidates a recorded oversight arrangement.** Each of these changes who is overseeing or
 what they can do, and an arrangement recorded before the change describes the earlier system:
@@ -365,13 +380,14 @@ Specifically authored here, none of it owner-approved:
 - **The three terms** overseer, intervention and oversight point, and the ruling that reading is not
   intervention. The brief defines none.
 - **R1 in full**: that overseers are named by person or by role with holders, and that nothing the
-  system or the requesting party controls counts as one, including a second instance of a model.
+  system or an automated agent acting for the requesting party controls counts as one, including a
+  second instance of a model.
 - **R2 in full**: that the overseer is shown the artifact or a route to it, any uncertainty signal,
   and more than the system's own summary.
 - **R3 in full**: the three capabilities of decline or correct, pause and stop; the requirement that a
-  decline stick; and its relation to Standard 11 R4 as general to specific.
+  decline or stop stick; and its relation to Standard 11 R4 as general to specific.
 - **R4's separation of before-effect from after-the-fact oversight**, the ruling that the latter must
-  be called what it is, and the optional statement of the window.
+  be called what it is, and the `SHOULD` statement of the window.
 - **R5's counts and the ruling that a zero is a finding to explain**; its `SHOULD` level.
 - **R6's capacity requirement** and its deliberate refusal to state a number.
 - **R7**, the constraint on this framework, in the same form as the equivalent requirement in
@@ -416,9 +432,10 @@ approver is shown and may do; it decides no gate.
 [Standard 8](08-ai-safety-requirements-and-safety-cases.md) may cite an oversight arrangement as
 evidence in a safety case, and [Standard 9](09-misuse-and-abuse-prevention.md) and
 [Standard 23](23-agent-execution-security.md) each record this item as the general obligation they do
-not claim. [Standard 25](25-grounding-and-hallucination-control.md) defines what an uncertainty signal
-is, which R2 asks to be shown. [Standard 13](13-personal-data-in-ai-systems.md) governs what an overseer
-may be shown. [Standard 7](07-boundary-with-adjacent-standards.md) R4 and R5 order conflicts and keep
+not claim. Item 26 (unwritten) will define what an uncertainty signal is, which R2 asks to be shown, and
+[Standard 25](25-grounding-and-hallucination-control.md) R2 what a grounded output is.
+[Standard 13](13-personal-data-in-ai-systems.md) governs what a stored or sent record may contain;
+entitlement to view it is item 16's. [Standard 7](07-boundary-with-adjacent-standards.md) R4 and R5 order conflicts and keep
 ids from colliding, and [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the
 applicability and non-lowering language used above.
 
@@ -437,8 +454,8 @@ as a capability.
 
 | Requirement | State |
 | --- | --- |
-| R7 | **Holds by construction, not by assertion.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` has a concept of human oversight as a subject; the reserved segment `oversight` names an identifier prefix and Standard 11's autonomy-tier rules, and `EVALUATED_RULES` in `scripts/standards.mjs` contains no `oversight.*` id. No test asserts the absence, so a future detector could break R7 without failing one |
-| This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's oversight |
+| R7 | **Holds by construction, not by assertion.** No `oversight.*` id is in `EVALUATED_RULES` in `scripts/standards.mjs`, so the manual-review rules of that shard report skipped or not-evaluated and no detector reports oversight as a result. No test asserts the absence, so a future detector could break R7 without failing one |
+| This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs`. That a document exists and is well-formed is not evidence of any project's oversight |
 
 **Proposed, and deliberately absent from this release. None of the following exists:**
 

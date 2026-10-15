@@ -39,7 +39,7 @@ as evidence inside that case; and the limit of what this framework can say about
 
 "Safety" here means harm to people, property, or the environment arising from the system operating as
 intended or failing to — a wrong, missing, late, or excessive output or effect. It does **not** cover,
-and this standard claims none of the ground of, the following; of these, item 10 is now written as [Standard 10](10-human-oversight-and-intervention.md) and the others are unwritten in this release:
+and this standard claims none of the ground of, the following; of these, items 9 and 10 are written as [Standard 9](09-misuse-and-abuse-prevention.md) and [Standard 10](10-human-oversight-and-intervention.md) and the others are unwritten in this release:
 
 - **Item 9, Misuse and Abuse Prevention** — which controls a system must have against deliberate
   misuse. It already owns `misuse.safety-controls-not-disabled`. A safety case may cite a misuse
@@ -442,8 +442,8 @@ system produces about itself is not evidence of what it did.
 be cited as evidence in a case, and it is not a safety requirements record, because a hazard can
 arise with no adversary present.
 
-Item 17, Evaluation Plans for Generative Systems, is unwritten; its shard `rules/eval.json` already
-carries `eval.no-fabricated-results`, which governs whether an evaluation result a case cites came from
+Item 17, Evaluation Plans for Generative Systems, is written as
+[Standard 17](17-evaluation-plans-for-generative-systems.md); its shard `rules/eval.json` carries `eval.no-fabricated-results`, which governs whether an evaluation result a case cites came from
 a real run. Items 9, 34, 35 and 48 are listed under Scope as ground this standard does not claim; item 10 is written as [Standard 10](10-human-oversight-and-intervention.md).
 
 No ADR covers this standard. `artifacts/adr/` does not exist in this release.

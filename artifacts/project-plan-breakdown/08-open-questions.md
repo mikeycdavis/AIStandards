@@ -322,8 +322,9 @@ twice or in neither place.
 ### Q24 — Are the general intervention capability and Standard 11's halt record one rule or two?
 
 Standard 11 R4 (rule `oversight.intervention-path-declared`) asks for a committed halt record for
-`execute` and `autonomous` systems. Standard 10 R3 asks for the general capability to decline, correct,
-pause and stop at every oversight point. Whether a rule for the general capability would duplicate or
+`execute` and `autonomous` systems. Standard 10 R3 asks for the general capability to decline and, where the output can be edited, correct
+before an effect, to correct or reverse a reversible effect after the fact, and, where the system runs over
+time, to pause and stop. Whether a rule for the general capability would duplicate or
 widen Standard 11's, and in which shard it lives, is undecided. **Not resolved here, because it
 changes an existing rule's scope.** **Impact if unanswered:** no rule covers the general capability;
 both requirements are manual review.

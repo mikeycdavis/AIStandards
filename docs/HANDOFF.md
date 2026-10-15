@@ -547,7 +547,7 @@ governance until a sign-off exists.
    `artifacts/project-plan-breakdown/08-open-questions.md`. R2's blanket wording is authored and
    unapproved, and its own reasoning does not reach the word "propose". Standard 11's R7 was scoped
    narrowly rather than propagating it, so the two standards currently differ on adjacent ground.
-   This is the only open question that changes the wording of an already-written standard.
+   Q23 to Q25 can also change Standard 10's wording once answered.
 5. **~~Whether to pin line endings repository-wide with a `.gitattributes`~~ — Q8, ANSWERED A on 2026-10-14.**
    `core.autocrlf` is `true`. The one `.gitattributes` that exists (ST-57) pins only `scripts/vendor/**` to LF so
    vendored hashes are checkout-independent, and that vendor-only rule is the owner's answer: no repository-wide
@@ -593,6 +593,10 @@ governance until a sign-off exists.
    not-applicable, and that any conflict refuses the whole run. None is owner-confirmed. The templates'
    wording is authored and unapproved, like every standard's.
 
+13. **Whether the prohibitive form of human oversight is item 48's, whether the general intervention capability and Standard 11's halt
+   record are one rule, and whether a model-instance reviewer may count as an overseer** — Q23 to Q25. Standard 10 is prose-first and
+   ships no rule; each is unanswered.
+
 ## 9 · The smallest next slice
 
 **Ask the GitHub backlog, not this section.** Run `/whats-next` against it (see `docs/COORDINATOR.md`). The paragraph below predates the backlog and is kept for its reasoning.
@@ -612,12 +616,12 @@ starting rather than trusting this section. Candidates, all inferred rather than
   standards and the nine missing shards.
 - **Another standard.** None now owns rules, so each would be prose only; pick by what later work
   cites. Follow `artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` §5 and cite code by
-  symbol name. Do not start the remaining 39 in one pass.
+  symbol name. Do not start the remaining 35 in one pass.
 
 **Q22 and Q7 are the open questions most likely to matter next.** Q22 decides whether this pack states
 any evaluation requirement for systems MachineLearningStandards does not reach, and cannot be answered
-without that pack's maintainers or an owner decision to author on its ground. Q7 is the only open
-question that changes an already-written standard's wording. Q9 to Q12, Q15 to Q21 and Q23 to Q25 are also open
+without that pack's maintainers or an owner decision to author on its ground. Q7 and Q23 to Q25 are among the
+open questions that change an already-written standard's wording. Q9 to Q12, Q15 to Q21 are also open
 (see §8).
 
 Completing the adoption slice does not complete Phase 2: 35 standards, nine missing shards and the

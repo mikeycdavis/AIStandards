@@ -77,7 +77,7 @@ dated record of that slice and is left as written.)
 `13-personal-data-in-ai-systems.md`, `17-evaluation-plans-for-generative-systems.md`,
 `21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `45-approval-gates.md`,
 `51-agent-and-tool-execution-prohibitions.md`
-(Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
+(Standard 10 added 2026-10-15; Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
 owner's assignment of the two `forbidden` agent rules to it — ST-42, #87).
 
 **35 standards remain unwritten.**
@@ -104,7 +104,7 @@ namespaces have no shard. **Nine** of the 46 rules are reachable by a detector (
 ## 3. Purpose
 
 Write the full normative corpus and prove it traces to the brief. The two blocking catalog reviews
-that gate this phase have run and pass mechanically (see §9). The remaining work is the 40 unwritten
+that gate this phase have run and pass mechanically (see §9). The remaining work is the 35 unwritten
 standards, shards for the nine reserved namespaces that have none, and
 `artifacts/standards-source-inventory.json`. `manifest.mjs`, `toolperms.mjs`, the templates and `init`
 were built on 2026-09-19.
@@ -116,7 +116,7 @@ were built on 2026-09-19.
   `Implemented by` column as its standard is written.
 - `artifacts/standards-source-inventory.json` — `expectedCount`, `reviewedOn`, and per item
   `{number, title, class, derivedFrom, implementedBy}`. **Not written.**
-- All 53 standards, each with the ten H2 sections carrying the brief's nine requirements. **13 done.**
+- All 53 standards, each with the ten H2 sections carrying the brief's nine requirements. **18 done.**
 - Shards for the nine reserved namespaces that have none, to roughly 96 rules. **Eight shards exist,
   46 rules**; Standards 11, 08 and 09 added rules during this phase.
 - All templates: manifest, threat model, evaluation plan, tool permissions, incident report,
@@ -213,7 +213,7 @@ specification rather than about your new file. That is exactly what happened whi
 `test/no-phase-creep.test.mjs` holds a sorted literal list of the standards that exist, under the
 test named `only the standards written so far exist`. Add the new filename in sorted position.
 
-The guard is not that the corpus is frozen — this phase writes the remaining 43. It is that a standard
+The guard is not that the corpus is frozen — this phase writes the remaining 35. It is that a standard
 arrives *deliberately*, by being added to that list, rather than by appearing unnoticed.
 
 **Verify (steps 1–5):**
