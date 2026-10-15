@@ -179,8 +179,9 @@ the code that would carry it out.
 ## Validation, severity, and exemptibility
 
 **This standard has no catalog rules of its own in this release.**
-[Standard 6](06-standard-structure-and-rule-identity.md) R3 requires every standard to cite at least
-one rule or record why it does not; this is that record.
+[Plan 02 section 6](../artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md) requires
+every standard to cite at least one rule or record in its Validation section why it ships with none;
+this is that record.
 
 Three reasons, stated so a reader can disagree with any one of them:
 
@@ -297,8 +298,8 @@ name them. [Standard 13](13-personal-data-in-ai-systems.md) governs the personal
 might otherwise carry: describing a data source does not license copying records into the document.
 [Standard 25](25-grounding-and-hallucination-control.md) is the closest sibling in form.
 [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern applicability and non-lowering,
-and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the Validation
-section's no-rule record answers.
+and [Standard 6](06-standard-structure-and-rule-identity.md) R3 (each requirement carries a
+falsifier or is declared not-evaluable) is what the Tests section answers.
 
 Items 34 (AI Incident Response), 37 (Fairness and Harm Distribution), 38 (Accessibility of AI
 Features) and 40 (User Disclosure of AI Involvement) are unwritten on this base; the lines drawn above
