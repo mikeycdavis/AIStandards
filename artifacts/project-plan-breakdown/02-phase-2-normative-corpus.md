@@ -68,18 +68,18 @@ dated record of that slice and is left as written.)
 
 ## 2. Current state, verified 2026-09-14
 
-**Written: 17 of 53 standards** — `standards/01-ai-system-manifest.md`,
+**Written: 18 of 53 standards** — `standards/01-ai-system-manifest.md`,
 `02-ai-risk-tiering-and-applicability.md`, `03-machine-readable-ai-policy.md`,
 `05-verdict-vocabulary.md`, `06-standard-structure-and-rule-identity.md`,
 `07-boundary-with-adjacent-standards.md`, `08-ai-safety-requirements-and-safety-cases.md`,
 `09-misuse-and-abuse-prevention.md`, `11-autonomy-levels-and-delegated-authority.md`,
 `13-personal-data-in-ai-systems.md`, `17-evaluation-plans-for-generative-systems.md`,
-`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `45-approval-gates.md`,
+`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `39-transparency-and-system-documentation.md`, `45-approval-gates.md`,
 `51-agent-and-tool-execution-prohibitions.md`
 (Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
-owner's assignment of the two `forbidden` agent rules to it — ST-42, #87).
+owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 39 added by ST-31, #76).
 
-**36 standards remain unwritten.**
+**35 standards remain unwritten.**
 
 **Rules: 46 across 8 shards** — `rules/agent.json` (4), `eval.json` (5), `gate.json` (6),
 `lifecycle.json` (11, five of them Standard 08's), `misuse.json` (5, four of them Standard 09's),
@@ -103,7 +103,7 @@ namespaces have no shard. **Nine** of the 46 rules are reachable by a detector (
 ## 3. Purpose
 
 Write the full normative corpus and prove it traces to the brief. The two blocking catalog reviews
-that gate this phase have run and pass mechanically (see §9). The remaining work is the 40 unwritten
+that gate this phase have run and pass mechanically (see §9). The remaining work is the 35 unwritten
 standards, shards for the nine reserved namespaces that have none, and
 `artifacts/standards-source-inventory.json`. `manifest.mjs`, `toolperms.mjs`, the templates and `init`
 were built on 2026-09-19.
@@ -115,7 +115,7 @@ were built on 2026-09-19.
   `Implemented by` column as its standard is written.
 - `artifacts/standards-source-inventory.json` — `expectedCount`, `reviewedOn`, and per item
   `{number, title, class, derivedFrom, implementedBy}`. **Not written.**
-- All 53 standards, each with the ten H2 sections carrying the brief's nine requirements. **13 done.**
+- All 53 standards, each with the ten H2 sections carrying the brief's nine requirements. **18 done.**
 - Shards for the nine reserved namespaces that have none, to roughly 96 rules. **Eight shards exist,
   46 rules**; Standards 11, 08 and 09 added rules during this phase.
 - All templates: manifest, threat model, evaluation plan, tool permissions, incident report,
@@ -212,7 +212,7 @@ specification rather than about your new file. That is exactly what happened whi
 `test/no-phase-creep.test.mjs` holds a sorted literal list of the standards that exist, under the
 test named `only the standards written so far exist`. Add the new filename in sorted position.
 
-The guard is not that the corpus is frozen — this phase writes the remaining 43. It is that a standard
+The guard is not that the corpus is frozen — this phase writes the remaining 35. It is that a standard
 arrives *deliberately*, by being added to that list, rather than by appearing unnoticed.
 
 **Verify (steps 1–5):**
@@ -272,7 +272,7 @@ node scripts/test.mjs && node scripts/inventory.mjs && node scripts/fidelity.mjs
 
 `node scripts/standards-sections.mjs` runs inside `node scripts/test.mjs` through
 `test/standards-sections.test.mjs`, and may also be run directly. Passing this command does not
-complete the phase: 36 standards, the nine missing shards and
+complete the phase: 35 standards, the nine missing shards and
 `artifacts/standards-source-inventory.json` remain.
 
 ## 8. Out of scope for this phase — a closed list
@@ -474,7 +474,7 @@ Q7, Q9 to Q12 and Q15 to Q22 remain open.
 `scripts/toolperms.mjs` and `scripts/init.mjs` as Phase 2 deliverables (§4) and names no file set, marker
 form, conflict behaviour or module boundary. Each decision below is inferred from the evidence cited and
 is the coordinator's, not the owner's; the owner may reverse any of them. **Completing this slice does not
-complete Phase 2**: 36 standards, shards for nine namespaces and the foreign-crosswalk id check remain.
+complete Phase 2**: 35 standards, shards for nine namespaces and the foreign-crosswalk id check remain.
 
 ### 12.1 Why detectors changed first
 
