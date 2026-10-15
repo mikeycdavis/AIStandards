@@ -34,9 +34,7 @@ Terms, defined once and used verbatim below:
 
 - **Framework output** — what a detector, catalog rule, audit finding or generated report of this
   framework states.
-- **Accessibility verdict** — a statement that an AI feature is accessible, whatever its basis: the
-  presence of an owner's rule, a component library or an accessibility statement, an imported owner
-  result, or anything else.
+- **Accessibility verdict** — a statement that an AI feature is, or is not, accessible or conformant to accessibility requirements, whatever its basis: the presence of an owner's rule, a component library or an accessibility statement, an imported owner result, or anything else.
 - **Accessibility definition** — a catalog id that defines an accessibility requirement.
 
 **Reach.** This standard does not decide whether a generated, conversational, voice-based or
