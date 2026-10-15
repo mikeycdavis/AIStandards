@@ -13,7 +13,7 @@ reading the module headers, the exported surface and the call sites it names. It
 generation of 2026-09-14, which predated: `init`, the manifest and tool-permission modules and the
 templates; the `--strict` audit flag; the lexical-contract freeze (ST-48); and the structural reader
 with its vendored YAML parser (ST-57). It describes the implementation at that commit — 18 modules under
-`scripts/` plus the vendored tree, 17 of 53 standards written, 46 rules in 8 shards, 35 test files.
+`scripts/` plus the vendored tree, 18 of 53 standards written, 46 rules in 8 shards, 35 test files.
 Line numbers were taken from that tree. It is **not** a plan and does not describe Phases 4–7.
 The superseded pre-implementation capture is preserved separately as
 `docs/architecture-baseline-2026-09-03.md`, which must not be overwritten: it is the evidence that
@@ -484,7 +484,7 @@ flowchart TB
     end
 
     subgraph corpus["Normative corpus"]
-        stds["standards/*.md<br/>17 of 53 written"]
+        stds["standards/*.md<br/>18 of 53 written"]
         rules["rules/*.json<br/>8 shards, 46 rules"]
         schemas["schemas/*.json<br/>5 schemas"]
     end
