@@ -270,7 +270,7 @@ under [Authored items](#authored-items).
 | 41 | Inference Cost and Budget Control | D | `Cost` | O | — |
 | 42 | Latency Budgets for AI Interactions | D | `latency` | O | — |
 | 43 | Environmental Impact Accounting | D | `environmental impact` | O | — |
-| 44 | Operational Resilience, Degradation, and Provider Portability | D | `operational resilience` | X | — |
+| 44 | Operational Resilience, Degradation, and Provider Portability | D | `operational resilience` | X | standards/44-operational-resilience-degradation-and-provider-portability.md |
 
 ### Band K — Approval gates · bullet 10
 
