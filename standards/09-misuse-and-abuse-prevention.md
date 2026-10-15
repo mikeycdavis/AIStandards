@@ -64,9 +64,9 @@ with this standard's neighbours falls, and none of their ground is claimed:
   item 16, Access Control for Models, Context, and Tools (who may use the system at all); items 22,
   23 and 24 (tool, agent and retrieval security — attacks on the system's components); item 34, AI
   Incident Response (what happens once a misuse event is declared an incident); item 35, Red Teaming
-  (how the adversarial exercises R5 names are run and recorded); item 41, Inference Cost and Budget
-  Control (budgets whose mechanism R3's bound may share); and item 48, Safety and Oversight
-  Prohibitions (below).
+  (how the adversarial exercises R5 names are run and recorded); and item 48, Safety and Oversight
+  Prohibitions (below). Item 41, Inference Cost and Budget Control, is written: [Standard 41](41-inference-cost-and-budget-control.md) owns budgets
+  whose mechanism R3's bound may share.
 
 **R1 reaches every system in scope, and "we identified no foreseeable misuse" is an answer to it, not
 an exit from it.** A system whose analysis finds no case records that, with its reasoning, and the
@@ -536,9 +536,9 @@ Unwritten items this standard defers to, by specification number: item 4 (except
 exemptibility needs); item 10 (the general oversight obligation); item 13, whose shard
 `rules/privacy.json` already carries `privacy.no-unredacted-prompt-logging`, which governs R4's records;
 item 16 (who may use the system at all); items 22, 23 and 24 (tool, agent and retrieval security);
-item 34 (what follows a misuse incident); item 35 (the adversarial exercises R5 names); item 41 (budget
-mechanisms R3's bounds may share); and item 48 (prohibitions on bullet 1's ground, whose relationship to
-`misuse prevention` the specification does not record).
+item 34 (what follows a misuse incident); item 35 (the adversarial exercises R5 names); and item 48 (prohibitions on bullet 1's ground, whose relationship to
+`misuse prevention` the specification does not record). Item 41 is written: [Standard 41](41-inference-cost-and-budget-control.md) owns the budget
+mechanisms R3's bounds may share.
 
 No ADR covers this standard. `artifacts/adr/` does not exist in this release.
 
