@@ -77,7 +77,7 @@ A request budget does not bound a retry loop that spends it faster than anyone l
 
 ### R4 — Say whether a spend figure is billed or estimated
 
-**A project MUST label each spend figure it reports as billed or estimated, and MUST NOT present an estimate as the amount spent.**
+**A project MUST label each spend figure it reports as billed or estimated, MUST name the invoice or capacity-accounting source of a billed figure, and MUST NOT present an estimate as the amount spent.**
 
 An estimate computed from token counts and a price list is a model of the bill. It diverges when the price changes, a model is substituted, a count omits tokens the provider charges for, or a call is billed that the system never saw. For provisioned or owned capacity, "billed" means the capacity's accounting cost.
 
@@ -111,7 +111,7 @@ This is a constraint on the framework, not on a project. A repository can show t
 | R1 | Spend per spend subject the project names, and the unattributed amount | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R2 | The ceiling's number, spend subject, period and enforcement point; the behaviour as implemented in code or configuration; and where the system cannot raise the value | Project code and configuration, gateway configuration | Human review |
 | R3 | Each multiplier the system has and the limit of its own, or the statement that it has none | Project code and configuration, gateway configuration | Human review |
-| R4 | Each reported spend figure with its label | The project's documentation and finance or operations records the project names | Human review |
+| R4 | Each reported spend figure with its label and, for a billed figure, its invoice or capacity-accounting source | The project's documentation and finance or operations records the project names | Human review |
 | R5 | Each published cost claim with the ceiling, measurement, or model, price date and workload it names | The project's documentation | Human review |
 | R6 | The absence of any detector, rule, audit finding or generated report that reports cost controlled from a setting | This repository's own detectors and tests | Code review; see Implementation |
 
@@ -150,7 +150,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | R1 | Spend can be read back for every spend subject a budget or spend figure names, and unattributed spend appears as its own amount | A named spend subject with no spend record, or unattributed spend folded into a named subject | A system whose budget and figures are stated per provider account, and whose spend is recorded per account, must **not** be faulted for lacking finer attribution |
 | R2 | The ceiling record is complete, its behaviour is one of those listed and is implemented, and the system cannot raise the value | A ceiling record missing a number, spend subject, period or enforcement point; a behaviour that is continue-and-log or an alert alone; or a value the system can raise | A system that states no budget is out of scope for R2; a ceiling the system can only lower, or cannot write, must **not** be faulted for that |
 | R3 | Each multiplier the system has has a limit of its own stated in code or configuration; a reviewed static limit establishes it without a run | A multiplier the system has with no limit of its own, including one governed only by the budget above it | A system that never retries or falls back, and says so, must **not** be faulted for lacking a retry limit |
-| R4 | Every reported spend figure carries a billed or estimated label, and no estimate is presented as the amount spent | A spend figure with no label, or an estimate presented as the amount spent | A project that labels its figure an estimate must **not** be faulted for lacking a billed figure it never claimed |
+| R4 | Every reported spend figure carries a billed or estimated label, a billed figure names its invoice or capacity-accounting source, and no estimate is presented as the amount spent | A spend figure with no label, a billed figure with no invoice or capacity-accounting source, or an estimate presented as the amount spent | A project that labels its figure an estimate must **not** be faulted for lacking a billed figure it never claimed |
 | R5 | Each cap or bound claim names its ceiling, each negligibility claim names its measurement, and each cost per unit names model and price date, and workload where it depends on one | A cap or bound claim, a negligibility claim, or a cost per unit missing what R5 requires it to name (model, price date, and workload where it depends on one) | A provider price-sheet rate that names model and price date, and a dated rate kept as a historical figure, must **not** be faulted for lacking a workload |
 | R6 | No detector, rule, audit finding or generated report in this repository states a cost verdict from presence | A detector, rule, audit finding or report that states cost controlled, capped or bounded because a token limit, budget figure, rate limit or alert is present | Reporting that a token limit or budget figure was *found*, as an observation with no verdict, is permitted |
 
@@ -168,7 +168,7 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 | --- | --- |
 | R1 | A new spend subject or a change of billing account. |
 | R2 | A change to the ceiling's value, spend subject, period, enforcement point or behaviour, or to who can write it. |
-| R3 | A change of retry, fallback or loop policy, or an observed multiplier exceeding its limit. |
+| R3 | A change of retry, fallback or repeated-call policy outside an agent loop, or an observed multiplier exceeding its limit. |
 | R4 | A change of how the provider counts billed units, for an estimate computed from them. |
 | R5 | A change of model, price or workload, for a cost per unit stated as the current cost of a call; or a change to what the measurement named by a negligibility claim measured. |
 | R6 | A new detector, rule or report that touches cost. |
