@@ -311,8 +311,6 @@ quantifying uncertainty or holding a comparison's conditions identical.
 
 *Q23 to Q25 are reserved by PR #128 (Standard 10).*
 
-*Q23 to Q25 are reserved by PR #128 (Standard 10).*
-
 ### Q26 — Should a structural rule require a provenance statement for each declared data source?
 
 `dataSources[].provenance` exists in the manifest schema as a free-text string and no rule reads it,

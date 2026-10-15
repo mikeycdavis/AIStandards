@@ -597,10 +597,6 @@ governance until a sign-off exists.
    licensing begins** — Q26 to Q28. Standard 12 follows the boundary review's owner division and does not edit
    Standard 13's remark; Q27 asks which is intended. All three are unanswered and the standard is prose-first.
 
-13. **Whether to add a structural rule over `dataSources[].provenance`, who owns training-data provenance, and where provenance ends and
-   licensing begins** — Q26 to Q28. Standard 12 follows the boundary review's owner division and does not edit
-   Standard 13's remark; Q27 asks which is intended. All three are unanswered and the standard is prose-first.
-
 ## 9 · The smallest next slice
 
 **Ask the GitHub backlog, not this section.** Run `/whats-next` against it (see `docs/COORDINATOR.md`). The paragraph below predates the backlog and is kept for its reasoning.

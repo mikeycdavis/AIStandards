@@ -757,8 +757,6 @@ normative here is authored, and none of it has owner approval:
 
 [Standard 12](12-context-and-corpus-provenance.md) governs where an evaluation set came from; this standard governs how it is used in a plan.
 
-[Standard 12](12-context-and-corpus-provenance.md) governs where an evaluation set came from; this standard governs how it is used in a plan.
-
 [Standard 1](01-ai-system-manifest.md) draws the scope this standard applies within. Its manifest
 schema has an `evaluation` object with `planPath`, `suiteCommand` and `baselinePath`, and a
 `dataSources[].kind` value `evaluation-set`; R1 to R4 name where each fits, and nothing reads any of
