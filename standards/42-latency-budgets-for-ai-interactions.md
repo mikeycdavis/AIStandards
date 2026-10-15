@@ -45,7 +45,7 @@ Terms, each defined once here and used verbatim below:
 - **Budget** — an objective someone chose for an interaction: a point of measurement (first token or byte, or complete answer), a percentile or fraction of requests, and a target time.
 - **Call limit** — a time limit on one model call that a person or process waits on.
 - **Interaction deadline** — a hard limit on the whole interaction, stated separately from any budget.
-- **Latency figure** — an aggregate figure offered as evidence of how an interaction performs: a percentile, a mean, a proportion within a threshold or a distribution. Its fields are: interaction, point of measurement, statistic, sample count, collection period, model identifier and prompt revision, provider, region and service tier, and workload.
+- **Latency figure** — an aggregate figure offered as evidence of how an interaction performs: a percentile, a mean, a proportion within a threshold or a distribution. Its fields are: interaction, point of measurement, statistic, sample count, collection period, model identifier and prompt revision, provider, region and service tier, call path (gateway, proxy, client library, cache), and workload.
 
 It does **not** cover, and claims none of the ground of:
 
@@ -60,7 +60,7 @@ It does **not** cover, and claims none of the ground of:
 
 ### R1 — State a budget over a named interaction, point and percentile or fraction
 
-**A latency budget MUST name its interaction, its point of measurement, its percentile or fraction of requests, and its target time.**
+**Every interaction in scope MUST have a latency budget, and the budget MUST name its interaction, its point of measurement, its percentile or fraction of requests, and its target time.**
 
 Time to first token and time to a complete answer are different waits, and a mean hides the tail where the complaints are. The requirement fixes no number: what is acceptable is the project's judgment about its users. A budget is an objective: it survives a change of provider or model and is what a new deployment is then measured against.
 
@@ -112,7 +112,7 @@ This is a constraint on the framework, not on a project. A repository can show t
 | R1 | Each budget as interaction, point of measurement, percentile or fraction, and target time | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R2 | Each call limit, where it is applied, and the behaviour at it as implemented in code or configuration | Project code, configuration and the records of a run | Human review |
 | R3 | The interaction deadline and how the time left is checked before an attempt | Project code, configuration and the records of a run | Human review |
-| R4 | Each reported latency figure with its fields (interaction, point of measurement, statistic, sample count, collection period, model identifier and prompt revision, provider, region and service tier, and workload) and, for a multi-deployment figure, each deployment's share | The project's documentation and measurement records | Human review |
+| R4 | Each reported latency figure with its fields (interaction, point of measurement, statistic, sample count, collection period, model identifier and prompt revision, provider, region and service tier, call path (gateway, proxy, client library, cache), and workload) and, for a multi-deployment figure, each deployment's share | The project's documentation and measurement records | Human review |
 | R5 | Each published latency claim with the budget and the latency figure behind it | The project's documentation | Human review |
 | R6 | The absence of any detector, rule, audit finding or generated report that reports latency from a setting | This repository's own detectors and tests | Code review; see Implementation |
 
@@ -148,7 +148,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | A stated budget names its interaction, point of measurement, a percentile or fraction of requests, and a target time | A budget missing any of the four, or a mean or other statistic in place of a percentile or fraction | A complete-answer p95 for a named interaction with no first-token figure must **not** be faulted for lacking one it never claimed |
+| R1 | Every interaction in scope has a budget, and the budget names its interaction, point of measurement, a percentile or fraction of requests, and a target time | An interaction in scope with no budget, a budget missing any of the four, or a mean or other statistic in place of a percentile or fraction | A complete-answer p95 for a named interaction with no first-token figure must **not** be faulted for lacking one it never claimed |
 | R2 | Each call someone waits on has a call limit, a recorded location and a defined behaviour at the limit, and the behaviour is not to wait | A call someone waits on with no call limit, no recorded location, no defined behaviour, or a behaviour that is to wait or hang the caller | A model call that is a background step nobody waits on is out of scope for R2, not failing it |
 | R3 | An interaction that retries or falls back has an interaction deadline, and an attempt is declined, or given a call limit no longer than the time left, when the time left is shorter than its call limit | A retrying interaction with no interaction deadline, a budget stated as the deadline, or an attempt started with less time left than its own call limit | A system that never retries or falls back, and says so, must **not** be faulted for lacking a deadline; a request longer than a percentile budget but inside its deadline must **not** be reported as violating R3 |
 | R4 | A reported latency figure names every field, each deployment with its share where it spans more than one, and is not presented as a measurement of the path users take | A latency figure missing a field, a multi-deployment figure naming deployments but not their share, or a figure measured on another path presented as the user path | A figure that names every field and says it was measured on an idle endpoint with its workload, and a per-call duration in a trace record, must **not** be faulted |
@@ -178,7 +178,7 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 
 **Nearly all of it.** The brief contributes one word, "latency", inside a bullet of four subjects and states no requirement, level or evidence for it. The item is class `D` because its subject token is derived from the brief; the requirements are not derived. Specifically authored here, none of it owner-approved:
 
-- **R1 to R5 in full**, with the defined terms interaction, budget, call limit, interaction deadline and latency figure, the field list of a latency figure, and the rulings that a call without a limit has no budget, that a retrying interaction needs a deadline separate from its budget, and that a claim needs a figure that meets its budget.
+- **R1 to R5 in full**, with the defined terms interaction, budget, call limit, interaction deadline and latency figure, the field list of a latency figure, and the rulings that a call without a limit is unbounded whatever objective is stated, that a retrying interaction needs a deadline separate from its budget, and that a claim needs a figure that meets its budget.
 - **R6**, the constraint on this framework, in the same form as the equivalent requirement in [Standard 25](25-grounding-and-hallucination-control.md) and [Standard 33](33-ai-observability.md).
 - **The four exclusions in Scope** as division lines, and the reading of the UIUXDesignStandards adjacency as a difference of subject. **The recheck** of the adjacent file and rule id at UIUXDesignStandards `7bff2e9`, which the boundary review did not make.
 - **The severity assignments** (one level per requirement, in Validation), the statement that no attestation or scheduled expiry exists in this release, and the staleness table.
