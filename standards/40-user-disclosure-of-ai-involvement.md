@@ -98,7 +98,8 @@ rejects.
 ### R2 — Where a disclosure is owed, it MUST precede reliance
 
 **A disclosure that is owed MUST reach the person no later than the point at which they interact or
-rely.**
+rely, and, for a person who does not interact with the system (R3), no later than the point at which
+the decision or action concerning them is taken or communicated.**
 
 Timing is a property of the decision, not of presentation: a notice shown after the person has acted
 on the output is a record of an omission. Where in the interface it appears, and how it is made
@@ -121,8 +122,9 @@ have already made it.
 
 ### R4 — Do not restate how it is presented; reference the owner
 
-**A project's disclosure decision MUST NOT be offered as evidence that the owner's presentation
-requirements are met, and this framework MUST NOT restate those requirements.**
+**A project that presents a disclosure MUST be able to name the UIUXDesignStandards standards its
+presentation evidence sits under, and MUST NOT offer its disclosure decision as evidence that those
+presentation requirements are met; this framework MUST NOT restate them.**
 
 Deciding that a disclosure is owed and presenting it so that it can be perceived and understood are
 two obligations, owned by two packs. A project that wrote "we disclose AI use in the footer" has
@@ -132,8 +134,9 @@ there ([Standard 7](07-boundary-with-adjacent-standards.md) R2).
 
 ### R5 — Keep what was shown, and revise the decision when the system changes
 
-**A project MUST be able to show what disclosure was presented, in the form users received it, at a
-given time, and MUST revise the decision under R1 and R3 when a model, a use of the output, or an
+**Where a disclosure was presented or is owed, a project MUST be able to show what was presented, in
+the form users received it, at a given time, and MUST revise the decision under R1 and R3 when a
+model, a use of the output, or an
 audience changes.**
 
 A decision recorded as "owed, shown" is a claim about the interface at the time. Without the shipped
@@ -175,10 +178,10 @@ capture of what a user saw.
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | A record per person-facing output kind: owed or not, to whom, why | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | The point in the interaction at which the disclosure appears, relative to interaction and reliance | The project's interface and a captured example | Human review |
+| R2 | The point in the interaction, or for a non-interacting subject the point of the decision or action, at which the disclosure appears, relative to interaction, reliance or that decision | The project's interface and a captured example | Human review |
 | R3 | The decision for each AI-assisted decision about a person, and what that person receives | The project's documents and a sample of what is sent | Human review |
 | R4 | The reference to the owner's standards, and the project's own presentation evidence under them | The project's accessibility and interface records | Human review, by the owner's standards |
-| R5 | A capture of the shipped disclosure and its date, and the revision history of the decision | Version control and the project's records | Human review |
+| R5 | Where a disclosure was presented or is owed, a capture of the shipped disclosure and its date; in every case, the revision history of the decision | Version control and the project's records | Human review |
 | R6 | The absence of any detector that reports disclosure from presence | This repository's own detectors and tests | Code review; see Implementation |
 
 Evidence for R1 to R5 is a human-authored record or a capture. A document naming a decision
@@ -207,15 +210,13 @@ Three reasons, stated so a reader can disagree with any one of them:
    `scripts/catalog.mjs`). This standard names no id and edits no shard; whether to place a rule there,
    with what meaning, is a decision this release does not take.
 
-**Severity.** R1 to R5 are `manual-review` obligations in this release; R2's timing is reviewed on
-the path a user takes, not by reading files. A disclosure reaching a person is
-**not-evaluable** from a repository and is not reported as reviewed. R6 constrains this framework and
-has no validation type.
-
-**No severity is assigned to R1 to R5 in this release.** A severity belongs to a rule's finding, and
-no rule exists here to produce one. A failed manual review is a finding for the reviewer, made under
-the standards the project and its owner apply, not a framework finding; if a rule is later minted
-for any of these requirements its severity is decided then and recorded in its shard.
+**Severity.** R1 to R5 are each `manual-review` obligations, established from the project's record,
+the capture required by R5 and the specified point of disclosure; a failed review of any of them is
+severity `error`. Whether a particular person actually received a disclosure at run time is a
+property of the running system. It is **not-evaluable** from a repository, it is not the validation
+type of any requirement here, and it is not reported as reviewed. R6 constrains this framework and
+has no validation type or project severity. These are the levels a rule would carry if one is
+minted; this release emits no framework finding at them.
 
 **Exemptibility.** R6 is not exemptible: no circumstance makes it reasonable for a scan to report an
 effect from a presence. R1, R3 and R5 reach a system only where output or action reaches a person
@@ -231,10 +232,10 @@ is lowered by a risk tier (Standard 2 R3).
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Each person-facing output kind has an owed-or-not decision with a reason | A system that emits generated messages in a person's name with no record of the question | A recorded "not owed — suggestion the user accepts or rejects in the act" must **not** be failed |
-| R2 | The disclosure precedes interaction or reliance on the path a user takes | A notice shown only after the output is acted on | A disclosure delivered at the first point of interaction, in whatever form the owner's standards allow, must **not** be failed for its form here |
+| R2 | The disclosure precedes interaction or reliance on the path a user takes; for a subject who does not interact, it is delivered no later than the decision or action concerning them | A notice shown only after the output is acted on, or a subject's disclosure owed and never delivered at or before the decision | A disclosure delivered at the first point of interaction, in whatever form the owner's standards allow, must **not** be failed for its form here |
 | R3 | An AI-assisted decision about a person records whether they are told | A person denied a service with the operator informed and the person not, and no record of deciding | A decision recorded "not told, reason" with an authority behind it is a recorded decision, not a failure of this requirement |
-| R4 | The project's evidence for presentation sits under the owner's standards, not under this decision | "Disclosure is in the footer" offered as showing it can be perceived | A project that cites the owner's standards by name and does not restate them must **not** be flagged |
-| R5 | A capture of the shipped notice exists with a date and the decision has revisions | A decision unchanged across a new audience, with no capture | A system whose notice never changed needs one capture, not one per release |
+| R4 | The project names the owner's standards its presentation evidence sits under, and does not offer this decision as that evidence | "Disclosure is in the footer" offered as showing it can be perceived, or a project that presents a disclosure and names no owner standard | A project that cites the owner's standards by name and does not restate them must **not** be flagged |
+| R5 | Where a disclosure was presented or is owed, a capture of the shipped notice exists with a date and the decision has revisions | A decision unchanged across a new audience, or a disclosure owed and presented with no capture | A decision recorded "not owed" has no notice to capture and must **not** be failed for lacking one; a system whose notice never changed needs one capture, not one per release |
 | R6 | No detector or report here outputs a disclosure verdict from presence | A detector that reported "discloses AI" because a notice string was found | Reporting that a notice string was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a disclosure record, so no detector
@@ -275,7 +276,8 @@ owner-approved:
 
 - **R1 in full**: the requirement to decide and record, and the ruling that "not owed" with a reason is
   a legitimate record while an absent decision is not.
-- **R2 in full**: that a disclosure owed precedes reliance, and nothing about where or how it appears.
+- **R2 in full**: that a disclosure owed precedes reliance, with a deadline tied to the decision for
+a non-interacting subject, and nothing about where or how it appears.
   An earlier draft also placed a prohibition on denying AI involvement here; it is withdrawn and
   recorded under Relationship as item 53's, unanswered.
 - **R3 in full**: the extension to a person who is the subject of an AI-assisted decision and is not a
@@ -287,6 +289,8 @@ owner-approved:
   [Standard 25](25-grounding-and-hallucination-control.md).
 - **The exclusions in Scope** (presentation, truthfulness, repository documentation, legal compliance)
   as division lines, unconfirmed by anyone.
+- **The severity** in Validation (`error` for a failed review of R1 to R5) and the single validation
+type assigned to each requirement; they are this repository's judgment.
 - **The ruling that this standard ships with no catalog rules**, and its three reasons, including the
   decision to mint no id in the shared `disclosure` segment.
 - **The recheck of one sibling file and three rule ids** at the sibling checkout's HEAD, which the
