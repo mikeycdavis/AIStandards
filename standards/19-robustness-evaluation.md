@@ -212,10 +212,11 @@ seen. It is **not-evaluable** from a repository.
 | --- | --- | --- | --- |
 | R1 | The list of classes, each with the reason it is expected in operation | The evaluation plan, or a document it names | Human review |
 | R2 | For each class: the bar, dated before the run, and the paired baseline and perturbed results for the same items | The evaluation plan and the run's record | Human review |
-| R3 | The generator, parameters and seed, or the committed variants; the split each variant is in | The suite and its data | Human review; split membership is checkable by reading |
+| R3 | The generator, parameters and seed, or the committed variants; the split each variant is in; and the selection record: how the variants were drawn, fixed before the run, and the number generated against the number kept and scored | The suite, its data and the plan | Human review; split membership is checkable by reading, and a kept count below the generated count with no recorded reason is the finding |
 | R4 | Per-class results, the named worst class, and the count of variants per class | The evaluation report | Human review |
 | R5 | The claim as worded, with the tested and untested classes and the subject measured | The report, the manifest or the documentation that states it | Human review |
-| R5 (generality) | None obtainable from a repository | — | **Not-evaluable** |
+| R5 (wording) | The claim as worded, read for whether it names the tested classes, the untested ones and the subject | The report, manifest or documentation that states it | Human review |
+| R5 (robustness beyond the tested inputs) | None obtainable from a repository | — | **Not-evaluable** |
 | R6 | The absence of any detector that reports robustness from presence | This repository's own detectors and tests | Code review; see Implementation |
 
 A document that lists classes establishes that the project wrote it. It does not establish that
@@ -247,8 +248,10 @@ Three reasons, stated so a reader can disagree with any one of them:
    ownership is unsettled; choosing a name is a decision this standard does not make, and it does
    not answer Q19.
 
-**Severity.** R1 to R5 are `manual-review` obligations in this release. R5's generality is
-**not-evaluable** and is not reported as reviewed. R6 constrains this framework and has no
+**Severity.** R1 to R5 are `manual-review` obligations in this release, including the check that
+R5's claim is worded as bounded, which a reviewer can make and can fail. What is
+**not-evaluable** is whether the system is robust beyond the tested inputs, and that is not
+reported as reviewed. R6 constrains this framework and has no
 validation type, because the thing it prohibits is a behaviour of the tool.
 
 **Exemptibility.** R6 is not exemptible: no project circumstance makes it reasonable for a scan to
@@ -268,7 +271,7 @@ tier (Standard 2 R3).
 | --- | --- | --- | --- |
 | R1 | Each recorded class carries a reason tied to operation | A class list with no reasons, or reasons that name only a library | A short, specific reason must **not** be failed for brevity |
 | R2 | Each class has a bar dated before the run and a baseline over the same items | A perturbed figure with no baseline, or a bar written after the result | A project whose bar is "no degradation" must **not** be failed for having no numeric tolerance |
-| R3 | The variants can be regenerated or are committed, and none of a held-out item's variants is in the development split | "Typos added" with no generator; paraphrases of a held-out item in the tuning set | A class made of variants all in the same split as their sources must **not** be flagged |
+| R3 | The variants can be regenerated or are committed, none of a held-out item's variants is in the development split, and the selection record shows the draw fixed before the run with generated and kept counts | "Typos added" with no generator; paraphrases of a held-out item in the tuning set; a generated pool of which only the variants the system failed were kept, with no record of the draw | A class made of variants all in the same split as their sources must **not** be flagged |
 | R4 | Results per class, the worst class named, counts given | One aggregate only | An aggregate reported beside the per-class results must **not** be flagged |
 | R5 | The claim names the classes tested and those not tested, and the subject | An unqualified "robust" | A narrow, bounded claim must **not** be failed for being narrow |
 | R6 | No detector or report in this repository outputs a robustness verdict from presence | A detector that reported robustness evaluated because a fixture directory existed | Reporting that a perturbation fixture was *found*, as an observation with no verdict, is permitted |
