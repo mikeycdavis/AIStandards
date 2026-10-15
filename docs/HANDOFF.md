@@ -547,7 +547,7 @@ governance until a sign-off exists.
    `artifacts/project-plan-breakdown/08-open-questions.md`. R2's blanket wording is authored and
    unapproved, and its own reasoning does not reach the word "propose". Standard 11's R7 was scoped
    narrowly rather than propagating it, so the two standards currently differ on adjacent ground.
-   Q27 (Standard 12 against Standard 13) is the other open question that changes an already-written standard's wording.
+   Q27 also changes an already-written standard's wording; see section 9.
 5. **~~Whether to pin line endings repository-wide with a `.gitattributes`~~ — Q8, ANSWERED A on 2026-10-14.**
    `core.autocrlf` is `true`. The one `.gitattributes` that exists (ST-57) pins only `scripts/vendor/**` to LF so
    vendored hashes are checkout-independent, and that vendor-only rule is the owner's answer: no repository-wide

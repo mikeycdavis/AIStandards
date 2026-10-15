@@ -309,7 +309,7 @@ either authors requirements on ground that pack owns or needs its maintainers' r
 unanswered:** for such systems, no requirement covers justifying a metric by the cost of error,
 quantifying uncertainty or holding a comparison's conditions identical.
 
-*Q23 to Q25 are reserved by PR #128 (Standard 10).*
+*Numbering reconciled by the integrator at merge.*
 
 ### Q26 — Should a structural rule require a provenance statement for each declared data source?
 
