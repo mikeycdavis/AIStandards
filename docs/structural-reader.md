@@ -33,7 +33,10 @@ is removed first and recorded.
 | `scalar` | `value` (decoded string), `length`, `style`, `jsonType` (JSON only) |
 | `alias` | `name` |
 
-Every node has `range`; YAML nodes may carry `anchor` and `tag` with the offset where they were written.
+Every node has `range`; YAML nodes may carry `anchor` and `tag` with the offset where they were written. Where
+the written position of a property cannot be recovered, `offset` is `null`, and a tag then carries the parser's
+resolved tag with `resolved: true`, never presented as the written spelling (a known limit: for example a
+flow map entry whose quoted key's colon has no space after it, `{"k":!!str v}`).
 
 * Every scalar is a string. A plain `true`, `12` or `null` is that text; there is no implicit type coercion.
 * Block, quoted and multi-line plain scalars are decoded to their semantic value (escapes resolved, lines
@@ -45,8 +48,18 @@ Every node has `range`; YAML nodes may carry `anchor` and `tag` with the offset 
 
 ## Failure outcomes
 
-A file the reader cannot read is **file-scoped unknown**: never a pass, never a finding, and never scanned
-lexically instead. The reader returns the failure as a value:
+The reader itself has no fallback: a file it cannot read is returned as a **failure value**, and the reader
+never scans its text some other way. What a consumer does with that value is the consumer's rule, and today
+it differs by rule:
+
+| Rule | Reads | A file the reader refused |
+|---|---|---|
+| `promptsec.no-inline-system-prompt`, `promptsec.prompt-is-versioned-artifact` (Standard 21's inline-prompt shapes) | the structural tree for `.yml` / `.yaml` / `.json`, the lexical layer for source code | **file-scoped unknown**: never a pass, never a finding of its own, and never scanned lexically instead; recorded as unknown alongside any violation found elsewhere, which stands |
+| `misuse.safety-controls-not-disabled` (Standard 9) | the **lexical** layer (`scripts/source.mjs`) for every collected file, structural scope included | **still scanned lexically**: a disabled safety setting in a malformed `.yml` is found and reported as an evaluated failure (`test/structural-audit.test.mjs`, case H). Moving Standard 9 onto this layer is ST-49 (#111) alone |
+| TOML files | the frozen lexical layer | unchanged; TOML is not structural scope |
+| the manifest and the tool-permission file | the strict policy/manifest parser, `scripts/yaml.mjs` | their own, pre-existing outcomes (an unparseable manifest is reported by the manifest rules); this reader is not involved |
+
+The reader returns the failure as a value:
 
 `read-failure`, `truncated` (a file past the read bound is refused, not cut), `utf-16`, `invalid-utf-8`,
 `control-character`, `lone-cr`, `syntax` (any parser error, any document), `empty-document` (JSON),
@@ -54,7 +67,8 @@ lexically instead. The reader returns the failure as a value:
 
 Findings from files that did parse are unaffected. The audit reports failures on
 `evidenceSurface.unparseableFiles` (exact `total`, at most 50 listed, `omitted` counted) and never carries
-file text. `validate` reports the affected rules as `skipped` / `not-evaluated`.
+file text. `validate` reports the two inline-prompt rules as `skipped` / `not-evaluated` where nothing else
+decides them; it does not do so for `misuse.safety-controls-not-disabled`.
 
 Duplicate anchor definitions are legal YAML and parse. Unresolved tags (`!Ref`) are warnings, not failures.
 
@@ -63,7 +77,7 @@ Duplicate anchor definitions are legal YAML and parse. Unresolved tags (`!Ref`) 
 `scripts/vendor/yaml` is `yaml@2.9.1` (ISC), the package's `browser/**` and `LICENSE`, unmodified.
 `scripts/vendor/yaml.vendor.json` pins the release, the registry tarball's integrity, and the SHA-256 of
 every vendored file; `test/vendor-yaml.test.mjs` fails on drift, a missing notice, an import that is not a
-file in the tree, or anything outside the tree importing it. `.gitattributes` keeps the tree LF so the
+file in the tree, or anything outside the tree importing it other than the structural reader. `.gitattributes` keeps the tree LF so the
 hashes do not depend on a checkout. The strict policy and manifest parser, `scripts/yaml.mjs`, is separate
 and does not use it.
 
