@@ -110,7 +110,7 @@ This is a constraint on the framework, not on a project. A repository can show t
 | --- | --- | --- | --- |
 | R1 | Spend per spend subject the project names, and the unattributed amount | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R2 | The ceiling's number, spend subject, period and enforcement point; the behaviour as implemented in code or configuration; and where the system cannot raise the value | Project code and configuration, gateway configuration | Human review |
-| R3 | Each multiplier the system has and the limit of its own, or the statement that it has none | Project code and configuration, gateway configuration | Human review |
+| R3 | Each multiplier the system has and the limit of its own; where review establishes that the system has none, that finding | Project code and configuration, gateway configuration | Human review |
 | R4 | Each reported spend figure with its label and, for a billed figure, its invoice or capacity-accounting source | The project's documentation and finance or operations records the project names | Human review |
 | R5 | Each published cost claim with the ceiling, measurement, or model, price date and workload it names | The project's documentation | Human review |
 | R6 | The absence of any detector, rule, audit finding or generated report that reports cost controlled from a setting | This repository's own detectors and tests | Code review; see Implementation |
@@ -168,7 +168,7 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 | --- | --- |
 | R1 | A new spend subject or a change of billing account. |
 | R2 | A change to the ceiling's value, spend subject, period, enforcement point or behaviour, or to who can write it. |
-| R3 | A change of retry, fallback or repeated-call policy outside an agent loop, or an observed multiplier exceeding its limit. |
+| R3 | A change of retry, fallback or repeated-call policy outside an agent loop, a change of the billing basis (flat per call to metered by tokens or time), or an observed multiplier exceeding its limit. |
 | R4 | A change of how the provider counts billed units, for an estimate computed from them. |
 | R5 | A change of model, price or workload, for a cost per unit stated as the current cost of a call; or a change to what the measurement named by a negligibility claim measured. |
 | R6 | A new detector, rule or report that touches cost. |
