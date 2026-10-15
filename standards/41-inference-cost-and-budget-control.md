@@ -226,7 +226,11 @@ Three reasons, stated so a reader can disagree with any one of them:
    introduced this document for per-rule approval, and not here, so that this document does not
    describe a rule that does not exist.
 
-**Severity.** R1 to R5 are `manual-review` obligations in this release. Whether a stated figure holds for a future
+**Severity.** A reviewer's finding against R1 to R4 is reported at **warning** severity: the system may
+behave well, and what is missing is the account of it. A finding against R5 is reported at **error**
+severity, because it is a claim with nothing behind it and R5 is not exemptible. These levels are this
+repository's judgment, listed in Additions, and are not owner-approved. R1 to R5 are also
+`manual-review` obligations in this release. Whether a stated figure holds for a future
 request is not a property of a repository, and no requirement here asks a reviewer to establish it. R6 constrains this framework and has no
 validation type, because the thing it prohibits is a behaviour of the tool.
 
@@ -263,6 +267,12 @@ is the honest state of this standard.
 There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to
 except. A project that knowingly does not meet one records that in its own documents; Standard 2's
 dispositions apply to the application of a rule, and this standard has none.
+
+**Attestations and expiry.** This release provides no attestation mechanism for these records, and no
+record under this standard expires on a schedule. [Standard 2](02-ai-risk-tiering-and-applicability.md)'s
+attestation and expiry machinery attaches to catalog rules, and none exists here; attestations are
+Phase 4 work. Review-staleness is event-driven only: a record is stale when one of the events below
+occurs, and nothing in this release detects that.
 
 **What invalidates a recorded budget, bound or unit cost.** Each is a different subject, and a record
 made before the change describes the earlier one:
@@ -311,6 +321,8 @@ it owner-approved:
 - **The five exclusions in Scope** as division lines. The specification lists items 42 to 44 under the
   same bullet; where this standard stops and each begins is unconfirmed by anyone, and the lines to
   Standards 9 and 23 follow what those standards themselves say about item 41.
+- **The severity assignments** (warning for R1 to R4, error for R5) and the statement that no
+  attestation or scheduled expiry exists in this release.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
   decision not to name a rule id in the unsharded `cost` namespace.
 
