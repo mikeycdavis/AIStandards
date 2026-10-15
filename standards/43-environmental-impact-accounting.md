@@ -45,7 +45,7 @@ Terms, each defined once here and used verbatim below:
 - **Impact figure** — any number or qualitative claim about energy, emissions, water or hardware attributed to the project's use of models.
 - **Boundary** — whether training is included, which of inference, retrieval, storage, networking and end-user devices are counted, and whether embodied hardware is included.
 - **Inputs** — what an impact figure is computed from; each has a status: measured by the project, estimated from a named model, reported by a named source with its disclosure revision or date, or unknown.
-- **Account** — its subject (the model identifier or class), its period or workload, and its assumptions; for a calculation that uses a grid or region intensity, that intensity and its date; for any other figure, the conversion factors it relies on.
+- **Account** — its subject (the model identifier or class), its period or workload, and its assumptions; the conversion factors it relies on and, for a calculation that uses a grid or region intensity, that intensity and its date.
 
 It does **not** cover, and claims none of the ground of:
 
@@ -72,7 +72,7 @@ A hosted model's energy is almost never measured by its user. Substituting the p
 
 ### R3 — Name the account of an impact figure
 
-**An impact figure MUST name its account, and MUST NOT be presented as describing the current system when it was computed for an earlier model, period or region.**
+**An impact figure MUST name its account, and MUST NOT be presented as describing the current system when it was computed for an earlier model, period, workload or region.**
 
 A grid intensity varies by region and by hour, and a model identifier can change behind an alias. A figure for last year's model on last year's grid is a statement about that, not about the system now running; a directly metered figure depends on no intensity and names none, and an assumption the figure does not use is not reported.
 
