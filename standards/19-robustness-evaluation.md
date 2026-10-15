@@ -118,7 +118,8 @@ claim says so (R5).
 
 ### R2 — Measure each class against a paired baseline and a stated bar
 
-**For each recorded class, the project MUST state the bar before the run, MUST measure the
+**For each class the claim or result concerns — a tested class, and not one recorded under R1 as
+considered and not tested — the project MUST state the bar before the run, MUST measure the
 unperturbed items from which its variants were made with the same subject and scorer, and MUST
 report the result as a difference from that baseline.**
 
@@ -128,9 +129,13 @@ good result for a system that scores 80 on the clean forms and a bad one for a s
 97. The paired baseline is what makes the figure a statement about the perturbation.
 
 The bar is the project's: the permitted degradation, or a floor, per class. **Each class's
-degradation is also recorded as its margin to its own bar** — how far above or below the floor, or
-how much of the permitted drop was used — so that classes measured with different scorers or
-scales can be compared under R4 without a common metric. This standard fixes no
+result is also recorded as a normalised margin to its own bar**, a unitless figure so that classes
+measured with different scorers or scales can be ordered under R4: where the bar is a floor, the
+margin is (result − floor) ÷ (baseline − floor); where it is a permitted drop, the margin is
+1 − (observed drop ÷ permitted drop). A margin of 1 is no degradation, 0 is exactly at the bar and
+below 0 is a breach, so a smaller margin is always a worse class. Where a class's baseline is at or
+below its floor, or its permitted drop is zero, the margin is undefined and the report says so and
+names that class as the worst. This standard fixes no
 number, because that number would be this repository's invention. It requires only that the bar
 exist before the result does ([Standard 17](17-evaluation-plans-for-generative-systems.md) R1), and
 that the baseline be the same items, not a different clean sample.
