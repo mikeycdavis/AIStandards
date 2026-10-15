@@ -366,7 +366,8 @@ what they can do, and an arrangement recorded before the change describes the ea
 
 - a change in the holders of a named role, in the team that owns the queue, or in who is on call;
 - a change to the interface or channel in which the overseer sees the output;
-- a change in volume that the capacity in R6 was recorded against;
+- a change in the volume, speed or complexity of what reaches the overseers, or in the time allotted
+  for review, that the capacity in R6 was recorded against;
 - a change in how quickly the effect follows the output, which moves the timing recorded in R4;
 - a tool added, or an existing tool gaining a side effect, which creates an oversight point nobody
   recorded;
