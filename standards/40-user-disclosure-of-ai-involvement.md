@@ -74,7 +74,7 @@ evidence is one standard in UIUXDesignStandards, and only this:
 
 The file, the three rule ids, the lede and R1 are as the boundary review and
 `artifacts/foreign-namespace-inventory.json` record them (pinned 2026-09-04). UIUXDesignStandards'
-R8 (anthropomorphism) is crosswalked by Standard 7 to item 28, not to this item, and is not cited as
+R8 (anthropomorphism) is crosswalked to item 28 in the boundary review, not to this item, and is not cited as
 precedent here.
 
 ## Requirements
@@ -106,8 +106,9 @@ perceivable and readable, is the owner's matter ([Standard 7](07-boundary-with-a
 and no requirement of location or legibility is made here.
 
 "No later than" is a constraint on when, and a project may meet it in any way the owner's standards
-allow. Whether and how a system may state its own nature is item 53's subject, recorded open and not
-decided here. That a given person actually received a disclosure at run time is not-evaluable from a
+allow. Whether and how a system may state its own nature is provisionally item 53's subject,
+recorded open and not decided here. That a given person actually received a disclosure at run time
+is not-evaluable from a
 repository and is not claimed.
 
 ### R3 — Decide whether a person who is the subject of an AI-assisted decision is told
@@ -246,11 +247,12 @@ is lowered by a risk tier (Standard 2 R3).
 | R2 | The disclosure is no later than interaction or reliance on the path a user takes; for a subject who does not interact, the sample of what is sent (R3) shows it no later than the decision or action concerning them | The specified or captured point of disclosure falls after interaction or reliance, or after the decision for a non-interacting subject, or none is specified | A disclosure delivered at the first point of interaction, in whatever form the owner's standards allow, must **not** be failed for its form here |
 | R3 | An AI-assisted decision about a person records whether that person, and not only the operator, is told, and what the person receives | A decision about a person with no record of whether they are told, or a record that treats notice to the operator as notice to the person | A decision recorded "not told, reason" is a recorded decision, not a failure of this requirement |
 | R4 | The project names the owner's standards its presentation evidence sits under, and does not offer this decision as that evidence | "Disclosure is in the footer" offered as showing it can be perceived, or a project that presents a disclosure and names no owner standard | A project that cites the owner's standards by name for its presentation evidence must **not** be flagged |
-| R5 | After each listed change the decision is revised or dated as re-examined and affirmed; where a disclosure was presented, a dated capture of the shipped notice exists and is replaced or re-confirmed | A decision neither revised nor recorded as re-examined across a model, prompt, use, audience, interface, owner-standard, presentation-evidence or law change; a presented disclosure with no capture, or a capture neither replaced nor re-confirmed after one | A decision recorded "not owed" has no notice to capture and must **not** be failed for lacking one; a system whose notice never changed needs one capture, not one per release |
+| R5 | After each listed change the decision is revised or dated as re-examined and affirmed; where a disclosure was presented, a dated capture of the shipped notice exists and is replaced or re-confirmed | A decision neither revised nor recorded as re-examined across a model, prompt, use, audience, interface, owner-standard, presentation-evidence or law change; a presented disclosure with no capture, or a capture neither replaced nor re-confirmed after one | A decision recorded "not owed" has no notice to capture and must **not** be failed for lacking one; a system whose notice never changed needs one capture plus a dated re-confirmation on each listed change, not a new capture per release |
 | R6 | No detector or report here outputs a disclosure verdict from presence | A detector that reported "discloses AI" because a notice string was found | Reporting that a notice string was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a disclosure record, so no detector
-checks R1 to R5; they are enforced by review or not at all, and R6 holds by construction. The
+checks R1 to R5; they are enforced by review or not at all, and R6 holds today because no such
+detector exists. The
 falsifiers in the table are observable by a reviewer reading the record or the running system: they
 are manual, not absent. The negative controls state what review must not do to a project that has
 the right subject and does the right thing.
@@ -292,8 +294,6 @@ owner-approved:
   a legitimate record while an absent decision is not.
 - **R2 in full**: that a disclosure owed precedes reliance, with a deadline tied to the decision for
 a non-interacting subject, and nothing about where or how it appears.
-  An earlier draft also placed a prohibition on denying AI involvement here; it is withdrawn and
-recorded under Relationship as provisionally item 53's, open and not decided.
 - **R3 in full**: the extension to a person who is the subject of an AI-assisted decision and is not a
   user.
 - **R4**: that a decision is not evidence of presentation, and that a project that presents a
@@ -307,8 +307,9 @@ not demonstrated.
   [Standard 25](25-grounding-and-hallucination-control.md).
 - **The exclusions in Scope** (presentation, truthfulness, repository documentation, legal compliance)
   as division lines, unconfirmed by anyone.
-- **The severity** in Validation (`error` for a failed review of R1 to R5) and the single validation
-type assigned to each requirement; they are this repository's judgment.
+- **The severity** in Validation (`error` for a failed review of R1 to R5) and the validation type
+assigned to R1 to R5 (`manual-review`, with R2's receipt not-evaluable); R6 has none. They are this
+repository's judgment.
 - **The ruling that this standard ships with no catalog rules**, and its three reasons, including the
   decision to mint no id in the shared `disclosure` segment.
 
@@ -355,7 +356,7 @@ crosswalk, and no maintainer of that pack has confirmed it. No ADR covers this s
 
 ## Implementation
 
-**Normative. Nothing about R1 to R5 is enforced; R6 holds by construction.**
+**Normative. Nothing about R1 to R5 is enforced; R6 holds today because no such detector exists.**
 
 **Implemented today, and re-runnable now:**
 
