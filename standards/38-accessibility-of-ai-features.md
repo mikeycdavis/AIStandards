@@ -39,11 +39,10 @@ Terms, defined once and used verbatim below:
   result, or anything else.
 - **Accessibility definition** — a catalog id that defines an accessibility requirement.
 
-**Reach.** The accessibility requirements of UIUXDesignStandards apply to an AI feature's interface as
-they do to any other. That its content is generated, its surface is conversational or voice-based, or
-its components were supplied by a model provider or a library is not an exemption. This is a statement
-of where the owner's requirements reach, not an obligation of this pack and not an accessibility
-control: it adds nothing the owner requires and removes nothing.
+**Reach.** This standard does not decide whether a generated, conversational, voice-based or
+provider-supplied AI feature is inside or outside the owner's accessibility requirements; the owner's
+requirements and exceptions apply to such an interface as the owner states. This is a statement of
+where this standard stops, not an obligation of this pack and not an accessibility control.
 
 It does **not** cover, and claims none of the ground of:
 
@@ -80,7 +79,7 @@ effect.
 
 | Requirement | Failure |
 | --- | --- |
-| R1 | A catalog id defines an accessibility requirement, or a framework output states that an AI feature is accessible, on any basis |
+| R1 | An accessibility definition exists in this catalog, or a framework output states an accessibility verdict |
 
 Failures of a project to meet the owner's requirements, including treating a generated or
 conversational interface as out of scope, are the owner's failure modes and are not listed here.
@@ -108,9 +107,10 @@ that record.
    exclusion for risk-tier fields).
 3. **No shard exists and none is proposed.**
 
-**Validation type and severity.** R1 constrains this framework: it has no catalog validation type and no
-project severity, and is held by code review of this repository. No framework severity is given to the
-owner's requirements, so that this framework does not create a second pass or fail beside the owner's.
+**Validation type and severity.** R1 constrains this framework: an accessibility definition or an
+accessibility verdict is a defect of this repository, held by code review, and it carries no catalog
+validation type and no project severity. No framework severity is given to the owner's requirements,
+so that this framework does not create a second pass or fail beside the owner's.
 
 **Exemptibility.** R1 is not exemptible. This standard defines no project exception mechanism and no
 recording duty; what an exception to the owner's requirements is, is the owner's to state. This
@@ -121,15 +121,16 @@ R3).
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | No accessibility definition exists in the catalog and no framework output states an accessibility verdict | A catalog id that defines an accessibility requirement, or a framework output that states an AI feature accessible on any basis | Reporting that an accessibility statement or an owner rule was *found*, as an observation with no verdict, is permitted |
+| R1 | No accessibility definition exists in the catalog and no framework output states an accessibility verdict | An accessibility definition, or a framework output that states an accessibility verdict | Reporting that an accessibility statement or an owner rule was *found*, as an observation with no accessibility verdict, is not an accessibility verdict |
 
 **No falsifier is automated in this release.** R1 holds today because no such rule or detector exists.
 This standard defines no test, falsifier or negative control for the owner's requirements.
 
 ## Exceptions and staleness
 
-This standard defines no exception mechanism and no invalidating event. R1 constrains this repository
-and is invalidated by nothing. How long accessibility evidence remains valid, and how a reported
+This standard defines no exception mechanism and no invalidating event. R1 constrains this repository:
+an accessibility definition or accessibility verdict is invalidated by nothing, because it is never
+valid. How long accessibility evidence remains valid, and how a reported
 barrier is handled, is the owner's to state; incident handling is item 34's subject (AI Incident
 Response, unwritten in this release).
 
@@ -138,7 +139,7 @@ Response, unwritten in this release).
 The brief contributes one word, "Accessibility", inside a bullet of four subjects. It states no
 requirement, level or evidence. Specifically authored here, none of it owner-approved:
 
-- **The Reach statement**, which adds no control.
+- **The Reach statement**, which adds no control and decides nothing.
 - **R1 and the three defined terms**, in the form of Standard 25 R6, with the additional prohibition on
   an accessibility definition, which is posture `D`, Standard 7 R2 and Standard 6 R5 applied.
 - **The exclusions in Scope** as division lines, unconfirmed by anyone.
