@@ -182,15 +182,18 @@ not that it is *exercised*, and R6 below keeps this framework from saying more.
 
 ### R6 — Overseers are not asked for more than they can do
 
-**Where the volume, speed or complexity of what reaches an overseer exceeds what one person can
-review in the time allotted, the project MUST NOT present the review as overseeing each item, and
-SHOULD change the design — by sampling, batching, escalation criteria or narrowing the system's
-authority — and say which it did.**
+**Where the volume, speed or complexity of what reaches the overseers exceeds what the people
+assigned to that oversight point can review in the time allotted, taken together, the project MUST NOT
+present the review as overseeing each item, and SHOULD change the design — by adding reviewers,
+sampling, batching, escalation criteria or narrowing the system's authority — and say which it did.**
 
-Review capacity is a property of people and of a queue. A system that produces five thousand items a
-day for one reviewer has a review step whose real function is to be able to say a reviewer exists. This
-requirement does not set a number: no ratio is derived from the brief, and any figure here would be an
-invention. It asks that the claim fit the arrangement.
+Review capacity is a property of people and of a queue. The comparison is between the workload and the
+**aggregate** capacity of the named holders of the role, which may divide a queue between them; it is not
+a single person's threshold. A system that produces five thousand items a day for one reviewer has a
+review step whose real function is to be able to say a reviewer exists; the same volume divided among
+enough holders, each of whom actually reviews their share, does not. This requirement does not set a
+number: no ratio is derived from the brief, and any figure here would be an invention. It asks that the
+claim fit the arrangement.
 
 **Sampling is a legitimate design and is not weakened here.** Reviewing a sample with a stated rate is
 oversight of the sample and of the process; it is not oversight of each item, and the project says
@@ -242,7 +245,7 @@ requirement in [Standard 8](08-ai-safety-requirements-and-safety-cases.md),
 | R4 | The recorded timing of each oversight point (before the effect or after), and the stated window where after | A project document the project names | Human review |
 | R5 | The counts described, per period, or a statement that none are kept | The project's own records | Human review |
 | R5 (the reason for a zero) | None obtainable from a repository | — | **Not-evaluable** |
-| R6 | The volume reaching each overseer against the time allotted, and the design chosen where it exceeds it | The project's operating records and documents | Human review |
+| R6 | The volume reaching the oversight point, the number of holders and the share each reviews, against the time allotted, and the design chosen where it exceeds it | The project's operating records and documents | Human review |
 | R7 | The absence of any detector that reports oversight from presence | This repository's own detectors and tests | Code review; see Implementation |
 
 A document that names overseers, states a timing or describes a review interface establishes that the
@@ -278,9 +281,23 @@ Four reasons, stated so a reader can disagree with any one of them:
 **Proposed rules are in the pull request, not in `rules/`.** Whether any is wanted is a per-rule
 decision for the owner; none is added to a shard by this change.
 
-**Severity.** R1 to R4 and R6 are `manual-review` obligations in this release. R5's reason-for-a-zero
-is **not-evaluable** and is not reported as reviewed. R7 constrains this framework and has no
-validation type, because the thing it prohibits is a behaviour of the tool.
+**Severity and validation type.** No rule exists, so none of the following is a reported result in
+this release; the table states what each requirement is and the severity a breach would carry were a
+rule minted, so that a consumer classifies it consistently.
+
+| Requirement | Validation type | Severity of a breach | Exemptible |
+| --- | --- | --- | --- |
+| R1 | manual-review | error | independence condition: no; otherwise yes, by not-applicable declaration where there is no oversight point |
+| R2 | manual-review | error | yes, as above |
+| R3 | manual-review | error | the requirement that a decline stick: no; otherwise yes, as above |
+| R4 | manual-review | error | yes, as above |
+| R5 (the record exists, `SHOULD`) | manual-review | warning | yes, as above |
+| R5 (the reason for a zero) | not-evaluable | none reported; not scored | not attestable |
+| R6 | manual-review | warning for the `SHOULD` design change, error for presenting review as item-by-item | yes, as above |
+| R7 | none for a consuming project; constrains this framework and is checked by code review | not applicable to a project | no |
+
+R7 has no validation type because the thing it prohibits is a behaviour of the tool, which a consuming
+project cannot breach.
 
 **Exemptibility.** R7 is not exemptible: no project circumstance makes it reasonable for a scan to
 report oversight from a presence, and a mechanism for excepting the prohibition would be
@@ -302,7 +319,7 @@ release would contradict a false declaration. No level here is lowered by a risk
 | R3 | A decline stops the action, and the system does not re-submit it by another path | An action that proceeds after a decline, or a decline overwritten by a retry | A `propose` system whose output is simply not applied must **not** be failed for lacking a decline button |
 | R4 | The timing of each point is recorded, and an after-the-fact point is not described as before | A next-day review described as pre-effect | A stated after-the-fact design for a low-impact, reversible action must **not** be failed for its timing alone |
 | R5 | Counts per period exist, or their absence is stated | A claim that oversight "works" resting on a record with no interventions and no explanation | A system with a recorded, explained zero must **not** be flagged |
-| R6 | The volume and time allotted are recorded, and the claim fits them | Item-by-item review claimed for a volume one person cannot review | A stated sampling design with a rate must **not** be flagged as weaker oversight |
+| R6 | The volume and time allotted are recorded, and the claim fits them | Item-by-item review claimed for a volume the assigned holders together cannot review | A stated sampling design with a rate must **not** be flagged as weaker oversight; a queue divided among enough holders to review every item must **not** be failed for its volume |
 | R7 | No detector or report in this repository outputs an oversight verdict from presence | A detector that reported "overseen" because an approval file existed | Reporting that an approval file was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads an oversight record and no fixture
