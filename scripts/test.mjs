@@ -49,6 +49,11 @@ const FILES = [
   "no-phase-creep.test.mjs",
   "standard-51-assignment.test.mjs",
   "lexical-contract.test.mjs",
+  "structural.test.mjs",
+  "structural-audit.test.mjs",
+  "vendor-yaml.test.mjs",
+  "structural-ledger.test.mjs",
+  "source-yaml-freeze.test.mjs",
 ];
 
 const missing = FILES.filter((f) => !fs.existsSync(path.join(TEST_DIR, f)));
