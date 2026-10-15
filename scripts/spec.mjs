@@ -36,7 +36,8 @@ export const ADDITIONS_HEADING = "## Additions this standard makes beyond the so
 /**
  * The one normalization applied anywhere in the fidelity check.
  *
- * `original_prompt.md` is stored CRLF and this repository pins no `.gitattributes`, so the same
+ * `original_prompt.md` is stored CRLF and no `.gitattributes` rule covers it (the only one pins the
+ * vendored parser tree), so the same
  * words can arrive LF on another platform. Failing on that would make the check fail for a reason
  * unrelated to what it exists to catch, and a check that fails for irrelevant reasons is a check
  * somebody disables. Every difference other than the line terminator still fails.

@@ -32,7 +32,7 @@ rather than the brief's instruction, and the only failure available is failing t
 ### The one normalization applied to verbatim comparison
 
 `original_prompt.md` is stored with CRLF line endings and this repository has no `.gitattributes`
-pinning them, so a checkout on another platform may hold the same words with LF. `fidelity.mjs`
+rule pinning them (the only one, `scripts/vendor/** text eol=lf`, covers the vendored parser tree), so a checkout on another platform may hold the same words with LF. `fidelity.mjs`
 therefore normalizes CRLF to LF **on both sides** before comparing, and reports whether the raw
 bytes also matched.
 
