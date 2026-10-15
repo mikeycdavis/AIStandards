@@ -91,7 +91,7 @@ A cost per request is a function of the model, its price on a date, the prompt a
 
 **No detector, rule, audit finding or generated report in this framework MAY state that a system's cost is controlled, capped or bounded because a token limit, a budget figure, a rate limit or an alert is present in the repository.**
 
-This is a constraint on the framework, not on a project. A repository can show that `max_tokens` is set or a limiter configured; it cannot show that the value is the one in production, that the limiter sits on the path a request takes, or that reaching the ceiling does anything. A ceiling is shown by the behaviour R2 defines for it at the ceiling, which is R2's record and not the framework's to infer.
+This is a constraint on the framework, not on a project. A repository can show that `max_tokens` is set or a limiter configured; it cannot show that the value is the one in production, that the limiter sits on the path a request takes, or that reaching the ceiling does anything. Whether a ceiling acts is R2's record, and not the framework's to infer from a setting.
 
 ## Failure modes
 
