@@ -177,7 +177,7 @@ queued, shortened or re-routed — at the ceiling.
 | Budget over a subject nothing is attributed to | A per-tenant monthly figure in a plan; spend recorded only per API key | R1 |
 | Misattributed remainder | Unattributed spend folded into the largest subject so totals reconcile | R1 |
 | Alert as enforcement | A notification at 80% of budget and no action at 100% | R2 |
-| Continue and log | Budget exhaustion is recorded and the call proceeds | R2 |
+| Continue and log | Budget exhaustion is recorded and the call proceeds unchanged, with none of the behaviour recorded for the ceiling | R2 |
 | Ceiling in an unnamed place | "The gateway handles it" with no record of which gateway or setting | R2 |
 | Self-raised ceiling | A budget read from configuration the system can rewrite during a run | R2 |
 | Uncapped retry | Retry-on-error with no maximum, each attempt billed | R3 |
@@ -197,7 +197,7 @@ queued, shortened or re-routed — at the ceiling.
 | R1 | The subject each model call's spend is attributed to, and the unattributed remainder | A project document the project names, and the cost records it points at — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R2 | Each budget as number, subject and period; where it is enforced; the behaviour at the ceiling as implemented in code or configuration; and, where the ceiling has been reached, the record of that run | Project configuration and code, gateway configuration, and the records of a run | Human review of the records |
 | R3 | Each multiplier the system has and the bound on it, or the statement that it has none | Project code and configuration | Human review; a project's own test where one exists |
-| R4 | The reconciliation of recorded spend with the billed amount, or with the capacity's accounting cost or utilisation, and its interval | Finance or operations records the project names | Human review |
+| R4 | Where a budget is stated, the reconciliation of recorded spend with the billed amount, or with the capacity's accounting cost or utilisation, and its interval; for any published spend figure, its source, so a billed amount can be told from an estimate | Finance or operations records the project names | Human review |
 | R5 | Any published cost figure, with model identifier and price date, and the workload where the figure depends on one; any cap or bound claim with the enforcing mechanism it names (R2); any negligibility claim with the measurement it rests on | The project's documentation | Human review |
 | R6 | The absence of any detector, rule, audit finding or generated report that reports cost controlled from a setting or presence | This repository's own detectors and tests | Code review; see Implementation |
 
@@ -237,8 +237,9 @@ Three reasons, stated so a reader can disagree with any one of them:
 requirement asks for is missing or incomplete, even where the Tests table lists that absence as a
 falsifier: the system may behave well, and what is missing is the account of it. A finding is reported at
 **error** severity only for behaviour or a claim: a ceiling reached without the recorded behaviour, a
-multiplier with no bound in code or configuration, a cap, bound or negligibility claim made contrary to
-R5, an estimate presented as the amount spent (R4), or a detector's violation of R6. The two
+multiplier with no bound in code or configuration, spend folded into a subject it does not belong to
+(R1), a cap, bound or negligibility claim made contrary to R5, an estimate presented as the amount
+spent (R4), or a detector's violation of R6. The two
 conditions do not overlap: a missing account is never an error, and an observed behaviour or claim is
 never a warning. These levels are this repository's judgment, listed in Additions, and are not
 owner-approved. R1 to R5 are also `manual-review` obligations in this release; the validation type and
@@ -288,8 +289,11 @@ the attestation mechanism itself is later work ([Standard 5](05-verdict-vocabula
 declarations and does not apply to these records. Review-staleness is event-driven only: a record is
 stale when one of the events below occurs, and nothing in this release detects that.
 
-**What invalidates a recorded budget, bound or unit cost.** Each is a different subject, and a record
-made before the change describes the earlier one:
+**What invalidates a recorded cost measurement or unit cost.** A stated budget or bound is a limit
+someone chose; it is not made false by a change of model or price, and is revised by a decision or when
+the subject it limits changes. A *measurement* of spend, a *unit cost*, and the *sufficiency* of a bound
+are records about a configuration, and each event below makes the earlier record describe a different
+subject:
 
 - a change of model identifier, or a model silently updated behind an alias
   ([Standard 1](01-ai-system-manifest.md) R4 asks for the identifier to be pinned);
