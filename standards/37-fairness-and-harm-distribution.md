@@ -134,8 +134,9 @@ or may be collected only in a form that is itself unreliable. That is a real con
 requirement is only that it be stated. "No disparity found" is a finding about a measured group; for
 an unmeasured one the honest entry is "not measured", with the reason.
 
-Collecting or inferring a group attribute to do this is subject to
-[Standard 13](13-personal-data-in-ai-systems.md) and to the law that governs it. This requirement does
+Collecting or inferring a group attribute to do this is subject to the law that governs it, and,
+where the attribute is placed in prompts, traces, evaluation fixtures or other model-adjacent
+stores, to [Standard 13](13-personal-data-in-ai-systems.md). This requirement does
 not ask anyone to collect a sensitive attribute they may not, and it does not treat an inferred one as
 a record of the person's characteristic.
 
@@ -169,8 +170,8 @@ Pre-deployment measurement covers the groups and cases a project thought of. The
 found by the people they happen to, and a route that exists but ends in no action is a log line. This
 requirement is a SHOULD because what a route looks like depends on the system — a public interface, an
 internal review queue, an operator escalation — and because incident handling is its own subject
-(item 34, unwritten in this release). Where a report is found well-founded, the record R1 to R4
-describe no longer stands (see Exceptions and staleness).
+(item 34, unwritten in this release). Where a report is found well-founded, the claim under R1 to R4
+that it contradicts no longer stands (see Exceptions and staleness).
 
 ### R6 — This framework MUST NOT report a system fair, or a disparity absent, from the presence of something
 
@@ -219,7 +220,7 @@ work.** A check is shown by a disparity it finds in a case where one was put the
 | R1 | A record of each output kind with its affected groups, harm and bearer, or a reasoned no-individual-consequence finding | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R2 | The measure, groups, data, criterion and the reason for the choice, for each fairness claim | The project's evaluation records and published statements | Human review |
 | R3 | Per-group results with group sizes, and a statement of each group that was not measured and why | The project's evaluation results ([Standard 17](17-evaluation-plans-for-generative-systems.md) governs a plan, if any) | Human review of the records |
-| R4 | The harm-by-group record, the proxies considered, and the effect of each mitigation on each group | The project's analysis documents and evaluation results | Human review |
+| R4 | The harm-by-group record, the proxies identified and how they were looked for, and, where a mitigation shifts harm, the groups the shift falls on | The project's analysis documents and evaluation results | Human review |
 | R5 | The route, and a record of what became of reports received | Project operations records | Human review |
 | R6 | The absence of any detector that reports fairness from presence | This repository's own detectors and tests | Code review; see Implementation |
 
@@ -316,9 +317,11 @@ parity figure measured on last year's population describes last year's system. N
 detects the transition; the events above are a note to a future reader.
 
 **Contradicted by operation.** A report, complaint or observation of a disparate outcome that a
-project judges well-founded contradicts whatever it recorded under R1 to R4 and invalidates it until
-re-examined. What happens operationally is item 34's subject (AI Incident Response, unwritten in this
-release); this standard says only that the record no longer stands.
+project judges well-founded invalidates, until re-examined, only the specific claim or result under
+R1 to R4 that it contradicts; a report that confirms a recorded disparity corroborates the record,
+and unrelated records stand. What happens operationally is item 34's subject (AI Incident Response,
+unwritten in this
+release); this standard says only that the contradicted claim no longer stands.
 
 ## Additions this standard makes beyond the source
 
