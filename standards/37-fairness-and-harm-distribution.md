@@ -230,8 +230,9 @@ The property of the next response, to the next person, is not-evaluable.
 ## Validation, severity, and exemptibility
 
 **This standard has no catalog rules of its own in this release.**
-[Standard 6](06-standard-structure-and-rule-identity.md) R3 requires every standard to cite at least
-one rule or record why it does not; this is that record.
+[Plan 02 section 6](../artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md) requires
+every standard to cite at least one rule or record in its Validation section why it ships with none;
+this is that record.
 
 Three reasons, stated so a reader can disagree with any one of them:
 
@@ -376,8 +377,8 @@ standard does not say when a distribution of harm is acceptable.
 [Standard 1](01-ai-system-manifest.md) declares models, prompts and data sources; it declares no
 affected group and this standard proposes no field. [Standard 2](02-ai-risk-tiering-and-applicability.md)
 R3 and R4 govern the applicability and non-lowering language used above.
-[Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the Validation
-section's no-rule record answers.
+[Standard 6](06-standard-structure-and-rule-identity.md) R3 (each requirement carries a falsifier or
+is declared not-evaluable) is what the Tests section answers.
 
 Items 38 (Accessibility of AI Features), 39 (Transparency and System Documentation), 40 (User
 Disclosure of AI Involvement) and 34 (AI Incident Response) are unwritten in this release; the lines
