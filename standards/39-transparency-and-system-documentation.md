@@ -35,16 +35,13 @@ Terms, defined once and used verbatim below:
 
 - **System description** — a document contained in, or pointed to from, the repository that states: the
   system's purpose; the people it is for and the people it affects without using it; what it is
-  explicitly not for; who answers for it; for each model, its role and the instructions that govern it
-  with where they live; for each tool, its authority; each retrieval source; and each point at which a
+  explicitly not for; who answers for it; for each model, its role, the instructions that govern it with where they live, and its documentation by name and, where it carries one, revision, or the statement that none is published; for each tool, its authority; each retrieval source; and each point at which a
   person must act before something happens, in code or in process.
 - **Required fact** — any fact the system description is required to state.
 - **Shared fact** — any fact both the system description and the manifest (`ai-system.yml`) state.
 - **Model claim** — a statement in the system description of a model's capability, limitation,
   performance or training.
-- **Change** — an addition, alteration, move or removal of a model, instruction, tool, retrieval source
-  or approval point, a model identifier silently re-pointed behind an alias, a difference in who the
-  system reaches, or a revision of documentation cited under R4.
+- **Change** — an addition, alteration, move or removal of a model, instruction, tool, retrieval source or approval point, a model identifier silently re-pointed behind an alias, a difference in who the system reaches, a revision of documentation cited under R4, or any other change to a required fact or a shared fact.
 - **Framework output** — what a detector, catalog rule, audit finding or generated report of this
   framework states.
 - **Presence artifact** — a file, a copied template or a section heading.
@@ -96,8 +93,7 @@ an oversight. A fact the standard does not require is outside this clause.
 
 ### R4 — Point at model documentation; do not restate or invent
 
-**Each model claim MUST be a reference to the model's documentation, by name and, where it carries one,
-revision, or to the project's own observation record.**
+**Each model claim MUST be established by a reference to the model's documentation, by name and, where it carries one, revision, or to the project's own observation record.**
 
 A restatement in the project's own words is a fork, and it drifts when the original is revised. Where
 no documentation exists the reference is to an observation record, and where neither exists there is
@@ -129,7 +125,7 @@ description, so this standard does not rely on it.
 | R1 | The only description of what the system is for and what it must not do lives in a slide, a thread or one engineer's head, or in a document the repository neither contains nor points to |
 | R2 | The system description states a shared fact differently from the manifest |
 | R3 | A required fact the project did not know that is omitted, guessed, or stated as unknown with no one named who could establish it |
-| R4 | A model claim that is not a reference to the model's documentation (by name and, where it carries one, revision) or to the project's own observation record |
+| R4 | A model claim that no cited reference to the model's documentation (by name and, where it carries one, revision) or to the project's own observation record establishes |
 | R5 | A change occurred and the system description was not revised |
 | R6 | A framework output states a system transparent, its documentation adequate, or its description accurate or current because a presence artifact is present |
 
@@ -140,7 +136,7 @@ description, so this standard does not rely on it.
 | R1 | The system description | A project document the project names; **no manifest or policy field points to it** | Human review |
 | R2 | The system description read against `ai-system.yml` | The description and the manifest | Human review |
 | R3 | The unknown-fact entries, each with who could establish it | The description | Human review |
-| R4 | Each model claim's reference: the cited model documentation by name and revision, or the observation record | The description, the cited documentation, the observation record | Human review |
+| R4 | Each model claim's reference: the cited model documentation by name and, where it carries one, revision, or the observation record | The description, the cited documentation, the observation record | Human review |
 | R5 | The description's revision history against the change records, including provider documentation where the change is outside the repository | Version control and the project's records | Human review |
 | R6 | The absence of any framework output of the kind R6 forbids | This repository's catalog, detectors, reports and tests | Code review |
 
@@ -185,7 +181,7 @@ R3).
 | R1 | A system description exists, in or pointed to from the repository | None exists, or it is only in a slide, a thread or a head, or the repository neither contains nor points to it | A short document, including a README passage, that is a system description is not failed for brevity or form |
 | R2 | No shared fact differs between the description and the manifest | Any shared fact that differs | A fact the manifest does not state is not a shared fact |
 | R3 | Each required fact the project did not know is stated as unknown with who could establish it | A required fact the project did not know that is omitted, guessed, or stated as unknown with no one named | "Unknown — the vendor does not say; ask the account owner" is complete |
-| R4 | Each model claim is a reference to the model's documentation or to the project's observation record, as R4 states | A model claim that is not such a reference, or documentation that carries a revision cited without it | A reference that names provider documentation and its revision, with nothing copied, is not flagged |
+| R4 | Each model claim is established by a reference to the model's documentation or to the project's observation record, as R4 states | A model claim that its cited reference does not establish, one with no reference, or documentation that carries a revision cited without it | A reference that names provider documentation and its revision, with nothing copied, is not flagged |
 | R5 | Each change has a matching revision of the system description | A change with no revision since | A difference that is not a change as defined in Scope needs no revision |
 | R6 | No framework output states a system transparent, its documentation adequate, or its description accurate or current because a presence artifact is present | A framework output that did so because a presence artifact was found | Reporting that a system description was *found*, as an observation with no verdict, is permitted |
 
