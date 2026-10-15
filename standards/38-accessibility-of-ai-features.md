@@ -1,8 +1,6 @@
 # Standard 38 — Accessibility of AI Features
 
-Accessibility has an owner in this portfolio, and it is not this pack. UIUXDesignStandards governs
-whether an interface can be perceived, operated and understood by people who use it differently; as
-recorded by the boundary review on 2026-09-04 it has nineteen rules across three dedicated standards.
+Accessibility has an owner in this portfolio, and it is not this pack: UIUXDesignStandards, which as recorded by the boundary review on 2026-09-04 has nineteen rules across three dedicated standards. This standard does not describe or restate what they require.
 This standard is about AI features as interfaces: a chat pane, a streamed answer, a voice surface, a
 generated summary, an agent that acts on a page.
 
@@ -32,10 +30,9 @@ that presents an AI feature to people through an interface.
 
 Terms, defined once and used verbatim below:
 
-- **Framework output** — what a detector, catalog rule, audit finding or generated report of this
-  framework states.
-- **Accessibility verdict** — a statement that an AI feature is, or is not, accessible or conformant to accessibility requirements, whatever its basis: the presence of an owner's rule, a component library or an accessibility statement, an imported owner result, or anything else.
-- **Accessibility definition** — a catalog id that defines an accessibility requirement.
+- **Framework output** — what a detector, catalog rule, audit finding, generated report, template, schema or policy of this framework states, or any other message, score or status it emits.
+- **Accessibility verdict** — a statement that an AI feature, or any interface, surface or component of it, is, is not or is partly accessible, or meets, fails or partly meets an accessibility requirement, whatever its basis: the presence of an owner's rule, a component library or an accessibility statement, an imported owner result, or anything else.
+- **Accessibility definition** — a catalog id, schema field, template item, policy key or standard requirement of this framework that defines an accessibility requirement.
 
 **Reach.** This standard does not decide whether a generated, conversational, voice-based or
 provider-supplied AI feature is inside or outside the owner's accessibility requirements; the owner's
@@ -64,8 +61,7 @@ unconfirmed.
 
 ### R1 — This framework defines no accessibility requirement and issues no accessibility verdict
 
-**No accessibility definition MAY exist in this catalog, and no framework output MAY state an
-accessibility verdict.**
+**No accessibility definition MAY exist in this framework, and no framework output MAY state an accessibility verdict.**
 
 This is a constraint on the framework, not on a project, and there is no project requirement in this
 standard. It follows from posture `D`, from Standard 7 R2 (link, do not copy), and from Standard 6 R5
@@ -77,7 +73,7 @@ effect.
 
 | Requirement | Failure |
 | --- | --- |
-| R1 | An accessibility definition exists in this catalog, or a framework output states an accessibility verdict |
+| R1 | An accessibility definition exists in this framework, or a framework output states an accessibility verdict |
 
 Failures of a project to meet the owner's requirements, including treating a generated or
 conversational interface as out of scope, are the owner's failure modes and are not listed here.
@@ -119,9 +115,9 @@ R3).
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | No accessibility definition exists in the catalog and no framework output states an accessibility verdict | An accessibility definition, or a framework output that states an accessibility verdict | Reporting that an accessibility statement or an owner rule was *found*, as an observation with no accessibility verdict, is not an accessibility verdict |
+| R1 | No accessibility definition exists in this framework and no framework output states an accessibility verdict | An accessibility definition, or a framework output that states an accessibility verdict | Reporting that an accessibility statement or an owner rule was *found*, as an observation with no accessibility verdict, is not an accessibility verdict |
 
-**No falsifier is automated in this release.** R1 holds today because no such rule or detector exists.
+**No falsifier is automated in this release.** R1 holds today because no such accessibility definition or accessibility verdict exists in any framework artifact.
 This standard defines no test, falsifier or negative control for the owner's requirements.
 
 ## Exceptions and staleness
@@ -164,11 +160,11 @@ this standard — `artifacts/adr/` does not exist in this release.
 
 ## Implementation
 
-**Normative. R1 holds today because no such rule or detector exists; nothing else here is enforced.**
+**Normative. R1 holds today because no such accessibility definition or accessibility verdict exists in any framework artifact; nothing else here is enforced.**
 
 | Requirement | State |
 | --- | --- |
-| R1 | No rule in `rules/` carries an accessibility id and no detector in `scripts/` states an AI feature accessible. An `accessibility.*` id is refused at catalog load (`NAMESPACES` in `scripts/catalog.mjs`: unreserved namespace); no test uses an `accessibility.*` id, and the general refusal is asserted in `test/catalog.test.mjs` with a placeholder namespace. A requirement placed in a namespace this pack does reserve (for example `fairness.*` or `disclosure.*`) is not detected, and no test asserts it |
+| R1 | No rule in `rules/` carries an accessibility id, and no detector in `scripts/`, template, schema, policy or generated report states an AI feature accessible or not accessible. An `accessibility.*` id is refused at catalog load (`NAMESPACES` in `scripts/catalog.mjs`: unreserved namespace); no test uses an `accessibility.*` id, and the general refusal is asserted in `test/catalog.test.mjs` with a placeholder namespace. A requirement placed in a namespace this pack does reserve (for example `fairness.*` or `disclosure.*`) is not detected, and no test asserts it |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test |
 
 **Proposed, and deliberately absent. None of the following exists:** a test that no id in a reserved
