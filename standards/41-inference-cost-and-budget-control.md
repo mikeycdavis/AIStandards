@@ -64,9 +64,9 @@ It does **not** cover, and claims none of the ground of, the following:
   release.
 - **Environmental impact and provider portability.** Items 43 and 44 own them and are unwritten in this
   release.
-- **What running an evaluation costs.** [Standard 17](17-evaluation-plans-for-generative-systems.md)
-  governs evaluation plans; the spend of running one is incurred under this standard like any other,
-  and nothing here restates the plan.
+- **The design of an evaluation plan.** [Standard 17](17-evaluation-plans-for-generative-systems.md)
+  governs it and nothing here restates it. The model calls an evaluation run makes are within this
+  standard's scope like any other, and owe R1 to R5 accordingly.
 
 ## Requirements
 
@@ -127,10 +127,10 @@ restating it.
 
 ### R4 — Reconcile recorded spend against what was actually charged, and say how often
 
-**A project that states a budget MUST record how recorded spend is reconciled with the amount
-actually billed or, for provisioned or owned capacity, with the capacity's accounting cost or measured
-utilisation, and at what interval, and MUST NOT report a figure drawn only from its own estimates
-as the amount spent.**
+**A project MUST NOT report a figure drawn only from its own estimates as the amount spent,
+whether or not it states a budget; and a project that states a budget MUST record how recorded spend is
+reconciled with the amount actually billed or, for provisioned or owned capacity, with the capacity's
+accounting cost or measured utilisation, and at what interval.**
 
 An estimate computed from token counts and a price list is a model of the bill. It diverges from the
 bill when the price changes, when a model is substituted, when a count excludes system or tool tokens
@@ -194,7 +194,7 @@ queued, shortened or re-routed — at the ceiling.
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | The subject each model call's spend is attributed to, and the unattributed remainder | A project document the project names, and the cost records it points at — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | Each budget as number, subject and period; where it is enforced; the behaviour at the ceiling; and a run in which it was reached | Project configuration and code, gateway configuration, and the records of a run | Human review of the records |
+| R2 | Each budget as number, subject and period; where it is enforced; the behaviour at the ceiling as implemented in code or configuration; and, where the ceiling has been reached, the record of that run | Project configuration and code, gateway configuration, and the records of a run | Human review of the records |
 | R3 | Each multiplier the system has and the bound on it, or the statement that it has none | Project code and configuration | Human review; a project's own test where one exists |
 | R4 | The reconciliation of recorded spend with the billed amount, or with the capacity's accounting cost or utilisation, and its interval | Finance or operations records the project names | Human review |
 | R5 | Any published cost figure, with model identifier and price date, and the workload where the figure depends on one | The project's documentation | Human review |
@@ -232,16 +232,17 @@ Three reasons, stated so a reader can disagree with any one of them:
    introduced this document for per-rule approval, and not here, so that this document does not
    describe a rule that does not exist.
 
-**Severity.** The standard separates a missing account from an observed failure. A reviewer's
-finding that a record, statement or label the requirement asks for is missing or incomplete is reported
-at **warning** severity: the system may behave well, and what is missing is the account of it. A
-finding that review has *observed* a falsifier occurring in the system or its documentation — the
-behaviour or claim the requirement forbids actually present — is reported at **error** severity, as is
-any finding against R5, which concerns a claim or a control whose absence is itself the failure, and a
-violation of R6 by a detector or report. These levels are this repository's judgment, listed in
-Additions, and are not owner-approved. R1 to R5 are also `manual-review` obligations in this release;
-the validation type and the severity are different things. R6 constrains this framework and has no
-validation type, because the thing it prohibits is a behaviour of the tool.
+**Severity.** A finding is reported at **warning** severity where a record, statement or label the
+requirement asks for is missing or incomplete, even where the Tests table lists that absence as a
+falsifier: the system may behave well, and what is missing is the account of it. A finding is reported at
+**error** severity only for behaviour or a claim: a ceiling reached without the recorded behaviour, a
+multiplier with no bound in code or configuration, a cap, bound or negligibility claim made contrary to
+R5, an estimate presented as the amount spent (R4), or a detector's violation of R6. The two
+conditions do not overlap: a missing account is never an error, and an observed behaviour or claim is
+never a warning. These levels are this repository's judgment, listed in Additions, and are not
+owner-approved. R1 to R5 are also `manual-review` obligations in this release; the validation type and
+the severity are different things. R6 constrains this framework and has no validation type, because the
+thing it prohibits is a behaviour of the tool.
 
 **Exemptibility.** R6 is not exemptible: no project circumstance makes it reasonable for a scan to
 report an effect from a presence, and a mechanism for excepting the prohibition would be
@@ -259,7 +260,7 @@ contradict a false statement. No level here is lowered by a risk tier (Standard 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Spend for a stated subject can be read back from the system's own records | Spend recorded only per account or API key while budgets are stated per tenant | A system whose budgets are stated per account, and whose spend is recorded per account, must **not** be reported missing a per-user attribution |
-| R2 | A run that reaches the ceiling is observed to take the behaviour recorded for it (refused, queued, degraded, shortened, re-routed or routed to a person), and the call is not made as before | The ceiling is reached, an alert is raised, and the call proceeds | A system with no ceiling applied is out of scope for R2, not failing it; a ceiling reached and acted on must not be flagged for also alerting |
+| R2 | The ceiling is stated with its subject and period, its enforcement point is named, and the configured behaviour is implemented; where the ceiling has been reached, the run shows the behaviour recorded for it (refused, queued, degraded, shortened, re-routed or routed to a person) and the call not made as before | The ceiling is reached, an alert is raised, and the call proceeds | A system with no ceiling applied is out of scope for R2, not failing it; a ceiling reached and acted on must not be flagged for also alerting |
 | R3 | Each multiplier the system has has a stated bound; a reviewed static bound (a fixed completion limit, a retry maximum in configuration) establishes it without an execution record | A retry or fallback with no maximum, or a bound that restarts on exhaustion | A system that never retries, and says so, must **not** be reported as lacking a retry bound |
 | R4 | A reconciliation exists with an interval and a result | Only estimates are reported as spend | A project that states no budget must **not** be failed for lacking a reconciliation; a project that states a budget and labels its figure an estimate avoids the misreporting finding only, and still owes the reconciliation record and interval |
 | R5 | A published unit cost names model and price date, and workload where it depends on one | "Costs pennies per query", or a cap claim with no mechanism | A statement of a measured figure with its model, date and workload, and no stronger claim, must **not** be flagged |
@@ -337,9 +338,9 @@ it owner-approved:
 - **The five exclusions in Scope** as division lines. The specification lists items 42 to 44 under the
   same bullet; where this standard stops and each begins is unconfirmed by anyone, and the lines to
   Standards 9 and 23 follow what those standards themselves say about item 41.
-- **The severity assignments** (warning for a missing account, error for an observed failure, for R5
-  and for a detector's violation of R6) and the statement that no attestation or scheduled expiry
-  exists in this release.
+- **The severity assignments** (warning for a missing account; error for an observed ceiling or
+  multiplier failure, a prohibited claim, an estimate presented as spend, and a detector's violation of
+  R6) and the statement that no attestation or scheduled expiry exists in this release.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
   decision not to name a rule id in the unsharded `cost` namespace.
 
