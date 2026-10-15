@@ -23,7 +23,7 @@ issue. Items that will end this way, **OBSERVED** from the plan files:
 | --- | --- | --- |
 | **Phase 7**, and cutting `1.0.0` | Needs an externally held scope registry, a reviewer already in its `authorisedReviewers`, a route for invoking this pack in a pipeline, and an **observed** enforcement run including a non-passing verdict | Q1, Q2; `07-phase-7-enforcer-integration.md` |
 | `humanSignOff` on the boundary review | A claim about who read what; **never set by tooling** | `artifacts/boundary-review.json` |
-| Open questions Q7, Q9–Q12, Q15–Q22 (Q8 answered A, 2026-10-14) | Owner decisions; several change a rule's `standard` field, a validation type or an already-written standard's wording | `08-open-questions.md` |
+| Open questions Q7, Q9–Q12, Q15–Q22, Q23–Q25 (Q8 answered A, 2026-10-14) | Owner decisions; several change a rule's `standard` field, a validation type or an already-written standard's wording | `08-open-questions.md` |
 | Phase 6 gating decision | Valid only if the honest self-verdict permits it; never reached by lowering anything | `06-phase-6-dogfooding-and-docs.md` |
 | Phase 5 digest and hosted CI | The `node:20-bookworm` digest must be read from a registry, not recalled; this repository has no hosted-CI evidence | Q6; `05-phase-5-ci-and-adapter.md` |
 
