@@ -64,10 +64,8 @@ It records one piece of evidence:
   [Standard 7](07-boundary-with-adjacent-standards.md) lists "Model cards and dataset cards" as
   deferred entirely, citing the templates and copying neither.
 
-That file and a `templates/MODEL-CARD.md` exist at MachineLearningStandards `af4120f` (the sibling
-checkout's HEAD on 2026-10-14, branch `design/publication-state-correction`, read through git objects),
-and the scope text is the same. This is a recheck of one file, not a refresh of the inventory, and
-the sibling's own state is not a claim about its release.
+The file, its scope text and the boundary review's reading of it are as the review records them
+(pinned 2026-09-04). Nothing is claimed here about the sibling pack's current state.
 
 ## Requirements
 
@@ -124,8 +122,10 @@ statements about the same system that disagree leave a reader unable to say whic
 ### R5 — Name an owner, and revise the description when the system changes
 
 **The description MUST name who answers for it, and MUST be revised when a model, an instruction, a
-tool, a retrieval source or an approval point it describes is changed, when documentation it cites
-under R3 is revised, or when any other change alters a fact the description is required to state.**
+tool, a retrieval source or an approval point it describes is changed, when a model identifier is
+silently re-pointed behind an alias, when who the system reaches changes, when documentation it
+cites under R3 is revised, or when any other change alters a fact the description is required to
+state.**
 
 A description with no owner has no one whose job it is to change it, and the system around a model
 changes more often than the model does: a prompt edit, a new tool or a new source alters the system
@@ -140,9 +140,11 @@ heading exists.**
 
 This is a constraint on the framework, not on a project. A repository can show that a document exists
 and has the headings of the template. It cannot show that the content is true, that it was answered
-by a person, or that it describes the system as it now stands. **A template carrying the scaffold
-marker is not documentation**: `scripts/scaffolding.mjs` and the scaffold
-comment exist so that a copied template is not read as an answer. Reporting a pass from the presence of
+by a person, or that it describes the system as it now stands. **A copied template is not
+documentation.** The scaffold marker in `templates/AI-SYSTEM.md` is a signal to the person who
+copies it; `scripts/scaffolding.mjs` inspects parsed YAML documents, and no detector in this release
+reads the marker in a Markdown description, so this standard does not rely on it to keep an
+unanswered template from being counted. Reporting a pass from the presence of
 a document would turn the existence of a file into a statement about a system.
 
 ## Failure modes
@@ -166,7 +168,7 @@ a document would turn the existence of a file into a statement about a system.
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | The system description, discoverable from the repository | A project document the project names — **no manifest or policy field points to it; see Implementation** | Human review |
-| R2 | The roles, instructions, tools, sources and approval points stated in it, checked against the code that carries them | The description and the project's code and configuration | Human review |
+| R2 | The roles, instructions, tools and their authority, sources and approval points stated in it, checked against the code that carries them and against `tool-permissions.yml` where tool authority is declared | The description, the project's code and configuration, and the tool-permissions file | Human review |
 | R3 | The reference to the model documentation by name and revision, or the statement that none exists | The description | Human review |
 | R4 | The description read against the manifest, and any recorded unknowns | The description and `ai-system.yml` | Human review |
 | R5 | A named owner and a revision history that follows system changes | The description and version control | Human review |
@@ -204,11 +206,11 @@ project severity. These are the levels a rule would carry if one is minted; this
 framework finding at them.
 
 **Exemptibility.** R6 is not exemptible: no circumstance makes it reasonable for a scan to report an
-effect from a presence. R1 to R5 reach a system only where it has a system to describe. That is a
-scope condition, not a disposition: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4's
-dispositions are recorded against catalog rules, this standard has none, and the policy schema
-offers no declaration for it. A project whose system lacks the subject records why in its own
-documents, and no detector in this release would contradict a false record. No level here is lowered
+effect from a presence. R1 to R5 apply to every system within this pack's scope ([Standard
+1](01-ai-system-manifest.md)); a repository with no AI system is outside this standard, not exempted
+from it. No policy declaration exists for any of them: [Standard
+2](02-ai-risk-tiering-and-applicability.md) R4's dispositions are recorded against catalog rules,
+and this standard has none. No level here is lowered
 by a risk tier
 (Standard 2 R3).
 
@@ -217,10 +219,10 @@ by a risk tier
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | A document states purpose, users, affected non-users and exclusions | The description exists only in a slide, a thread or someone's head, or is a document that omits any of the four | A short document, including a README passage, that answers all four and is findable must **not** be failed for brevity or form |
-| R2 | For each model, its role; the instructions that govern it and where they live; for each tool, its authority; each retrieval source; each approval point, all as they exist in the code | A tool callable in code that the description never mentions, or one named with no statement of its authority; a model with no role; instructions with no location | A system with no tools or retrieval, said to have none, must not be failed for the empty sections |
-| R3 | The model documentation is referenced by name and revision, or "none" is recorded and no capability or limitation is stated that the project has not established | A paraphrase of a model card's limitations in the project's words, or a capability or limitation asserted as fact beside "none" with no observation or provider document behind it | A reference that names a provider document and its revision, with nothing copied, must **not** be flagged |
-| R4 | No contradiction with the manifest on any fact both state; each unknown is recorded with who could establish it | A model, purpose, owner, prompt path, lifecycle stage or autonomy tier that differs between the two; a fact the project does not know that is omitted; a plausible guess written where the project did not know | A section reading "unknown — the vendor does not say; ask the account owner" must **not** be treated as missing |
-| R5 | An owner is named and a recent system change has a matching revision | A prompt changed twice since the description was last edited | A change with no effect on anything the description states needs no revision |
+| R2 | For each model, its role; the instructions that govern it and where they live; for each tool, its authority; each retrieval source; each approval point, all as they exist in the code | A tool callable in code that the description never mentions, or one named with no statement of its authority; a model with no role; instructions with no location; a retrieval source read in code and not named; an approval point in code and not stated | A system with no tools or retrieval, said to have none, must not be failed for the empty sections |
+| R3 | The model documentation is referenced by name and revision, or "none" is recorded and no capability or limitation is stated that the project has not established | A paraphrase of a model card's limitations in the project's words, or a capability or limitation asserted as fact beside "none" with no observation or provider document behind it; a reference with no revision, or neither a reference nor a "none" record | A reference that names a provider document and its revision, with nothing copied, must **not** be flagged |
+| R4 | No contradiction with the manifest on any fact both state; each unknown is recorded with who could establish it | A model, purpose, owner, prompt path, lifecycle stage or autonomy tier that differs between the two; a fact the project does not know that is omitted; a plausible guess written where the project did not know; an "unknown" with no one named who could establish it | A section reading "unknown — the vendor does not say; ask the account owner" must **not** be treated as missing |
+| R5 | An owner is named and a recent system change has a matching revision | No owner named; or an instruction, tool, source, approval point, alias target or cited documentation revision changed since the description was last edited | A change with no effect on anything the description states needs no revision |
 | R6 | No detector or report here outputs a transparency verdict from presence | A detector that reported "documented" because a file was found | Reporting that a system description was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a system description, so no detector
@@ -279,8 +281,6 @@ the "unknown, and who could establish it"
 - **The severity** in Validation (`error` for a failed review of R1 to R5), the level a rule would
 carry; it is this repository's judgment.
 - **The ruling that this standard ships with no catalog rules**, and its three reasons.
-- **The recheck of one sibling file** at the sibling checkout's HEAD, which the boundary review did not
-  make.
 
 Not authored here: the posture `B`, the split of ownership between the two packs and the recorded
 evidence are the boundary review's.
@@ -306,7 +306,7 @@ Features) and 40 (User Disclosure of AI Involvement) are unwritten on this base;
 are provisional until they are.
 
 **Outside this pack.** MachineLearningStandards' `25-model-limitations.md` and its model-card template
-are named in Scope with what the boundary review and the recheck recorded. This is a deference, not a
+are named in Scope with what the boundary review recorded. This is a deference, not a
 crosswalk, and no maintainer of that pack has confirmed it. No ADR covers this standard —
 `artifacts/adr/` does not exist in this release.
 
@@ -318,8 +318,8 @@ crosswalk, and no maintainer of that pack has confirmed it. No ADR covers this s
 
 | Requirement | State |
 | --- | --- |
-| R1 to R2 (aid only) | `templates/AI-SYSTEM.md` is a narrative template with questions on purpose, users, models, prompts, tools, data and ownership, and carries the scaffold marker. It is an aid to writing the description, not a check that one exists |
-| R6 | **Holds by construction, not by assertion.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` reports a system transparent or documented. The scaffold marker is what makes an unanswered template count for nothing. I found no test asserting the absence, so a future detector could break R6 without failing one |
+| R1 to R2 (aid only) | `templates/AI-SYSTEM.md` is a narrative template with questions on purpose, users, models, prompts, tools, data and ownership, and carries the scaffold marker. It asks no question about retrieval sources as such (only "Data") or about approval points, so it does not prompt for two things R2 requires. It is an aid to writing the description, not a check that one exists |
+| R6 | **Holds by construction, not by assertion.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` reports a system transparent or documented. No detector reads the scaffold marker in a Markdown description. I found no test asserting the absence, so a future detector could break R6 without failing one |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test |
 
 **Proposed, and deliberately absent from this release. None of the following exists:**
