@@ -155,7 +155,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | R5 | Each projection is labelled as one and names every assumption it extrapolates from | A projection with no projection label, with no named assumptions, or naming only some of the assumptions it extrapolates from | A labelled projection with its assumptions must **not** be faulted for being uncertain |
 | R6 | No detector, rule, audit finding or generated report in this repository states an impact verdict from presence | A detector, rule, audit finding or report that states an environmental impact, or that the system is efficient or low-impact, because a region name, model name, quantisation flag, caching layer or declaration is present | Reporting that a region setting was *found*, as an observation with no verdict, is permitted |
 
-**No falsifier is automated in this release.** No rule reads this subject's artifact and no fixture carries one, so R1 to R5 are enforced by review or not at all, and R6 holds today only because no such detector exists. The falsifiers in the table are available for manual review; what this release lacks is a detector that applies them.
+**No falsifier is automated in this release.** No rule reads this subject's artifact and no fixture carries one, so R1 to R5 are enforced by review or not at all, and R6 holds today only because no such detector exists. The falsifiers in the table are available for manual review; what this release lacks is a detector that applies them. A record made stale by the event in the staleness table below does not satisfy the minimum test it was offered for until it is re-made.
 
 ## Exceptions and staleness
 
