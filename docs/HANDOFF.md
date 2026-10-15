@@ -31,14 +31,10 @@ most likely way to go wrong here.
 (`git log --grep "Q13"`), because the safety-detector repair and the Q13 correction had changed
 behaviour it described, not only its line counts. Earlier regenerations: 2026-09-14 against the tree
 committed with Standard 09, and 2026-09-06 against `70832f4`, which had replaced a hand-scanned version.
-**It was not regenerated for the 2026-09-15 commit** (`git log --grep "Standard 17"`) **nor for the
-adoption slice of 2026-09-19** (`git log --grep "adoption"`), and it is now stale in these places: it counts
-13 of 53 standards; its account of `evaluateRule()` says a narrow clean search no longer counts toward the
-score, when it earns no credit but stays in the scored denominator; its gaps table lists Q14 as open; and,
-most materially, it describes no `init` command, no `templates/`, no `scripts/manifest.mjs` or
-`scripts/toolperms.mjs`, and predates the change that makes the four rules reading a scaffold report
-not-evaluated. Regenerate it with `/codebase-docs` rather than patching those lines; it is the first thing
-the next session should do if it needs the architecture to be true. `docs/architecture.mmd` and `docs/validate-flow.mmd`
+**It was regenerated again on 2026-10-11** by the `codebase-docs` skill against the ST-57 integration with
+`develop` 5ecd226, and now describes `init`, `templates/`, `manifest.mjs`, `toolperms.mjs`, the `--strict` audit flag,
+the lexical-contract freeze and the structural reader with its vendored YAML parser. Its provenance paragraph names
+what that generation did not re-read (the corpus-tooling modules, whose behaviour is carried from 2026-09-14). Regenerate it with `/codebase-docs` rather than patching lines. `docs/architecture.mmd` and `docs/validate-flow.mmd`
 are its canonical diagram sources; the fenced blocks inside the document are byte-identical copies,
 verified programmatically. No SVG is rendered — that would require a build-time download, and this
 repository has no dependencies. **Do not hand-patch the architecture document; regenerate it.**
@@ -85,7 +81,7 @@ could not run reports as not-evaluated, a prohibition nobody established reports
 |---|---|
 | Runtime | Node ≥ 18 declared in `package.json`, ESM `.mjs` throughout. **Executed** on 2026-09-14 against the tree committed with Standard 09: Node 18.20.8, 20.19.6, 22.23.2 and 24.21.0 in locally present Docker images, and 24.15.0 on the host, all 316 tests passing. On the tree committed with Standard 13, the seven test files covering the changed detector and splitter (93 tests) were re-run on Node 18.20.8 in a local Docker image, and the full suite of 333 on the host's 24.15.0; nothing was re-run on 20.x or 22.x for that commit. On the tree committed with the Q13 correction and Standard 23, ten test files covering the changed evaluation code and catalog (157 tests) ran on Node 18.20.8 in a local Docker image, and the full suite of 367 on the host's 24.15.0; 20.x and 22.x were not re-run. On the tree committed with Standard 17 and the Q14 clarification, which changed documents, catalog crosswalks, a code comment and tests but no runtime code, only the full suite of 374 ran, on the host's 24.15.0; no other runtime was re-run. On the tree committed with the adoption slice, the twelve test files covering the changed runtime code (198 tests, none skipped, including `init` against real symlinks) ran on Node 18.20.8 in a local Docker image, and the full suite of 449 on the host's 24.15.0; 20.x and 22.x were not re-run. **Every other version is unverified, including 18.0.0–18.20.7** |
 | Package manager | **None used.** There are no dependencies to install, and no lockfile exists |
-| Dependencies | **Zero third-party, structurally.** `test/no-phase-creep.test.mjs` fails if a lockfile appears |
+| Dependencies | **None installed or resolved from the environment, structurally.** `test/no-phase-creep.test.mjs` fails if a dependency key, a lockfile or a bare import appears. One parser is vendored as repository content (`scripts/vendor/yaml`), pinned by `scripts/vendor/yaml.vendor.json` and held by `test/vendor-yaml.test.mjs` |
 | Test framework | `node:test` + `node:assert/strict`. Nothing else |
 | Host OS during development | Windows 11, PowerShell 7 |
 | Git | Branch `develop`. Checkpoint commit **`d4b4ee2`** (2026-09-04) tracks the whole implementation; **`70832f4`** adds Standard 02; **`fc060bf`** (2026-09-06) adds Standard 11, the `oversight` shard and the regenerated documentation; the 2026-09-14 batch commit (`git log --grep "Standard 08"`) adds Standard 08, the rule-table generator and the document-conformance checker; the Standard 09 commit (`git log --grep "Standard 09"`) adds Standard 09, four misuse rules, the rule-table coverage check and the regenerated architecture document; the Standard 13 commit (`git log --grep "Standard 13"`) adds Standard 13 and the safety-detector repair; the Q13 commit (`git log --grep "Q13"`) brings partial-assurance evaluation to Standard 5 R6 and adds Standard 23; the Standard 17 commit (`git log --grep "Standard 17"`) adds Standard 17, clarifies Standard 5's meanings and scoring (Q14) and corrects three crosswalks; the adoption commit (`git log --grep "adoption"`) adds the templates, `manifest.mjs`, `toolperms.mjs` and `init`, preceded by `a2d5069`, which stopped scaffolding satisfying any rule; **`850646a`** records GitHub as the backlog authority. **Nothing is pushed**: `develop` was 12 commits ahead of `origin/develop` on 2026-10-03 |
@@ -98,11 +94,15 @@ There is no install step. Clone and run.
 git had no copy. There is now a safety net; keep it by committing each slice rather than accumulating
 another untracked tree.
 
-**`core.autocrlf` is `true` and there is no `.gitattributes`.** Committed bytes are LF, working-tree
-bytes are CRLF, and a clone on another platform will differ from this one at the byte level. The
+**`core.autocrlf` is `true` and there is no repository-wide line-ending policy (Q8 answered A, 2026-10-14).** Committed bytes are LF,
+working-tree bytes are CRLF, and a clone on another platform will differ from this one at the byte level. The
 fidelity gate is unaffected because it normalizes CRLF→LF on both sides and declares that it does.
-Adding a `.gitattributes` would rewrite the line endings of every file, so it is left as a deliberate
-open item rather than done in passing.
+The one `.gitattributes` that exists (added by ST-57) is `scripts/vendor/** text eol=lf` and covers only the
+vendored parser tree, so its recorded hashes do not depend on a checkout; it decides nothing about any other
+file. Q8 was answered A by the owner on 2026-10-14: that vendor-only rule is the answer, no repository-wide
+rule is added, and the question is revisited only when a second byte-pinned artifact appears outside
+`scripts/vendor/`. (The `init` note near the end of this section, "no
+`.gitattributes` was added", is a dated record of that slice and is left as written.)
 
 **`.claude/` is untracked local tooling state, and a clean `git status` in one checkout is not
 portable evidence.** The development checkout holds `.claude/settings.local.json`, and `git
@@ -464,7 +464,7 @@ the coordinator's inference from the plan, the schemas and Standard 17, and the 
 - **Guard.** `test/no-phase-creep.test.mjs` now requires these files and that a bare `init` refuses; the
   attestation, exception, container, workflow and adapter restrictions are unchanged.
 - **Limits.** Templates are LF in git and CRLF in this Windows working tree, and `init` copies working-tree
-  bytes, so a target inherits the checkout's line endings; no `.gitattributes` was added (Q8). Coverage is
+  bytes, so a target inherits the checkout's line endings; no `.gitattributes` was added (Q8; answered A, vendor-only rule, on 2026-10-14). Coverage is
   still declared, not measured. The human report's closing NOTE prints on a refused run too.
 
 **Deliberately not built, and asserted absent by test:** the remaining 36 standards, shards for
@@ -548,9 +548,10 @@ governance until a sign-off exists.
    unapproved, and its own reasoning does not reach the word "propose". Standard 11's R7 was scoped
    narrowly rather than propagating it, so the two standards currently differ on adjacent ground.
    This is the only open question that changes the wording of an already-written standard.
-5. **Whether to pin line endings with a `.gitattributes`** — Q8. `core.autocrlf` is `true` and no
-   `.gitattributes` exists. Nothing breaks today; it becomes real in Phase 5, where the container
-   materialises its clone with `core.autocrlf=false`.
+5. **~~Whether to pin line endings repository-wide with a `.gitattributes`~~ — Q8, ANSWERED A on 2026-10-14.**
+   `core.autocrlf` is `true`. The one `.gitattributes` that exists (ST-57) pins only `scripts/vendor/**` to LF so
+   vendored hashes are checkout-independent, and that vendor-only rule is the owner's answer: no repository-wide
+   rule is added. Revisit only when a second byte-pinned artifact appears outside `scripts/vendor/`. Packet: `F:\Repos\StandardsPortfolio-evidence\aistandards-125-q8-packet-2026-10-14.md`.
 6. **Whether the substantive authored content of Standards 08, 09, 13, 17 and 23 stands.** Each discloses every
    authored element in its Additions section — for 08, that safety cases are not graded by risk
    tier; for 09, the definitions of misuse and abuse, reading jailbreak attempts as Standard 21's
@@ -629,7 +630,9 @@ source inventory remain.
 2. **Never weaken a test, policy, standard or evidence requirement to make a gate pass.**
 3. **Never invent historical intent, test results, approvals, reviewers, model capabilities or
    compliance evidence.** `humanSignOff: null` is the shape this takes in practice.
-4. **Zero third-party dependencies, and no lockfile.** A test enforces it structurally.
+4. **No install-time or environment-resolved third-party dependency, and no lockfile.** Vendored parser
+   code is reviewed repository content whose version, hashes and licence are pinned. Tests enforce it
+   structurally.
 5. **Crosswalks are semantic, never id reuse.** `ai.*` and `ai-ux.*` are refused at catalog load.
 6. **`fidelity.mjs`, `inventory.mjs` and `attestations.mjs` have no write path.** A gate that can
    repair what it checks is not a gate.
