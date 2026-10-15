@@ -30,8 +30,8 @@ that presents an AI feature to people through an interface.
 
 Terms, defined once and used verbatim below:
 
-- **Framework output** — what a detector, catalog rule, audit finding, generated report, template, schema or policy of this framework states, or any other message, score or status it emits.
-- **Accessibility verdict** — a statement that an AI feature, or any interface, surface or component of it, is, is not or is partly accessible, or meets, fails or partly meets an accessibility requirement, whatever its basis: the presence of an owner's rule, a component library or an accessibility statement, an imported owner result, or anything else.
+- **Framework output** — what a detector, catalog rule, audit finding, generated report, template, schema or policy of this framework states, or any other message, score or status it emits, other than text supplied by a target project and clearly attributed to it.
+- **Accessibility verdict** — a statement that an AI feature, or any interface, surface or component of it, is, is not or is partly accessible, or meets, fails or partly meets an accessibility requirement, or a statement that classifies an accessibility barrier, accepts an accessibility exception, or declares owner evidence of accessibility valid or stale, whatever its basis: the presence of an owner's rule, a component library or an accessibility statement, an imported owner result, or anything else.
 - **Accessibility definition** — a catalog id, schema field, template item, policy key or standard requirement of this framework that defines an accessibility requirement.
 
 **Reach.** This standard does not decide whether a generated, conversational, voice-based or
