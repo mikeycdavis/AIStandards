@@ -191,7 +191,7 @@ under [Authored items](#authored-items).
 | --- | --- | --- | --- | --- | --- |
 | 8 | AI Safety Requirements and Safety Cases | D | `AI safety` | O | standards/08-ai-safety-requirements-and-safety-cases.md |
 | 9 | Misuse and Abuse Prevention | D | `misuse prevention` | O | standards/09-misuse-and-abuse-prevention.md |
-| 10 | Human Oversight and Intervention | D | `human oversight` | O | — |
+| 10 | Human Oversight and Intervention | D | `human oversight` | O | standards/10-human-oversight-and-intervention.md |
 | 11 | Autonomy Levels and Delegated Authority | D | `autonomous` | X | standards/11-autonomy-levels-and-delegated-authority.md |
 
 ### Band C — Data · bullet 2

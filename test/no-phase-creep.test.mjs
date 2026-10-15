@@ -120,6 +120,7 @@ test("only the standards written so far exist", () => {
     "07-boundary-with-adjacent-standards.md",
     "08-ai-safety-requirements-and-safety-cases.md",
     "09-misuse-and-abuse-prevention.md",
+    "10-human-oversight-and-intervention.md",
     "11-autonomy-levels-and-delegated-authority.md",
     "13-personal-data-in-ai-systems.md",
     "17-evaluation-plans-for-generative-systems.md",
