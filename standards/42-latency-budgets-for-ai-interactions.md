@@ -92,7 +92,7 @@ This requirement sets no threshold and prescribes no universal figure. A claim a
 
 **No detector, rule, audit finding or generated report in this framework MAY state that a system meets a latency budget, or that its calls are bounded in time, because a timeout setting, a streaming flag or a named model is present in the repository.**
 
-This is a constraint on the framework, not on a project. A repository can show that a timeout argument is set; it cannot show that the value is the one in production, that it is on the call that matters, or that anything observed the wait. A call limit is shown by a call it cut short, which is R2's record and not the framework's to infer.
+This is a constraint on the framework, not on a project. A repository can show that a timeout argument is set; it cannot show that the value is the one in production, that it is on the call that matters, or that anything observed the wait. Whether a call limit works is R2's record, and not the framework's to infer from a setting.
 
 ## Failure modes
 
@@ -171,7 +171,7 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 | R2 | A change of provider, gateway, client or call path, or of the call limit's value or behaviour. |
 | R3 | A change of retry, fallback or timeout policy. |
 | R4 | A change of model, prompt, provider, region, tier, workload or call path, or a known and material change in the provider's load regime. |
-| R5 | A change that makes the named latency figure stale (R4). |
+| R5 | A change that makes the named latency figure stale (R4), or a change to the named budget (R1). |
 | R6 | A new detector, rule or report that touches latency. |
 
 ## Additions this standard makes beyond the source
