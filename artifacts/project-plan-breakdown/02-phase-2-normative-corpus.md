@@ -43,21 +43,26 @@ boundary posture in it is a unilateral judgment; no maintainer of any adjacent p
 any of them. Catalog numbering is *technically* frozen by `artifacts/prompts/ai-standards-spec.md`
 and is separately *not* maintainer-approved governance. Report both, never one.
 
-**Zero third-party dependencies, enforced by a test.** `package.json` has no `dependencies` key and
-there is no lockfile. `test/no-phase-creep.test.mjs` asserts this. Do not `npm install` anything, do
-not add a formatter, do not add a mermaid renderer. If you need to parse something, extend
-`scripts/yaml.mjs` or `scripts/jsonschema.mjs`.
+**No install-time or environment-resolved third-party dependency, enforced by a test.** `package.json`
+has no dependency key of any kind and there is no lockfile. `test/no-phase-creep.test.mjs` asserts this.
+The one third-party parser, `yaml`, is vendored under `scripts/vendor/` as reviewed repository content
+whose version, hashes and licence are pinned (`test/vendor-yaml.test.mjs`). Do not `npm install`
+anything, do not add a formatter, do not add a mermaid renderer. If you need to parse a policy or
+manifest, extend `scripts/yaml.mjs` or `scripts/jsonschema.mjs`; the vendored parser is for the
+structural reader (`scripts/structural.mjs`) only.
 
 **`--test-concurrency=1` is mandatory and already set in `scripts/test.mjs`.** The mutation suites
 corrupt a real shared file, assert the check fails, and restore it. Running them in parallel
 corrupts the run and produces failures unrelated to your change. Do not "optimise" this away.
 
-**`core.autocrlf` is `true` on this machine and there is no `.gitattributes`.** Committed bytes are
-LF; working-tree bytes are CRLF. `scripts/fidelity.mjs` declares a single normalization (CRLF→LF on
-both sides) and reports raw-byte matches separately, so this is currently harmless. Do **not** add a
-`.gitattributes` as a side effect of other work — it rewrites every file's line endings in one
-commit and buries whatever you were actually doing. It is recorded as an open item in
-`08-open-questions.md`.
+**`core.autocrlf` is `true` on this machine and there is no repository-wide line-ending policy.** Committed
+bytes are LF; working-tree bytes are CRLF. `scripts/fidelity.mjs` declares a single normalization (CRLF→LF on
+both sides) and reports raw-byte matches separately, so this is currently harmless. The one
+`.gitattributes` that exists (ST-57) pins only `scripts/vendor/**` to LF and decides nothing about any other
+file. Do **not** add a repository-wide `.gitattributes` as a side effect of other work. The owner answered Q8
+(option A, 2026-10-14): the vendor-only rule is the answer and no repository-wide rule is added; the entry in
+`08-open-questions.md` records it and the revisit trigger. (The `init` note further down, "No `.gitattributes` was added", is a
+dated record of that slice and is left as written.)
 
 ---
 
@@ -564,7 +569,7 @@ Built to §12.2–§12.4. Decisions the workers made beyond the contract, each i
 
 **Known limits.** Templates are LF in git and CRLF in this Windows working tree, and `init` copies
 working-tree bytes, so a target inherits the checkout's line endings. Repeating `init` is unchanged within
-one checkout. No `.gitattributes` was added (Q8). `init` writes no `evaluation-plan.yml`, no `.gitignore`
+one checkout. No `.gitattributes` was added (Q8; answered A, vendor-only rule, on 2026-10-14). `init` writes no `evaluation-plan.yml`, no `.gitignore`
 entry and nothing outside the three core files and the optional `docs/ai/` set. The file set, marker forms,
 destination and conflict behaviour are the coordinator's inference from the plan, the schemas and Standard 17;
 the owner may reverse any of them.
