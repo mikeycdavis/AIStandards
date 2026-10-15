@@ -68,7 +68,7 @@ Time to first token and time to a complete answer are different waits, and a mea
 
 **Every model call that a person or process waits on MUST have a call limit, recorded with where in the call path it is applied and with the behaviour when it is reached.**
 
-A call without a limit has no latency budget, only a hope. The behaviours differ in what they cost the user and the project chooses: a partial answer marked as partial, a fallback, a failure with a message, queued work; the requirement is that one is defined and is not "wait". A percentile or fraction objective is not an event inside one request and has no per-request behaviour to define.
+A call without a limit is not bounded in time, whatever objective is stated for its interaction. The behaviours differ in what they cost the user and the project chooses: a partial answer marked as partial, a fallback, a failure with a message, queued work; the requirement is that one is defined and is not "wait". A percentile or fraction objective is not an event inside one request and has no per-request behaviour to define.
 
 ### R3 — Give a retrying interaction a deadline
 
