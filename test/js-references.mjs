@@ -554,6 +554,19 @@ function readUrlConstruction(tokens, open, offset, specifiers, unreadable) {
   return undefined;
 }
 
+// Names through which a module can run code that this scan cannot read, so a module that uses them could
+// reach a loader the scan never sees (`eval('require("package")')`). Any occurrence is an unreadable
+// reference, whatever precedes it: `eval`, `Function` (`new Function(...)`, `Function(...)`,
+// `.constructor("...")`), `importScripts`, and the vm entry points that compile or run source text. A
+// worker started with `{ eval: true }` contains the identifier `eval` and is caught by the same rule.
+const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule"];
+// Timers that accept source text as their first argument, and child processes that can be told to evaluate
+// source (`node -e`, `--eval`, `-p`, `--print`). Seen only through literals: a command held in a variable
+// is a stated limit.
+const TIMER_NAMES = ["setTimeout", "setInterval", "setImmediate"];
+const CHILD_PROCESS_NAMES = ["exec", "execSync", "execFile", "execFileSync", "spawn", "spawnSync", "fork"];
+const EVAL_FLAG = /(^|\s)(-e|--eval|-p|--print|--eval=\S*|--print=\S*)(\s|$)/;
+
 // Whether the token at `k` is directly called: `x(...)` or `x?.(...)`.
 function isCalledAt(tokens, k) {
   const a = tokens[k + 1];
@@ -580,6 +593,33 @@ export function moduleReferences(source) {
   for (let k = 0; k < tokens.length; k += 1) {
     const tk = tokens[k];
     if (tk.t === "id" && tk.v === "createRequire") unreadable.push({ form: "createRequire", specifier: `at offset ${tk.s}` });
+    const dynamic = (why) => unreadable.push({ form: "dynamic-code", specifier: `${why} at offset ${tk.s}` });
+    if (tk.t === "id" && DYNAMIC_CODE_NAMES.includes(tk.v)) dynamic(`reference to ${tk.v}, which runs source text`);
+    if (tk.t === "str" && DYNAMIC_CODE_NAMES.includes(tk.v) && tokens[k - 1] && tokens[k - 1].v === "[" && tokens[k + 1] && tokens[k + 1].v === "]") {
+      dynamic(`computed reference to ${tk.v}, which runs source text`);
+    }
+    if (tk.t === "id" && tk.v === "Script" && tokens[k - 1] && (tokens[k - 1].v === "new" || (tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "vm"))) {
+      dynamic("vm.Script, which compiles source text");
+    }
+    if (tk.t === "id" && tk.v === "constructor" && tokens[k - 1] && tokens[k - 1].v === "." && tokens[k + 1] && tokens[k + 1].v === "(" && !tokens[k + 1].syn) {
+      dynamic(".constructor(...), which reaches Function");
+    }
+    if (tk.t === "id" && (TIMER_NAMES.includes(tk.v) || CHILD_PROCESS_NAMES.includes(tk.v)) && isCalledAt(tokens, k)) {
+      const open = tokens[k + 1].v === "(" ? k + 1 : k + 3;
+      const callArgs = callArguments(tokens, open);
+      if (callArgs === null) {
+        dynamic(`unparseable ${tk.v} call`);
+      } else if (TIMER_NAMES.includes(tk.v)) {
+        const first = callArgs[0] ?? [];
+        if (first.some((t) => t.t === "str" || t.t === "tmpl")) dynamic(`${tk.v} with source text`);
+      } else {
+        for (const arg of callArgs) {
+          for (const t of arg) {
+            if (t.t === "str" && EVAL_FLAG.test(t.v)) dynamic(`${tk.v} told to evaluate source (${t.v.slice(0, 30)})`);
+          }
+        }
+      }
+    }
     const memberOf = tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === ".";
     if (tk.t === "id" && tk.v === "require" && !isCalledAt(tokens, k)) {
       unreadable.push({ form: "require", specifier: `reference that is not a literal call at offset ${tk.s}` });

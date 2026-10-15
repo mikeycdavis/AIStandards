@@ -95,12 +95,108 @@ test("the installed-modules scan itself: a node_modules at any depth is reported
   }
 });
 
+// Every JavaScript runtime file under <root>/scripts (.mjs, .js and .cjs, at any depth, node_modules reported
+// separately) scanned for references that leave the repository or cannot be read.
+const RUNTIME_FILE = /\.(mjs|js|cjs)$/;
+function runtimeOffenders(root) {
+  const out = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === ".git" || entry.name === "node_modules") continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (RUNTIME_FILE.test(entry.name)) {
+        const rel = path.relative(root, full).split(path.sep).join("/");
+        for (const o of externalReferences(fs.readFileSync(full, "utf8"), { file: full, root })) out.push(rel + ": " + o);
+      }
+    }
+  };
+  if (fs.existsSync(path.join(root, "scripts"))) walk(path.join(root, "scripts"));
+  return out.sort();
+}
+
 test("invariant 4: every runtime import under scripts/ is a node: builtin or a local module", () => {
-  const offenders = [];
-  for (const file of filesUnder("scripts").filter((f) => /\.(mjs|js|cjs)$/.test(f))) {
-    for (const o of externalReferences(read(file), { file: path.join(REPO, file), root: REPO })) offenders.push(`${file}: ${o}`);
+  assert.deepEqual(runtimeOffenders(REPO), [], "a bare import specifier is a third-party dependency resolved from the environment");
+});
+
+test("the runtime scan covers .cjs, .js and .mjs at any depth and reports code that could hide a loader", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "aistd-runtime-"));
+  try {
+    const put = (rel, text) => {
+      const full = path.join(root, ...rel.split("/"));
+      fs.mkdirSync(path.dirname(full), { recursive: true });
+      fs.writeFileSync(full, text);
+    };
+    put("scripts/ok.mjs", 'import fs from "node:fs";\nexport const a = fs;\n');
+    put("scripts/lib/ok.cjs", 'const p = require("node:path");\nmodule.exports = p;\n');
+    assert.deepEqual(runtimeOffenders(root), []);
+    put("scripts/a.cjs", 'const x = require("package");\n');
+    put("scripts/lib/deep/b.js", 'const x = eval(\'require("package")\');\n');
+    put("scripts/c.mjs", 'import "package";\n');
+    put("scripts/lib/d.cjs", "const f = new Function(\"return require\");\n");
+    const found = runtimeOffenders(root);
+    for (const file of ["scripts/a.cjs", "scripts/lib/deep/b.js", "scripts/c.mjs", "scripts/lib/d.cjs"]) {
+      assert.ok(found.some((o) => o.startsWith(file + ":")), file + " must be reported: " + JSON.stringify(found));
+    }
+    assert.ok(!found.some((o) => o.startsWith("scripts/ok.mjs") || o.startsWith("scripts/lib/ok.cjs")));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
   }
-  assert.deepEqual(offenders, [], "a bare import specifier is a third-party dependency resolved from the environment");
+});
+
+test("dynamic-code loaders are unreadable references: eval, Function, vm, timers given source, child_process evaluating source, eval workers", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-dyn", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-dyn"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src, where);
+  const must = {
+    "eval of a require": 'const x = eval(\'require("package")\');',
+    "indirect eval": 'const x = (0, eval)("1");',
+    "eval as a value": "const e = eval;",
+    "new Function": 'const f = new Function("return 1");',
+    "Function without new": 'const f = Function("a", "return a");',
+    "Function through globalThis": 'const f = new globalThis.Function("return 1");',
+    "computed eval": 'const e = globalThis["eval"];',
+    "the constructor of a function": 'const f = (() => {}).constructor("return 1");',
+    "vm.runInThisContext": 'const v = vm.runInThisContext("1");',
+    "vm.runInNewContext": 'const v = vm.runInNewContext("1", {});',
+    "vm.runInContext": "const v = vm.runInContext(code, ctx);",
+    "vm.Script": 'const s = new vm.Script("1");',
+    "a Script constructed": 'const s = new Script("1");',
+    "vm.compileFunction": 'const f = vm.compileFunction("return 1");',
+    "vm.SourceTextModule": "const m = new vm.SourceTextModule(src);",
+    "importScripts": 'importScripts("https://example.com/x.js");',
+    "setTimeout with a string": 'setTimeout("doIt()", 10);',
+    "setInterval with a template": "setInterval(" + String.fromCharCode(96) + "doIt()" + String.fromCharCode(96) + ", 10);",
+    "setTimeout with a concatenated string": 'setTimeout("do" + name + "()", 10);',
+    "a worker with eval: true": 'new Worker("require(\'package\')", { eval: true });',
+    "node -e through execSync": 'execSync("node -e \'1\'");',
+    "node --eval through spawnSync": 'spawnSync(process.execPath, ["--eval", "1"]);',
+    "node -p through execFileSync": 'execFileSync("node", ["-p", "1"]);',
+    "node --print=code": 'spawn("node", ["--print=1"]);',
+    "fork with -e": 'fork("x.js", ["-e", "1"]);',
+    "qualified child_process call": 'cp.execSync("node -e 1");',
+    "an unbalanced timer call": 'setTimeout("x", 1;',
+    "vm.SyntheticModule": "const m = new vm.SyntheticModule(names, fn);",
+    "a timer given a template with an interpolation": "setTimeout(" + String.fromCharCode(96) + "do${name}()" + String.fromCharCode(96) + ", 1);",
+    "setImmediate with a string": 'setImmediate("doIt()");',
+    "node --print as a separate argument": 'execFileSync("node", ["--print", "1"]);',
+    "node --eval=code": 'spawnSync("node", ["--eval=1"]);',
+    "exec with node -e": 'exec("node -e 1", cb);',
+    "execFile with -e": 'execFile("node", ["-e", "1"], cb);',
+  };
+  for (const [label, src] of Object.entries(must)) assert.notDeepEqual(refs(src + "\n"), [], "must be an offender: " + label);
+  const may = {
+    "a timer given a function": "setTimeout(() => {}, 10);",
+    "a timer given a named function": "setInterval(tick, 10);",
+    "spawnSync running the test runner": 'spawnSync(process.execPath, ["--test", "--test-concurrency=1", file], { stdio: "inherit" });',
+    "execFileSync of git": 'execFileSync("git", ["rev-parse", "HEAD"]);',
+    "the word eval in a string": 'const s = "do not eval this";',
+    "the word eval in a comment": "// eval(x)\nconst a = 1;",
+    "a class constructor method": "class A { constructor(x) { this.x = x; } }",
+    "an identifier containing the word": "const evaluate = 1; const Functions = 2; const myeval = 3;",
+    "the namespace string eval in a list": 'const names = ["promptsec", "eval"];',
+    "a class with a Script name that is not constructed": "const Script = 1;",
+  };
+  for (const [label, src] of Object.entries(may)) assert.deepEqual(refs(src + "\n"), [], "must be accepted: " + label);
 });
 
 // A file at <root>/scripts/a.mjs, for the scan's own tests. The injected file system says every path exists
