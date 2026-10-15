@@ -50,9 +50,11 @@ it.
 
 Two terms, each defined here rather than by the brief:
 
-- A **dependency** is any service or host, external or operated by the project itself, whose failure
-  or change alters what the system produces: a model endpoint or the host a self-served model runs on,
-  an embedding service, a vector store, a tool API, a moderation service.
+- A **dependency** is a service or host whose failure or change alters what the system produces and
+  that is either external to the project, or is a model host or other AI-specific service the project
+  itself operates: a model endpoint or the host a self-served model runs on, an embedding service, a
+  vector store, a tool API, a moderation service. The project's ordinary infrastructure (its
+  databases, queues and application servers) is not a dependency in this sense; Scope excludes it.
 - A **degraded mode** is a defined, reduced service the system gives when a dependency is unavailable or
   untrustworthy, which may be to decline.
 
@@ -89,10 +91,9 @@ and not resolved here; which governs is that pack's to say.
 
 ### R1 — Name each dependency, external or self-operated, and what its failure does
 
-**A system MUST record each dependency, whether external or operated by the project, whose failure or
-change alters what it produces, and
-for each MUST record what the system does when the dependency is unavailable, slow, rate-limited or
-changed.**
+**A system MUST record each dependency, as defined in Scope, whose failure or change alters what it
+produces, and for each MUST record what the system does under each of four conditions: unavailable,
+slow, rate-limited and changed.**
 
 A dependency not enumerated is a failure nobody planned for. The record is a document, not a manifest
 field: `schemas/ai-system-manifest.schema.json` is closed and declares `models`, `tools` and
@@ -140,13 +141,13 @@ those.
 
 ### R5 — Exercise the degraded and fallback paths, and record that they ran
 
-**A degraded mode or fallback MUST be exercised — in a test, a drill or an observed real event — and the
-project MUST record when and with what result; a path that has never been exercised MUST NOT be
-described as available.**
+**Each degraded mode and each fallback MUST be exercised — in a test, a drill or an observed real
+event — and the project MUST record when and with what result and state how often it will be exercised
+again; a path that has never been exercised MUST NOT be described as available.**
 
 A fallback that has never run has an unknown failure rate, and the usual way to find it out is the
-outage it was written for. The interval is the project's choice; the requirement is that one exists and
-that a date is on the record.
+outage it was written for. The interval is the project's choice; the requirement is that one is stated
+and that a dated result is on the record.
 
 ### R6 — This framework MUST NOT report resilience or portability from the presence of an arrangement
 
@@ -187,7 +188,7 @@ a request it served.
 | R2 | Each degraded mode, and the field, header or shape that carries it, with a sample of a degraded response | The project's output contract and a captured example | Human review |
 | R3 | The controls on the primary path and a statement of how each applies to the fallback | Project code, configuration and data-handling terms | Human review |
 | R4 | The boundary where provider-specific behaviour sits, and the stated list of what replacement would change | Project code and documentation | Human review |
-| R5 | The date and result of each exercise of a degraded or fallback path | Test records, drill records or incident records | Human review of the records |
+| R5 | The date and result of each exercise of a degraded or fallback path, and the stated interval | Test records, drill records or incident records | Human review of the records |
 | R6 | The absence of any detector that reports resilience from a presence | This repository's own detectors and tests | Code review; see Implementation |
 
 Evidence for R1 to R5 is a human-authored record. A document naming a fallback establishes that the
@@ -222,7 +223,11 @@ Three reasons, stated so a reader can disagree with any one of them:
    another, is the owner's decision; a proposal, if one is natural, is recorded in the pull request that
    introduced this document for per-rule approval.
 
-**Severity.** R1 to R5 are `manual-review` obligations in this release. What a real outage will do is not a
+**Severity.** A reviewer's finding against R1 to R4 is reported at **warning** severity: the system may
+behave well, and what is missing is the account of it. A finding against R5 is reported at **error**
+severity, because it is a claim with nothing behind it and R5 is not exemptible. These levels are this
+repository's judgment, listed in Additions, and are not owner-approved. R1 to R5 are also
+`manual-review` obligations in this release. What a real outage will do is not a
 property of a repository, and no requirement here asks a reviewer to establish it. R6 constrains this framework and has
 no validation type, because the thing it prohibits is a behaviour of the tool.
 
@@ -240,11 +245,12 @@ here is lowered by a risk tier (Standard 2 R3).
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | Each dependency, including a self-served model's host, has a recorded failure behaviour | A retrieval or moderation service, or a self-hosted model's host, in use with no recorded behaviour on its failure | A system with a single model dependency whose recorded failure behaviour is "decline" must **not** be reported missing a degraded mode: the decline is its degraded mode |
-| R2 | A response produced in a degraded mode differs, in the data the system emits, from a full one | The two are byte-identical in the output contract | A system whose recorded degraded mode is to decline must **not** be failed for lacking a separate marker on responses it never produces in a degraded form; a system that declines without recording the decline as its degraded mode fails R2 |
+| R1 | Each dependency, including a self-served model's host, has a recorded behaviour for each of the four conditions: unavailable, slow, rate-limited, changed | A dependency in use with no record, or a record covering only a total outage | A system whose record states, for the model dependency, that the degraded mode under each condition is to decline, recorded as its degraded mode, must **not** be reported missing a degraded mode |
+| R2 | A response produced in a degraded mode carries the recorded field, header or distinct response shape that a full response does not | No such signal is recorded, or it is absent from a degraded response (comparing the generated text of the two does not establish a signal) | A system whose recorded degraded mode is to decline must **not** be failed for lacking a separate marker on responses it never produces in a degraded form; a system that declines without recording the decline as its degraded mode fails R2 |
 | R3 | A request served by the fallback passes through the controls of the primary, or is declined | A fallback path with no redaction or output check | A fallback behind the same controls must **not** be flagged for being a different model |
-| R4 | A stated list of what replacement would change exists beside the claim | "Provider-agnostic" with one adapter and no list | A project that makes no portability claim and says so must **not** be failed for lacking a replacement list; provider-specific logic in domain code remains assessed against the abstraction clause |
-| R5 | A dated record of an exercise exists for each fallback | A fallback with no record of ever running | A degraded mode exercised only in a test, and recorded as such, must **not** be flagged for not having been used in production |
+| R4, replacement claim | A stated list of what replacement would change exists beside the claim | "Provider-agnostic" with one adapter and no list | A project that makes no portability claim and says so must **not** be failed for lacking a replacement list |
+| R4, abstraction | Provider-specific calls and request shapes sit at an integration boundary behind an interface | Provider-specific behaviour (a provider SDK call, a provider-specific request shape) embedded in domain logic | A provider SDK used only inside the adapter or integration module must **not** be flagged |
+| R5 | A dated record of an exercise, and a stated interval, exist for each degraded mode and each fallback | A degraded mode or fallback with no record of ever running, or with no stated interval | A degraded mode exercised only in a test, and recorded as such, must **not** be flagged for not having been used in production |
 | R6 | No detector or report in this repository outputs a resilience verdict from presence | A detector that reported resilient because a fallback model was configured | Reporting that a fallback setting was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a resilience artifact and no fixture
@@ -257,6 +263,12 @@ honest state of this standard.
 There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to
 except. A project that knowingly does not meet one records that in its own documents; Standard 2's
 dispositions apply to the application of a rule, and this standard has none.
+
+**Attestations and expiry.** This release provides no attestation mechanism for these records, and no
+record under this standard expires on a schedule. [Standard 2](02-ai-risk-tiering-and-applicability.md)'s
+attestation and expiry machinery attaches to catalog rules, and none exists here; attestations are
+Phase 4 work. Review-staleness is event-driven only: a record is stale when one of the events below
+occurs, and nothing in this release detects that.
 
 **What invalidates a recorded dependency inventory, degraded mode or exercise.** Each is a different
 subject, and a record made before the change describes the earlier one:
@@ -303,6 +315,8 @@ owner-approved:
 - **The recheck of the precedent** at EngineeringStandards `3b1b18d` on 2026-10-14, including the
   observation that the standard's text and the rule record differ in level, which the boundary review
   did not make.
+- **The severity assignments** (warning for R1 to R4, error for R5) and the statement that no
+  attestation or scheduled expiry exists in this release.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
   decision to mint no id.
 
