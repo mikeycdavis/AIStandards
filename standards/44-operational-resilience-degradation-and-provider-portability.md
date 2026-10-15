@@ -144,8 +144,10 @@ those.
 
 **Each degraded mode and each fallback MUST be exercised — in a test, a drill or an observed real
 event — and the project MUST record when and with what result and state how often it will be exercised
-again; a path that has never been exercised, or whose latest recorded exercise is older than its stated
-interval, MUST NOT be described as available.**
+again; a path that has never been exercised, whose latest recorded exercise is older than its stated
+interval, whose latest exercise did not show the expected degraded or fallback behaviour, or that has
+changed since its latest exercise (a model, provider, terms, primary-path control or fallback policy),
+MUST NOT be described as available.**
 
 A fallback that has never run has an unknown failure rate, and the usual way to find it out is the
 outage it was written for. The interval is the project's choice; the requirement is that one is stated
@@ -227,7 +229,8 @@ Three reasons, stated so a reader can disagree with any one of them:
 **Severity.** A finding is reported at **error** severity when review observes one of: a fallback
 serving an interaction without a control the primary path applies (R3); a degraded response presented in
 the form of a full one (R2); a degraded mode or fallback described as available that has never been
-exercised or whose latest exercise is older than its stated interval (R5); or a violation of R6 by any detector, rule, audit finding or generated report. **Every other finding is reported at warning
+exercised, whose latest exercise is older than its stated interval, failed, or predates a change to the
+path (R5); or a violation of R6 by any detector, rule, audit finding or generated report. **Every other finding is reported at warning
 severity**, including a missing or incomplete record, statement or label (R1 to R5), a missing
 statement of how a fallback's controls apply, and provider-specific behaviour embedded in domain logic
 under R4's abstraction clause, which is a SHOULD. The assignment is exhaustive and does not depend on
@@ -255,7 +258,7 @@ here is lowered by a risk tier (Standard 2 R3).
 | R3 | A request served by the fallback passes through the controls of the primary, or is declined, and a statement of how each control applies to the fallback exists | A fallback that serves an interaction without a control the primary path applies (no redaction, no output check); or no statement of how each primary-path control applies to the fallback | A fallback behind the same controls must **not** be flagged for being a different model |
 | R4, replacement claim | A stated list of what replacement would change exists beside the claim | "Provider-agnostic" with one adapter and no list | A project that makes no portability claim and says so must **not** be failed for lacking a replacement list |
 | R4, abstraction | Provider-specific calls and request shapes sit at an integration boundary behind an interface | Provider-specific behaviour (a provider SDK call, a provider-specific request shape) embedded in domain logic | A provider SDK used only inside the adapter or integration module must **not** be flagged |
-| R5 | A dated record of an exercise, with its result, and a stated interval, exist for each degraded mode and each fallback, and the latest exercise falls within the interval, or the path is not described as available until it is exercised again | A degraded mode or fallback with no record of ever running, or with no stated interval, or whose record of an exercise gives no result, or whose latest exercise is older than its interval and which is still described as available | A degraded mode exercised only in a test, and recorded as such, must **not** be flagged for not having been used in production |
+| R5 | A dated record of an exercise, with its result, and a stated interval, exist for each degraded mode and each fallback, and the latest exercise falls within the interval, shows the expected behaviour, and postdates the latest change to the path, or the path is not described as available until it is exercised again | A degraded mode or fallback with no record of ever running, or with no stated interval, or whose record of an exercise gives no result, or whose latest exercise is older than its interval, failed to show the expected behaviour, or predates a change to the path, and which is still described as available | A degraded mode exercised only in a test, and recorded as such, must **not** be flagged for not having been used in production |
 | R6 | No detector, rule, audit finding or generated report in this repository states a resilience verdict from presence | A detector, rule, audit finding or report that stated a system resilient, degrading safely or provider-portable because a fallback setting, second provider name, retry policy or adapter interface was present | Reporting that a fallback setting was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a resilience artifact and no fixture
