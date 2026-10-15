@@ -44,7 +44,7 @@ when the evaluated model may have seen the set; where a project's own held-out s
 be placed; what a contamination check is entitled to claim; when a benchmark is no longer evidence;
 and the limit of what this framework can say about any of it.
 
-Three terms, each defined here rather than by the brief:
+Four terms, each defined here rather than by the brief:
 
 - **Contamination** is the presence of an evaluation set's content, or of material from which its
   answers can be derived, in data a model was trained or tuned on, or in a model's context at the
@@ -56,24 +56,23 @@ Three terms, each defined here rather than by the brief:
   anyone else published.
 - A **benchmark** is a public benchmark or any evaluation set a project uses as a stand-in for a
   capability it cares about, as opposed to a set built from its own task.
+- **Project-held material** is any evaluation material that is not public: see R3.
 
-**Where each requirement reaches.** R1 reaches every system that holds an evaluation set or reports a result on one. R2 reaches every system that reports a result on a set that a third-party-trained model could
-have seen, which includes a public benchmark published before the model's training cutoff or where
-the cutoff or training window is unknown, and a model the project fine-tunes from a third-party
-base. What the project's own training pipeline introduces is MachineLearningStandards' ground (see
-below). R2 does not require the qualification for a set that the project has recorded under R1 as
-not available by any route — private, circulated or published — before every training cutoff that
-applies, for as long as that record stands and is read under the staleness events below. A
-publication date alone is not that record, and without the record the exposure is unknown and the
-result is qualified. The exception concerns exposure through training only: it does not reach
-exposure through a model's context, retrieval or browsing at evaluation time, which R2's trigger
-covers separately, or through a model or alias updated after the cutoff. R3 reaches systems that hold a held-out set built from their own task, or that add material to a public benchmark. R4
-reaches a project that states a contamination check was run. R5 reaches systems that rely on a
-benchmark as evidence. R6 constrains this framework and reaches no consuming project. A system with
-none of a requirement's subject has nothing to meet: this standard defines no catalog rule, so there
-is no rule id under which [Standard 2](02-ai-risk-tiering-and-applicability.md) R4's
-not-applicable declaration could be made, and none is asked for. The project should say in its own
-evaluation record that the subject does not exist, with the reason; this is guidance, and no requirement is breached by silence.
+**Where each requirement reaches.** R1 reaches every system that holds an evaluation set or reports a
+result on one. R2 reaches every system that reports a result on a set that a model trained or tuned
+by another party could have seen in training, which includes a public benchmark published before
+the model's training cutoff or where the cutoff or window is unknown and a model the project
+fine-tunes from a third-party base, and every system whose evaluated model could have had the set's
+items or answers in its context at evaluation time. R3 reaches systems that hold project-held
+material. R4 reaches a project that states a contamination check was run. R5 reaches systems that
+rely on a benchmark as evidence. R6 constrains this framework and reaches no consuming project. A
+system with none of a requirement's subject has nothing to meet: this standard defines no catalog
+rule, so there is no rule id under which [Standard 2](02-ai-risk-tiering-and-applicability.md) R4's
+not-applicable declaration could be made, and none is asked for. The project may say in its own
+evaluation record that the subject does not exist; that is guidance, and no requirement is breached
+by silence.
+
+What the project's own training pipeline introduces is MachineLearningStandards' ground (see below).
 
 It does **not** cover, and claims none of the ground of, the following:
 
@@ -138,7 +137,7 @@ item 50 is still unwritten, and R3 below is a requirement, not one of its prohib
 from, whether its content was public and from when, any earlier circulation of its items or answers
 that the project knows of, and the model identifiers a result on it was computed for. Where the
 project wants R2's unavailability exception, it MUST also record that the items and answers were not
-available by any route before each applicable cutoff, and on what basis.**
+available by any route before each applicable training cutoff, and on what basis.**
 
 The model identifier is the one [Standard 1](01-ai-system-manifest.md) R4 asks the manifest to
 pin; without it a record of "published before the model's data was fixed" cannot be read, because
@@ -147,26 +146,30 @@ short record, and that is the point: the record is what lets a reader see that t
 public rather than assume it.
 
 The record concerns exposure, not authorship. "Public from 2024-03" and "never published, held in a
-private repository" are both complete answers; "unknown" is a third complete answer and is better
-than a guess. **A record that is absent is not a record that the set is private.**
+private repository" are both complete answers; "unknown" is a third complete answer, for the date
+and for earlier circulation alike, and is better than a guess. **A record that is absent is not a
+record that the set is private.**
 
-The manifest's `dataSources` entry carries `kind: evaluation-set`, `synthetic` and `provenance`, and
-no field for public exposure or its date. Nothing here asks an adopter to write a field the schema
-rejects: the record is a document the project names, and which document is the project's choice.
+The manifest's `dataSources` entry of kind `evaluation-set` carries only `synthetic` and a free
+`provenance` string, with no field for public exposure or its date. Nothing here asks an adopter to
+write a field the schema rejects: the record is a document the project names.
 
-### R2 — A result on a set the model may have seen says so
+### R2 — A result on a set a model may have seen says so
 
-**Where an evaluated model, or a model it was fine-tuned from, was trained by a party other than
-the project and could have been trained on the evaluation set, or whose items or answers could have
-reached the model in its context at evaluation time by any route — retrieval, browsing, tools, or
-being placed directly in a system prompt, example or message — a result MUST be reported with that
-qualification, and MUST NOT be reported as free of contamination because
-no contamination was found.**
+**Where an evaluated model, or the model it was fine-tuned from, was trained or tuned by a party
+other than the project, and (1) the evaluation set could have been in that training or tuning data,
+a result MUST be reported as a result on a possibly-exposed set; and where (2) the set's items or
+answers, or material from which they can be derived, could have reached the model's context at
+evaluation time by any route — retrieval, browsing, tools, or placed directly in a prompt, example
+or message — for any model, including one the project trained, the same applies. Such a result MUST
+NOT be reported as free of contamination because none was found, and a public benchmark's result
+MUST NOT be presented as capability on the project's own task.**
 
-A model the project trains entirely itself from data it holds is outside this trigger; what its
-pipeline lets in is MachineLearningStandards' subject. A model the project fine-tunes is inside it
-for what the base model saw: the project's pipeline did not introduce that exposure and cannot see
-it.
+**The unavailability exception.** Condition (1) is not met for a set whose R1 record shows, with its
+basis, that its items and answers were not available by any route before every training cutoff that
+applies to the model the record names. A publication date alone is not that record; without it the
+exposure is unknown and the result is qualified. The exception does not reach condition (2), and it
+ends with the staleness events below.
 
 For a model the project did not train, which is every hosted model, the project usually cannot see
 the training data. A provider may state that it filtered named benchmarks, may publish a training
@@ -178,92 +181,84 @@ only as good as the match it used.
 check. "The result is uncontaminated" is a statement about the model, and nothing a repository
 holds supports it for a model the project does not train.
 
-A public benchmark's score is therefore reported as a score on a public benchmark, with its
-exposure as R1 records it. This does not ask a project to stop using one. It asks that the number
-not carry a claim about capability on the project's own task that the set's exposure leaves open.
+A model the project trains entirely itself from data it holds is outside condition (1); what its
+pipeline lets in is MachineLearningStandards' subject. A model the project fine-tunes is inside it
+for what the base model saw: the project's pipeline did not introduce that exposure and cannot see
+it. A public benchmark's score is reported as a score on a public benchmark, with its exposure as
+R1 records it; this does not ask a project to stop using one.
 
-### R3 — A project's own held-out set stays out of reach of models it will evaluate
+### R3 — Project-held evaluation material stays out of reach of models it will evaluate
 
-**A project MUST NOT place (a) a held-out set it built from its own task, or (b) reference answers,
-splits or other material it added to a public benchmark, or the reference answers for either, where
-a model it will evaluate may ingest it, other than as the evaluation itself: the item presented to
-the model under evaluation to obtain its answer. It MUST record which routes it relied on being
-closed (public repositories and mirrors, data used to fine-tune or to select few-shot examples, and
-stores a coding assistant indexes) and, for each provider or judge the set or its answers were sent
-to, the terms it relied on.**
+**A project MUST NOT place project-held material where a model it will evaluate may ingest it,
+other than as the evaluation itself: presenting an item to the evaluated model to obtain its
+answer, or presenting an item and its reference answer to a judge or scorer to score that answer.
+It MUST record the routes it relied on being closed — public repositories and mirrors, data used to
+fine-tune or to select few-shot examples, and stores that a coding assistant or other tool indexes
+and may share — and, for each provider or judge that received an item or answer, the terms it
+relied on.**
 
-**A held-out set that is a public benchmark is outside this requirement.** Its content is public by
-construction and nothing the project does places it there; such a set falls under R2 alone, and
-R3's duties attach to whatever the project itself adds to it, such as reference answers it wrote,
-which the requirement above names.
+**Project-held material** is any evaluation material that is not public: a set built from the
+project's own task, a privately held or licensed benchmark, and reference answers, splits or other
+material the project added to a public benchmark. A public benchmark's own items and answers are not
+project-held; their content is public by construction, nothing the project does places it there,
+and such a set falls under R2.
 
-This is the part of the concern a project controls. A held-out set committed to a repository
-that is later made public, or to a repository that a coding assistant indexes, or pasted into a
-prompt, is a set an evaluated model may have seen the next time it is trained. What the project can
-do is keep it out and record what it did.
+This is the part of the concern a project controls. Project-held material committed to a
+repository that is later made public, or indexed by a tool that shares it, or pasted into a prompt
+as an example, is material an evaluated model may have seen the next time it is trained. What the
+project can do is keep it out and record what it did.
 
 **Which provider terms apply is the project's fact to record, not this standard's to assume.**
 Whether a provider retains requests, whether it trains on them and under which plan are matters of
-that provider's published terms and the project's agreement with it, and they change. The
-requirement is that the project looked and wrote down what it relied on.
+that provider's published terms and the project's agreement with it, and they change. The carve-out
+for the evaluation call removes the prohibition for the act of evaluating, not the duty to record
+what happens to the request afterwards, and the same holds for a judge or scorer call.
 
-The set used to select few-shot examples, or any reference answers placed in a prompt, is inside
-the requirement. **Presenting an item to the model under evaluation, to obtain its answer to that
-item, is the evaluation and is not a breach of this requirement.** The call is still a request to a
-provider, so the provider's terms for it are one of the routes the project records as relied on: the
-carve-out removes the prohibition for the act of evaluating, not the duty to record what happens to
-the request afterwards. **A judge or scorer call is the same**: reference answers sent to a model
-that scores the output are sent to a provider, and its terms are recorded likewise. What is inside it is an item
-or answer placed in a prompt, example set, fine-tuning set or shared store that a later evaluation
-of the same or another model will see: that set is one the model was shown, and the result computed
-on it has measured how well the prompt carried the answers.
-
-**R3 states what is placed where; it does not restate [Standard 17](17-evaluation-plans-for-generative-systems.md)
-R4.** Selecting by score on the held-out set is R4's subject and is an act of the project's;
-exposing the set to a model that is later evaluated is this requirement's, and a project can
-breach either without the other.
+**R3 states what is placed where; it does not restate
+[Standard 17](17-evaluation-plans-for-generative-systems.md) R4.** Selecting by score on the
+held-out set is R4's subject and is an act of the project's; exposing the material to a model that is
+later evaluated is this requirement's, and a project can breach either without the other.
 
 ### R4 — A contamination check states its method and what it cannot establish
 
-**Where a project reports that a contamination check was run, it MUST record the method, the
-data it was able to examine, and the limits of what a negative result establishes, and MUST NOT
-describe a negative result of a proxy check, or of a check over data that is not the complete
-training data, as showing the set was not in a model's training data.**
+**Where a project reports that a contamination check was run, it MUST record the method, the data it
+was able to examine and the limits of what a negative result establishes, and MUST NOT describe a
+negative result as showing the set was not in a model's training data unless the data examined is
+shown to be that model's complete training data and the method is capable of supporting the
+conclusion, and then only for the form of overlap the method detects.**
 
 Common methods are overlap between evaluation items and a corpus the project can see, planted
 canary strings that a model is then asked to complete, comparing performance on items with their
-paraphrases, and comparing performance before and after a set's publication date. Each of these,
-unless the corpus is the model's complete training corpus (below), examines something other than the
-model's training data, and each can miss contamination that has been
-paraphrased, translated or partially included.
+paraphrases, and comparing performance before and after a set's publication date. The last three
+examine something other than the model's training data, and every method can miss contamination
+that has been paraphrased, translated or partially included.
 
 **A check examines a proxy.** A check against a corpus the project holds says that corpus does not
 contain the items. A canary string absent from completions says the model did not reproduce it.
 Both are worth recording and neither is a finding about the model's training data, which for a
-hosted model the project does not have. **A check over the complete training corpus of a model the
-project trained from scratch is not a proxy for the corpus, but it is still a method with a reach**: where the
-project can show the corpus examined is the whole of what the model was trained on, and the method
-is one capable of supporting the conclusion drawn, a negative result may be described as a finding
-about that model's training data *for the form of overlap the method detects*. An exact-match or
-n-gram search of a complete corpus shows no verbatim or near-verbatim presence; it does not exclude
-a paraphrase or a translation, and the description says so. The corpus, its completeness, the method
-and the form of overlap checked are recorded.
+hosted model the project does not have. **An overlap check over the complete training corpus of a
+model the project trained from scratch is the one case that is not a proxy for the corpus**: where
+the project can show the corpus examined is the whole of what the model was trained on, a negative
+result may be described as a finding about that model's training data for the form of overlap the
+method detects. An exact-match or n-gram search of a complete corpus shows no verbatim or
+near-verbatim presence; it does not exclude a paraphrase or a translation, and the description says
+so. The corpus, its completeness, the method and the form of overlap checked are recorded.
 
 The requirement does not ask a project to run a check. It asks that one that was run be described
 by what it did.
 
-### R5 — A benchmark that no longer discriminates is not kept as evidence
+### R5 — A benchmark that no longer serves is not kept as evidence
 
 **A project MUST record when a benchmark it relies on has stopped distinguishing the systems it
 compares, has been found to have a defect that undermines it, or no longer stands in for the
 capability the project cares about, and MUST NOT continue to report it as evidence of the capability
 it was adopted for without saying so.**
 
-The ways a public benchmark stops measuring anything are ordinary: scores sit at the ceiling so
-that candidates are indistinguishable, the items and answers have circulated widely enough that
-contamination is likely whatever any one check says (that exposure is R2's, and R5 records the
-decision not to keep relying on the set), a defect in the items or the reference answers
-is found, or the capability it stood in for is no longer the one the project cares about.
+The ways a public benchmark stops measuring anything are ordinary: scores sit where candidates are
+no longer distinguishable, a defect in the items or the reference answers is found, or the
+capability it stood in for is no longer the one the project cares about. Wide circulation of its
+items and answers is a further reason to doubt it, and that exposure is R2's; R5 records the
+project's decision to stop relying on the set.
 
 [Standard 17](17-evaluation-plans-for-generative-systems.md) assigns "whether a public benchmark
 still measures anything" to this item, and this is the requirement that carries it. What this
@@ -272,7 +267,7 @@ benchmark is saturated, because that figure would be this repository's invention
 
 ### R6 — This framework MUST NOT report an evaluation set uncontaminated or a benchmark valid from a repository
 
-**No detector, rule, audit finding or generated report in this framework MAY state that an
+**A detector, rule, audit finding or generated report in this framework MUST NOT state that an
 evaluation set is uncontaminated, that a model has not seen it, or that a benchmark remains valid,
 because a document, a configuration, a file path, a check's output or an absence of overlap is
 present in the repository.**
@@ -291,34 +286,35 @@ repository at all."
 
 | Failure | What it looks like | Requirement |
 | --- | --- | --- |
-| Exposure unrecorded | A result reported on a set whose public status and date nobody wrote down, so a reader assumes it is private | R1 |
-| Model not named | A record of when a set was published with no model identifier, so it cannot be read against a training cutoff | R1 |
+| Exposure unrecorded | A held or used set with no record of origin, public status and date, so a reader assumes it is private | R1 |
 | Absence read as privacy | A set with no exposure record treated as one that was never published | R1 |
+| Model not named | A record of when a set was published with no model identifier, so it cannot be read against a training cutoff | R1 |
+| Unavailability without basis | A claim that a set was unavailable before the cutoff with no basis recorded | R1 |
 | Clean by search | A score reported as uncontaminated because a search of a corpus the project holds found no overlap | R2 |
 | Provider claim as fact | A provider's statement that benchmarks were filtered reported as the set not being seen | R2 |
 | Public score as task capability | A public benchmark number reported as the system's capability on the project's own task | R2 |
-| Held-out set published | The set committed to a repository later made public, or indexed by a tool that shares it | R3 |
-| Answers in the prompt | Held-out items or answers used as few-shot examples or placed in a system prompt | R3 |
-| Terms assumed | A project's held-out set sent to a provider on an assumption about retention that nobody recorded | R3 |
+| Context-time exposure unqualified | Items or answers placed in a prompt, retrieved or browsed, and the result reported with no qualification | R2 |
+| Project-held material published | An own-task set, a licensed benchmark or answers the project wrote committed to a repository later made public, or indexed by a tool that shares it | R3 |
+| Answers in the prompt | Project-held items or answers used as few-shot examples or placed in a system prompt | R3 |
+| Routes or terms not recorded | The routes relied on being closed, or a provider's or judge's terms, assumed and not written down | R3 |
 | Proxy as proof | A canary string not reproduced, or zero n-gram overlap, reported as the set not being in the training data | R4 |
+| Complete corpus overclaimed | A complete-corpus exact-match search described as excluding paraphrase or translation, or a fine-tuning corpus described as the whole training data | R4 |
 | Method not stated | "Checked for contamination" with no method, corpus or limit | R4 |
-| Ceiling kept | A benchmark on which every candidate scores within noise of the top, still reported as a differentiator | R5 |
+| No longer distinguishing | A benchmark on which candidates are no longer distinguishable still reported as a differentiator | R5 |
 | Known-defective item set | A benchmark found to have wrong reference answers still cited with no qualification | R5 |
-| Paraphrase or translation claimed absent | A complete-corpus exact-match or n-gram search described as showing the set was not in the training data in any form | R4 |
-| Fine-tuning corpus as whole | A fine-tuned model's fine-tuning corpus described as its complete training data | R4 |
+| No longer stands in | A benchmark kept as evidence of a capability the project no longer cares about | R5 |
 | Presence read as clean | A framework report that a set is uncontaminated because a record or an overlap check exists | R6 |
 
 ## Evidence
 
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
-| R1 | For each evaluation set the system holds or a result uses: origin, public status with a date or "not published", any known earlier circulation, the model identifiers a result is for, and where R2's exception is wanted, the unavailability record with its basis | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | The reported result with its qualification, and the provider statements or cutoff relied on, each marked as the provider's claim | The evaluation report and the project's notes on the provider | Human review |
+| R1 | For each evaluation set held or used: origin, public status with a date or "not published", any known earlier circulation (or "unknown"), the model identifiers a result is for, and where the exception is wanted the unavailability record with its basis | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
+| R2 | The reported result with its qualification; the provider statements, cutoff and unavailability record relied on, each marked as the provider's claim or the project's; the routes by which items or answers could reach the model's context | The evaluation report and the project's notes on the provider | Human review |
 | R2 (exposure) | None obtainable from a repository | — | **Not-evaluable** |
-| R3 | The routes the project relied on being closed, and the terms it read for each provider the set was sent to | A project document the project names | Human review |
-| R3 (placement) | Whether the held-out set is in a repository that is or becomes public, or in a prompt: a statement of fact the reviewer checks against the repository's visibility and prompt files | The repository and its hosting settings | Human review |
-| R4 | The check's method, the corpus or model examined, and the limits stated | The report of the check | Human review |
-| R5 | The observation that led to a benchmark's retirement or qualification, with its date | The evaluation report or a decision record | Human review |
+| R3 | The project-held material and where it lives; the routes relied on being closed; each provider's or judge's terms relied on | A project document the project names, the repository and its hosting settings | Human review |
+| R4 | The check's method, the data examined, its limits and, where a training-data claim is made, the corpus, its completeness and the form of overlap | The report of the check | Human review |
+| R5 | The observation that led to a benchmark's retirement or qualification (stopped distinguishing, defect, no longer stands in), with its date | The evaluation report or a decision record | Human review |
 | R6 | The absence of any detector that reports contamination or benchmark validity from presence | This repository's own detectors and tests | Code review; see Implementation |
 
 A document that records an evaluation set's exposure establishes that the project wrote it down. It
@@ -360,47 +356,48 @@ validation type, because the thing it prohibits is a behaviour of the tool.
 report a model unexposed or a benchmark valid from a record, and a mechanism for excepting the
 prohibition would be self-defeating. R2's requirement not to report a clean result because nothing
 was found is likewise not exemptible, because an exception would record a project as knowingly
-reporting an unsupported claim about a model. R1, R3, R4 and R5 reach a system only where their
-subject exists — R3 only where a held-out set is held, R4 only where a check is reported, R5 only
-where a benchmark is relied on — and a system without that subject records the absence and its reason
-in its own evaluation record. There is no policy declaration for it: [Standard 2](02-ai-risk-tiering-and-applicability.md)
-R4's not-applicable disposition applies to a catalog rule id, and this standard has none. No detector
-in this release would contradict a false record. No level here is
-lowered by a risk tier (Standard 2 R3).
+reporting an unsupported claim about a model. R1 and R3 to R5 reach a system as Scope says, and
+there is no policy declaration for a system without their subject:
+[Standard 2](02-ai-risk-tiering-and-applicability.md) R4's not-applicable disposition applies to a
+catalog rule id, and this standard has none. No level here is lowered by a risk tier (Standard 2
+R3).
 
 ## Tests and falsifiers
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | For one held or used evaluation set, origin, public status with a date or "not published", known earlier circulation, and the model identifiers are all recoverable from the record | A held or used set with no exposure record, or a record naming no model | A set recorded as "not published" with a stated reason must **not** be failed for lacking a publication date |
-| R2 | Unless the set is recorded under R1, with its basis, as unavailable by any route before every applicable cutoff and no context-time exposure applies: a result on a public benchmark carries the qualification; so does a result where items or answers could reach the model in context by any route, and a provider statement is marked as the provider's | A result described as uncontaminated because a search found no overlap; a result with no R1 unavailability record, or with context-time exposure, reported with no exposure qualification; a provider's filter statement reported as fact | A project that reports "exposure unknown" and the score must **not** be failed for not having excluded contamination, and a result on a set recorded under R1, with its basis, as unavailable by any route before every applicable cutoff must **not** be failed for lacking the qualification for exposure through training, provided no context-time exposure applies |
-| R3 | The held-out set is absent from public repositories, and from prompts, examples, fine-tuning sets and shared stores other than the item presented to the model under evaluation to obtain its answer; the routes relied on and each provider's or judge's terms are recorded | The set in a repository that is public, or its items in a few-shot prompt | A set held in a private repository with no model-facing use must **not** be flagged for existing, and the held-out item presented to the model under evaluation to obtain its answer must **not** be flagged |
-| R4 | A reported check names its method, what it examined, and what a negative result does not show | "Checked, no contamination" with no method | A project that ran no check and says so must **not** be failed for not running one, and a negative result over the recorded complete training corpus of a model the project trained from scratch must **not** be failed for being described as a finding about its training data for the form of overlap the method detects; the same description claiming absence of paraphrase or translation, or a fine-tuned model's fine-tuning corpus described as its whole training data, is the falsifier |
-| R5 | A benchmark found saturated or defective is recorded as such and is reported with that qualification | A benchmark on which every candidate scores at the ceiling, or that no longer stands in for the capability the project cares about, reported as a differentiator with no note | A benchmark still discriminating between candidates must **not** be flagged for being old or public |
+| R1 | For one held or used evaluation set: origin, public status with a date or "not published", known earlier circulation, and the model identifiers are all recoverable from the record; where the exception is wanted, the unavailability record carries its basis | A held or used set with no exposure record; a record missing the origin, the public date, the earlier circulation or the model identifier; an unavailability claim with no basis | A set recorded as "not published" with a stated reason, or with "unknown" for its date or for earlier circulation, must **not** be failed |
+| R2 | For a model or base model trained or tuned by another party: a result on a public benchmark, on a set with no unavailability record, or whose items or answers could reach the model's context by any route, carries the possibly-exposed qualification; provider statements are marked as the provider's; a public score is not presented as capability on the project's own task | A result described as uncontaminated because a search found no overlap; a result in those cases reported with no qualification; a provider's filter statement reported as fact; a public score reported as capability on the project's own task | A project that reports "exposure unknown" must **not** be failed for not having excluded contamination; a result on a set whose R1 record shows, with its basis, unavailability before every applicable cutoff for the model the record names, with no context-time exposure and no staleness event since, must **not** be failed for lacking the qualification; a model the project trained from scratch on data it holds must **not** be failed under condition (1) |
+| R3 | No project-held material is in a public repository or mirror, a prompt or example set, a fine-tuning set or a store a tool indexes and shares, other than the item (and reference answer, to a judge) presented for the evaluation itself; the routes relied on and each provider's or judge's terms are recorded | Project-held material in a public repository, a few-shot prompt, a fine-tuning set or a shared index; no record of the routes relied on or of a provider's or judge's terms | A set held privately with no model-facing use must **not** be flagged for existing; the item presented to the model under evaluation, and the item with its answer presented to a judge, must **not** be flagged; a public benchmark's own items in a public repository must **not** be flagged |
+| R4 | A reported check names its method, what it examined and what a negative result does not show; a training-data claim names the corpus, its completeness and the form of overlap | "Checked, no contamination" with no method; a complete-corpus negative described as excluding paraphrase or translation, or a fine-tuning corpus described as the whole training data; a canary or paraphrase check described as showing absence | A project that ran no check and says so must **not** be failed for not running one; a negative result over the recorded complete training corpus of a model the project trained from scratch must **not** be failed for being described as a finding about its training data for the form of overlap the method detects |
+| R5 | A benchmark that stopped distinguishing, was found defective or no longer stands in for the capability is recorded as such and reported with that qualification | A benchmark on which candidates are no longer distinguishable, that has a known defect or that no longer stands in for the capability, reported as evidence with no note | A benchmark still discriminating between candidates must **not** be flagged for being old or public |
 | R6 | No detector or report in this repository outputs a contamination or benchmark-validity verdict from presence | A detector that reported a set uncontaminated because an overlap check's output was zero | Reporting that an exposure record was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads an exposure record and no fixture
-carries one, so R1 to R5 are enforced by review or not at all, and R6 holds at this commit by inspection only. The
-negative controls state what review must not do to a project that has the right subject and does
-the right thing. **A falsifier no tool applies is applied by review or not at all**, and that is the honest state of
-this standard.
+carries one, so R1 to R5 are enforced by review or not at all, and R6 holds at this commit by
+inspection only. The negative controls state what review must not do to a project that has the right
+subject and does the right thing. **A falsifier no tool applies is applied by review or not at
+all**, and that is the honest state of this standard.
 
 ## Exceptions and staleness
 
 There is no policy-level exception mechanism for R1 to R5 in this release, because no rule exists to
 except. A project that knowingly does not meet R1, R3, R4 or R5 records that in its own documents;
-R2 and R6 are not exemptible, and for R2 the only remedy is to qualify the result, because a record of
-non-conformance is not an exception; Standard 2's
-dispositions apply to the application of a rule, and this standard has none.
+R2 and R6 are not exemptible, and for R2 the only remedy is to qualify the result, because a record
+of non-conformance is not an exception; Standard 2's dispositions apply to the application of a
+rule, and this standard has none.
 
-**What invalidates a recorded exposure statement or contamination check.** Each of these changes
-what the record means, and a record made before the change describes the earlier situation:
+**What invalidates a recorded exposure statement, unavailability record or contamination check.**
+Each of these changes what the record means, and a record made before the change describes the
+earlier situation:
 
-- a change of model identifier, provider or model version, since a set that was after one model's
-  cutoff may be before the next's;
+- a change of model identifier, provider or model version, or an alias updated after the cutoff,
+  since a set that was after one model's cutoff may be before the next's;
 - the evaluation set being published, mirrored, quoted or committed to a repository that is or
   becomes public, or reaching a provider on terms that permit retention;
 - a change in a provider's published terms, which R3's recorded route depends on;
+- a new tool or store that indexes the repository, or a change to which route the project relied on
+  being closed;
 - a change in the benchmark itself: items added or removed, reference answers corrected;
 - the project beginning to train or fine-tune a model of its own, which brings what its training
   pipeline introduces into MachineLearningStandards' ground; exposure inherited from a third-party
@@ -429,20 +426,23 @@ subject token is derived from the brief; the requirements are not derived. Speci
 here, none of it owner-approved:
 
 - **The definition of contamination** as including exposure through a model's context at evaluation
-  time and not only through training data. The brief does not define the term.
-- **R1's record** and the ruling that an absent record is not a record of privacy.
-- **R2 in full**: the qualification of a result on a set a model may have seen, and the ruling that
-  "no overlap found" is a statement about a check and not about a model, including its
+  time and not only through training data, and of project-held material.
+- **R1's record**, the unavailability record with its basis, and the ruling that an absent record is
+  not a record of privacy.
+- **R2 in full**: the qualification of a result on a set a model may have seen, both conditions, the
+  unavailability exception, the ruling that "no overlap found" is a statement about a check and not
+  about a model, and the ban on presenting a public score as task capability, including its
   non-exemptibility.
-- **R3's requirement** that a project keep its own held-out set out of reach of models it will
-  evaluate, the list of routes, and the inclusion of few-shot examples and prompts. The brief names
-  no placement.
-- **R4's limits** on what a contamination check may claim, and the list of methods named in the
-  text, which is illustrative and not a required set.
-- **R5's** requirement that a benchmark that no longer discriminates be recorded, and the refusal to
-  set a saturation threshold. The assignment of "whether a public benchmark still measures anything"
-  to this item is [Standard 17](17-evaluation-plans-for-generative-systems.md)'s statement of the
-  boundary, not the brief's.
+- **R3's requirement** that a project keep project-held material out of reach of models it will
+  evaluate, the carve-out for the evaluation and judge calls, the single route list and the record
+  of provider and judge terms. The brief names no placement.
+- **R4's limits** on what a contamination check may claim, including the complete-corpus case; the
+  list of methods is illustrative and not a required set.
+- **R5's** requirement that a benchmark that no longer serves be recorded, with its three
+  conditions, and the refusal to set a saturation threshold. The assignment of "whether a public
+  benchmark still measures anything" to this item is
+  [Standard 17](17-evaluation-plans-for-generative-systems.md)'s statement of the boundary, not the
+  brief's.
 - **R6**, the constraint on this framework, in the same form as the equivalent requirement in
   [Standard 8](08-ai-safety-requirements-and-safety-cases.md),
   [Standard 17](17-evaluation-plans-for-generative-systems.md),
@@ -498,7 +498,7 @@ as a capability.
 
 | Requirement | State |
 | --- | --- |
-| R6 | **Holds at this commit, by inspection only.** No detector, rule or report in `scripts/`, `rules/`, `schemas/`, `templates/` or `ai-policy.yml` has a concept of contamination or benchmark integrity; a case-insensitive search of those paths for `contamin` and `benchmark` found no use of either as a subject. No test asserts the absence, so a future detector could break R6 without failing one |
+| R6 | **Holds at this commit, by inspection only.** No detector, rule or report in `scripts/`, `rules/`, `schemas/`, `templates/` or `ai-policy.yml` has a concept of contamination or benchmark integrity; a case-insensitive search of those paths for `contamin` and `benchmark` found no use of either as a subject; reports are written by `scripts/`, and no other path generates one. No test asserts the absence, so a future detector could break R6 without failing one |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's evaluation integrity |
 
 **Proposed, and deliberately absent from this release. None of the following exists:**
