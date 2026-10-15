@@ -38,9 +38,7 @@ Terms, defined once and used verbatim below:
   person must act before something happens, in code or in process.
 - **Required fact** — any fact the system description is required to state.
 - **Shared fact** — any subject on which both the system description and the manifest (`ai-system.yml`) make a statement.
-- **Model claim** — a statement in the system description of a model's capability, limitation, performance or training.
-- **Observation record** — a dated record of what the project observed of a model, its method and who observed it.
-- **Change** — an addition, alteration, move or removal of a model, instruction, tool, retrieval source or approval point, a model identifier silently re-pointed behind an alias, a difference in who the system affects, a revision of documentation cited under R4, an incident in which the system did something its description said it could not, an unknown required fact becoming known, or any other change to a required fact or a shared fact.
+- **Change** — an addition, alteration, move or removal of a model, instruction, tool, retrieval source or approval point, a model identifier silently re-pointed behind an alias, a difference in who the system affects, a revision of model documentation the system description cites, an incident in which the system did something its description said it could not, an unknown required fact becoming known, or any other change to a required fact or a shared fact.
 - **Framework output** — what a detector, catalog rule, audit finding or generated report of this framework states, or any other message, score or status it emits.
 - **Presence artifact** — a file, a copied template, a section heading, a non-empty section, or a manifest or policy field or other pointer.
 
@@ -89,22 +87,14 @@ statements that disagree leave a reader unable to say which is current.
 An honest "unknown" is information; a missing section is not, because the reader cannot tell a gap from
 an oversight. A fact the standard does not require is outside this clause.
 
-### R4 — Point at model documentation; do not restate or invent
+### R4 — Revise on change
 
-**Each model claim MUST be established by a reference to the model's documentation, by name and, where it carries one, revision, or to an observation record.**
-
-A restatement in the project's own words is a fork, and it drifts when the original is revised. Where
-no documentation exists the reference is to an observation record, and where neither exists there is
-no model claim to make; "not published" is stated as an unknown under R3.
-
-### R5 — Revise on change
-
-**The system description MUST be revised on each change.**
+**The system description MUST be revised on each change so as to restate the changed fact, confirm it unchanged, or mark it unknown.**
 
 The system around a model changes more often than the model does: a prompt edit, a new tool or a new
 source alters the system without anyone filing a change to the document.
 
-### R6 — This framework states no transparency verdict from a presence artifact
+### R5 — This framework states no transparency verdict from a presence artifact
 
 **No framework output MAY state that a system is transparent, that its documentation is adequate, or
 that its description is accurate or current, because a presence artifact is present.**
@@ -123,9 +113,8 @@ description, so this standard does not rely on it.
 | R1 | The only description of what the system is for and what it must not do lives in a slide, a thread or one engineer's head, or in a document the repository neither contains nor points to |
 | R2 | The manifest contradicts the system description on a shared fact |
 | R3 | A required fact the project did not know that is omitted, guessed, or stated as unknown with no one named who could establish it |
-| R4 | A model claim that no cited reference to the model's documentation (by name and, where it carries one, revision) or to the project's own observation record establishes |
-| R5 | A change occurred and the system description was not revised |
-| R6 | A framework output states a system transparent, its documentation adequate, or its description accurate or current because a presence artifact is present |
+| R4 | A change occurred and the system description was not revised to restate the changed fact, confirm it unchanged, or mark it unknown |
+| R5 | A framework output states a system transparent, its documentation adequate, or its description accurate or current because a presence artifact is present |
 
 ## Evidence
 
@@ -134,9 +123,8 @@ description, so this standard does not rely on it.
 | R1 | The system description | A project document the project names; **no manifest or policy field points to it** | Human review |
 | R2 | The system description read against `ai-system.yml` | The description and the manifest | Human review |
 | R3 | The unknown-fact entries, each with who could establish it | The description | Human review |
-| R4 | Each model claim's reference: the cited model documentation by name and, where it carries one, revision, or the observation record | The description, the cited documentation, the observation record | Human review |
-| R5 | The description's revision history against the change records, including provider documentation where the change is outside the repository | Version control and the project's records | Human review |
-| R6 | The absence of any framework output of the kind R6 forbids | This repository's catalog, detectors, reports and tests | Code review |
+| R4 | The description's revision history against the change records, including provider documentation where the change is outside the repository | Version control and the project's records | Human review |
+| R5 | The absence of any framework output of the kind R5 forbids | This repository's catalog, detectors, reports and tests | Code review |
 
 ## Validation, severity, and exemptibility
 
@@ -148,8 +136,8 @@ that record.
 1. **There is no artifact a rule could read.** Neither schema has a place to point at a system
    description, and both are closed; adding a field is a schema-versioning decision outside this slice
    (plan 02 section 8 excludes risk-tier fields on the same ground).
-2. **R2 to R5 concern the truth of a document, not its existence.** A heading check would test for a
-   presence artifact, which R6 forbids this framework to report as a result.
+2. **R2 to R4 concern the truth of a document, not its existence.** A heading check would test for a
+   presence artifact, which R5 forbids this framework to report as a result.
 3. **No shard or namespace has been decided for it.** This standard mints no id and edits no shard.
 
 **Validation type and severity.**
@@ -160,13 +148,12 @@ that record.
 | R2 | `manual-review` | `error` |
 | R3 | `manual-review` | `error` |
 | R4 | `manual-review` | `error` |
-| R5 | `manual-review` | `error` |
-| R6 | none (a constraint on the framework) | none |
+| R5 | none (a constraint on the framework) | none |
 
 These are the levels a rule would carry if one is minted; this release emits no framework finding at
 them.
 
-**Exemptibility.** R6 is not exemptible. R1 to R5 apply to every system within this pack's scope; a
+**Exemptibility.** R5 is not exemptible. R1 to R4 apply to every system within this pack's scope; a
 repository with no AI system is outside this standard, not exempted from it. No policy declaration
 exists for them: [Standard 2](02-ai-risk-tiering-and-applicability.md) R4's dispositions are recorded
 against catalog rules, and this standard has none. No level here is lowered by a risk tier (Standard 2
@@ -179,12 +166,11 @@ R3).
 | R1 | A system description exists, in or pointed to from the repository | None exists, or it is only in a slide, a thread or a head, or the repository neither contains nor points to it | A short document, including a README passage, that is a system description is not failed for brevity or form |
 | R2 | The manifest contradicts the system description on no shared fact | A shared fact on which the manifest contradicts the description | A fact the manifest does not state is not a shared fact |
 | R3 | Each required fact the project did not know is stated as unknown with who could establish it | A required fact the project did not know that is omitted, guessed, or stated as unknown with no one named | "Unknown — the vendor does not say; ask the account owner" is complete |
-| R4 | Each model claim is established by a reference to the model's documentation or to the project's observation record, as R4 states | A model claim that its cited reference does not establish, one with no reference, or a model claim whose cited documentation carries a revision that is cited without it | A reference that names provider documentation and its revision, where that documentation states the claim, is not flagged |
-| R5 | Each change is followed by a revision of the system description that restates the changed fact, confirms it unchanged, or marks it unknown | A change with no such revision | A difference that is not a change as defined in Scope needs no revision |
-| R6 | No framework output states a system transparent, its documentation adequate, or its description accurate or current because a presence artifact is present | A framework output that did so because a presence artifact was found | Reporting that a system description was *found*, as an observation with no verdict, is permitted |
+| R4 | Each change is followed by a revision of the system description that restates the changed fact, confirms it unchanged, or marks it unknown | A change with no such revision, or an unrelated revision | A difference that is not a change as defined in Scope needs no revision |
+| R5 | No framework output states a system transparent, its documentation adequate, or its description accurate or current because a presence artifact is present | A framework output that did so because a presence artifact was found | Reporting that a system description was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a system description, so no detector
-checks R1 to R5; they are held by review, and R6 holds today because no such framework output exists.
+checks R1 to R4; they are held by review, and R5 holds today because no such framework output exists.
 The falsifiers are manual, not absent.
 
 ## Exceptions and staleness
@@ -196,9 +182,8 @@ There is no policy-level exception mechanism in this release, because no rule ex
 | R1 | A change |
 | R2 | A change |
 | R3 | A change |
-| R4 | A change, including a revision of cited documentation |
-| R5 | A change |
-| R6 | Nothing: it constrains this repository |
+| R4 | A change |
+| R5 | Nothing: it constrains this repository |
 
 An incident in which the system did something its description said it could not invalidates the
 description until it is re-examined. The code changes in review and the description does not: nobody's
@@ -210,8 +195,8 @@ pull request fails for leaving a document behind. Nothing in this release detect
 The brief contributes one word, "transparency", inside a bullet of four subjects. It states no
 requirement, level or evidence. Specifically authored here, none of it owner-approved:
 
-- **Every defined term and R1 to R6**, including that the system, as distinct from the model, has a
-  description; that unknowns are stated, not omitted; and that model claims are references.
+- **Every defined term and R1 to R4**, including that the system, as distinct from the model, has a
+  description; that unknowns are stated, not omitted; and that the model's documentation is named, not restated.
 - **The severity and validation types** in Validation.
 - **The exclusions in Scope** as division lines, unconfirmed by anyone.
 - **The ruling that this standard ships with no catalog rules**, and the invalidation table.
@@ -222,8 +207,7 @@ are the boundary review's.
 ## Relationship to other standards and ADRs
 
 [Standard 1](01-ai-system-manifest.md) is the structured declaration this description accompanies, and
-R2 depends on it. [Standard 7](07-boundary-with-adjacent-standards.md) R2 (link, do not copy) is why R4
-points and does not restate. [Standard 11](11-autonomy-levels-and-delegated-authority.md) and
+R2 depends on it. [Standard 7](07-boundary-with-adjacent-standards.md) R2 (link, do not copy) is why model documentation is named in the system description and not restated. [Standard 11](11-autonomy-levels-and-delegated-authority.md) and
 [Standard 45](45-approval-gates.md) govern authority and approval; the system description only names
 them. [Standard 25](25-grounding-and-hallucination-control.md) is the closest sibling in form.
 [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 governs non-lowering, and
@@ -237,13 +221,13 @@ confirmed it. No ADR covers this standard — `artifacts/adr/` does not exist in
 
 ## Implementation
 
-**Normative. Nothing about R1 to R5 is enforced; R6 holds today because no such framework output exists.**
+**Normative. Nothing about R1 to R4 is enforced; R5 holds today because no such framework output exists.**
 
 | Requirement | State |
 | --- | --- |
-| R2 to R5 | Not enforced; held by review |
-| R1 (aid only) | `templates/AI-SYSTEM.md` is a narrative template with questions on purpose, users, ownership, models and their roles, prompts and where they live, tools, and data (it asks to name each source). Its nearest approval-point question is "What can the system do without a human acting?", it asks nothing per model about its documentation or the statement that none is published, it prompts nothing for R4, and it asks nothing about revising the description on change (it does ask who answers for the system and where instructions live). It is an aid, not a check that a description exists |
-| R6 | No framework output in `scripts/`, `rules/` or `ai-policy.yml` states a system transparent or documented, and no detector calls the scaffold-marker check on a Markdown description. No test asserts the absence |
+| R2 to R4 | Not enforced; held by review |
+| R1 (aid only) | `templates/AI-SYSTEM.md` is a narrative template with questions on purpose, users, ownership, models and their roles, prompts and where they live, tools, and data (it asks to name each source). Its nearest approval-point question is "What can the system do without a human acting?", it asks nothing per model about its documentation or the statement that none is published and it asks nothing about revising the description on change (it does ask who answers for the system and where instructions live). It is an aid, not a check that a description exists |
+| R5 | No framework output in `scripts/`, `rules/` or `ai-policy.yml` states a system transparent or documented, and no detector calls the scaffold-marker check on a Markdown description. No test asserts the absence |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test |
 
 **Proposed, and deliberately absent. None of the following exists:** a manifest or policy field that
@@ -252,4 +236,4 @@ code, which reads free text for coverage and is a heuristic; and a test that no 
 a transparency verdict from a presence artifact.
 
 **What no future release will implement.** A framework output that states a system transparent, or its
-documentation adequate, from a presence artifact. R6 forecloses it.
+documentation adequate, from a presence artifact. R5 forecloses it.
