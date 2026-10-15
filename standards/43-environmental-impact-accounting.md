@@ -96,9 +96,11 @@ number and no label is the failure.
 ### R3 — Name the subject, period and assumptions
 
 **A reported figure MUST name the model identifier or class it applies to, the period or workload it
-was computed over, and the assumptions it depends on: for an energy or emissions figure, among them the
-grid or region intensity used and its date, and for any other figure (water, hardware) the conversion
-factors it relies on. An assumption the figure does not use is not reported.**
+was computed over, and the assumptions it depends on: where the calculation uses a grid or region
+intensity (an emissions figure derived from energy, or an energy figure estimated from a region's
+supply), that intensity and its date; and for any other figure the conversion factors it relies on. A
+figure from a direct measurement, such as a metered quantity of energy, depends on no intensity and
+names none. An assumption the figure does not use is not reported.**
 
 Grid intensity varies by region and by hour, and a model identifier can change behind an alias. A figure
 for last year's model on last year's grid is a statement about that, not about the system now running.
@@ -156,7 +158,7 @@ consumed. Reporting an impact from a presence would turn a setting into a measur
 | --- | --- | --- | --- |
 | R1 | The boundary written beside each reported figure | The document or report carrying the figure | Human review |
 | R2 | The method, and each input's status | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R3 | The subject, period and assumptions, including grid intensity and its date for an energy or emissions figure | The report carrying the figure | Human review |
+| R3 | The subject, period and assumptions, including grid intensity and its date where the calculation uses one | The report carrying the figure | Human review |
 | R4 | Any neutrality or low-impact claim, with the figure and the separately reported offset | The project's documentation and public statements | Human review |
 | R5 | Any projection, labelled, with its assumptions | The project's documentation | Human review |
 | The correctness of a figure, and of a projection, as a statement about energy actually used | None obtainable from a repository | — | **Not-evaluable** |
@@ -189,16 +191,16 @@ Three reasons, stated so a reader can disagree with any one of them:
    mints no id; naming one is a decision for the owner. A proposed rule, if one is natural, is recorded
    in the pull request that introduced this document for per-rule approval, and not here.
 
-**Severity.** The standard separates a missing account from an observed failure. A reviewer's
-finding that a record, statement or label the requirement asks for is missing or incomplete is reported
-at **warning** severity: the system may behave well, and what is missing is the account of it. A
-finding that review has *observed* a falsifier occurring in the system or its documentation — the
-behaviour or claim the requirement forbids actually present — is reported at **error** severity, as is
-any finding against R4, which concerns a claim or a control whose absence is itself the failure, and a
-violation of R6 by a detector or report. These levels are this repository's judgment, listed in
-Additions, and are not owner-approved. R1 to R5 are also `manual-review` obligations in this release;
-the validation type and the severity are different things. R6 constrains this framework and has no
-validation type, because the thing it prohibits is a behaviour of the tool.
+**Severity.** Every requirement here asks for a record, statement or label, so a finding against R1,
+R2, R3 or R5 is reported at **warning** severity: the figure may still be honest, and what is missing is
+the account of it. A finding against R4, which prohibits a claim made with nothing behind it, is
+reported at **error** severity, as is a detector's violation of R6. The assignment is per requirement
+and does not depend on how the finding is phrased. These levels are this repository's judgment, listed
+in Additions, and are not owner-approved. R1 to R5 are also `manual-review` obligations where a
+figure, claim or projection exists; the validation type and the severity are different things.
+Whether a figure or a projection is *correct* is **not-evaluable** and is not reported as reviewed. R6
+constrains this framework and has no validation type, because the thing it prohibits is a behaviour of
+the tool.
 
 **Exemptibility.** R6 is not exemptible, for the reason R6 of
 [Standard 25](25-grounding-and-hallucination-control.md) is not. R4's prohibition on a neutrality or
@@ -217,7 +219,7 @@ by a risk tier (Standard 2 R3).
 | --- | --- | --- | --- |
 | R1 | A reported figure states whether training is in or out, which of inference, retrieval, storage, networking and end-user devices are counted, and whether embodied hardware is in or out | A number with no boundary, or one that states only some of the three | A figure that states "training excluded; inference counted, retrieval, storage, networking and end-user devices excluded; operational energy only, embodied hardware excluded" must **not** be faulted for the narrow boundary |
 | R2 | Each input has a status label and the method is named | An estimate described as measured, or an unknown replaced silently | A project that records its hosted model's energy as "unknown" and reports no figure must **not** be reported as failing R2 |
-| R3 | A figure names model or class, period and its assumptions, including grid intensity with date for an energy or emissions figure | A figure with a number and no subject, period or assumptions, or an emissions figure with no grid intensity | A figure that names an old model and an old period, and says so, must **not** be flagged as stale |
+| R3 | A figure names model or class, period and its assumptions, including the grid intensity and its date where the calculation uses one | A figure with a number and no subject, period or assumptions, or a calculated emissions figure with no grid intensity | A figure that names an old model and an old period, and says so, must **not** be flagged as stale |
 | R4 | A neutrality or low-impact claim cites the figure, with offsets reported separately | "Carbon-neutral" with the gross figure absent | A project that publishes a gross figure and separately lists an offset must **not** be flagged for having one |
 | R5 | A projection is labelled as one and names its assumptions | A projection with no projection label, or with no named assumptions | A labelled projection with assumptions must **not** be flagged for being uncertain |
 | R6 | No detector or report in this repository outputs an impact verdict from presence | A detector that reported low-impact because a region name was present | Reporting that a region setting was *found*, as an observation with no verdict, is permitted |
@@ -281,9 +283,8 @@ none of it owner-approved:
 - **R6**, the constraint on this framework, in the same form as the equivalent requirement in
   [Standard 25](25-grounding-and-hallucination-control.md) and
   [Standard 33](33-ai-observability.md).
-- **The severity assignments** (warning for a missing account, error for an observed failure, for R4
-  and for a detector's violation of R6) and the statement that no attestation or scheduled expiry
-  exists in this release.
+- **The severity assignments** (warning for R1, R2, R3 and R5; error for R4 and for a detector's
+  violation of R6) and the statement that no attestation or scheduled expiry exists in this release.
 - **That this standard sets no target, threshold or method**, and the exclusions in Scope as division
   lines, which no one has confirmed.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
