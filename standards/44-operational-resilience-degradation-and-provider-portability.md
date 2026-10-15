@@ -212,7 +212,7 @@ Stated as two separate lists, because a reader scanning one table will otherwise
 | --- | --- | --- |
 | R1, R2 | A place to declare dependencies and degraded modes: a schema change, or a named document a rule can find | Both schemas are closed; a change is a schema-versioning decision and Phase 2 section 8 puts it out of scope |
 | R3, R5 | Fixtures with a fallback served and a control applied, and a detector that runs project-supplied checks | Phase 3 detector and evidence-availability work |
-| R4 | A detector for provider SDK use inside domain modules, and the rule id that would carry it | Language-specific, and the id (`cost.provider-portable` per Standard 7 R3, or another) is the owner's decision; it would report a presence unless it also read a recorded abstraction |
+| R4 | A detector for provider SDK use inside domain modules, and the rule id that would carry it | Language-specific, and the id is `cost.provider-portable` per Standard 7 R3, and whether and when it is minted is the owner's decision; it would report a presence unless it also read a recorded abstraction |
 | R6 | A test asserting no detector, rule, audit finding or report emits a resilience verdict | None exists; it would be a regression guard even now, and is proposed here, not built |
 | Rule id | A reserved-namespace id and a shard, once an owner decides | Not decided; this standard names none |
 
