@@ -554,31 +554,26 @@ function readUrlConstruction(tokens, open, offset, specifiers, unreadable) {
   return undefined;
 }
 
-// Names through which a module can run code that this scan cannot read, so a module that uses them could
-// reach a loader the scan never sees (`eval('require("package")')`). Any occurrence is an unreadable
-// reference, whatever precedes it: `eval`, `Function` (`new Function(...)`, `Function(...)`,
-// `.constructor("...")`), `importScripts`, and the vm entry points that compile or run source text. A
-// worker started with `{ eval: true }` contains the identifier `eval` and is caught by the same rule.
-const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH"];
-// Timers that accept source text as their first argument, and child processes that can be told to evaluate
-// source (`node -e`, `--eval`, `-p`, `--print`). Seen only through literals: a command held in a variable
-// is a stated limit.
+// INVARIANT 4, AS A CONTRACT (deny by default). In a first-party runtime script the only permitted ways to
+// bring in code are
+//   * static `import` / `export ... from` of `node:` builtins and of relative paths that land inside the
+//     repository (and the literal `import()` / `require()` / `new URL(x, import.meta.url)` / `import.meta.resolve`
+//     forms of the same, and the module's own location);
+// and every other construct that can load or run code is an offender, whatever its spelling:
+//   * a builtin module that can start a process, run source text, load native code or change how modules
+//     load (LOADER_CAPABLE_MODULES), imported in any form;
+//   * the names that run source text or reach a loader (DYNAMIC_CODE_NAMES), as an identifier, as a string,
+//     or as a computed member;
+//   * `.constructor` and `{ constructor: C }` (it reaches Function); only a class's own `constructor(...)`
+//     method is permitted;
+//   * a timer whose first argument is not a function expression;
+//   * a computed member that is called, or taken from the global scope, with a key built at run time.
+// A file that legitimately needs one of these is named, with its reason and the exact calls reviewed, on the
+// allowlist in no-phase-creep.test.mjs; nothing else is exempt. The boundary of reading text is that a name
+// assembled at run time never reaches a loader without one of the denied constructs above.
+const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH", "dlopen", "_load", "_resolveFilename"];
+export const LOADER_CAPABLE_MODULES = ["child_process", "worker_threads", "vm", "module", "cluster", "repl", "inspector", "wasi", "v8", "trace_events", "async_hooks"];
 const TIMER_NAMES = ["setTimeout", "setInterval", "setImmediate"];
-const CHILD_PROCESS_NAMES = ["exec", "execSync", "execFile", "execFileSync", "spawn", "spawnSync", "fork"];
-// A shell removes quotes and backslashes before a program sees its words, so `node "-e" "..."` is the same
-// invocation as `node -e 1`: a command string is read with them removed and split into words. Node (and
-// every other program a script might start) takes options that evaluate source (-e, -p), preload code
-// (-r / --require, --import, --loader / --experimental-loader), change how files are read (--input-type,
-// --experimental-default-type, --env-file) or run another entry point. Rather than list the options that do
-// harm, an option-shaped literal in a child-process call is classified: only the options on this list are
-// known to be harmless, and every other literal word that begins with `-` is unreadable. Words that are not
-// literals (a variable, a spread of a computed list) are paths and values the scan cannot see; that is the
-// boundary of reading text, stated in the PR body.
-// Calls that build one string from others: inside a child-process call they assemble a command or an option.
-// `path.join` and `path.resolve` build paths, which is data, and are not in the way.
-const STRING_BUILDERS = ["join", "concat", "replace", "replaceAll", "repeat", "padStart", "padEnd", "fromCharCode", "fromCodePoint", "toString", "toLowerCase", "toUpperCase", "slice", "substring", "substr", "split", "format", "raw", "String", "atob", "Buffer"];
-const SAFE_CHILD_OPTION = /^(--test|--test-concurrency=\d+)$/;
-const unquoted = (text) => text.replace(/["'`\\]/g, "");
 
 // The indexes of string tokens that are direct ELEMENTS of an array literal (`["a", "eval"]`): a list of names is
 // data. A `[` after an identifier, a string, a number or a closing delimiter is a member access (`o["eval"]`),
@@ -630,15 +625,6 @@ function closeBracketIndex(tokens, open) {
   return -1;
 }
 
-// Whether the identifier at `k` is a member of a regular expression literal (`/re/.exec(x)`). A regex token is
-// followed by the tokens of its own body (flagged inRegex), so step back over those first.
-function regexLiteralMember(tokens, k) {
-  if (!(tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === ".")) return false;
-  let j = k - 2;
-  while (j >= 0 && tokens[j].inRegex) j -= 1;
-  return j >= 0 && tokens[j].t === "regex";
-}
-
 // Whether the token at `k` is directly called: `x(...)` or `x?.(...)`.
 function isCalledAt(tokens, k) {
   const a = tokens[k + 1];
@@ -666,7 +652,7 @@ export function moduleReferences(source, options = {}) {
   if (!ok) unreadable.push({ form: "source", specifier: "unparseable (unterminated string, template, regex or comment)" });
   const inClause = new Set();
   const arrayElements = arrayElementStrings(tokens);
-  const nameStrings = new Set([...DYNAMIC_CODE_NAMES, "constructor", ...TIMER_NAMES, ...CHILD_PROCESS_NAMES]);
+  const nameStrings = new Set([...DYNAMIC_CODE_NAMES, "constructor", ...TIMER_NAMES]);
   const urlConstructions = new Set();
   for (let k = 0; k < tokens.length; k += 1) {
     const tk = tokens[k];
@@ -696,8 +682,10 @@ export function moduleReferences(source, options = {}) {
       }
     }
     if (tk.t === "punct" && tk.v === "[" && !tk.syn) {
-      const prev = tokens[k - 1];
-      const access = prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !LITERAL_PRECEDERS.has(prev.v)));
+      // `x?.[k]` is tokenized `x ? . [ k ]`: step over the optional-chain dot to the object.
+      const optional = tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "?";
+      const prev = optional ? tokens[k - 3] : tokens[k - 1];
+      const access = optional ? Boolean(prev) : prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !LITERAL_PRECEDERS.has(prev.v)));
       const close = access ? closeBracketIndex(tokens, k) : -1;
       if (close !== -1) {
         const key = tokens.slice(k + 1, close);
@@ -706,59 +694,42 @@ export function moduleReferences(source, options = {}) {
         else if (!literalKey && prev.t === "id" && GLOBAL_OBJECTS.includes(prev.v)) dynamic(`computed access on ${prev.v} with a key built at run time`);
       }
     }
+    if (tk.t === "id" && tk.v === "binding" && tokens[k - 1] && tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "process") {
+      dynamic("process.binding, which reaches internal modules");
+    }
     if (tk.t === "id" && tk.v === "Script" && tokens[k - 1] && (tokens[k - 1].v === "new" || (tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "vm"))) {
       dynamic("vm.Script, which compiles source text");
     }
-    // `.constructor` reaches Function (`fn.constructor("code")`, `(fn.constructor)("code")`,
-    // `fn.constructor.call(null, "code")`, `const C = fn.constructor`). It is positively classified safe only
-    // when it is compared (`x.constructor === Y`) or its `.name` is read; every other use is unreadable.
-    if (tk.t === "id" && tk.v === "constructor" && tokens[k - 1] && tokens[k - 1].v === ".") {
-      const n1 = tokens[k + 1];
+    // `constructor` reaches Function (`fn.constructor("code")`, `(fn.constructor)("code")`,
+    // `const { constructor: C } = fn`, `fn.constructor.call(null, "code")`). The only permitted use is a class's
+    // own `constructor(...) { ... }` method, which follows `{`, `}` or `;` and is followed by `(`.
+    if (tk.t === "id" && tk.v === "constructor") {
+      const before = tokens[k - 1];
+      const after = tokens[k + 1];
+      const classMethod = before && before.t === "punct" && ["{", "}", ";"].includes(before.v) && after && after.t === "punct" && after.v === "(";
+      // `x.constructor.name` and `x.constructor === Y` consume the value without keeping a reference to it: a
+      // string and a boolean cannot load anything. These two are the only member uses that are permitted.
       const n2 = tokens[k + 2];
       const n3 = tokens[k + 3];
-      const named = (n1 && n1.v === "." && n2 && n2.t === "id" && n2.v === "name") || (n1 && n1.v === "?" && n2 && n2.v === "." && n3 && n3.t === "id" && n3.v === "name");
-      const compared = n1 && (n1.v === "=" || n1.v === "!") && n2 && n2.v === "=";
-      if (!named && !compared) dynamic(".constructor used other than compared or named, which reaches Function");
+      const memberBefore = before && before.t === "punct" && before.v === ".";
+      const named = memberBefore && ((after && after.v === "." && n2 && n2.t === "id" && n2.v === "name") || (after && after.v === "?" && n2 && n2.v === "." && n3 && n3.t === "id" && n3.v === "name"));
+      const compared = memberBefore && after && (after.v === "=" || after.v === "!") && n2 && n2.v === "=";
+      if (!classMethod && !named && !compared) dynamic("constructor used other than as a class's own method, compared, or named, which reaches Function");
     }
-    // Timers and child processes: a direct call is read (source text, evaluation flags); a reference that is
-    // not a direct call ((execSync)(...), const r = spawn, passing setTimeout on) cannot be read and is
-    // unreadable. An import clause naming them is neither.
-    if (tk.t === "id" && (TIMER_NAMES.includes(tk.v) || CHILD_PROCESS_NAMES.includes(tk.v))) {
-      if (inClause.has(k)) {
-        // `import { execSync }` is a plain import. A rename (`import { execSync as run }`) hides the call from
-        // the name checks, so it is unreadable.
-        if (tokens[k + 1] && tokens[k + 1].t === "id" && tokens[k + 1].v === "as") dynamic(`${tk.v} imported under another name`);
-      } else if (regexLiteralMember(tokens, k)) {
-        // `/pattern/.exec(text)`: RegExp.prototype.exec on a regular expression literal, not a child process.
-      } else if (!isCalledAt(tokens, k)) {
-        dynamic(`reference to ${tk.v} that is not a direct call`);
-      } else {
-        const open = tokens[k + 1].v === "(" ? k + 1 : k + 3;
-        const callArgs = callArguments(tokens, open);
-        if (callArgs === null) {
-          dynamic(`unparseable ${tk.v} call`);
-        } else if (TIMER_NAMES.includes(tk.v)) {
-          const first = callArgs[0] ?? [];
-          if (first.some((t) => t.t === "str" || t.t === "tmpl")) dynamic(`${tk.v} with source text`);
-        } else {
-          for (const arg of callArgs) {
-            for (let ti = 0; ti < arg.length; ti += 1) {
-              const t = arg[ti];
-              // A string assembled at run time cannot be read: a template with an interpolation, a `+`, or a
-              // string-building call other than path.join / path.resolve and friends.
-              if (t.t === "tmpl") dynamic(`${tk.v} given a template with an interpolation`);
-              if (t.t === "punct" && t.v === "+") dynamic(`${tk.v} given a string built with +`);
-              if (t.t === "id" && STRING_BUILDERS.includes(t.v) && !(arg[ti - 1] && arg[ti - 1].v === "." && arg[ti - 2] && arg[ti - 2].v === "path")) {
-                dynamic(`${tk.v} given a string built with ${t.v}`);
-              }
-              if (t.t !== "str") continue;
-              for (const word of unquoted(t.v).split(/\s+/)) {
-                if (word.startsWith("-") && !SAFE_CHILD_OPTION.test(word)) dynamic(`${tk.v} given the option "${word.slice(0, 30)}", which is not known to be harmless`);
-              }
-            }
-          }
-        }
-      }
+    // A timer takes source text unless its first argument is a function expression.
+    if (tk.t === "id" && TIMER_NAMES.includes(tk.v) && !inClause.has(k) && isCalledAt(tokens, k)) {
+      const open = tokens[k + 1].v === "(" ? k + 1 : k + 3;
+      const timerArgs = callArguments(tokens, open);
+      const first = timerArgs && timerArgs[0] ? timerArgs[0] : null;
+      const isFunction = first !== null && (first[0]?.v === "function" || first[0]?.v === "async" || first.some((t, i) => t.t === "punct" && t.v === "=" && first[i + 1]?.v === ">"));
+      if (!isFunction) dynamic(`${tk.v} whose first argument is not a function expression`);
+    }
+    // A renamed import hides a timer from the checks above.
+    if (tk.t === "id" && TIMER_NAMES.includes(tk.v) && inClause.has(k) && tokens[k + 1] && tokens[k + 1].t === "id" && tokens[k + 1].v === "as") {
+      dynamic(`${tk.v} imported under another name`);
+    }
+    if (tk.t === "id" && TIMER_NAMES.includes(tk.v) && !inClause.has(k) && !isCalledAt(tokens, k)) {
+      dynamic(`reference to ${tk.v} that is not a direct call`);
     }
     const memberOf = tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === ".";
     if (tk.t === "id" && tk.v === "require" && !isCalledAt(tokens, k)) {
@@ -907,6 +878,10 @@ export function externalReferences(source, where) {
   const { specifiers, unreadable } = moduleReferences(source, { dynamicCode: where.dynamicCode !== false });
   const out = unreadable.map((u) => `${u.form} ${u.specifier}`);
   for (const { form, specifier } of specifiers) {
+    if (where.dynamicCode !== false && LOADER_CAPABLE_MODULES.some((m) => specifier === m || specifier === "node:" + m)) {
+      out.push(`${form} ${specifier} is a loader-capable module (starts processes, runs source text, loads native code or changes module loading)`);
+      continue;
+    }
     if (specifier.startsWith("node:")) continue;
     if (form === "file-url") {
       // A file URL names a file system path: decide it like any other target, on its real path.
@@ -934,6 +909,26 @@ export function externalReferences(source, where) {
       if (where2 === "missing") out.push(`${form} ${specifier} does not exist, so containment cannot be proved`);
       else if (where2 !== "ok") out.push(`${form} ${specifier} lands outside the repository or cannot be resolved`);
     }
+  }
+  return out;
+}
+
+/**
+ * The normalised text of every direct call to one of `names` in `source`: the callee and its arguments as one
+ * space-joined token string. An allowlist entry records the calls a reviewer read; any other call, or any edit
+ * of one, no longer matches.
+ */
+export function directCallTexts(source, names) {
+  const { tokens } = tokenize(source);
+  const out = [];
+  for (let k = 0; k < tokens.length; k += 1) {
+    const tk = tokens[k];
+    if (tk.t !== "id" || !names.includes(tk.v) || tk.inRegex) continue;
+    const open = tokens[k + 1] && tokens[k + 1].v === "(" && !tokens[k + 1].syn ? k + 1 : -1;
+    if (open === -1) continue;
+    const info = {};
+    if (callArguments(tokens, open, info) === null) continue;
+    out.push(tokens.slice(k, info.end + 1).map((t) => (t.t === "str" ? JSON.stringify(t.v) : t.v)).join(" "));
   }
   return out;
 }
