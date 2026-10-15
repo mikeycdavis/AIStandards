@@ -164,7 +164,7 @@ consumed. Reporting an impact from a presence would turn a setting into a measur
 | R4 | Any neutrality or low-impact claim, with the figure and the separately reported offset | The project's documentation and public statements | Human review |
 | R5 | Any projection, labelled, with its assumptions | The project's documentation | Human review |
 | The correctness of a figure, and of a projection, as a statement about energy actually used | None obtainable from a repository | — | **Not-evaluable** |
-| R6 | The absence of any detector that reports impact from a setting | This repository's own detectors and tests | Code review; see Implementation |
+| R6 | The absence of any detector, rule, audit finding or generated report that reports impact from a setting or presence | This repository's own detectors and tests | Code review; see Implementation |
 
 Evidence for R1 to R5 is a human-authored record. A document stating a boundary and a method establishes
 that the project wrote them down. Whether the figure is correct is not established by any record in a
@@ -224,7 +224,7 @@ by a risk tier (Standard 2 R3).
 | R3 | A figure names model or class, period and its assumptions, including the grid intensity and its date where the calculation uses one | A figure with a number and no subject, period or assumptions, or a calculated emissions figure whose calculation uses a grid intensity and names none | A figure that names an old model and an old period, and says so, must **not** be flagged as stale |
 | R4 | A neutrality or low-impact claim cites the figure, with offsets reported separately | "Carbon-neutral" with the gross figure absent | A project that publishes a gross figure and separately lists an offset must **not** be flagged for having one |
 | R5 | A projection is labelled as one and names its assumptions | A projection with no projection label, or with no named assumptions | A labelled projection with assumptions must **not** be flagged for being uncertain |
-| R6 | No detector or report in this repository outputs an impact verdict from presence | A detector that reported low-impact because a region name was present | Reporting that a region setting was *found*, as an observation with no verdict, is permitted |
+| R6 | No detector, rule, audit finding or generated report in this repository states an impact verdict from presence | A detector, rule (a rule that treats a presence as establishing the property), audit finding or report that reported low-impact because a region name was present | Reporting that a region setting was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads an accounting artifact and no fixture
 carries one, so R1 to R5 are enforced by review or not at all, and R6 holds by construction. **A
