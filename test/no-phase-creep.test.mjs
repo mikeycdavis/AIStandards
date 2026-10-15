@@ -123,6 +123,7 @@ test("only the standards written so far exist", () => {
     "11-autonomy-levels-and-delegated-authority.md",
     "13-personal-data-in-ai-systems.md",
     "17-evaluation-plans-for-generative-systems.md",
+    "19-robustness-evaluation.md",
     "21-prompt-and-instruction-security.md",
     "23-agent-execution-security.md",
     "25-grounding-and-hallucination-control.md",
