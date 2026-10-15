@@ -113,7 +113,7 @@ This is a constraint on the framework, not on a project. A repository can show t
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
 | R1 | Each dependency and its behaviour under each of the four conditions | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
-| R2 | Each degraded mode, the field, header or shape that carries its signal, and a retained sample of a degraded response (or, for a declining mode, a captured declined outcome) | The project's output contract and a captured example | Human review |
+| R2 | Each degraded mode and the field, header or shape that carries its signal | The project's output contract and a captured example | Human review |
 | R3 | The primary path's controls and, for each, where it applies on the fallback path | Project code, configuration and data-handling terms | Human review |
 | R4 | Where provider-specific calls and request shapes sit, and the abstraction in front of them | Project code and documentation | Human review |
 | R5 | The date, result and stated interval of each exercise, and the date of the latest change to the path | Test records, drill records or incident records | Human review |
