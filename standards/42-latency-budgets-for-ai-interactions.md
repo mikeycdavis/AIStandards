@@ -248,7 +248,7 @@ contradict a false statement. No level here is lowered by a risk tier (Standard 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | A stated budget names interaction, point of measurement and percentile | "Fast" or "under two seconds" with none of the three | A budget stated as complete-answer p95 for a named interaction, with no first-token figure, must **not** be reported as missing one it never claimed |
-| R2 | A call that exceeds the call limit, or an interaction that reaches its deadline, is cut, cancelled where the provider allows it, and handled as recorded | The limit is reached and the call hangs the caller, or proceeds as before, or the underlying call continues to completion where cancellation was available | A system whose only model call is a background step nobody waits on is out of scope for R2, not failing it |
+| R2 | A call that exceeds the call limit, or an interaction that reaches its deadline, is cut, cancelled where the provider allows it, and handled as recorded | A model call path someone waits on has no time limit; or the limit is reached and the call hangs the caller, or proceeds as before, or the underlying call continues to completion where cancellation was available | A system whose only model call is a background step nobody waits on is out of scope for R2, not failing it |
 | R3 | An interaction that retries or falls back has a stated deadline, and a retry is declined when the remaining deadline is shorter than its own limit | Retries with no stated interaction deadline, or three attempts at the per-call limit inside an interaction with a deadline of one | A system that never retries or falls back, and says so, must **not** be failed for lacking a deadline; a request that exceeds a p95 objective but is inside its deadline must **not** be reported as a violation of R3 |
 | R4 | A reported aggregate figure names interaction, measurement point, statistic, model, prompt revision, provider, region and tier, and workload, and every deployment that took part with their mixture (or is stratified by deployment) | A figure with a number and nothing else, a mean reported as a percentile or the reverse, or a multi-deployment figure that lists deployments and not their mixture | A figure on a named workload that says it was measured on an idle endpoint must **not** be flagged for admitting it; a per-call duration in a trace record must **not** be flagged for lacking a percentile or workload |
 | R5 | A published claim names the budget and the measurement, and the measurement's interaction, point, statistic and result are compared with the budget's and meet it | "Real-time" or "instant" with neither, or one that names a measurement that misses its budget | A statement of a measured figure on a named workload and no stronger claim must **not** be flagged |
@@ -293,11 +293,12 @@ following makes the earlier one describe a different subject:
 changes: a provider's load and a silent model update are changes nobody in the project made. Nothing in
 this release detects the transition; the events above are a note to a future reader.
 
-**Contradicted by operation.** A call that hung past its stated limit, an interaction that ran past its
-declared deadline, or a representative measurement that misses the stated percentile or fraction of an
-R1 budget, contradicts the record made under R1, R2 or R3 and invalidates it until re-examined. A
-single wait longer than a percentile objective is permitted by that objective and is not by itself a
-contradiction. What
+**Contradicted by operation.** A call that hung past its stated limit, or an interaction that ran past its
+declared deadline, contradicts the record made under R2 or R3 and invalidates it until re-examined. A
+representative measurement that misses an R1 budget's percentile or fraction does not invalidate the
+budget, which is an objective and stands for comparison; it contradicts any claim that the budget is met
+and makes the measurement the record of a miss. A single wait longer than a percentile objective is
+permitted by that objective and is not by itself a contradiction. What
 follows operationally is item 34's subject (AI Incident Response, unwritten in this release); this
 standard says only that the record no longer stands.
 
