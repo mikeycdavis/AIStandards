@@ -180,7 +180,6 @@ that record.
 | R3 | `manual-review` | `error` |
 | R4 | `manual-review` | `error` |
 | R5 | `manual-review` | `error` |
-
 | R6 | none (a constraint on the framework) | none |
 
 R2's reach is reviewed from the specified point of disclosure and the disclosure captures R3 requires,
@@ -219,7 +218,7 @@ There is no policy-level exception mechanism in this release, because no rule ex
 | R1 | A listed change |
 | R2 | A listed change |
 | R3 | A listed change |
-| R4 | A change of the owner's presentation standards or of the project's presentation evidence |
+| R4 | A change of the owner's presentation standards, of the project's presentation evidence, of the interface that presents the disclosure, or of the audience |
 | R5 | A listed change |
 | R6 | Nothing: it constrains this repository |
 
