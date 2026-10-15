@@ -212,6 +212,19 @@ test("dynamic-code loaders are unreadable references: eval, Function, vm, timers
     "NODE_OPTIONS assigned": 'process.env.NODE_OPTIONS = "--import package";',
     "NODE_PATH assigned": 'process.env.NODE_PATH = dir;',
     "NODE_OPTIONS as a quoted key": 'run({ "NODE_OPTIONS": x });',
+    "a template command with -e": "execSync(" + String.fromCharCode(96) + "node -e ${code}" + String.fromCharCode(96) + ");",
+    "a template option": "execFileSync(process.execPath, [" + String.fromCharCode(96) + "--require=${pkg}" + String.fromCharCode(96) + "]);",
+    "a template argument with a flag-free prefix": "spawnSync(cmd, [" + String.fromCharCode(96) + "${flag}" + String.fromCharCode(96) + "]);",
+    "a command built with +": 'execSync("node " + flag + " x.js");',
+    "an option built with +": 'execFileSync(process.execPath, ["--req" + "uire", "package"]);',
+    "a command joined from an array": 'execSync(["node", flag].join(" "));',
+    "an option concatenated": 'execFileSync("node", [].concat(flags, ["x.js"]));',
+    "an option built with replace": 'execFileSync("node", [name.replace("a", "-r")]);',
+    "a computed property name built by concatenation": 'new Worker("require(\'package\')", { ["ev" + "al"]: true });',
+    "a computed property name from a variable": "new Worker(code, { [key]: true });",
+    "a literal computed property name": 'new Worker(code, { ["eval"]: true });',
+    "a literal computed property name after another key": 'new Worker(code, { stdout: true, ["eval"]: true });',
+    "a computed method name": "const o = { [name]() {} };",
     "node --require preload": 'execFileSync(process.execPath, ["--require", "package"]);',
     "node -r preload": 'execFileSync(process.execPath, ["-r", "package"]);',
     "node --require=preload": 'spawnSync(process.execPath, ["--require=package", "x.js"]);',
@@ -253,6 +266,10 @@ test("dynamic-code loaders are unreadable references: eval, Function, vm, timers
     "a computed constructor called optionally": 'const f = fn["constructor"]?.("return 1");',
     "execFile with -e": 'execFile("node", ["-e", "1"], cb);',
   };
+  // every string-building call (an independent list) inside a child-process call is unreadable
+  for (const name of ["join", "concat", "replace", "replaceAll", "repeat", "padStart", "padEnd", "fromCharCode", "fromCodePoint", "toString", "toLowerCase", "toUpperCase", "slice", "substring", "substr", "split", "format", "raw", "String", "atob", "Buffer"]) {
+    assert.notDeepEqual(refs("execFileSync(process.execPath, [value." + name + "(1)]);\n"), [], "string builder: " + name);
+  }
   for (const [label, src] of Object.entries(must)) assert.notDeepEqual(refs(src + "\n"), [], "must be an offender: " + label);
   const may = {
     "a timer given a function": "setTimeout(() => {}, 10);",
@@ -269,10 +286,16 @@ test("dynamic-code loaders are unreadable references: eval, Function, vm, timers
     "a nested list of names": 'const groups = [["a", "eval"], ["exec"]];',
     "an imported child-process function used by a call": 'import { spawnSync } from "node:child_process";\nspawnSync(process.execPath, ["--test"]);',
     "a regular expression exec": "const m = re.exec(text);",
+    "exec on a regex literal with string building": 'const m = /^a+/.exec(text.slice(1) + tail);',
+    "exec on a regex literal with a template": "const m = /a/.exec(" + String.fromCharCode(96) + "${x}" + String.fromCharCode(96) + ");",
     "the test runner with only its own flags": 'spawnSync(process.execPath, ["--test", "--test-concurrency=4", ...files.map((f) => path.join(dir, f))], { stdio: "inherit", cwd: root });',
     "child-process calls with words and no options": 'execFileSync("git", ["rev-parse", "HEAD"]);',
     "an optional-chained constructor name": "const n = obj?.constructor?.name;",
     "an indexed read": "const x = items[i];",
+    "a list of names in a call, followed by a colon in a ternary": 'const l = cond ? ["eval", "exec"] : ["x"];',
+    "path.join in a child-process call": 'execFileSync("git", [path.join(dir, "a"), path.resolve(root, b)]);',
+    "a computed property name with a numeric literal": "const o = { [0]: a, [1]: b };",
+    "a computed property name with a plain string literal key": 'const o = { ["kind"]: 1 };',
     "an indexed call with a numeric literal": "const r = steps[0](input);",
     "several names imported without renames": 'import { spawnSync, execFileSync } from "node:child_process";\nexecFileSync("git", ["status"]);',
     "an indexed call of a table with a literal key": 'const r = handlers["start"](1);',

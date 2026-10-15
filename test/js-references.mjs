@@ -574,6 +574,9 @@ const CHILD_PROCESS_NAMES = ["exec", "execSync", "execFile", "execFileSync", "sp
 // known to be harmless, and every other literal word that begins with `-` is unreadable. Words that are not
 // literals (a variable, a spread of a computed list) are paths and values the scan cannot see; that is the
 // boundary of reading text, stated in the PR body.
+// Calls that build one string from others: inside a child-process call they assemble a command or an option.
+// `path.join` and `path.resolve` build paths, which is data, and are not in the way.
+const STRING_BUILDERS = ["join", "concat", "replace", "replaceAll", "repeat", "padStart", "padEnd", "fromCharCode", "fromCodePoint", "toString", "toLowerCase", "toUpperCase", "slice", "substring", "substr", "split", "format", "raw", "String", "atob", "Buffer"];
 const SAFE_CHILD_OPTION = /^(--test|--test-concurrency=\d+)$/;
 const unquoted = (text) => text.replace(/["'`\\]/g, "");
 
@@ -589,7 +592,15 @@ function arrayElementStrings(tokens) {
     if (tk.inRegex) continue;
     if (tk.t === "punct" && (tk.v === "(" || tk.v === "[" || tk.v === "{")) {
       const prev = tokens[k - 1];
-      const literal = tk.v === "[" && (!prev || (prev.t === "punct" && ![")", "]", "}"].includes(prev.v)) || (prev.t === "id" && LITERAL_PRECEDERS.has(prev.v)));
+      let literal = tk.v === "[" && (!prev || (prev.t === "punct" && ![")", "]", "}"].includes(prev.v)) || (prev.t === "id" && LITERAL_PRECEDERS.has(prev.v)));
+      if (literal) {
+        // `{ ["eval"]: true }` and `{ ["run"]() {} }`: a bracket group in key position that is followed by `:`
+        // or `(` is a computed property name, whose string names a member; it is not a list of names.
+        const close = closeBracketIndex(tokens, k);
+        const after = close === -1 ? null : tokens[close + 1];
+        const keyPosition = prev && prev.t === "punct" && (prev.v === "{" || prev.v === ",");
+        if (keyPosition && after && after.t === "punct" && (after.v === ":" || after.v === "(")) literal = false;
+      }
       stack.push(literal);
     } else if (tk.t === "punct" && (tk.v === ")" || tk.v === "]" || tk.v === "}")) {
       stack.pop();
@@ -617,6 +628,15 @@ function closeBracketIndex(tokens, open) {
     }
   }
   return -1;
+}
+
+// Whether the identifier at `k` is a member of a regular expression literal (`/re/.exec(x)`). A regex token is
+// followed by the tokens of its own body (flagged inRegex), so step back over those first.
+function regexLiteralMember(tokens, k) {
+  if (!(tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === ".")) return false;
+  let j = k - 2;
+  while (j >= 0 && tokens[j].inRegex) j -= 1;
+  return j >= 0 && tokens[j].t === "regex";
 }
 
 // Whether the token at `k` is directly called: `x(...)` or `x?.(...)`.
@@ -665,6 +685,16 @@ export function moduleReferences(source, options = {}) {
     // the result is called (`x[name](...)`, `new x[name](...)`) or when the object is the global scope or a
     // module-level loader holder (`globalThis[name]`), because the name can be assembled to spell eval,
     // Function or a loader. A key that is a single string or number literal is read by the string rule above.
+    if (tk.t === "punct" && tk.v === "[" && !tk.syn && tokens[k - 1] && tokens[k - 1].t === "punct" && (tokens[k - 1].v === "{" || tokens[k - 1].v === ",")) {
+      // A computed property name (`{ [name]: v }`, `{ ["ev" + "al"]: true }`): its key is a name built at run time.
+      const close = closeBracketIndex(tokens, k);
+      const after = close === -1 ? null : tokens[close + 1];
+      if (after && after.t === "punct" && (after.v === ":" || after.v === "(")) {
+        const key = tokens.slice(k + 1, close);
+        const literalKey = key.length === 1 && (key[0].t === "str" || key[0].t === "num");
+        if (!literalKey) dynamic("a computed property name built at run time");
+      }
+    }
     if (tk.t === "punct" && tk.v === "[" && !tk.syn) {
       const prev = tokens[k - 1];
       const access = prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !LITERAL_PRECEDERS.has(prev.v)));
@@ -698,6 +728,8 @@ export function moduleReferences(source, options = {}) {
         // `import { execSync }` is a plain import. A rename (`import { execSync as run }`) hides the call from
         // the name checks, so it is unreadable.
         if (tokens[k + 1] && tokens[k + 1].t === "id" && tokens[k + 1].v === "as") dynamic(`${tk.v} imported under another name`);
+      } else if (regexLiteralMember(tokens, k)) {
+        // `/pattern/.exec(text)`: RegExp.prototype.exec on a regular expression literal, not a child process.
       } else if (!isCalledAt(tokens, k)) {
         dynamic(`reference to ${tk.v} that is not a direct call`);
       } else {
@@ -710,7 +742,15 @@ export function moduleReferences(source, options = {}) {
           if (first.some((t) => t.t === "str" || t.t === "tmpl")) dynamic(`${tk.v} with source text`);
         } else {
           for (const arg of callArgs) {
-            for (const t of arg) {
+            for (let ti = 0; ti < arg.length; ti += 1) {
+              const t = arg[ti];
+              // A string assembled at run time cannot be read: a template with an interpolation, a `+`, or a
+              // string-building call other than path.join / path.resolve and friends.
+              if (t.t === "tmpl") dynamic(`${tk.v} given a template with an interpolation`);
+              if (t.t === "punct" && t.v === "+") dynamic(`${tk.v} given a string built with +`);
+              if (t.t === "id" && STRING_BUILDERS.includes(t.v) && !(arg[ti - 1] && arg[ti - 1].v === "." && arg[ti - 2] && arg[ti - 2].v === "path")) {
+                dynamic(`${tk.v} given a string built with ${t.v}`);
+              }
               if (t.t !== "str") continue;
               for (const word of unquoted(t.v).split(/\s+/)) {
                 if (word.startsWith("-") && !SAFE_CHILD_OPTION.test(word)) dynamic(`${tk.v} given the option "${word.slice(0, 30)}", which is not known to be harmless`);
