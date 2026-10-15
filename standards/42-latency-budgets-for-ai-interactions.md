@@ -114,8 +114,8 @@ A percentile objective such as "p95 under two seconds" permits some requests to 
 statement about a population, and it leaves no "remaining time" for one request to consume. The deadline
 is what a single interaction is held to, and it is the project's choice, including whether it is much
 larger than the objective. A system that retries with no deadline of its own has a deadline anyway: the
-sum of its attempts. A per-call timeout of ten seconds with three retries is a thirty-second interaction
-that nobody declared. The multiplier is the same one that affects cost; the bound on its count is the subject of
+sum of its attempts. A per-call timeout of ten seconds with three attempts is a thirty-second
+interaction that nobody declared. The multiplier is the same one that affects cost; the bound on its count is the subject of
 item 41, and this requirement concerns only the time it adds. That a different model answered is
 [Standard 33](33-ai-observability.md) R2's subject, and this standard relies on it.
 
@@ -124,8 +124,11 @@ item 41, and this requirement concerns only the time it adds. That a different m
 **A project that reports an aggregate latency figure — a percentile, a mean or a distribution offered
 as evidence of how the system performs or as support for a budget — MUST name the interaction, the
 point of measurement (first token or byte, or complete answer), the statistic reported (which
-percentile, or the mean), the model identifier and prompt revision, the provider, region and service
-tier it was measured on, and the workload (request mix, prompt and output lengths, concurrency), and
+percentile, the mean, or for a distribution its form, such as histogram buckets or quantiles), the model
+identifier and prompt revision, the provider, region and service tier it was measured on, and the
+workload (request mix, prompt and output lengths, concurrency) — and, where the figure spans more than
+one model call or deployment (a fallback, a multi-call interaction), every deployment that took part and
+their mixture, or the figure stratified by deployment — and
 MUST NOT present a figure measured on a different path than users take as a measurement of the user
 path.**
 
@@ -169,7 +172,7 @@ shown by a call it cut short.
 | Mean as budget | An average met while a tenth of requests wait ten times longer | R1 |
 | No timeout | A model call with no limit, hanging a request thread until the provider answers | R2 |
 | Wait as behaviour | The limit is reached and the system keeps waiting, or hangs the caller | R2 |
-| Orphaned call | The caller gives up at the limit; the underlying call continues and is billed | R2 |
+| Orphaned call | The caller gives up at the limit; the underlying call continues and is billed although the provider allows it to be cancelled | R2 |
 | Hidden stack of retries | Three attempts at ten seconds in an interaction declared as ten | R3 |
 | Retry past the deadline | A retry started with less time left than its own limit | R3 |
 | Objective read as deadline | A percentile objective used as the per-request cutoff, so the tail the objective permits is cut off, or never stated as a separate deadline | R1, R3 |
@@ -186,7 +189,7 @@ shown by a call it cut short.
 | R1 | Each budget as interaction, point of measurement and percentile | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R2 | The limit and where it is applied, the behaviour at it, and a run in which it was reached | Project code, configuration and the records of a run | Human review of the records |
 | R3 | Retry and fallback policy, the interaction deadline, and how what remains is checked before an attempt | Project code and configuration | Human review; a project's own test where one exists |
-| R4 | A reported figure with interaction, measurement point, statistic, model, prompt revision, provider and tier, and workload | The project's documentation and measurement records | Human review |
+| R4 | A reported figure with interaction, measurement point, statistic, model, prompt revision, provider, region and tier, and workload, and every deployment that took part | The project's documentation and measurement records | Human review |
 | R5 | Any published latency claim with the budget and measurement behind it | The project's documentation | Human review |
 | R6 | The absence of any detector that reports latency from a setting | This repository's own detectors and tests | Code review; see Implementation |
 
@@ -219,16 +222,17 @@ Three reasons, stated so a reader can disagree with any one of them:
    it against the `performance.*` ids another pack already uses. A proposed rule, if one is natural, is
    recorded in the pull request that introduced this document for per-rule approval, and not here.
 
-**Severity.** The standard separates a missing account from an observed failure. A reviewer's
-finding that a record, statement or label the requirement asks for is missing or incomplete is reported
-at **warning** severity: the system may behave well, and what is missing is the account of it. A
-finding that review has *observed* a falsifier occurring in the system or its documentation — the
-behaviour or claim the requirement forbids actually present — is reported at **error** severity, as is
-any finding against R5, which concerns a claim or a control whose absence is itself the failure, and a
-violation of R6 by a detector or report. These levels are this repository's judgment, listed in
-Additions, and are not owner-approved. R1 to R5 are also `manual-review` obligations in this release;
-the validation type and the severity are different things. R6 constrains this framework and has no
-validation type, because the thing it prohibits is a behaviour of the tool.
+**Severity.** A finding is reported at **warning** severity where a record, statement or label the
+requirement asks for is missing or incomplete, even where the Tests table lists that absence as a
+falsifier: the system may behave well, and what is missing is the account of it. A finding is reported at
+**error** severity only for behaviour or a claim: a call with no limit that hangs its caller, a limit
+reached without the recorded behaviour, a retry started past the interaction's deadline, an
+unqualified latency claim made contrary to R5, or a detector's violation of R6. The two conditions do
+not overlap: a missing account is never an error, and an observed behaviour or claim is never a
+warning. These levels are this repository's judgment, listed in Additions, and are not
+owner-approved. R1 to R5 are also `manual-review` obligations in this release; the validation type and
+the severity are different things. R6 constrains this framework and has no validation type, because the
+thing it prohibits is a behaviour of the tool.
 
 **Exemptibility.** R6 is not exemptible, for the reason R6 of
 [Standard 25](25-grounding-and-hallucination-control.md) is not. R5's prohibition on an unqualified
@@ -246,7 +250,7 @@ contradict a false statement. No level here is lowered by a risk tier (Standard 
 | R1 | A stated budget names interaction, point of measurement and percentile | "Fast" or "under two seconds" with none of the three | A budget stated as complete-answer p95 for a named interaction, with no first-token figure, must **not** be reported as missing one it never claimed |
 | R2 | A call that exceeds the call limit, or an interaction that reaches its deadline, is cut, cancelled where the provider allows it, and handled as recorded | The limit is reached and the call hangs the caller, or proceeds as before, or the underlying call continues to completion where cancellation was available | A system whose only model call is a background step nobody waits on is out of scope for R2, not failing it |
 | R3 | An interaction that retries or falls back has a stated deadline, and a retry is declined when the remaining deadline is shorter than its own limit | Retries with no stated interaction deadline, or three attempts at the per-call limit inside an interaction with a deadline of one | A system that never retries or falls back, and says so, must **not** be failed for lacking a deadline; a request that exceeds a p95 objective but is inside its deadline must **not** be reported as a violation of R3 |
-| R4 | A reported aggregate figure names interaction, measurement point, statistic, model, prompt revision, provider and tier, and workload | A figure with a number and nothing else, or a mean reported as a percentile or the reverse | A figure on a named workload that says it was measured on an idle endpoint must **not** be flagged for admitting it; a per-call duration in a trace record must **not** be flagged for lacking a percentile or workload |
+| R4 | A reported aggregate figure names interaction, measurement point, statistic, model, prompt revision, provider, region and tier, and workload, and every deployment that took part | A figure with a number and nothing else, or a mean reported as a percentile or the reverse | A figure on a named workload that says it was measured on an idle endpoint must **not** be flagged for admitting it; a per-call duration in a trace record must **not** be flagged for lacking a percentile or workload |
 | R5 | A published claim names the budget and measurement | "Real-time" or "instant" with neither | A statement of a measured figure on a named workload and no stronger claim must **not** be flagged |
 | R6 | No detector or report in this repository outputs a latency verdict from presence | A detector that reported a bound because a timeout argument was present | Reporting that a timeout setting was *found*, as an observation with no verdict, is permitted |
 
@@ -270,8 +274,11 @@ the attestation mechanism itself is later work ([Standard 5](05-verdict-vocabula
 declarations and does not apply to these records. Review-staleness is event-driven only: a record is
 stale when one of the events below occurs, and nothing in this release detects that.
 
-**What invalidates a recorded budget or measurement.** Each is a different subject, and a record made
-before the change describes the earlier one:
+**What invalidates a recorded measurement.** A budget is an objective someone chose, not an
+observation of a deployment: it survives a change of provider or model, and is what the new deployment
+is then measured against. It is revised only by a decision to change the objective, or when the
+interaction it names changes. A *measurement* is a record about one deployment, and each of the
+following makes the earlier one describe a different subject:
 
 - a change of model identifier, or a model silently updated behind an alias
   ([Standard 1](01-ai-system-manifest.md) R4 asks for the identifier to be pinned);
@@ -319,9 +326,9 @@ it owner-approved:
   Where this standard stops and items 41 and 44 begin is unconfirmed by anyone.
 - **The recheck of the adjacent file and rule id** at UIUXDesignStandards `7bff2e9` on 2026-10-14,
   which the boundary review did not make.
-- **The severity assignments** (warning for a missing account, error for an observed failure, for R5
-  and for a detector's violation of R6) and the statement that no attestation or scheduled expiry
-  exists in this release.
+- **The severity assignments** (warning for a missing account; error for an observed timeout, deadline
+  or limit failure, a prohibited claim, and a detector's violation of R6) and the statement that no
+  attestation or scheduled expiry exists in this release.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
   decision not to name a rule id.
 

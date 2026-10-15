@@ -103,7 +103,7 @@ namespaces have no shard. **Nine** of the 46 rules are reachable by a detector (
 ## 3. Purpose
 
 Write the full normative corpus and prove it traces to the brief. The two blocking catalog reviews
-that gate this phase have run and pass mechanically (see §9). The remaining work is the 40 unwritten
+that gate this phase have run and pass mechanically (see §9). The remaining work is the 35 unwritten
 standards, shards for the nine reserved namespaces that have none, and
 `artifacts/standards-source-inventory.json`. `manifest.mjs`, `toolperms.mjs`, the templates and `init`
 were built on 2026-09-19.
@@ -212,7 +212,7 @@ specification rather than about your new file. That is exactly what happened whi
 `test/no-phase-creep.test.mjs` holds a sorted literal list of the standards that exist, under the
 test named `only the standards written so far exist`. Add the new filename in sorted position.
 
-The guard is not that the corpus is frozen — this phase writes the remaining 43. It is that a standard
+The guard is not that the corpus is frozen — this phase writes the remaining 35. It is that a standard
 arrives *deliberately*, by being added to that list, rather than by appearing unnoticed.
 
 **Verify (steps 1–5):**
