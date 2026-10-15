@@ -187,7 +187,7 @@ queued, shortened or re-routed — at the ceiling.
 | Cap claim without mechanism | "Cost is capped" with nothing enforcing it | R5 |
 | Unattached unit cost | "Roughly $0.02 per request" naming no model, date or workload | R5 |
 | Setting read as control | A framework report of "cost controlled" because a token limit is present | R6 |
-| Untested ceiling | A budget shown to exist and never shown to take effect at its ceiling | R2, R6 |
+| Ceiling presented as demonstrated | A ceiling described as enforced, or reported by a framework as bounding spend, with no run in which it took effect | R6 |
 
 ## Evidence
 
