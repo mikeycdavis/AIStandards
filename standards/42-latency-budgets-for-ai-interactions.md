@@ -117,9 +117,17 @@ item 41, and this requirement concerns only the time it adds. That a different m
 
 ### R4 — Measure on the path a request takes, at a named workload and revision
 
-**A project that reports a latency figure MUST name the interaction, the percentile, the model
-identifier and prompt revision it was measured on, and the workload (request mix, prompt and output
-lengths, concurrency), and MUST NOT report a figure from a different path than users take.**
+**A project that reports an aggregate latency figure — a percentile, a mean or a distribution offered
+as evidence of how the system performs or as support for a budget — MUST name the interaction, the
+percentile, the model identifier and prompt revision it was measured on, and the workload (request mix,
+prompt and output lengths, concurrency), and MUST NOT report a figure from a different path than users
+take.**
+
+This applies to figures offered as a statement about performance. It does not apply to a per-call
+operational record such as the duration field of a trace record
+([Standard 33](33-ai-observability.md) R1): a single observation has no percentile and no workload, and
+is not a reported figure in this sense. It becomes evidence for R4 only when aggregated into a figure
+that is then reported.
 
 A benchmark on short prompts against an idle provider describes a system nobody uses. The figure moves
 when the model, the prompt, the provider's load or the output length does. A measured figure is a
@@ -224,7 +232,7 @@ contradict a false statement. No level here is lowered by a risk tier (Standard 
 | R1 | A stated budget names interaction, point of measurement and percentile | "Fast" or "under two seconds" with none of the three | A budget stated as complete-answer p95 for a named interaction, with no first-token figure, must **not** be reported as missing one it never claimed |
 | R2 | A call that exceeds the limit is cut and handled as recorded | The limit is reached and the call hangs the caller, or proceeds as before | A system whose only model call is a background step nobody waits on is out of scope for R2, not failing it |
 | R3 | A retry is declined when the interaction's remaining deadline is shorter than its own limit | Three attempts at the per-call limit inside an interaction with a deadline of one | A system that never retries or falls back, and says so, must **not** be failed for lacking a deadline; a request that exceeds a p95 objective but is inside its deadline must **not** be reported as a violation of R3 |
-| R4 | A reported figure names interaction, percentile, model, prompt revision and workload | A figure with a number and nothing else | A figure on a named workload that says it was measured on an idle endpoint must **not** be flagged for admitting it |
+| R4 | A reported aggregate figure names interaction, percentile, model, prompt revision and workload | A figure with a number and nothing else | A figure on a named workload that says it was measured on an idle endpoint must **not** be flagged for admitting it; a per-call duration in a trace record must **not** be flagged for lacking a percentile or workload |
 | R5 | A published claim names the budget and measurement | "Real-time" or "instant" with neither | A statement of a measured figure on a named workload and no stronger claim must **not** be flagged |
 | R6 | No detector or report in this repository outputs a latency verdict from presence | A detector that reported a bound because a timeout argument was present | Reporting that a timeout setting was *found*, as an observation with no verdict, is permitted |
 
