@@ -170,11 +170,11 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 
 | Requirement | Event that makes its record stale |
 | --- | --- |
-| R1 | The addition of a dependency, a change in what a dependency returns or in its terms, or a change to the system's own behaviour under a condition. |
-| R2 | A change of the model or provider that produces the response, or of the degraded-mode routing or the response contract. |
-| R3 | A change to the controls on the primary path, to the fallback policy, or to the fallback provider or its terms. |
-| R4 | A change of provider or of the integration boundary. |
-| R5 | For a path described as available, any change to the path since its latest exercise: a model, provider, terms, primary-path control or fallback policy. |
+| R1 | Any change to anything this record names or relies on, including: the addition of a dependency, a change in what a dependency returns or in its terms, or a change to the system's own behaviour under a condition. |
+| R2 | Any change to anything this record names or relies on, including: a change of the model or provider that produces the response, or of the degraded-mode routing or the response contract. |
+| R3 | Any change to anything this record names or relies on, including: a change to the controls on the primary path, to the fallback policy, or to the fallback provider or its terms. |
+| R4 | Any change to anything this record names or relies on, including: a change of provider or of the integration boundary. |
+| R5 | Any change to anything this record names or relies on, including: for a path described as available, any change to the path since its latest exercise: a model, provider, terms, primary-path control or fallback policy. |
 | R6 | A new detector, rule or report that touches resilience. |
 
 ## Additions this standard makes beyond the source
