@@ -188,7 +188,7 @@ a request it served.
 | R2 | Each degraded mode, and the field, header or shape that carries it, with a sample of a degraded response | The project's output contract and a captured example | Human review |
 | R3 | The controls on the primary path and a statement of how each applies to the fallback | Project code, configuration and data-handling terms | Human review |
 | R4 | The boundary where provider-specific behaviour sits, and the stated list of what replacement would change | Project code and documentation | Human review |
-| R5 | The date and result of each exercise of a degraded or fallback path, and the stated interval | Test records, drill records or incident records | Human review of the records |
+| R5 | The date and result of each exercise of a degraded or fallback path, and the stated interval; an exercise record without a result is incomplete | Test records, drill records or incident records | Human review of the records |
 | R6 | The absence of any detector that reports resilience from a presence | This repository's own detectors and tests | Code review; see Implementation |
 
 Evidence for R1 to R5 is a human-authored record. A document naming a fallback establishes that the
@@ -223,16 +223,17 @@ Three reasons, stated so a reader can disagree with any one of them:
    another, is the owner's decision; a proposal, if one is natural, is recorded in the pull request that
    introduced this document for per-rule approval.
 
-**Severity.** The standard separates a missing account from an observed failure. A reviewer's
-finding that a record, statement or label the requirement asks for is missing or incomplete is reported
-at **warning** severity: the system may behave well, and what is missing is the account of it. A
-finding that review has *observed* a falsifier occurring in the system or its documentation — the
-behaviour or claim the requirement forbids actually present — is reported at **error** severity, as is
-any finding against R3, which concerns a claim or a control whose absence is itself the failure, and a
-violation of R6 by a detector or report. These levels are this repository's judgment, listed in
-Additions, and are not owner-approved. R1 to R5 are also `manual-review` obligations in this release;
-the validation type and the severity are different things. R6 constrains this framework and has no
-validation type, because the thing it prohibits is a behaviour of the tool.
+**Severity.** A finding is reported at **warning** severity where a record, statement or label the
+requirement asks for is missing or incomplete, even where the Tests table lists that absence as a
+falsifier: the system may behave well, and what is missing is the account of it. A finding is reported at
+**error** severity only for behaviour: a fallback observed serving an interaction without a control the
+primary path applies (R3), a degraded response observed in the form of a full one (R2), or a
+detector's violation of R6. The two conditions do not overlap: a missing account is never an error,
+including a missing statement of how a fallback's controls apply, and an observed behaviour is never a
+warning. These levels are this repository's judgment, listed in Additions, and are not
+owner-approved. R1 to R5 are also `manual-review` obligations in this release; the validation type and
+the severity are different things. R6 constrains this framework and has no validation type, because the
+thing it prohibits is a behaviour of the tool.
 
 **Exemptibility.** R6 is not exemptible, for the reason R6 of
 [Standard 25](25-grounding-and-hallucination-control.md) is not. R3 is not lowered by an outage: a
@@ -250,10 +251,10 @@ here is lowered by a risk tier (Standard 2 R3).
 | --- | --- | --- | --- |
 | R1 | Each dependency, including a self-served model's host, has a recorded behaviour for each of the four conditions: unavailable, slow, rate-limited, changed | A dependency in use with no record, or a record covering only a total outage | A system whose record states, for the model dependency, that the degraded mode under each condition is to decline, recorded as its degraded mode, must **not** be reported missing a degraded mode |
 | R2 | A response produced in a degraded mode carries the recorded field, header or distinct response shape that a full response does not | No such signal is recorded, or it is absent from a degraded response (comparing the generated text of the two does not establish a signal) | A system whose recorded degraded mode is to decline must **not** be failed for lacking a separate marker on responses it never produces in a degraded form; a system that declines without recording the decline as its degraded mode fails R2 |
-| R3 | A request served by the fallback passes through the controls of the primary, or is declined | A fallback path with no redaction or output check | A fallback behind the same controls must **not** be flagged for being a different model |
+| R3 | A request served by the fallback passes through the controls of the primary, or is declined | A fallback that serves an interaction without a control the primary path applies (no redaction, no output check) | A fallback behind the same controls must **not** be flagged for being a different model |
 | R4, replacement claim | A stated list of what replacement would change exists beside the claim | "Provider-agnostic" with one adapter and no list | A project that makes no portability claim and says so must **not** be failed for lacking a replacement list |
 | R4, abstraction | Provider-specific calls and request shapes sit at an integration boundary behind an interface | Provider-specific behaviour (a provider SDK call, a provider-specific request shape) embedded in domain logic | A provider SDK used only inside the adapter or integration module must **not** be flagged |
-| R5 | A dated record of an exercise, and a stated interval, exist for each degraded mode and each fallback | A degraded mode or fallback with no record of ever running, or with no stated interval | A degraded mode exercised only in a test, and recorded as such, must **not** be flagged for not having been used in production |
+| R5 | A dated record of an exercise, and a stated interval, exist for each degraded mode and each fallback | A degraded mode or fallback with no record of ever running, or with no stated interval, or whose record of an exercise gives no result | A degraded mode exercised only in a test, and recorded as such, must **not** be flagged for not having been used in production |
 | R6 | No detector or report in this repository outputs a resilience verdict from presence | A detector that reported resilient because a fallback model was configured | Reporting that a fallback setting was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a resilience artifact and no fixture
@@ -321,9 +322,9 @@ owner-approved:
 - **The recheck of the precedent** at EngineeringStandards `3b1b18d` on 2026-10-14, including the
   observation that the standard's text and the rule record differ in level, which the boundary review
   did not make.
-- **The severity assignments** (warning for a missing account, error for an observed failure, for R3
-  and for a detector's violation of R6) and the statement that no attestation or scheduled expiry
-  exists in this release.
+- **The severity assignments** (warning for a missing account; error for an observed fallback serving
+  without a primary-path control, an observed degraded response in full form, and a detector's
+  violation of R6) and the statement that no attestation or scheduled expiry exists in this release.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
   decision to mint no id.
 

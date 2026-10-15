@@ -612,7 +612,7 @@ starting rather than trusting this section. Candidates, all inferred rather than
   standards and the nine missing shards.
 - **Another standard.** None now owns rules, so each would be prose only; pick by what later work
   cites. Follow `artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` §5 and cite code by
-  symbol name. Do not start the remaining 39 in one pass.
+  symbol name. Do not start the remaining 35 in one pass.
 
 **Q22 and Q7 are the open questions most likely to matter next.** Q22 decides whether this pack states
 any evaluation requirement for systems MachineLearningStandards does not reach, and cannot be answered
