@@ -115,11 +115,11 @@ next run, and it cannot be held to a claim.
 
 ### R3 — Report results by group, and record where a group cannot be measured
 
-**Where a system's quality, error rate or outcome is reported, the report MUST give each group's figure
-with the size of the group it was computed on, MUST NOT be limited to an aggregate when an affected
-group recorded under R1 can be measured; and where a group cannot be
-measured, the report MUST record that as a limit of the evaluation and MUST NOT present the absence
-of a measurement as parity.**
+**Where a system's quality, error rate or outcome is reported, the report MUST give the figure of
+each affected group recorded under R1 that can be measured, with the size of the group it was
+computed on, and MUST NOT be limited to an aggregate; where a group cannot be measured, the report
+MUST record that as a limit of the evaluation and MUST NOT present the absence of a measurement as
+parity.**
 
 An aggregate is dominated by the largest group. A group that is a small fraction of the evaluation
 set can be wrong in most of its cases and move the headline by less than its noise. The requirement is
@@ -277,7 +277,7 @@ by a risk tier
 | R1 | An output kind that affects people has a recorded group set, harm and bearer | A system that scores or classifies people with no record of who bears an error | A system recording a reasoned "no individual consequence" finding must **not** be reported as missing a record |
 | R2 | A fairness claim names a measure, the reason it was chosen, the groups, the data and a criterion | "Fair", "equitable" or "bias-free" with any of them missing, or a measure with no recorded reason for its selection | A statement reporting a named measure on named groups with the number and no stronger claim must **not** be flagged |
 | R3 | A report carries per-group figures with sizes, or states which group was not measured and why | An aggregate-only report where a recorded group was measurable | A report stating "not measured, attribute not lawfully collected" must **not** be read as a failure to evaluate; a group with a very small size reported as such is not a defect |
-| R4 | Each identified harm has a record of which groups bear it and how; every proxy the project knows of is recorded; a mitigation's effect is recorded on each group | A harm with no record of who bears it; a known proxy left unrecorded; a mitigation reported with its benefit to one group and no recorded effect on another | A project recording that no proxy was identified, with how it looked, must **not** be failed for the empty list; a system with no mitigation needs no mitigation record |
+| R4 | Each identified harm has a record of which groups bear it and how; every proxy the project knows of is recorded; where a mitigation reduces a harm for one group by shifting it to another, the shift is recorded with the groups it falls on | A harm with no record of who bears it; a known proxy left unrecorded; a mitigation that shifts harm reported with its benefit to one group and no record of where the harm went | A project recording that no proxy was identified, with how it looked, must **not** be failed for the empty list; a system with no mitigation, or a mitigation with no harm shift, needs no shift record |
 | R5 | A route exists and a report received has a recorded disposition | A route that discards or never reads reports | A system with no individual-level consequence (R1) must not be failed for having no route |
 | R6 | No detector or report in this repository outputs a fairness verdict, an adequacy verdict for an evaluation, an effectiveness verdict for a mitigation, or a preferred measure, from presence, and none supplies a protected-attribute list or threshold | A detector that reported fair, adequate or effective because a bias-testing import or a fairness document was present, or that named a default measure | Reporting that a fairness document or library was *found*, as an observation with no verdict, is permitted |
 
