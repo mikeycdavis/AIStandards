@@ -102,9 +102,10 @@ requirement adds what happens when one is gone, and does not restate the declara
 
 ### R2 — Define the degraded mode, and say when the system is in it
 
-**For each dependency in R1, the system MUST define a degraded mode, which MAY be to decline, and
-MUST make it detectable to the caller or downstream process when a response was produced in a degraded
-mode. A system MUST NOT present a degraded response in the same form as a full one.**
+**For each dependency in R1, and for each of its four conditions that results in reduced service, the
+system MUST define a degraded mode, which MAY be to decline, and MUST make it detectable to the caller
+or downstream process when a response was produced in a degraded mode. A system MUST NOT present a
+degraded response in the same form as a full one.**
 
 A fallback to a smaller model, a retrieval step that returned nothing, a tool that timed out and was
 skipped: each produces a response of the usual shape. If the difference is only in a trace nobody reads,
@@ -143,7 +144,8 @@ those.
 
 **Each degraded mode and each fallback MUST be exercised — in a test, a drill or an observed real
 event — and the project MUST record when and with what result and state how often it will be exercised
-again; a path that has never been exercised MUST NOT be described as available.**
+again; a path that has never been exercised, or whose latest recorded exercise is older than its stated
+interval, MUST NOT be described as available.**
 
 A fallback that has never run has an unknown failure rate, and the usual way to find it out is the
 outage it was written for. The interval is the project's choice; the requirement is that one is stated
@@ -254,7 +256,7 @@ here is lowered by a risk tier (Standard 2 R3).
 | R3 | A request served by the fallback passes through the controls of the primary, or is declined | A fallback that serves an interaction without a control the primary path applies (no redaction, no output check) | A fallback behind the same controls must **not** be flagged for being a different model |
 | R4, replacement claim | A stated list of what replacement would change exists beside the claim | "Provider-agnostic" with one adapter and no list | A project that makes no portability claim and says so must **not** be failed for lacking a replacement list |
 | R4, abstraction | Provider-specific calls and request shapes sit at an integration boundary behind an interface | Provider-specific behaviour (a provider SDK call, a provider-specific request shape) embedded in domain logic | A provider SDK used only inside the adapter or integration module must **not** be flagged |
-| R5 | A dated record of an exercise, with its result, and a stated interval, exist for each degraded mode and each fallback | A degraded mode or fallback with no record of ever running, or with no stated interval, or whose record of an exercise gives no result | A degraded mode exercised only in a test, and recorded as such, must **not** be flagged for not having been used in production |
+| R5 | A dated record of an exercise, with its result, and a stated interval, exist for each degraded mode and each fallback, and the latest exercise falls within the interval | A degraded mode or fallback with no record of ever running, or with no stated interval, or whose record of an exercise gives no result, or whose latest exercise is older than its interval and which is still described as available | A degraded mode exercised only in a test, and recorded as such, must **not** be flagged for not having been used in production |
 | R6 | No detector, rule, audit finding or generated report in this repository states a resilience verdict from presence | A detector, rule (a rule that treats a presence as establishing the property), audit finding or report that reported resilient because a fallback model was configured | Reporting that a fallback setting was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads a resilience artifact and no fixture
