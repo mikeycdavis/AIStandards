@@ -85,7 +85,7 @@ An estimate computed from token counts and a price list is a model of the bill. 
 
 **A project MUST NOT state that cost is capped or bounded without naming the ceiling (R2), MUST NOT state that it is negligible without naming the measurement, and MUST NOT state a cost per unit without naming the model identifier and the date of the price and, where the figure depends on a workload (a cost per request, conversation or job), the workload it was measured on.**
 
-A cost per request is a function of the model, its price on a date, the prompt and the output; "costs a few cents per conversation" is a claim with no subject. A dated price-sheet entry kept as a historical figure, and not stated as the cost of a call, is not a cost per unit under this requirement. This requirement sets no threshold and no price.
+A cost per request is a function of the model, its price on a date, the prompt and the output; "costs a few cents per conversation" is a claim with no subject. A provider price-sheet rate, historical or current, is a cost per unit and names its model and price date; it depends on no workload and needs none. This requirement sets no threshold and no price.
 
 ### R6 — This framework MUST NOT report cost controlled from the presence of a setting
 
@@ -166,11 +166,11 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 
 | Requirement | Event that makes its record stale |
 | --- | --- |
-| R1 | A new spend subject or a change of billing account. |
+| R1 | A new type or granularity of spend subject, or a change of billing account or attribution scheme. |
 | R2 | A change to the ceiling's value, spend subject, period, enforcement point or behaviour, or to who can write it. |
 | R3 | A change of retry, fallback or repeated-call policy outside an agent loop, a change of the billing basis (flat per call to metered by tokens or time), or an observed multiplier exceeding its limit. |
 | R4 | A change of how the provider counts billed units, for an estimate computed from them. |
-| R5 | A change of model, price or workload, for a cost per unit stated as the current cost of a call; or a change to what the measurement named by a negligibility claim measured. |
+| R5 | A change of model, price or workload, for a cost per unit stated as the current cost of a call; a change to what the measurement named by a negligibility claim measured; or a change to the ceiling a cap claim names. |
 | R6 | A new detector, rule or report that touches cost. |
 
 ## Additions this standard makes beyond the source
