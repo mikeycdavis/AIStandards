@@ -38,7 +38,7 @@ operational resilience" bullet of
 
 Applies to any AI system within this pack's scope as [Standard 1](01-ai-system-manifest.md) draws
 it — a repository that invokes a model, retrieves context for one, or acts on a model's output —
-where the project states, reports or is asked for a figure or a claim about the environmental impact of
+where the project states, reports or publishes a figure or a claim about the environmental impact of
 that use: energy, emissions, water, or hardware.
 
 Covers: the boundary of what is accounted; the method and the status of each input; how a reported
@@ -87,7 +87,8 @@ comparison across boundaries say so.
 
 **Each input to an impact figure MUST be labelled by its status — measured by the project, estimated
 by the project from a stated model, reported by a provider or third party, or unknown — and the method
-that combines them MUST be named. An input that is not available MUST be recorded as unknown and
+that combines them MUST be named. A reported input MUST name its source and the revision or date of the
+disclosure it is taken from. An input that is not available MUST be recorded as unknown and
 MUST NOT be replaced by a figure for another model, region or period without saying so.**
 
 A hosted model's energy is almost never measured by its user. Substituting the published figure of a
@@ -222,14 +223,15 @@ by a risk tier (Standard 2 R3).
 | R1 | A reported figure states whether training is in or out, which of inference, retrieval, storage, networking and end-user devices are counted, and whether embodied hardware is in or out | A number with no boundary, or one that states only some of the three | A figure that states "training excluded; inference counted, retrieval, storage, networking and end-user devices excluded; operational energy only, embodied hardware excluded" must **not** be faulted for the narrow boundary |
 | R2 | Each input has a status label and the method is named | An estimate described as measured, or an unknown replaced silently | A project that records its hosted model's energy as "unknown" and reports no figure must **not** be reported as failing R2 |
 | R3 | A figure names model or class, period and its assumptions, including the grid intensity and its date where the calculation uses one | A figure with a number and no subject, period or assumptions, or a calculated emissions figure whose calculation uses a grid intensity and names none | A figure that names an old model and an old period, and says so, must **not** be flagged as stale |
-| R4 | A neutrality or low-impact claim cites the figure, with offsets reported separately | "Carbon-neutral" with the gross figure absent | A project that publishes a gross figure and separately lists an offset must **not** be flagged for having one |
+| R4 | A neutrality or low-impact claim cites the figure, with offsets reported separately and what each covers | "Carbon-neutral" with the gross figure absent | A project that publishes a gross figure and separately lists an offset must **not** be flagged for having one |
 | R5 | A projection is labelled as one and names its assumptions | A projection with no projection label, or with no named assumptions | A labelled projection with assumptions must **not** be flagged for being uncertain |
 | R6 | No detector, rule, audit finding or generated report in this repository states an impact verdict from presence | A detector, rule (a rule that treats a presence as establishing the property), audit finding or report that reported low-impact because a region name was present | Reporting that a region setting was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads an accounting artifact and no fixture
-carries one, so R1 to R5 are enforced by review or not at all, and R6 holds by construction. **A
-requirement with no falsifier is a requirement nobody can be shown to have broken**, and that is the
-honest state of this standard.
+carries one, so R1 to R5 are enforced by review or not at all, and R6 holds by construction. The
+falsifiers in the table are available for manual review; what this release lacks is a detector that
+applies them. **A requirement nobody can be shown to have broken is a requirement with no falsifier**,
+and each requirement above has one.
 
 ## Exceptions and staleness
 
