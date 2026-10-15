@@ -44,8 +44,8 @@ Defined terms, each used verbatim below:
   system produces or does.
 - **Oversight point** — a place where an overseer is expected to act: *before an effect*, *during a
   run*, or *after the fact*.
-- **Decision material** — the output or action (as proposed before an effect, or as it took effect
-  after the fact), the inputs it was made from or a route to them, and any signal the system holds that
+- **Decision material** — the output or action (as proposed before an effect, as it is in progress
+  during a run, or as it took effect after the fact), the inputs it was made from or a route to them, and any signal the system holds that
   the output is uncertain or ungrounded. A summary composed by the system under review is not decision
   material.
 - **Intervention capability** — at an oversight point *before an effect*: decline the output, and
@@ -57,13 +57,14 @@ Defined terms, each used verbatim below:
 It does **not** cover, and claims none of the ground of:
 
 - **Autonomy tier and the halt record for a system that acts alone** —
-  [Standard 11](11-autonomy-levels-and-delegated-authority.md) R4 and R5.
+  [Standard 11](11-autonomy-levels-and-delegated-authority.md) R1 and R4, and R5 for raising the tier.
 - **Whether an individual action is gated** — [Standard 45](45-approval-gates.md) R3 (irreversible
   actions await approval), R5 and R6. This standard asks what the approver is shown and may do.
 - **Gates for externally visible actions** — item 46, unwritten.
 - **What the system must never do to its overseers** — item 48, Safety and Oversight Prohibitions,
   unwritten and the negative face of this item's token. This standard mints no forbidden-level
-  prohibition beyond R5 (see Q23).
+  prohibition beyond R5, the only must-not clause on the system's own behaviour (R2 and R10 constrain
+  the project; see Q23).
 - **Records of what the system did and the investigation of failures** — items 36 and 34, unwritten.
 - **Entitlement to view data** — item 16, unwritten. [Standard 13](13-personal-data-in-ai-systems.md)
   states what records may hold and gives how personal data is shown to a user to UIUXDesignStandards.
@@ -121,7 +122,7 @@ applies it without them.
 
 ### R5 — An intervention binds the system
 
-**The system MUST NOT reverse, retry past or re-queue an overseer's decline or stop.**
+**The system MUST NOT reverse, retry past or re-queue an overseer's decline, pause or stop.**
 
 A system that, on decline, re-submits the same action by another path has turned oversight into a
 delay.
@@ -186,10 +187,11 @@ confirm: a `manual-review` rule such as Standard 11's `oversight.intervention-pa
 obligation and today only ever reports skipped or not-evaluated. The tension between that rule's title
 and its description is recorded under Q24. Reporting that a file was *found*, as an observation with no
 verdict, is permitted. R12 is adapted from the equivalent requirement in
-[Standard 8](08-ai-safety-requirements-and-safety-cases.md),
-[Standard 17](17-evaluation-plans-for-generative-systems.md),
-[Standard 25](25-grounding-and-hallucination-control.md) and
-[Standard 33](33-ai-observability.md), which also name a rule; R12 omits it for the reason above.
+[Standard 8](08-ai-safety-requirements-and-safety-cases.md) R6,
+[Standard 17](17-evaluation-plans-for-generative-systems.md) R9,
+[Standard 25](25-grounding-and-hallucination-control.md) R6 and
+[Standard 33](33-ai-observability.md) R6; Standards 25 and 33 also name a rule, which R12 omits for the
+reason above.
 
 ## Failure modes
 
@@ -198,8 +200,8 @@ verdict, is permitted. R12 is adapted from the equivalent requirement in
 | R1 | Unattended role | "A human reviews it", and the review queue has no owner |
 | R2 | Self-approval | The system, or its agent for the requester, supplies the approval it needs, or a second model instance is recorded as the human check |
 | R3 | Reviewing the self-description | The overseer sees the system's summary of an action, not the action, its inputs or a held doubt |
-| R4 | Approve-only | The overseer can confirm but not decline, correct, pause or stop where those apply |
-| R5 | Decline that does not stick | A declined action is re-submitted by another path, or a stopped run resumes without the overseer |
+| R4 | Approve-only | The overseer can confirm but lacks an intervention capability that applies at the point |
+| R5 | Intervention that does not bind | A declined action is re-submitted by another path, or a paused or stopped run resumes without the overseer |
 | R6 | After-the-fact called before | A next-day review is described as pre-effect, or no timing is recorded where the effect can precede the overseer |
 | R7 | Window unstated | An after-the-fact point with no statement of when an intervention could still help |
 | R8 | No counts | Oversight claimed with no record of how many items were declined, corrected, paused or stopped |
@@ -212,10 +214,10 @@ verdict, is permitted. R12 is adapted from the equivalent requirement in
 
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
-| R1 | The recorded overseers for each oversight point | A project document the project names (no manifest or policy field exists; see Implementation) | Human review |
+| R1 | The recorded overseers for each oversight point, or the record that no oversight point exists | A project document the project names (no manifest or policy field exists; see Implementation) | Human review |
 | R2 | The recorded overseers set against the components the system or its requester's agents control | The same document and the system's configuration | Human review |
 | R3 | A sample of what the overseer is shown, set against what the system will do or did | The review interface or its description, and the code that produces it | Human review |
-| R4 | The overseer's available actions at each oversight point | The interface and a demonstration | Human review |
+| R4 | The intervention capabilities that apply at each oversight point | The interface and a demonstration | Human review |
 | R5 | The behaviour of the system after a decline or stop | The code that handles the outcome, and a demonstration | Human review |
 | R6 | The recorded timing of each point whose effect can precede the overseer | A project document the project names | Human review |
 | R7 | The stated window for each after-the-fact point | The same document | Human review |
@@ -280,14 +282,14 @@ minted; having none does not make it overseen. No level is lowered by a risk tie
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | Each oversight point names a person, or a role with at least one holder | A role with no holder | A named person who is also the operator must **not** be failed |
+| R1 | Each oversight point names a person, or a role with at least one named holder | A role with no holder | A named person who is also the operator must **not** be failed; a system recording that it has no oversight point must **not** be failed |
 | R2 | No listed overseer is a component the system, or an automated agent for the requester, controls | An approval generated by the system or by such an agent | A named person who is the requester must **not** be failed |
-| R3 | From the decision or review point the overseer can reach the decision material | A screen showing only a description the system wrote, or hiding the inputs or a held uncertainty signal | A summary that links to the full artifact must **not** be flagged for being a summary |
+| R3 | At the decision or review point the overseer is presented with the decision material | A screen showing only a description the system wrote, or hiding the inputs or a held uncertainty signal | A summary shown together with the full output must **not** be flagged for being a summary |
 | R4 | The overseer has each intervention capability that applies to the point | A point lacking one that applies | A `propose` system whose output is simply not applied must **not** be failed for lacking a decline button |
-| R5 | A decline or stop is not reversed, retried past or re-queued by the system | An action that proceeds after a decline, or a run that resumes after a stop without the overseer | A system that asks the overseer again, who then approves, must **not** be failed |
+| R5 | A decline, pause or stop is not reversed, retried past or re-queued by the system | An action that proceeds after a decline, or a run that resumes after a pause or stop without the overseer | A system that asks the overseer again, who then approves, must **not** be failed |
 | R6 | Each point whose effect can precede the overseer is recorded as after the fact | A next-day review described as pre-effect, or such a point with no recorded timing | A stated after-the-fact design must **not** be failed for its timing alone |
 | R7 | Each after-the-fact point states its window | An after-the-fact point with no window (warning) | A point whose window is stated as "none" must **not** be failed |
-| R8 | Counts per period exist for each point | No record, or a record omitting stops | A project that states it keeps none is reported as the warning, not as a pass |
+| R8 | Counts per period exist for each point | No record of counts for a point, or a record omitting stops (warning) | A record in a form of the project's choosing must **not** be failed for its form |
 | R9 | A zero over a period of use is reported as a finding with an explanation sought | A claim that oversight "works" resting on a zero | A recorded, explained zero must **not** be flagged |
 | R10 | The claim of item-by-item review fits the volume, speed and complexity against the aggregate capacity | Item-by-item review claimed beyond aggregate capacity | A stated sampling design must **not** be flagged as weaker; a queue divided among enough holders must **not** be failed for volume |
 | R11 | Where capacity is exceeded, the design change is stated | Capacity exceeded and no design change stated (warning) | A system within capacity must **not** be flagged |
@@ -333,13 +335,14 @@ here, none of it owner-approved:
   aggregate capacity, and that reading is not intervention.
 - **R1 and R2**: named overseers; the exclusion of any component the system or an automated agent for
   its requester controls, including a second model instance.
-- **R3 and R4**: what the overseer is given and may do, and the three-part table of intervention
-  capabilities.
+- **R3 and R4**: what the overseer is given and may do, and the three-part definition of
+  intervention capability.
 - **R5**: that an intervention binds the system.
 - **R6 and R7**: the before/after-the-fact separation and the `SHOULD` window.
 - **R8 and R9**: the counts (`SHOULD`) and the ruling that a zero is a finding.
 - **R10 and R11**: capacity against aggregate holders, no number stated, and the `SHOULD` design change.
-- **R12**, adapted from the equivalent requirement in Standards 8, 17, 25 and 33, omitting "rule".
+- **R12**, adapted from the equivalent requirement in Standards 8, 17, 25 and 33; 25 and 33 also name a
+  rule, which R12 omits.
 - **The severities** (error, warning for R7, R8 and R11), **exemptibility** (R2, R5, R6, R9, R10, R12
   not exemptible), **attestability** (all attestable except R12) and the **staleness table**.
 - **The ruling that this standard ships with no catalog rules**, its four reasons, and no id minted in
@@ -352,7 +355,7 @@ Not authored here: the posture `O` and its search are the boundary review's.
 [`artifacts/project-plan-breakdown/08-open-questions.md`](../artifacts/project-plan-breakdown/08-open-questions.md)):
 
 - **Q23.** Is the remaining prohibitive form — a system must not disable, evade or degrade its
-  overseers — item 48's, or stated here? R5 is the only must-not clause stated.
+  overseers — item 48's, or stated here? R5 is the only must-not clause on the system's own behaviour (R2 and R10 constrain the project).
 - **Q24.** Should the general intervention capability (R4) and the halt record (Standard 11 R4) be one
   rule or two, and in which shard? The title of `oversight.intervention-path-declared` ("A human can
   halt the system") says more than its description.
