@@ -84,7 +84,7 @@ A figure moves when the model, the prompt, the provider's load or the output len
 
 ### R5 — Support a latency claim with a figure that meets the budget
 
-**A claim that an interaction is real-time, instant or within budget MUST name its budget and a latency figure that meets that budget for the same interaction, point of measurement and statistic, on the workload and path the claim is about.**
+**A claim about the latency an interaction achieves (for example real-time, instant, fast, low-latency, responsive, or within budget or an SLA) MUST name its budget and a latency figure that meets that budget for the same interaction, point of measurement and statistic, on the workload and path the claim is about.**
 
 This requirement sets no threshold and prescribes no universal figure. A claim about production traffic is not supported by a figure measured on a different workload or path, and a measurement of a different interaction or statistic does not support a budget.
 
@@ -167,11 +167,11 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 
 | Requirement | Event that makes its record stale |
 | --- | --- |
-| R1 | A change of the interaction the budget names, or a decision to change the objective. |
-| R2 | A change of provider, gateway, client or call path, or of the call limit's value or behaviour. |
-| R3 | A change of retry, fallback or timeout policy. |
-| R4 | A change of model, prompt, provider, region, tier, workload or call path, or a known and material change in the provider's load regime. |
-| R5 | A change that makes the named latency figure stale (R4), or a change to the named budget (R1). |
+| R1 | Any change to anything this record names or relies on, including: a change of the interaction the budget names, or a decision to change the objective. |
+| R2 | Any change to anything this record names or relies on, including: a change of provider, gateway, client or call path, or of the call limit's value or behaviour. |
+| R3 | Any change to anything this record names or relies on, including: a change of retry, fallback or timeout policy. |
+| R4 | Any change to anything this record names or relies on, including: a change of model, prompt, provider, region, tier, workload or call path, or a known and material change in the provider's load regime. |
+| R5 | Any change to anything this record names or relies on, including: a change that makes the named latency figure stale (R4), or a change to the named budget (R1). |
 | R6 | A new detector, rule or report that touches latency. |
 
 ## Additions this standard makes beyond the source
