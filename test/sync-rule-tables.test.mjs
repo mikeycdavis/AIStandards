@@ -4,8 +4,8 @@
 // are what is exercised. Write-mode and malformed-input tests run against a temporary copy of a
 // fixture root; nothing here writes into the repository or into the committed fixtures.
 //
-// LINE ENDINGS ARE SET AT RUNTIME, not trusted from the checkout. This repository pins no
-// .gitattributes and core.autocrlf varies by machine, so a committed fixture arrives LF on one machine
+// LINE ENDINGS ARE SET AT RUNTIME, not trusted from the checkout. No .gitattributes rule covers these
+// files (the only one pins the vendored parser tree) and core.autocrlf varies by machine, so a committed fixture arrives LF on one machine
 // and CRLF on another, and a mixed-EOL file cannot be committed at all.
 
 import { test } from "node:test";

@@ -41,7 +41,9 @@ evidence.** A freshly initialised project reports `NON_COMPLIANT` with no rule p
 until a person writes the manifest.
 
 Requires Node 18 or later. There are no dependencies to install, and that is a decision rather than
-an omission — every import is a `node:` builtin or a local module.
+an omission — every import is a `node:` builtin or a local module, or a file in the one vendored
+parser tree (`scripts/vendor/yaml`, its release, hashes and licence pinned in
+`scripts/vendor/yaml.vendor.json`). Nothing is resolved at install time or from the environment.
 
 ## The part worth reading first
 
@@ -164,7 +166,7 @@ Each of those divisions is evidenced against a real standard at a recorded commi
 standards/    numbered normative documents
 rules/        rule identity and metadata — the catalog
 schemas/      policy, manifest, tool permissions, and both report envelopes
-scripts/      the CLI and its modules. ESM, zero dependencies
+scripts/      the CLI and its modules. ESM, no installed dependencies (one vendored parser tree)
 test/         node:test suites and detector fixtures
 artifacts/    the governing prompt, the derived specification, the boundary review,
               the plan breakdown, the foreign-namespace snapshot (560 ids, nine packs)
