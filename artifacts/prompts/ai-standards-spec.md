@@ -259,7 +259,7 @@ under [Authored items](#authored-items).
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
 | 37 | Fairness and Harm Distribution | D | `fairness` | O | — |
-| 38 | Accessibility of AI Features | D | `Accessibility` | D | — |
+| 38 | Accessibility of AI Features | D | `Accessibility` | D | standards/38-accessibility-of-ai-features.md |
 | 39 | Transparency and System Documentation | D | `transparency` | B | — |
 | 40 | User Disclosure of AI Involvement | D | `user disclosure` | B | — |
 
