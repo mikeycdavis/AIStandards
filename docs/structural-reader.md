@@ -6,8 +6,10 @@ configuration files can stop guessing structure from indentation (the lexical la
 which stays the right tool for source code).
 
 Implemented by ST-57 (#119). The consumer that re-expresses the inline-prompt shapes over this tree is
-`scripts/structural-shapes.mjs` (ST-58, #120; see "The inline-prompt shapes over the tree" below); migrating YAML detector fixtures and retiring YAML-specific lexical branches is ST-59 (#121);
-Standard 21 text, assurance notes and schema documentation are ST-60 (#122); moving Standard 9 or TOML
+`scripts/structural-shapes.mjs` (ST-58, #120; see "The inline-prompt shapes over the tree" below). ST-59 (#121)
+migrated the YAML and JSON detector fixtures onto it, retired the YAML-specific lexical branches that nothing
+reads any more, and records the named regression ledger (see "The named regression ledger" and "Retired
+lexical branches" below). Standard 21 text, assurance notes and schema documentation are ST-60 (#122); moving Standard 9 or TOML
 onto this layer is ST-49 (#111) alone.
 
 ## Scope
@@ -125,6 +127,80 @@ file text. `validate` reports the two inline-prompt rules as `skipped` / `not-ev
 decides them; it does not do so for `misuse.safety-controls-not-disabled`.
 
 Duplicate anchor definitions are legal YAML and parse. Unresolved tags (`!Ref`) are warnings, not failures.
+
+## The named regression ledger
+
+Decision D accepts a named list of 21 probe cases (`test/fixtures/structural-ledger/ledger.json`) as the cases
+whose outcome changes when YAML and JSON stop being scanned as text. This is the record of what each one did
+before and does now, for `promptsec.no-inline-system-prompt` on a probe file whose literal is 250 characters
+unless the row says otherwise. **Before** was measured on the lexical layer at develop `5ecd226` (the parent of
+ST-57); **after** is measured by `test/structural-retirement.test.mjs` on every run, which fails if a row of
+this table stops being true.
+
+An outcome is **unknown** (a file the reader refused: file-scoped, never a pass, never a finding), a
+**finding**, or **quiet** (the file parsed and no literal reached 200 decoded code points, so the rule claims
+nothing about it).
+
+| Id | Probe | Before | After |
+|---|---|---|---|
+| c01 | YAML invalid (unclosed flow) after a valid long `system` | finding: p.yml (250 chars) | unknown: syntax |
+| c02 | YAML invalid (tab indent) with a long `system` | finding: p.yml (250 chars) | unknown: syntax |
+| c04 | YAML invalid (bad indent) then a long `system` | finding: p.yml (250 chars) | unknown: syntax |
+| c05 | JSON trailing comma | finding: p.json (250 chars) | unknown: syntax |
+| c07 | JSON truncated mid-document | finding: p.json (250 chars) | unknown: syntax |
+| c08 | JSON single-quoted | finding: p.json (250 chars) | unknown: syntax |
+| c12 | bytes before a long `system` that start `FF FE` | finding: p.yml (250 chars) | unknown: utf-16 |
+| g05 | valid block, then an invalid flow later | finding: p.yml (250 chars) | unknown: syntax |
+| g06 | invalid first, a valid long `system` after | finding: p.yml (250 chars) | unknown: syntax |
+| g07 | duplicate anchor definition and a long `system` | finding: p.yml (250 chars) | finding: p.yml (250 chars) |
+| g08 | `role` and `content` with invalid YAML between them | finding: p.yml (250 chars, message role shape) | unknown: syntax |
+| d09 | escapes: 300 raw characters decode to 50 | finding: p.json (300 chars) | quiet: decoded 50 code points |
+| d09b | escapes: 240 raw characters decode to 40 | finding: p.json (240 chars) | quiet: decoded 40 code points |
+| d19 | JSON: 250 raw characters of `\n` escapes decode to 125 | finding: p.json (250 chars) | quiet: decoded 125 code points |
+| b02 | an anchor on the value | quiet: no literal seen | finding: p.yml (250 chars) |
+| b03 | a tag on the value | quiet: no literal seen | finding: p.yml (250 chars) |
+| d06 | JSON key `"system"` | quiet: no literal seen | finding: p.json (250 chars) |
+| d07 | YAML double-quoted key `"sys\x74em"` | quiet: no literal seen | finding: p.yml (250 chars) |
+| d08 | JSON role `"system"` with long `content` | quiet: no literal seen | finding: p.json (250 chars, message role shape) |
+| d17 | YAML multi-line double-quoted scalar, folded | quiet: no literal seen | finding: p.yml (258 chars) |
+| d18 | YAML plain multi-line scalar | quiet: no literal seen | finding: p.yml (258 chars) |
+
+Ten cases changed from a lexical finding to **unknown** (c01 to g08 except g07), three from a finding to
+**quiet** (the compatibility change from raw-source measurement, E, recorded above), and seven from quiet to a
+**finding**. Two entries do not behave as the ledger group says, and the record keeps the difference rather than
+forcing the expected outcome:
+
+* **g07** is valid YAML: 1.2 allows an anchor to be redefined, the vendored parser reads the file, and the
+  finding stands. Making a duplicate anchor a failure would be a rule the owner has not decided.
+* **c12** is labelled "invalid UTF-8", but its bytes begin `FF FE`, a UTF-16 little-endian byte order mark, so
+  the reader names the reason `utf-16`. The outcome (unknown) is the one the ledger expects; only the reason's
+  spelling differs.
+
+Cases where the file is **unknown** carry no finding of their own and never combine with a finding in another
+file: `findings from successfully parsed files remain` (`test/structural-audit.test.mjs`).
+
+## Retired lexical branches
+
+ST-59 retires the YAML-specific branches of the lexical layer that no consumer reads any more. A `.yml`,
+`.yaml` or `.json` file that parsed is read over its tree and a file the reader refused is unknown, so the
+Standard 21 lexical detectors in `scripts/standards.mjs` never see YAML or JSON text.
+
+| Retired | Where | Why nothing needs it |
+|---|---|---|
+| a bare `system` role value; a role found by indentation (`yamlMappingKeys`); explicit `?` keys and the `?` ternary exception; `[` as an entry opener (flow-sequence entries); the YAML entry terminator | the message-role and systemInstruction-parts detectors and their helpers in `scripts/standards.mjs`, each of which took a `yaml` flag that is now gone | the flag was always false once ST-58 routed structural files to the tree; the tree reads these shapes (`test/structural-shapes.test.mjs`, `test/message-role-shapes.test.mjs`) |
+| a quoted key after `- ` sequence markers kept in the code-only view | `scripts/source.mjs`, `splitSource` (`isQuotedKey`) | the code-only view is read only by the Standard 21 lexical detectors |
+
+Kept, and why:
+
+* The **block-scalar machinery** of `splitSource` (`BLOCK_HEADER`, `yamlBlockScalarEnd`, and the `isYaml`
+  branch that applies it). It decides which text is a comment in the `withoutComments` view, and Standard 9
+  (`misuse.safety-controls-not-disabled`) reads that view for YAML files: `note: |` followed by an indented
+  `# moderation: false` is a finding for Standard 9 with the branch and quiet without it. Decision H leaves
+  Standard 9 on the lexical layer, so removing the branch would change a Standard 9 result without a decision
+  to do so. It stays pinned by `test/source-yaml-freeze.test.mjs`; whether it goes too is an open owner decision,
+  not made here.
+* `OFF_QUOTED_YAML` in Standard 9's own detector, TOML handling, the source-code lexical layer (the 30
+  source-code file types), and `scripts/yaml.mjs`, all unchanged.
 
 ## What is vendored
 

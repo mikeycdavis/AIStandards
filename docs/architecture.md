@@ -13,7 +13,7 @@ reading the module headers, the exported surface and the call sites it names. It
 generation of 2026-09-14, which predated: `init`, the manifest and tool-permission modules and the
 templates; the `--strict` audit flag; the lexical-contract freeze (ST-48); and the structural reader
 with its vendored YAML parser (ST-57). It describes the implementation at that commit — 18 modules under
-`scripts/` plus the vendored tree, 17 of 53 standards written, 46 rules in 8 shards, 36 test files.
+`scripts/` plus the vendored tree, 17 of 53 standards written, 46 rules in 8 shards, 37 test files.
 Line numbers were taken from that tree. It is **not** a plan and does not describe Phases 4–7.
 The superseded pre-implementation capture is preserved separately as
 `docs/architecture-baseline-2026-09-03.md`, which must not be overwritten: it is the evidence that
@@ -37,7 +37,7 @@ architecture. Regenerate this document rather than hand-patching it.
 |---|---|
 | Runtime | Node.js ≥ 18 declared (`engines` in `package.json`), ESM `.mjs` throughout. Which versions have executed which tree is recorded per commit in `docs/HANDOFF.md` §3; the ST-57 integration ran the full suite on Node 24.15.0 and 18.20.8 |
 | Dependencies | **No install-time or environment-resolved third-party dependency** (invariant 4, as amended). No `dependencies` or `devDependencies` key, no lockfile, no install step, no bare import under `scripts/` — structurally enforced by `test/no-phase-creep.test.mjs`. One third-party parser is **vendored** as reviewed repository content: `yaml@2.9.1` (ISC) under `scripts/vendor/yaml`, identity and per-file SHA-256 pinned in `scripts/vendor/yaml.vendor.json` and held by `test/vendor-yaml.test.mjs`; kept LF by `.gitattributes` |
-| Test framework | `node:test` + `node:assert/strict`, run via `scripts/test.mjs` with an explicit list of 36 files (1155 tests at this commit) |
+| Test framework | `node:test` + `node:assert/strict`, run via `scripts/test.mjs` with an explicit list of 37 files (1169 tests at this commit) |
 | YAML (policy, manifest) | `scripts/yaml.mjs` — a hand-written subset parser that *refuses* constructs it cannot represent rather than guessing. Kept separate from the structural reader on purpose |
 | YAML (structural) | the vendored `yaml` library, used only by `scripts/structural.mjs`, never `toJS`, aliases never dereferenced |
 | JSON (structural) | an owned strict RFC 8259 tokenizer in `scripts/structural.mjs` (duplicates and offsets kept; `JSON.parse` is not the semantic parser) |
@@ -57,7 +57,7 @@ There is one product process. AIStandards has no server, no daemon, and no backg
 ### `standards` CLI
 **Host:** invoked directly by a developer, by `npm run` scripts, by CI, or by StandardsEnforcer as a
 subprocess.
-**Entry point:** `scripts/standards.mjs` (1277 lines); `main(argv)` at line 1225, dispatched from the
+**Entry point:** `scripts/standards.mjs` (1189 lines); `main(argv)` at line 1137, dispatched from the
 `import.meta.url` guard at the foot of the file. `init` is routed to `runInitCommand` before flag parsing.
 **Purpose:** Walks a target repository, reads every in-scope YAML and JSON file once with the
 structural reader, runs a fixed sequence of detectors over it, and emits either an evidence report
@@ -151,9 +151,9 @@ registry, or any remote host — including during its own tests.
   that would read it report an `unknown` — only `lifecycle.manifest-not-scaffold` reports on the scaffold itself.
 - **`detectInlineSystemPrompt`** measures a quoted literal of 200+ characters (`INLINE_THRESHOLD`) in
   three detection shapes, each named in its evidence string: the parameter shape (`INSTRUCTION_PARAM`, a
-  listed name then `:` or `=`), the message role shape (`messageRoleLength`, 720: an object or YAML
-  mapping whose `role` is `system` and whose own `content` is the literal) and the `systemInstruction`
-  parts shape (`systemInstructionPartsLength`, 768). In source code all three search the `codeOnly` view for keys and
+  listed name then `:` or `=`), the message role shape (`messageRoleLength`, 673: an object
+  whose `role` is `system` and whose own `content` is the literal) and the `systemInstruction`
+  parts shape (`systemInstructionPartsLength`, 699). In source code all three search the `codeOnly` view for keys and
   measure the literal in the original text and stay **lexical**; in a `.yml`, `.yaml` or `.json` file that
   parsed they are read over the parsed tree by `scripts/structural-shapes.mjs` (ST-58), measured in decoded
   code points, with structured locations. Since ST-57, a YAML or JSON file the structural reader could not read is **not
@@ -259,9 +259,10 @@ source into use and mention.
 - `scripts/source.mjs` (278 lines) — `splitSource()` (line 117) performs the **USE/MENTION split**,
   selecting comment syntax by extension from `SYNTAX` (line 14) and `BY_EXTENSION` (line 22). It returns
   the `code`, `comments`, `strings`, `withoutComments` and `codeOnly` views, index-aligned with the
-  original text. `isCode()` (34) and `extensionOf()` (39) are exported beside it. The YAML branches
-  (`BLOCK_HEADER`, `yamlBlockScalarEnd` at 55, and the three `isYaml` uses) are shared with Standard 9
-  and are **frozen** by `test/source-yaml-freeze.test.mjs`; the source-code forms are frozen by
+  original text. `isCode()` (34) and `extensionOf()` (39) are exported beside it. The remaining YAML branch
+  (`BLOCK_HEADER`, `yamlBlockScalarEnd` at 55, and the two `isYaml` uses) shapes the `withoutComments` view that
+  Standard 9 reads for YAML files and is **frozen** by `test/source-yaml-freeze.test.mjs` (ST-59 retired the
+  other: a quoted key after `- `, which only the retired lexical YAML detector read); the source-code forms are frozen by
   `docs/lexical-contract.md` and `test/lexical-contract.test.mjs` (ST-48).
 - `scripts/manifest.mjs` (53 lines) and `scripts/toolperms.mjs` (51 lines) — pure functions over text:
   `classifyManifest()` / `classifyToolPermissions()` return `unparseable`, `invalid`, `scaffold` or `ok`
@@ -426,7 +427,7 @@ document cites the rule id in exactly one `### RN` section and carries a marker 
 | Add a rule | The matching `rules/*.json` shard. The ID must match `RULE_ID` in `catalog.mjs:30` and its namespace must be in `NAMESPACES` (line 43). If its standard is written, cite it in one `### RN` section and regenerate the table |
 | Add a rule namespace | `NAMESPACES` in `scripts/catalog.mjs:43`, and `SHARED_SEGMENTS` if another pack uses the segment |
 | Add a detector | `scripts/standards.mjs` — write the function, insert it into `runDetectors()` (line 981) in the correct band, and add its rule ID to `EVALUATED_RULES` (line 222). Declare the rule's `assurance` honestly: `partial` means a clean result is reported not-evaluated. A test asserts detectors and the list agree in both directions |
-| Detect over YAML or JSON structure | Consume the tree from `scripts/structural.mjs` (`parseStructuralBytes`, `walk`, `pathOf`) rather than adding a regular expression; the lexical YAML branches are frozen (`test/source-yaml-freeze.test.mjs`). The inline-prompt shapes are the worked example: `scripts/structural-shapes.mjs` (ST-58, #120) |
+| Detect over YAML or JSON structure | Consume the tree from `scripts/structural.mjs` (`parseStructuralBytes`, `walk`, `pathOf`) rather than adding a regular expression; the Standard 21 lexical detector no longer has YAML branches (retired by ST-59) and the one that remains, for Standard 9, is frozen (`test/source-yaml-freeze.test.mjs`). The inline-prompt shapes are the worked example: `scripts/structural-shapes.mjs` (ST-58, #120) |
 | Change the audit report | `schemas/audit-report.schema.json` and `commandAudit()` in the same change; raise `schemaVersion` for an additive field; `test/structural-audit.test.mjs` validates real output against the schema |
 | Change how a result is judged | `evaluateRule()` in `scripts/compliance.mjs:91`, against Standard 5 R6; the unit tests are in `test/compliance.test.mjs`, the CLI reproductions in `test/partial-assurance.test.mjs` |
 | Add a schema | `schemas/*.json`, registered in the `SCHEMAS` map at `scripts/standards.mjs:43` |
@@ -620,7 +621,7 @@ These are recorded rather than guessed at, per the brief's requirement to preser
 | `standards-adapter.json` | Does not exist. Phase 5. Until it does, nothing observable connects this pack to StandardsEnforcer |
 | Detector coverage | 9 of 46 rules are in `EVALUATED_RULES`; 5 are `not-evaluable`. The rest report `skipped / not-evaluated` by construction. This is the honest floor, not an omission |
 | Coverage is declared, not measured | A clean result is `passed` only for a rule declaring `assurance: full`. Nothing checks that such a rule's detector really covers it, so a `full` detector's own blind spots would still report `passed`. Phase 3 |
-| Structural reader consumed only by the inline-prompt shapes | Since ST-57 an unparseable YAML or JSON file is unknown for the inline-prompt rules, and since ST-58 the shapes are read over the tree in files that parse. The remaining YAML-specific lexical branches are not retired (ST-59), and Standard 21's text and assurance notes do not yet describe the structural contract (ST-60) |
+| Structural reader consumed only by the inline-prompt shapes | Since ST-57 an unparseable YAML or JSON file is unknown for the inline-prompt rules, and since ST-58 the shapes are read over the tree in files that parse. ST-59 (#121) retired the YAML-specific lexical branches of the Standard 21 detector and recorded the regression ledger (`docs/structural-reader.md`); the block-scalar branch of `source.mjs` stays because Standard 9 reads it (decision H), and Standard 21's text and assurance notes do not yet describe the structural contract (ST-60) |
 | Locations on violation evidence | Only for YAML and JSON files (ST-58): `validate` results carry `locations` beside the unchanged evidence strings. A violation found by the lexical layer (source code) has evidence strings and no location |
 | Duplicate anchors | Valid YAML, parsed, and a lexical finding stands (owner decision of 2026-10-11 for ledger case g07). The named regression ledger expected it to become unknown |
 | JSONC and templates named `.json` / `.yaml` | Not supported, by decision. A `.json` file that is really JSONC is unparseable, hence unknown for the inline rules, in any repository containing one; a prospective non-claim, not a defect. No tracked file in this repository is JSONC |

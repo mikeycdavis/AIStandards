@@ -149,9 +149,9 @@ export function splitSource(text, filePath) {
   //   - the next non-blank character is `:` (or `=`, not `==`, for the `hash` syntaxes, where TOML
   //     writes `"system" = ...`);
   //   - it opens a mapping entry: the previous code character is `{` or `,`, or, in the `hash`
-  //     syntaxes, the literal begins its line (a YAML or TOML key) or, in YAML only, follows `- `
-  //     sequence markers on its own line (`- "system": ...`, a list of mappings). A ternary branch `c ? "a" : b`
-  //     follows `?` and is a value.
+  //     syntaxes, the literal begins its line (a TOML key). A ternary branch `c ? "a" : b` follows `?`
+  //     and is a value. (A YAML key after `- ` sequence markers was read here until ST-59 retired it: a
+  //     YAML file is read over its parsed tree, so no consumer of this view reads YAML keys.)
   const isQuotedKey = (start, end, quote) => {
     if (quote === "`" || end - start < 3 || text[end - 1] !== quote) return false;
     if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(text.slice(start + 1, end - 1))) return false;
@@ -164,7 +164,7 @@ export function splitSource(text, filePath) {
     if (kind !== "hash") return false;
     const lineStart = text.lastIndexOf("\n", start - 1) + 1;
     const before = text.slice(lineStart, start);
-    return before.trim() === "" || (isYaml && /^\s*(-\s+)+$/.test(before));
+    return before.trim() === "";
   };
 
   while (i < n) {

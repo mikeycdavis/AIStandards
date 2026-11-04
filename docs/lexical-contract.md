@@ -20,7 +20,9 @@ does not replace the detector paragraph of Standard 21 (`standards/21-prompt-and
   separate ST-49 owner decision. They are listed so that the decision has an exact inventory to act on.
 - **Not in the frozen list:** YAML and JSON forms (parameter keys, message lists, flow mappings, explicit
   keys, block scalars, key boundaries). Those are the structural parser's to own (FE-30, #109) and are
-  deliberately not frozen here. #104 was the last bounded YAML/JSON regex repair.
+  deliberately not frozen here. #104 was the last bounded YAML/JSON regex repair. ST-59 (#121) then retired
+  the YAML-specific branches of the lexical inline-prompt detector (`docs/structural-reader.md`, "Retired
+  lexical branches"); the block-scalar branch of `splitSource` stays, because Standard 9 reads it.
 
 Instruction parameter names: `system`, `system_prompt`, `systemPrompt`, `instructions`, `systemInstruction`.
 Threshold: 200 characters.

@@ -5,14 +5,18 @@
 // read YAML through it. The structural reader replaces the YAML handling Standard 21 needed; it does
 // not replace this. So the YAML-specific branches are pinned two ways:
 //
-//   * by content hash: the block-scalar machinery (BLOCK_HEADER and yamlBlockScalarEnd) and the three
-//     places splitSource consults `isYaml`, so an edit to them is a visible decision rather than a
-//     drive-by;
+//   * by content hash: the block-scalar machinery (BLOCK_HEADER and yamlBlockScalarEnd) and the two
+//     places splitSource consults `isYaml` (two since ST-59), so an edit to them is a visible decision rather
+//     than a drive-by;
 //   * by behaviour: splitSource over a set of YAML inputs returns exactly the pinned partitions.
 //
-// Retiring any of this belongs to the story that migrates YAML detection and states what replaced it
-// (ST-59, #121), and Standard 9 or TOML move only through ST-49 / #111. If this test fails because a
-// branch was changed on purpose, update the pin in the same change and say why in the description.
+// ST-59 (#121) retired the one YAML branch whose only consumer was the lexical inline-prompt detector: the
+// quoted key after `- ` sequence markers, which fed only the `codeOnly` view. The block-scalar machinery stays,
+// because it shapes the `withoutComments` view that Standard 9 (misuse.safety-controls-not-disabled) reads
+// for YAML files, and Standard 9 moves only through ST-49 / #111 (decision H). Whether to retire it too is the
+// owner decision in the ST-59 packet AIStandards-source-yaml-block-scalar-branch.md; until then it is pinned.
+// If this test fails because a branch was changed on purpose, update the pin in the same change and say why
+// in the description.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -37,10 +41,10 @@ test("the block-scalar machinery of source.mjs is unchanged", () => {
   assert.equal(sha(region), PINNED.blockScalar);
 });
 
-test("the three places splitSource consults the YAML flag are unchanged", () => {
+test("the two places splitSource consults the YAML flag are unchanged (the third was retired by ST-59)", () => {
   const lines = SOURCE.split("\n").filter((l) => /\bisYaml\b/.test(l));
   assert.equal(sha(lines.join("\n")), PINNED.isYaml);
-  assert.equal(lines.length, 3);
+  assert.equal(lines.length, 2, "the definition and the block-scalar branch; the quoted-key-after-dash clause is gone");
 });
 
 test("the extension table still routes .yml and .yaml (and .toml, and .json) to the same syntaxes", () => {
@@ -60,10 +64,11 @@ test("behaviour: splitSource over YAML returns the pinned partitions", () => {
   assert.equal(extensionOf("p.YAML"), ".yaml");
 });
 
-// Pins computed from scripts/source.mjs as of the ST-57 base (develop de149bf), where it is unchanged.
+// Pins computed from scripts/source.mjs. blockScalar and extensions are unchanged since the ST-57 base (develop
+// de149bf); isYaml was re-pinned by ST-59 when the quoted-key-after-dash clause was retired.
 const PINNED = {
   blockScalar: "9051320b2960cac86742af9da47acf90a51c34b60fce3708d8acee570a714689",
-  isYaml: "9f9e81c7093bee0e184ad8aea25481d15d050c474bb4937f525096d9f8795c56",
+  isYaml: "5fdcc3fc02a94f7d55bbf13a9eed04e1ca7d553a36839d01842928ac0de97909",
   extensions: "2ae72c02e5cbd386191129a82a9d2a462c2af05880e015a7697ef380320fdb3c",
 };
 const CASES = [
@@ -160,7 +165,7 @@ const CASES = [
     "- \"documentation\": |2\n    text\n  system: \"s\"\n",
     {
       "usable": true,
-      "codeOnly": "- \"documentation\": |2\n        \n  system: \"  \n"
+      "codeOnly": "- \"              : |2\n        \n  system: \"  \n"
     }
   ]
 ];

@@ -105,20 +105,22 @@ test("codeOnly keeps a quoted property NAME and blanks every other string", () =
   assert.equal(view('c ? "a" : "b"', "a.py"), `c ? ${blank('"', 3)} : ${blank('"', 3)}`);
 });
 
-test("codeOnly keeps a quoted key after YAML sequence markers, in YAML files only", () => {
+test("codeOnly keeps no quoted key after sequence markers in any file type: the YAML branch is retired (ST-59)", () => {
   const view = (text, file) => splitSource(text, file).codeOnly;
   const blank = (quote, length) => quote + " ".repeat(length - 1);
-  assert.equal(view('- "system": "abc"', "a.yaml"), `- "system": ${blank('"', 5)}`);
-  assert.equal(view("- 'system': 'abc'", "a.yml"), `- 'system': ${blank("'", 5)}`);
-  assert.equal(view('- - "system": "abc"', "a.yaml"), `- - "system": ${blank('"', 5)}`);
-  assert.equal(view('  -   "system" : "abc"', "a.yaml"), `  -   "system" : ${blank('"', 5)}`);
-  // only a YAML file has sequences of mappings: the same line in Python, TOML or shell is not a key
-  assert.equal(view('- "system": "abc"', "a.py"), `- ${blank('"', 8)}: ${blank('"', 5)}`);
-  assert.equal(view('- "system": "abc"', "a.toml"), `- ${blank('"', 8)}: ${blank('"', 5)}`);
-  // a dash glued to the literal is not a sequence marker
-  assert.equal(view('-"system": "abc"', "a.yaml"), `-${blank('"', 8)}: ${blank('"', 5)}`);
-  // a value after the marker, a mention, and text between the marker and the literal are not keys
-  assert.equal(view('- "system"', "a.yaml"), `- ${blank('"', 8)}`);
-  assert.equal(view('- a "system": 1', "a.yaml"), `- a ${blank('"', 8)}: 1`);
-  assert.equal(view('x - "system": 1', "a.yaml"), `x - ${blank('"', 8)}: 1`);
+  // Until ST-59 a YAML file kept `"system"` here, for the lexical inline-prompt detector. A YAML file is now
+  // read over its parsed tree, nothing consumes this view for YAML, and the branch is gone: every file type
+  // blanks the literal, exactly as Python, TOML and shell always did.
+  for (const file of ["a.yaml", "a.yml", "a.YAML", "a.py", "a.toml", "a.sh"]) {
+    assert.equal(view('- "system": "abc"', file), `- ${blank('"', 8)}: ${blank('"', 5)}`, file);
+    assert.equal(view("- 'system': 'abc'", file), `- ${blank("'", 8)}: ${blank("'", 5)}`, file);
+    assert.equal(view('- - "system": "abc"', file), `- - ${blank('"', 8)}: ${blank('"', 5)}`, file);
+    assert.equal(view('  -   "system" : "abc"', file), `  -   ${blank('"', 8)} : ${blank('"', 5)}`, file);
+  }
+  // a quoted key that begins its line is a key in every hash-comment syntax (YAML and TOML both write one):
+  // that is the generic hash rule, not a YAML branch, and Standard 9 and TOML keep it
+  assert.equal(view('"system": "abc"', "a.yaml"), `"system": ${blank('"', 5)}`);
+  assert.equal(view('"system": "abc"', "a.toml"), `"system": ${blank('"', 5)}`);
+  // the withoutComments view, the one Standard 9 reads, is untouched by this: nothing is blanked but comments
+  assert.equal(splitSource('- "system": "abc" # c', "a.yaml").withoutComments, '- "system": "abc"    ');
 });
