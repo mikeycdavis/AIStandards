@@ -91,7 +91,7 @@ It does **not** cover, and claims none of the ground of:
   report says the difference is. R3 here asks only that the project say what it did.
 - **Prohibitions on tampering with or fabricating results** (item 50, Evaluation Integrity
   Prohibitions, written as [Standard 50](50-evaluation-integrity-prohibitions.md)). R4's refusal of a criterion changed after the run is a requirement of this
-  standard, not a statement of what item 50 prohibits; Standard 50 R1 overlaps R3, R4 and R6 here and says so (Q55); Q19 is open and not answered here.
+  standard, not a statement of what item 50 prohibits; Standard 50 R1 overlaps R3, R4 and R6 here and says so (Q58); Q19 is open and not answered here.
 - **Detecting a change the project cannot see**, such as a provider replacing the model behind an
   identifier it does not publish a version for. R1 asks that the project say how it handles that
   case and claims no ability to detect it.

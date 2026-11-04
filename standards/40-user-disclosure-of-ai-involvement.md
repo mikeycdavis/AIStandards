@@ -230,7 +230,7 @@ evidence are the boundary review's, and Standard 7's table is where the line was
 **Item 53, Disclosure and Deception Prohibitions** is listed by the specification as derived from the same `user disclosure` token: class `A`, authored, posture `O`, written as [Standard 53](53-disclosure-and-deception-prohibitions.md). This
 standard says whether a disclosure is owed and when it must arrive; whether and how a system may state
 or imply that a person rather than an AI is the source is provisionally item 53's. The line is
-provisional until the owner rules, and Standard 53 is written without settling it; **it is recorded open, not decided** (Q57 concerns R3 of Standard 53). Which of the two items owns
+provisional until the owner rules, and Standard 53 is written without settling it; **it is recorded open, not decided** (Q60 concerns R3 of Standard 53). Which of the two items owns
 each deception case, and whether either is non-exemptible, needs an owner's ruling and is not settled
 by this document.
 

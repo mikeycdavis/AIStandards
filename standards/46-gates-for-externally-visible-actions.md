@@ -104,7 +104,7 @@ obtained, is not a gate for the purposes of this requirement. This repeats the r
 R5 and R6, which are worded for "the approval its own action requires" and for any approval mechanism that is
 unavailable, and are not worded for irreversible actions only; this requirement adds no rule of its own beyond
 the approver's authority and the recording. Whether those two rules should be read as reaching an approval that
-Standard 45 R3 does not require is open question Q52.
+Standard 45 R3 does not require is open question Q55.
 
 ### R3 — The approval binds the content and the audience it was given for
 

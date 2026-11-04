@@ -542,7 +542,7 @@ its end. The two can disagree. **Not resolved here, because it concerns two stan
 **Impact if unanswered:** a cited figure may name a revision the retention mechanism has deleted.
 Recommended: the period of the thing that names a revision should not outlast the revision's.
 
-### Q49 — Should the incident, red-team and audit-record templates and schemas gain fields the new standards need?
+### Q52 — Should the incident, red-team and audit-record templates and schemas gain fields the new standards need?
 
 `templates/INCIDENT-REPORT.md` already has headings for the timeline sources, the components involved, and
 established evidence and hypothesis under Cause (Standard 34 R2). It lacks a containment time (it asks "by whom"
@@ -554,20 +554,20 @@ also need a declared home for criteria, exercise records and audit-record fields
 **Not resolved here, because template and schema changes are outside this slice (plan 02 section 8).**
 **Impact if unanswered:** the templates and the standards drift. Recommended: amend templates separately.
 
-### Q50 — Should an `audit`, `incident` or `redteam` rule namespace be reserved, and should any rule examine a red-team record?
+### Q53 — Should an `audit`, `incident` or `redteam` rule namespace be reserved, and should any rule examine a red-team record?
 
 `agent.no-self-modification` and `promptsec.template-injection-guarded` are `not-evaluable` and name a
 recorded red-team exercise as how they would be established. Standards 34, 35 and 36 mint no rule.
 **Not resolved here, because minting a rule or shard is owner-only.** **Impact if unanswered:** those
 properties stay not-evaluable. Recommended: mint nothing for now.
 
-### Q51 — Does Standard 36 R5's independent reader role need structural separation like Standard 45 R5?
+### Q54 — Does Standard 36 R5's independent reader role need structural separation like Standard 45 R5?
 
 Standard 36 R5 requires a reader who is neither the actor nor the requester. Whether it should become a
 structural separation requirement is undecided. **Not resolved here, because it is a judgment about how
 far authored restrictions go.** **Impact if unanswered:** none for the text as written.
 
-### Q52 — Do Standard 45 R5 and R6 need re-scoping to every approval gate?
+### Q55 — Do Standard 45 R5 and R6 need re-scoping to every approval gate?
 
 Standard 45 R5 ("the approval its own action requires") and R6 ("where the approval mechanism is unavailable")
 are worded without reference to irreversibility, and Standard 45 says only R3 is bounded by *irreversible*. The
@@ -582,17 +582,17 @@ would change an already-written standard.** **Impact if unanswered:** a reader m
 irreversible-only and 46 R2 as a separate rule. Recommended: state in 45 that R5 and R6 reach any approval a gate
 requires.
 
-### Q53 — Can a standing delegation under Standard 11 satisfy Standard 46 R2's per-action approval?
+### Q56 — Can a standing delegation under Standard 11 satisfy Standard 46 R2's per-action approval?
 
 **Not resolved here, because it concerns the reach of Standard 11.** **Impact if unanswered:** scheduled
 or auto-reply posting is undecided. Recommended: only if Standard 11 records it as the approval.
 
-### Q54 — Where does "outside the organisation" begin for Standards 45 and 46?
+### Q57 — Where does "outside the organisation" begin for Standards 45 and 46?
 
 Both inherit an undefined phrase (shared tenant, all-staff broadcast). **Not resolved here, because it is
 a definition for Standard 1 or 45.** **Impact if unanswered:** the externally-visible class is project-defined.
 
-### Q55 — Do the prohibitions of Standards 48 to 50, 52 and 53 overlap the existing forbidden rules, and who owns each act?
+### Q58 — Do the prohibitions of Standards 48 to 50, 52 and 53 overlap the existing forbidden rules, and who owns each act?
 
 Standard 48 R1 and R2 overlap `misuse.safety-controls-not-disabled`, `gate.no-self-approval`,
 `gate.fail-closed`, `oversight.no-authority-beyond-declared-tier` and `agent.no-self-modification`;
@@ -604,13 +604,13 @@ questions Q9, Q12, Q19 and Q23 open (option C, 2026-10-15) and no rule was moved
 unanswered:** one act may be reported under two standards. Recommended: one owner per act, decided with
 those questions.
 
-### Q56 — Are Standards 53 R1 to R3 exemptible, and does a rule belong in the shared `disclosure.` segment?
+### Q59 — Are Standards 53 R1 to R3 exemptible, and does a rule belong in the shared `disclosure.` segment?
 
 FinancialStandards uses `disclosure.`; Standard 7 R4 forbids only a colliding full id. **Not resolved
 here, because it is an owner policy choice.** **Impact if unanswered:** exemptibility of the deception
 prohibitions is undecided. Recommended: R2 non-exemptible; mint no rule yet.
 
-### Q57 — Is Standard 53 R3 (suppressing an owed disclosure) Standard 40's omission or item 53's act?
+### Q60 — Is Standard 53 R3 (suppressing an owed disclosure) Standard 40's omission or Standard 53's act?
 
 Standard 40 left the line provisional. **Not resolved here, because the owner has not ruled.** **Impact if
 unanswered:** the same act may be recorded against both. Recommended: 53 holds the act, 40 the omission.

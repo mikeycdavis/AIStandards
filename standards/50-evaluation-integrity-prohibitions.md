@@ -80,7 +80,7 @@ both a change recorded with the verdict under Standard 20 R4 and a change after 
 instrument version it was obtained under, under R1 here. Standard 20 governs the regression run, its criterion and
 its verdict; R1 here governs any reported evaluation result, whether or not a regression run is involved, and the
 instrument version it names. The two are compatible, a project meets both, and neither narrows the other. Whether
-one owner should hold the act is Q55 and is not answered here.
+one owner should hold the act is Q58 and is not answered here.
 
 **Boundary posture O — owned outright.** The boundary review lists this item as one for which no pack in
 the portfolio was found to hold an owner. This document accepts that record for what a repository can
