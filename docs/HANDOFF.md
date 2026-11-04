@@ -188,6 +188,9 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
 - **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 19, 21, 23, 25, 33, 45, 51**
   (51 added 2026-10-05 by the ST-42 assignment: it states `agent.no-self-modification` and
   `agent.retrieved-content-not-instruction`, which Standard 23 stated until then; 19 added by ST-13 (#58), prose-first, ships no rule)
+- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 37, 45, 51**
+  (37 added by ST-29, #74; 51 added 2026-10-05 by the ST-42 assignment: it states `agent.no-self-modification` and
+  `agent.retrieved-content-not-instruction`, which Standard 23 stated until then)
 - `templates/` (twelve templates and `index.json`), `scripts/manifest.mjs`, `scripts/toolperms.mjs` and
   `scripts/init.mjs`, all 2026-09-19 — see the sixth batch below
 
