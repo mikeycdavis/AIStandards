@@ -64,27 +64,27 @@ const clip = (s) => {
 // `line` and `column` cost O(length of the line) each, so a minified file of many entries on one line would be
 // quadratic if every entry were located. An entry is located the first time its line or column is READ, and
 // the report reads only the entries it lists (at most 50), so the rest never are.
-function withLazyWhere(entry, parsed, offset) {
+// It captures the standalone `locate` function and nothing else: an entry that held the whole parsed result
+// would keep every document tree of every file reachable for the whole run.
+function withLazyWhere(entry, locate, offset) {
   let where = null;
-  const at = () => (where ??= parsed.locate(offset));
+  const at = () => (where ??= locate(offset));
   Object.defineProperty(entry, "line", { enumerable: true, configurable: true, get: () => at().line });
   Object.defineProperty(entry, "column", { enumerable: true, configurable: true, get: () => at().column });
   return entry;
 }
 const COMPLEX_KEY = "[complex key]";
 
-function stepsOf(frame) {
-  const steps = [];
-  for (let f = frame; f && f.parent !== null; f = f.parent) steps.push(f.step);
-  steps.reverse();
-  return steps;
-}
-
+// Walks up at most PATH_DEPTH_LIMIT + 1 ancestors: the last 64 steps are kept, and one more establishes that
+// the path was cut. Walking the whole chain for every entry would be quadratic in nesting depth.
 function pathOfFrame(frame) {
-  const all = stepsOf(frame);
-  const truncated = all.length > PATH_DEPTH_LIMIT;
-  const path = (truncated ? all.slice(all.length - PATH_DEPTH_LIMIT) : all).map((s) => (typeof s === "string" ? clip(s) : s));
-  return { path, truncated };
+  const steps = [];
+  let f = frame;
+  for (; f && f.parent !== null && steps.length <= PATH_DEPTH_LIMIT; f = f.parent) steps.push(f.step);
+  const truncated = steps.length > PATH_DEPTH_LIMIT;
+  if (truncated) steps.length = PATH_DEPTH_LIMIT;
+  steps.reverse();
+  return { path: steps.map((s) => (typeof s === "string" ? clip(s) : s)), truncated };
 }
 
 // The Gemini OBJECT form. In JSON every mapping is braced. In YAML only the flow mapping `{...}` is the object
@@ -106,6 +106,7 @@ const keyName = (pair) => (isScalar(pair.key) ? pair.key.value : null);
  *               one per examined key that occurs more than once in a single mapping
  */
 export function findInlinePromptShapes(parsed, threshold) {
+  const locate = parsed.locate;
   const matches = [];
   const duplicates = [];
 
@@ -128,7 +129,7 @@ export function findInlinePromptShapes(parsed, threshold) {
         duplicate,
       };
       if (truncated) entry.pathTruncated = true;
-      matches.push(withLazyWhere(entry, parsed, valueNode.range.start));
+      matches.push(withLazyWhere(entry, locate, valueNode.range.start));
     };
 
     // Iterative: a hostile nesting depth is not a stack hazard. Stack entries are [node, frame, inParts].
@@ -160,7 +161,7 @@ export function findInlinePromptShapes(parsed, threshold) {
         dupNames.add(name);
         const first = list[0].key;
         const { path, truncated } = pathOfFrame(frame);
-        const entry = withLazyWhere({ documentIndex, offset: first.range.start, key: name, path, occurrences: list.length }, parsed, first.range.start);
+        const entry = withLazyWhere({ documentIndex, offset: first.range.start, key: name, path, occurrences: list.length }, locate, first.range.start);
         if (truncated) entry.pathTruncated = true;
         duplicates.push(entry);
       }

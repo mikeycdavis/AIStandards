@@ -612,3 +612,31 @@ test("a JSON duplicate entry carries no documentIndex and a YAML one does", () =
   assert.equal("documentIndex" in byFile["j.json"], false);
   assert.equal(byFile["d.yml"].documentIndex, 0);
 });
+
+test("hostile: duplicates at every level of a deeply nested file are not quadratic in depth", () => {
+  const depth = 18000;
+  const text = '{"role":0,"role":1,"x":'.repeat(depth) + "0" + "}".repeat(depth);
+  const parsed = read(text, "json");
+  const started = Date.now();
+  const r = findInlinePromptShapes(parsed, T);
+  assert.equal(r.duplicates.length, depth);
+  assert.ok(Date.now() - started < 600, `took ${Date.now() - started} ms`);
+  const last = r.duplicates.at(-1);
+  assert.equal(last.path.length, 64);
+  assert.equal(last.pathTruncated, true);
+  const shallow = r.duplicates[10];
+  assert.equal(shallow.path.length, 10, "a path under the limit is whole and not marked truncated");
+  assert.equal("pathTruncated" in shallow, false);
+  assert.equal(r.duplicates[64].path.length, 64, "exactly 64 steps is not truncated");
+  assert.equal("pathTruncated" in r.duplicates[64], false);
+  assert.equal(r.duplicates[65].pathTruncated, true);
+});
+
+test("an entry keeps no reference to the parsed result: it locates through the standalone locator only", () => {
+  const parsed = read(`system: "${LONG}"\n`);
+  const { matches } = findInlinePromptShapes(parsed, T);
+  parsed.locate = () => { throw new Error("the entry must not reach back into the parsed result"); };
+  parsed.documents = null;
+  parsed.text = null;
+  assert.deepEqual([matches[0].line, matches[0].column], [1, 9]);
+});
