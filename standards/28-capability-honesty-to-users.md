@@ -136,15 +136,20 @@ capability statement and is subject to this requirement as much as interface cop
 documentation applies to the deployment the documentation names, and a statement that names none
 applies to all of them.
 
-### R3 — Decline what the deployment cannot do and do not produce its appearance
+### R3 — Decline what the deployment cannot do and do not claim an action that did not happen
 
-**When a request needs a capability the deployment lacks, the system MUST say that it cannot, and MUST
-NOT return output that presents the capability as having been exercised.**
+**When a request needs a capability the deployment lacks, the system MUST say that it cannot. The
+system MUST NOT return output that presents a capability or action as having been exercised in this
+interaction when it was not.**
 
 This is the capability statement a model makes in the moment: "I've saved that", "I looked that up",
 "I'll remember that" where no save, lookup or retention happened. A refusal of this kind is a statement
 about the system, and it is the one a user acts on immediately. The requirement is met by saying so; it
-does not require the system to say why, and it does not require a substitute. Whether the underlying
+does not require the system to say why, and it does not require a substitute. The second sentence is
+not limited to a missing capability: a deployment that has a save or lookup tool, does not call it or
+whose call fails, and replies "I've saved that", is within it, because the claim is about this
+interaction and not about what the deployment could do. A reply that reports a failed action as failed
+is not stating it done. Whether the underlying
 claim about the world is supported is [Standard 25](25-grounding-and-hallucination-control.md)'s subject.
 That an action requires approval before it takes effect is [Standard 45](45-approval-gates.md)'s, and a
 system that says an action is *pending* approval is not stating it done.
@@ -191,6 +196,7 @@ statement into a verdict about its truth, which is the failure this standard is 
 | Statement correct elsewhere | The flagship deployment's "analyses images" shown on a fallback that cannot | R2 |
 | Self-description in the prompt, wrong | A system prompt telling the model it can browse, with the search tool disabled | R2 |
 | Simulated capability | "I've booked it" or "I looked that up" returned where no call was made | R3 |
+| Available tool not called, or call failed | "I've saved that" returned by a deployment that has the tool but did not call it, or whose call failed | R3 |
 | Refusal that hides the gap | A vague answer in place of "I cannot do that here", leaving the user to infer a capability | R3 |
 | Remembered nothing | "I remember you" from a deployment with no retention | R4 |
 | Stale statement | A "supports PDFs" line surviving the removal of the tool | R5 |
@@ -202,7 +208,7 @@ statement into a verdict about its truth, which is the failure this standard is 
 | --- | --- | --- | --- |
 | R1 | The record of presented capabilities and limits, each with deployment and exercise date and result | A project document the project names — **no manifest or policy field exists for it; see Implementation** | Human review |
 | R2 | Each capability statement mapped to the deployment it appears in, and the configuration of that deployment | Project code, configuration, system prompts, interface copy | Human review |
-| R3 | A request needing an absent capability and the system's response to it | A captured interaction or test | Human review |
+| R3 | A request needing an absent capability and the system's response to it; for an action claimed done, the record of the calls made in that interaction and their outcomes | A captured interaction or test, and the call record | Human review |
 | R4 | Each statement of memory, intent, understanding or agency and the R1 entry that holds it true | Persona prompts, interface copy, captured interactions | Human review |
 | R5 | For each change to the deployment, the date of the re-check and the statements it covered | Change records and R1 record dates | Human review |
 | R6 | The absence of any detector, rule, audit finding or generated report that reports capability honesty from a presence | This repository's own detectors and tests | Code review; see Implementation |
@@ -243,7 +249,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | --- | --- | --- | --- |
 | R1 | Each capability and limit presented to users has a record entry naming deployment and a dated exercise with result | A presented capability with no entry, or an entry with no exercise, date or result | A capability the system does not present to users needs no entry and must **not** be faulted for lacking one |
 | R2 | For each deployment, every capability statement it serves is true of that deployment's configuration | A statement of a capability the serving deployment lacks, including one in the system prompt's self-description | A statement correct for the deployment it appears in must **not** be faulted because another deployment differs |
-| R3 | A request needing a capability the deployment lacks is answered by saying the system cannot, and not by output presenting it as done | A response that presents an absent capability as exercised | A response that declines in one sentence without a reason or substitute satisfies R3 and must **not** be faulted for brevity |
+| R3 | A request needing a capability the deployment lacks is answered by saying the system cannot; an action presented as done in a response has a call in that interaction's record that succeeded | A request needing an absent capability answered without saying the system cannot; or a response presenting a capability or action as exercised where no call was made, the call failed, or it is recorded pending | A response that declines in one sentence without a reason or substitute satisfies R3 and must **not** be faulted for brevity; an action reported as done where the record shows the call succeeded must **not** be faulted |
 | R4 | Each statement of memory, intent, understanding or agency maps to an R1 entry that holds it true | Such a statement with no supporting entry, or one the entry records as absent | A persona's name, tone and style, which assert no capability, must **not** be faulted |
 | R5 | Each change to the deployment has a dated re-check covering the statements that depend on it, made before it served users | A statement that outlived a change to the capability it names with no re-check, and not marked unverified | A change that touches no capability a statement names needs no re-check and must **not** be faulted |
 | R6 | No detector, rule, audit finding or generated report in this repository states capability honesty from a presence | A detector, rule, audit finding or report that states a system honest about its capabilities because a capability list, disclaimer, persona instruction or limitations page is present | Reporting that a disclaimer string was *found*, as an observation with no verdict, is permitted |
@@ -271,7 +277,7 @@ There is no policy-level exception mechanism for R1 to R5 in this release, becau
 
 **Nearly all of it.** The brief contributes two words, "capability honesty", inside a bullet of four subjects and states no requirement, level or evidence for them. The item is class `D` because its subject token is derived from the brief; the requirements are not derived. Specifically authored here, none of it owner-approved:
 
-- **R1 to R5 in full**, with the defined terms capability, capability statement and deployment, the ruling that the deployment and not the product is the unit a statement is checked against, that a system must say it cannot rather than return the appearance of a capability, that mental-state language is tested against a recorded fact with a persona carve-out, and that a statement is re-checked on a change to the deployment.
+- **R1 to R5 in full**, with the defined terms capability, capability statement and deployment, the ruling that the deployment and not the product is the unit a statement is checked against, that a system must say it cannot rather than return the appearance of a capability (R3, first sentence), and, added after review of the merged text, that a system must not present a capability or action as exercised in an interaction where it was not, including an available tool that was not called or whose call failed (R3, second sentence; new authored content, severity `error` as for R3, not owner-approved, answering an unresolved Codex P2 on PR 142), that mental-state language is tested against a recorded fact with a persona carve-out, and that a statement is re-checked on a change to the deployment.
 - **R6**, the constraint on this framework, in the same form as the equivalent requirement in [Standard 25](25-grounding-and-hallucination-control.md) and [Standard 44](44-operational-resilience-degradation-and-provider-portability.md).
 - **The exclusions in Scope** as division lines, including the lines against items 25, 26, 27, 40, 52 and 53; where this standard stops and each of those begins is unconfirmed by anyone.
 - **The crosswalk table**, its mapping of precedents to requirements, and the observation about the differences in level and exemptibility.
