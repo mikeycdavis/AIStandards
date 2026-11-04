@@ -490,10 +490,12 @@ for a prompt, the stricter identifier rule over the assembled whole (R1) and the
 as a revision (R5); 31 owns run parameters and repeat claims; 32 owns the rollback target and procedure.
 Identity is therefore shared ground between 29 R1 and 30 R1 and R5, not owned by one: the two are written
 to be met together and cross-reference each other, and 29's alias clause and 30 R5 are aligned (the revision
-is what the alias resolved to). Two further overlaps are cross-referenced and not owned by either side:
-29 R4 against Standard 20 R1 (a re-run observing a change is one way an upstream change becomes known),
-and 31 R3 against Standard 20 R3 (20 R3 governs the pass or fail recorded, 31 R3 what the report says a
-difference inside the variation is). The boundary review's O record for item 29 is a generic search and
+is what the alias resolved to). Two further overlaps are cross-referenced and not owned by either side, and no order between them is stated:
+29 R4 against Standard 20 R1 (a re-run observing a change is one way an upstream change becomes known; whether
+a statement under 20 R1 that no re-run is made relieves a change learned of by other means is not decided here),
+and 31 R3 against Standard 20 R3. These two are in tension: 31 R3 does not allow a difference inside the
+variation to be called a change, and 20 R3 requires a pass or fail against a criterion fixed before the run,
+which may sit inside the variation; which yields is not decided here. The boundary review's O record for item 29 is a generic search and
 does not address MachineLearningStandards dataset versioning or reproducibility. **Not resolved here,
 because the lines are authored and the posture check is a human recheck.** **Impact if unanswered:** shared
 ground may be stated twice. Recommended: keep the split as drawn.
@@ -615,6 +617,17 @@ prohibitions is undecided. Recommended: R2 non-exemptible; mint no rule yet.
 
 Standard 40 left the line provisional. **Not resolved here, because the owner has not ruled.** **Impact if
 unanswered:** the same act may be recorded against both. Recommended: 53 holds the act, 40 the omission.
+
+### Q61 — Which yields when a deletion obligation reaches a rollback target (Standard 32 R2 against Standard 13 R5 and Standard 15 R3)?
+
+Standard 32 R2 says the project must not retire, overwrite or delete a recorded rollback target before the
+end of its window; a withdrawn state in R4 includes data removed for a data-subject or legal requirement,
+and Standards 13 R5 and 15 R3 ask that deletion reach derived copies and backups, which a retained
+rollback target can be. A target that must be deleted for a deletion obligation therefore conflicts with R2
+as written. **Not resolved here, because it concerns two standards' shared ground and the order is a
+normative judgment.** **Impact if unanswered:** a project may be faulted under one standard for the act the
+other requires. No direction is recommended here: each reading protects a different party, and the
+order is for the owner to rule.
 
 ## Not questions
 

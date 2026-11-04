@@ -59,7 +59,9 @@ against, or used to justify a decision) and `16-random-seeds.md` (scope: every s
 affects a reported result; it requires the seed and requires equally that the seed not be treated as a
 guarantee it cannot give), with no rule ids recorded (reviewed 2026-09-04). The review's reasoning
 is that this item adds only nondeterminism originating at a remote inference endpoint, which no seed the
-project controls can remove, and that it must stay the shortest in the catalog. Nothing is claimed here
+project controls can remove, and that it must stay the shortest in the catalog. This document does not meet
+that aim: it has four requirements and runs to about 217 lines, and other standards are shorter. The
+departure is recorded here and is not justified by the review. Nothing is claimed here
 about the sibling pack beyond that record.
 
 ## Requirements

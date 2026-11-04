@@ -460,7 +460,7 @@ git worktree created outside the repository at `a2d5069`; shared cells were edit
 item that owns catalog rules has a document, so the rule that picked items 23 and 17 picks nothing.
 Re-run `/whats-next` before starting; `docs/HANDOFF.md` §9 lists the candidates (inferred).
 
-Q7, Q9 to Q12, Q15 and Q17 to Q60 remain open.
+Q7, Q9 to Q12, Q15 and Q17 to Q61 remain open.
 
 ## 12. The adoption slice contract
 
