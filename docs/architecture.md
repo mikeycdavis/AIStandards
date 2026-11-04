@@ -153,9 +153,10 @@ registry, or any remote host — including during its own tests.
   three detection shapes, each named in its evidence string: the parameter shape (`INSTRUCTION_PARAM`, a
   listed name then `:` or `=`), the message role shape (`messageRoleLength`, 720: an object or YAML
   mapping whose `role` is `system` and whose own `content` is the literal) and the `systemInstruction`
-  parts shape (`systemInstructionPartsLength`, 768). All three search the `codeOnly` view for keys and
-  measure the literal in the original text, and are **still lexical**: they are re-expressed over the
-  parsed tree by ST-58. Since ST-57, a YAML or JSON file the structural reader could not read is **not
+  parts shape (`systemInstructionPartsLength`, 768). In source code all three search the `codeOnly` view for keys and
+  measure the literal in the original text and stay **lexical**; in a `.yml`, `.yaml` or `.json` file that
+  parsed they are read over the parsed tree by `scripts/structural-shapes.mjs` (ST-58), measured in decoded
+  code points, with structured locations. Since ST-57, a YAML or JSON file the structural reader could not read is **not
   scanned at all** (`run.structural.failures`); the detector records an `unknown` for both rules
   alongside any violation, so a clean-looking result cannot be a pass. Variables, template and
   concatenated content, typed-part arrays, the `developer` role and keyword-argument constructors are not claimed.
@@ -425,7 +426,7 @@ document cites the rule id in exactly one `### RN` section and carries a marker 
 | Add a rule | The matching `rules/*.json` shard. The ID must match `RULE_ID` in `catalog.mjs:30` and its namespace must be in `NAMESPACES` (line 43). If its standard is written, cite it in one `### RN` section and regenerate the table |
 | Add a rule namespace | `NAMESPACES` in `scripts/catalog.mjs:43`, and `SHARED_SEGMENTS` if another pack uses the segment |
 | Add a detector | `scripts/standards.mjs` — write the function, insert it into `runDetectors()` (line 981) in the correct band, and add its rule ID to `EVALUATED_RULES` (line 222). Declare the rule's `assurance` honestly: `partial` means a clean result is reported not-evaluated. A test asserts detectors and the list agree in both directions |
-| Detect over YAML or JSON structure | Consume the tree from `scripts/structural.mjs` (`parseStructuralBytes`, `walk`, `pathOf`) rather than adding a regular expression; the lexical YAML branches are frozen (`test/source-yaml-freeze.test.mjs`). Re-expressing the inline-prompt shapes is ST-58 (#120) |
+| Detect over YAML or JSON structure | Consume the tree from `scripts/structural.mjs` (`parseStructuralBytes`, `walk`, `pathOf`) rather than adding a regular expression; the lexical YAML branches are frozen (`test/source-yaml-freeze.test.mjs`). The inline-prompt shapes are the worked example: `scripts/structural-shapes.mjs` (ST-58, #120) |
 | Change the audit report | `schemas/audit-report.schema.json` and `commandAudit()` in the same change; raise `schemaVersion` for an additive field; `test/structural-audit.test.mjs` validates real output against the schema |
 | Change how a result is judged | `evaluateRule()` in `scripts/compliance.mjs:91`, against Standard 5 R6; the unit tests are in `test/compliance.test.mjs`, the CLI reproductions in `test/partial-assurance.test.mjs` |
 | Add a schema | `schemas/*.json`, registered in the `SCHEMAS` map at `scripts/standards.mjs:43` |
@@ -619,8 +620,8 @@ These are recorded rather than guessed at, per the brief's requirement to preser
 | `standards-adapter.json` | Does not exist. Phase 5. Until it does, nothing observable connects this pack to StandardsEnforcer |
 | Detector coverage | 9 of 46 rules are in `EVALUATED_RULES`; 5 are `not-evaluable`. The rest report `skipped / not-evaluated` by construction. This is the honest floor, not an omission |
 | Coverage is declared, not measured | A clean result is `passed` only for a rule declaring `assurance: full`. Nothing checks that such a rule's detector really covers it, so a `full` detector's own blind spots would still report `passed`. Phase 3 |
-| Structural reader not yet consumed | Since ST-57 an unparseable YAML or JSON file is unknown for the inline-prompt rules, but the shapes themselves are still matched lexically in files that parse (ST-58), the remaining YAML-specific lexical branches are not retired (ST-59), and Standard 21's text and assurance notes do not yet describe the structural contract (ST-60) |
-| Locations on violation evidence | The structural reader exposes node positions, but a violation's evidence strings are unchanged and carry no structured location; that needs the shapes expressed over the tree |
+| Structural reader consumed only by the inline-prompt shapes | Since ST-57 an unparseable YAML or JSON file is unknown for the inline-prompt rules, and since ST-58 the shapes are read over the tree in files that parse. The remaining YAML-specific lexical branches are not retired (ST-59), and Standard 21's text and assurance notes do not yet describe the structural contract (ST-60) |
+| Locations on violation evidence | Only for YAML and JSON files (ST-58): `validate` results carry `locations` beside the unchanged evidence strings. A violation found by the lexical layer (source code) has evidence strings and no location |
 | Duplicate anchors | Valid YAML, parsed, and a lexical finding stands (owner decision of 2026-10-11 for ledger case g07). The named regression ledger expected it to become unknown |
 | JSONC and templates named `.json` / `.yaml` | Not supported, by decision. A `.json` file that is really JSONC is unparseable, hence unknown for the inline rules, in any repository containing one; a prospective non-claim, not a defect. No tracked file in this repository is JSONC |
 | Resource limits | No file-size cap or timeout was chosen for the structural reader. The parser is synchronous and cannot be interrupted; the only bound is the 512 KiB read bound. A separate evidenced decision is required |

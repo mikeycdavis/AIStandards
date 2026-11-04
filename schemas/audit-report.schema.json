@@ -7,6 +7,34 @@
   "required": ["schemaVersion", "standard", "project", "auditedAt", "notAVerdict", "evidenceSurface", "structuralSurface", "aiSurface", "findings"],
   "additionalProperties": false,
   "$defs": {
+    "duplicateEvidence": {
+      "type": "object",
+      "required": ["total", "listed", "omitted"],
+      "additionalProperties": false,
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "listed": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "required": ["file", "key", "occurrences", "line", "column", "path"],
+            "additionalProperties": false,
+            "properties": {
+              "file": { "type": "string", "minLength": 1 },
+              "documentIndex": { "description": "YAML only.", "type": "integer", "minimum": 0 },
+              "key": { "description": "The decoded key that occurs more than once in one mapping.", "type": "string", "maxLength": 129 },
+              "occurrences": { "type": "integer", "minimum": 2 },
+              "line": { "description": "Of the first occurrence.", "type": "integer", "minimum": 1 },
+              "column": { "type": "integer", "minimum": 1 },
+              "path": { "description": "To the mapping that holds the duplicate: a string is a key (clipped), an integer a sequence index. At most the last 64 steps.", "type": "array", "maxItems": 64, "items": { "type": ["string", "integer"] } },
+              "pathTruncated": { "type": "boolean", "const": true }
+            }
+          }
+        },
+        "omitted": { "type": "integer", "minimum": 0 }
+      }
+    },
     "unparseableFile": {
       "type": "object",
       "required": ["file", "reason"],
@@ -53,9 +81,9 @@
   },
   "properties": {
     "schemaVersion": {
-      "description": "1.1 is additive over 1.0: evidenceSurface.unparseableFiles and structuralSurface. Nothing was removed or retyped. The validate report is a different envelope and keeps its own version.",
+      "description": "1.1 is additive over 1.0: evidenceSurface.unparseableFiles and structuralSurface. 1.2 is additive over 1.1: structuralSurface.duplicateKeysEvaluated. Nothing was removed or retyped. The validate report is a different envelope and has its own version.",
       "type": "string",
-      "const": "1.1"
+      "const": "1.2"
     },
     "standard": {
       "type": "object",
@@ -115,13 +143,17 @@
     "structuralSurface": {
       "description": "What the structural reader saw. Aliases and merge keys are PARSED and deliberately NOT followed: a role or content supplied through one stays a non-claim, and these lists are the evidence that it was present.",
       "type": "object",
-      "required": ["scope", "filesParsed", "aliasesNotFollowed", "mergeKeysNotApplied"],
+      "required": ["scope", "filesParsed", "aliasesNotFollowed", "mergeKeysNotApplied", "duplicateKeysEvaluated"],
       "additionalProperties": false,
       "properties": {
         "scope": { "type": "array", "items": { "type": "string", "enum": [".yml", ".yaml", ".json"] } },
         "filesParsed": { "type": "integer", "minimum": 0 },
         "aliasesNotFollowed": { "$ref": "#/$defs/referenceEvidence" },
-        "mergeKeysNotApplied": { "$ref": "#/$defs/referenceEvidence" }
+        "mergeKeysNotApplied": { "$ref": "#/$defs/referenceEvidence" },
+        "duplicateKeysEvaluated": {
+          "description": "The keys the inline-prompt shapes read that occur more than once in one mapping. Every occurrence was evaluated; `total` is exact and `listed` is bounded.",
+          "$ref": "#/$defs/duplicateEvidence"
+        }
       }
     },
     "aiSurface": {

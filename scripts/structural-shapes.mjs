@@ -1,0 +1,196 @@
+// Standard 21's inline-prompt shapes, re-expressed over the parsed tree (ST-58, #120).
+//
+// This is a CONSUMER of scripts/structural.mjs. It reads a tree the reader already produced and finds
+// the three shapes of one problem (parameter, message role, Gemini systemInstruction parts) in a YAML or
+// JSON file. It does not parse, it has no fallback, and it does not decide whether a match is a violation:
+// it reports each literal at or above `threshold` with where it is, and the detector decides.
+//
+// WHAT CHANGED FROM THE LEXICAL LAYER (decisions C, E, G; the compatibility change is recorded in
+// docs/structural-reader.md):
+//   * a literal is measured in Unicode code points of its DECODED value (escapes resolved, lines folded,
+//     chomping applied), not in characters of the raw source;
+//   * keys and values are decoded before they are compared: a key written with an escape (u0074 for the
+//     t of `system`) is the key `system`;
+//   * every scalar is a string, whatever its style or tag: a quoted or plain scalar, and a scalar carrying
+//     an anchor or a tag, are decoded scalars (a block scalar is the one named exception, below);
+//   * a mapping is a mapping, so a key's value is the node under that key, not the next text on a line.
+//
+// WHAT IS NOT CLAIMED, and is reported rather than guessed:
+//   * an alias is not dereferenced and a merge key is not applied (decision C): a role, content or
+//     instruction supplied through one is a non-claim, and the reader's alias and merge lists are the
+//     evidence that one was present;
+//   * a mapping nested INSIDE A COMPLEX KEY (`? {system: "..."}`) is not scanned (decision E). A key is
+//     a name; the walk descends into values and sequence items only;
+//   * documents are scanned independently: nothing here compares or combines evidence across documents;
+//   * a block-style YAML `systemInstruction` mapping is not the object form Standard 21 claims (only `{...}`);
+//   * a YAML BLOCK scalar (`|` or `>`) is not a literal for these shapes. Standard 21 names it as a non-claim
+//     and the regression ledger the owner accepted lists no case that changes it, so it stays one until a
+//     decision (ST-60) says otherwise. The reader decodes it, so the change would be one line here.
+//
+// DUPLICATE KEYS (decision E). The reader keeps every occurrence. Every occurrence of a content, text or
+// instruction key is measured, and a role is `system` if ANY of its occurrences is. A key that occurs more
+// than once in one mapping is reported as duplicate evidence, because a consumer that keeps only the last
+// occurrence sees a different file from the one that was read.
+
+export const SHAPES = Object.freeze({
+  parameter: "parameter",
+  messageRole: "message-role",
+  systemInstructionParts: "system-instruction-parts",
+});
+
+// Parameter names that carry model instructions across the common provider SDKs. The same names as the
+// lexical layer's INSTRUCTION_PARAM; a test requires the two lists to agree.
+export const PARAMETER_KEYS = Object.freeze(["system", "system_prompt", "systemPrompt", "instructions", "systemInstruction"]);
+const SYSTEM_INSTRUCTION_KEYS = new Set(["systemInstruction", "system_instruction"]);
+const PARAMETER_SET = new Set(PARAMETER_KEYS);
+
+// Every key a shape examines. Duplicate evidence is reported for these and no others, so a repository's
+// ordinary repeated keys are not swept into the report.
+const EXAMINED_KEYS = new Set([...PARAMETER_KEYS, "system_instruction", "role", "content", "parts", "text"]);
+
+// Bounds on what a location entry may carry from a file. A key can be any length; the report is not a
+// copy of the file.
+export const PATH_STEP_LIMIT = 128;
+export const PATH_DEPTH_LIMIT = 64;
+
+const clip = (s) => (s.length > PATH_STEP_LIMIT ? `${s.slice(0, PATH_STEP_LIMIT)}…` : s);
+const COMPLEX_KEY = "[complex key]";
+
+function stepsOf(frame) {
+  const steps = [];
+  for (let f = frame; f && f.parent !== null; f = f.parent) steps.push(f.step);
+  steps.reverse();
+  return steps;
+}
+
+function pathOfFrame(frame) {
+  const all = stepsOf(frame);
+  const truncated = all.length > PATH_DEPTH_LIMIT;
+  const path = (truncated ? all.slice(all.length - PATH_DEPTH_LIMIT) : all).map((s) => (typeof s === "string" ? clip(s) : s));
+  return { path, truncated };
+}
+
+// The Gemini OBJECT form. In JSON every mapping is braced. In YAML only the flow mapping `{...}` is the object
+// form Standard 21 claims; a block-style `systemInstruction:` mapping is a named non-claim and stays one.
+const isObjectForm = (parsed, node) => parsed.format === "json" || parsed.text[node.range.start] === "{";
+
+const isScalar = (n) => n !== null && n !== undefined && n.kind === "scalar";
+const keyName = (pair) => (isScalar(pair.key) ? pair.key.value : null);
+
+/**
+ * Find the inline-prompt shapes in a parsed tree.
+ *
+ * @param {object} parsed  the ok-result of parseStructuralBytes / parseStructuralText
+ * @param {number} threshold  report a literal only at this many Unicode code points (decoded) or more
+ * @returns {{ matches: Array, duplicates: Array }}
+ *   matches:    { shape, length, documentIndex, offset, line, column, key, path, pathTruncated, duplicate }
+ *               one per literal at or above the threshold, in source order
+ *   duplicates: { documentIndex, offset, line, column, key, path, pathTruncated, occurrences }
+ *               one per examined key that occurs more than once in a single mapping
+ */
+export function findInlinePromptShapes(parsed, threshold) {
+  const matches = [];
+  const duplicates = [];
+
+  const locate = (offset) => parsed.locate(offset);
+
+  for (const doc of parsed.documents) {
+    if (doc.root === null || doc.root === undefined) continue;
+    const documentIndex = doc.index;
+
+    const record = (shape, valueNode, key, frame, duplicate) => {
+      if (!isScalar(valueNode) || valueNode.length < threshold) return;
+      if (valueNode.style === "block-literal" || valueNode.style === "block-folded") return; // named non-claim
+      const where = locate(valueNode.range.start);
+      const { path, truncated } = pathOfFrame(frame);
+      const entry = {
+        shape,
+        length: valueNode.length,
+        documentIndex,
+        offset: valueNode.range.start,
+        line: where.line,
+        column: where.column,
+        key,
+        path,
+        duplicate,
+      };
+      if (truncated) entry.pathTruncated = true;
+      matches.push(entry);
+    };
+
+    // Iterative: a hostile nesting depth is not a stack hazard. Stack entries are [node, frame, inParts].
+    // `inParts` is true under the `parts` of a systemInstruction, where a `text` key is the third shape.
+    const pending = [{ node: doc.root, frame: { parent: null }, parts: false }];
+    while (pending.length > 0) {
+      const { node, frame, parts } = pending.pop();
+      if (node.kind === "seq") {
+        const kids = [];
+        node.items.forEach((item, index) => {
+          if (item) kids.push({ node: item, frame: { parent: frame, step: index }, parts });
+        });
+        for (let k = kids.length - 1; k >= 0; k -= 1) pending.push(kids[k]);
+        continue;
+      }
+      if (node.kind !== "map") continue; // scalars and aliases: an alias is not followed
+
+      // Decode every key of this mapping once and group the occurrences of the examined ones.
+      const byName = new Map();
+      for (const pair of node.pairs) {
+        const name = keyName(pair);
+        if (name === null || !EXAMINED_KEYS.has(name)) continue;
+        if (!byName.has(name)) byName.set(name, []);
+        byName.get(name).push(pair);
+      }
+      const dupNames = new Set();
+      for (const [name, list] of byName) {
+        if (list.length < 2) continue;
+        dupNames.add(name);
+        const first = list[0].key;
+        const where = locate(first.range.start);
+        const { path, truncated } = pathOfFrame(frame);
+        const entry = { documentIndex, offset: first.range.start, line: where.line, column: where.column, key: name, path, occurrences: list.length };
+        if (truncated) entry.pathTruncated = true;
+        duplicates.push(entry);
+      }
+
+      const childFrame = (_pair, name) => ({ parent: frame, step: name === null ? COMPLEX_KEY : name });
+
+      // Parameter shape: an instruction parameter whose value is a scalar. Every occurrence is measured.
+      for (const pair of node.pairs) {
+        const name = keyName(pair);
+        if (name !== null && PARAMETER_SET.has(name)) {
+          record(SHAPES.parameter, pair.value, name, childFrame(pair, name), dupNames.has(name));
+        }
+      }
+
+      // Message role shape: this mapping has a `role` that is `system` and a `content` scalar.
+      const roles = byName.get("role") ?? [];
+      if (roles.some((p) => isScalar(p.value) && p.value.value === "system")) {
+        for (const pair of byName.get("content") ?? []) {
+          record(SHAPES.messageRole, pair.value, "content", childFrame(pair, "content"), dupNames.has("content") || dupNames.has("role"));
+        }
+      }
+
+      // Third shape, inside a systemInstruction's `parts`: a `text` key of a mapping reached through them.
+      if (parts) {
+        for (const pair of byName.get("text") ?? []) {
+          record(SHAPES.systemInstructionParts, pair.value, "text", childFrame(pair, "text"), dupNames.has("text"));
+        }
+      }
+
+      // Descend into VALUES only. A key is a name: a mapping inside a complex key is a documented non-claim.
+      const kids = [];
+      for (const pair of node.pairs) {
+        if (!pair.value) continue;
+        const name = keyName(pair);
+        const next = { parent: frame, step: name === null ? COMPLEX_KEY : name };
+        // `parts` opens the third shape only as a key of a systemInstruction's own mapping.
+        if (name !== null && SYSTEM_INSTRUCTION_KEYS.has(name) && pair.value.kind === "map" && isObjectForm(parsed, pair.value)) next.systemInstruction = true;
+        const opensParts = name === "parts" && frame.systemInstruction === true;
+        kids.push({ node: pair.value, frame: next, parts: parts || opensParts });
+      }
+      for (let k = kids.length - 1; k >= 0; k -= 1) pending.push(kids[k]);
+    }
+  }
+  return { matches, duplicates };
+}

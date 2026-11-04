@@ -7,9 +7,8 @@
 // bundle; fixtures/structural-ledger/ledger.json carries each case's input.
 //
 // What ST-57 can complete is the first group: a file the reader refuses. The other two groups change
-// only when a consumer measures decoded values (ST-58), so for them this test pins the OPPOSITE:
-// the reader parses them, and the lexical result is unchanged by ST-57. That keeps "not yet moved"
-// from being mistaken for "moved".
+// only when a consumer measures decoded values (ST-58). This file pins that the reader parses them;
+// the outcome ST-58 gave each one is pinned in test/structural-shapes.test.mjs.
 //
 // One ledger entry does not behave as the ledger says. g07 (a duplicate anchor definition) is valid
 // YAML, and the vendored parser reads it, so it stays a finding rather than becoming unknown. It is
@@ -83,7 +82,7 @@ test("ledger g07 is a DISCREPANCY, pinned: a duplicate anchor parses and its lex
 });
 
 for (const entry of deferred) {
-  test(`ledger ${entry.id} (${entry.label}): parses; its outcome is unchanged here and completes in ${entry.completedBy}`, () => {
+  test(`ledger ${entry.id} (${entry.label}): parses; its outcome is pinned by ${entry.completedBy} (test/structural-shapes.test.mjs)`, () => {
     const r = parseStructuralBytes(entry.file, bytesOf(entry));
     assert.equal(r.ok, true, `${entry.id} is valid, so no failure outcome applies`);
     assert.equal(audit(target(entry)).json.evidenceSurface.unparseableFiles.total, 0);
