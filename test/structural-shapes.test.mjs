@@ -521,3 +521,14 @@ test("CLI: the ST-58 ledger cases have the outcome the owner accepted", () => {
   }
   assert.equal(seen, expectFires.size + expectQuiet.size);
 });
+
+test("duplicate context reaches the parts shape: a duplicated parts or systemInstruction key flags the match", () => {
+  const dupParts = find(`{"systemInstruction":{"parts":[{"text":"${LONG}"}],"parts":[]}}`, "json").matches;
+  assert.deepEqual(dupParts.map((m) => m.duplicate), [true]);
+  const dupInstruction = find(`{"systemInstruction":{"parts":[{"text":"${LONG}"}]},"systemInstruction":{}}`, "json").matches;
+  assert.deepEqual(dupInstruction.map((m) => m.duplicate), [true]);
+  const clean = find(`{"systemInstruction":{"parts":[{"text":"${LONG}"}]}}`, "json").matches;
+  assert.deepEqual(clean.map((m) => m.duplicate), [false]);
+  const unrelated = find(`{"other":1,"other":2,"systemInstruction":{"parts":[{"text":"${LONG}"}]}}`, "json").matches;
+  assert.deepEqual(unrelated.map((m) => m.duplicate), [false], "a duplicate that is not on the path does not flag it");
+});

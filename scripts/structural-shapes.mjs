@@ -120,13 +120,13 @@ export function findInlinePromptShapes(parsed, threshold) {
 
     // Iterative: a hostile nesting depth is not a stack hazard. Stack entries are [node, frame, inParts].
     // `inParts` is true under the `parts` of a systemInstruction, where a `text` key is the third shape.
-    const pending = [{ node: doc.root, frame: { parent: null }, parts: false }];
+    const pending = [{ node: doc.root, frame: { parent: null }, parts: false, dupCtx: false }];
     while (pending.length > 0) {
-      const { node, frame, parts } = pending.pop();
+      const { node, frame, parts, dupCtx } = pending.pop();
       if (node.kind === "seq") {
         const kids = [];
         node.items.forEach((item, index) => {
-          if (item) kids.push({ node: item, frame: { parent: frame, step: index }, parts });
+          if (item) kids.push({ node: item, frame: { parent: frame, step: index }, parts, dupCtx });
         });
         for (let k = kids.length - 1; k >= 0; k -= 1) pending.push(kids[k]);
         continue;
@@ -174,7 +174,7 @@ export function findInlinePromptShapes(parsed, threshold) {
       // Third shape, inside a systemInstruction's `parts`: a `text` key of a mapping reached through them.
       if (parts) {
         for (const pair of byName.get("text") ?? []) {
-          record(SHAPES.systemInstructionParts, pair.value, "text", childFrame(pair, "text"), dupNames.has("text"));
+          record(SHAPES.systemInstructionParts, pair.value, "text", childFrame(pair, "text"), dupCtx || dupNames.has("text"));
         }
       }
 
@@ -187,7 +187,9 @@ export function findInlinePromptShapes(parsed, threshold) {
         // `parts` opens the third shape only as a key of a systemInstruction's own mapping.
         if (name !== null && SYSTEM_INSTRUCTION_KEYS.has(name) && pair.value.kind === "map" && isObjectForm(parsed, pair.value)) next.systemInstruction = true;
         const opensParts = name === "parts" && frame.systemInstruction === true;
-        kids.push({ node: pair.value, frame: next, parts: parts || opensParts });
+        // A duplicated systemInstruction or parts key on the path makes every match below it ambiguous.
+        const ambiguous = name !== null && (SYSTEM_INSTRUCTION_KEYS.has(name) || name === "parts") && dupNames.has(name);
+        kids.push({ node: pair.value, frame: next, parts: parts || opensParts, dupCtx: dupCtx || ambiguous });
       }
       for (let k = kids.length - 1; k >= 0; k -= 1) pending.push(kids[k]);
     }
