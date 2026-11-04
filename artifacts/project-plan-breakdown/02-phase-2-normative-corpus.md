@@ -76,6 +76,9 @@ dated record of that slice and is left as written.)
 `11-autonomy-levels-and-delegated-authority.md`,
 `13-personal-data-in-ai-systems.md`, `17-evaluation-plans-for-generative-systems.md`,
 `21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `43-environmental-impact-accounting.md`, `45-approval-gates.md`,
+`09-misuse-and-abuse-prevention.md`, `11-autonomy-levels-and-delegated-authority.md`,
+`12-context-and-corpus-provenance.md`, `13-personal-data-in-ai-systems.md`, `17-evaluation-plans-for-generative-systems.md`,
+`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `45-approval-gates.md`,
 `51-agent-and-tool-execution-prohibitions.md`
 (Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
 owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 43 added 2026-10-15, ST-35, #80).
@@ -470,6 +473,7 @@ item that owns catalog rules has a document, so the rule that picked items 23 an
 Re-run `/whats-next` before starting; `docs/HANDOFF.md` §9 lists the candidates (inferred).
 
 Q7, Q9 to Q12, Q15 to Q22 and Q23 to Q25 remain open.
+Q7, Q9 to Q12, Q15 to Q22 and Q26 to Q28 remain open.
 
 ## 12. The adoption slice contract
 

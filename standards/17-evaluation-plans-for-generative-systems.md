@@ -123,7 +123,7 @@ The boundary with this standard's other neighbours, none of whose ground is clai
 - **Item 20, Regression Testing Across Model and Prompt Versions** (unwritten) — when regression
   runs happen, and what difference from a baseline fails a change. R3's rule records a baseline and
   cites this standard; whether it belongs to item 20 is recorded under Additions and not decided.
-- **Item 12, Context and Corpus Provenance** (unwritten, posture B) — where an evaluation set came
+- **Item 12, Context and Corpus Provenance** (written as [Standard 12](12-context-and-corpus-provenance.md), posture B) — where an evaluation set came
   from. **[Standard 13](13-personal-data-in-ai-systems.md) R1** governs whether it holds real personal
   data.
 - **Items 29, 30 and 31** (unwritten) — versioning and change control, model and prompt lineage, and
@@ -755,6 +755,8 @@ normative here is authored, and none of it has owner approval:
 
 ## Relationship to other standards and ADRs
 
+[Standard 12](12-context-and-corpus-provenance.md) governs where an evaluation set came from; this standard governs how it is used in a plan.
+
 [Standard 1](01-ai-system-manifest.md) draws the scope this standard applies within. Its manifest
 schema has an `evaluation` object with `planPath`, `suiteCommand` and `baselinePath`, and a
 `dataSources[].kind` value `evaluation-set`; R1 to R4 name where each fits, and nothing reads any of
@@ -793,8 +795,7 @@ model-adjacent stores. Nothing here restates either.
 [Standard 21](21-prompt-and-instruction-security.md) R1 makes prompts versioned artifacts, which is
 what gives R6's prompt revision something to name.
 
-Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 12
-(provenance of evaluation sets); item 18 (benchmark integrity and contamination); item 19 (what an
+Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 18 (benchmark integrity and contamination); item 19 (what an
 evaluation must cover); item 20 (when regressions are tested and what fails a change, and the open
 question of R3's rule); items 29, 30 and 31 (versioning, lineage, and nondeterminism of re-runs);
 item 35 (adversarial exercises); and item 50 (evaluation integrity prohibitions, whose relationship to

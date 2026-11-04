@@ -87,6 +87,7 @@ Exit codes are process semantics. The verdict is the `status` field of the JSON 
 [9 Misuse and Abuse Prevention](standards/09-misuse-and-abuse-prevention.md) ·
 [10 Human Oversight and Intervention](standards/10-human-oversight-and-intervention.md) ·
 [11 Autonomy Levels and Delegated Authority](standards/11-autonomy-levels-and-delegated-authority.md) ·
+[12 Context and Corpus Provenance](standards/12-context-and-corpus-provenance.md) ·
 [13 Personal Data in AI Systems](standards/13-personal-data-in-ai-systems.md) ·
 [17 Evaluation Plans for Generative Systems](standards/17-evaluation-plans-for-generative-systems.md) ·
 [21 Prompt and Instruction Security](standards/21-prompt-and-instruction-security.md) ·
@@ -101,6 +102,7 @@ Exit codes are process semantics. The verdict is the `status` field of the JSON 
 undocumented. 21 and 45, written in Phase 1, are the easiest and hardest domain standards, chosen to
 prove the document skeleton at both extremes. 2, 8, 9, 11, 13, 17, 23, 25, 33, 43 and 51 are the Phase 2 corpus written so far.
 prove the document skeleton at both extremes. 2, 8, 9, 10, 11, 13, 17, 23, 25, 33 and 51 are the Phase 2 corpus written so far.
+prove the document skeleton at both extremes. 2, 8, 9, 11, 12, 13, 17, 23, 25, 33 and 51 are the Phase 2 corpus written so far.
 
 **Rules** — 46 across eight shards; **9 have a detector**. The rest report as unevaluated. That ratio
 is not a defect to be hidden: an AI standards pack is mostly manual review, and a design claiming

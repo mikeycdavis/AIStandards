@@ -181,6 +181,7 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
   `scripts/standards-sections.mjs` (read-only document conformance), both 2026-09-14
 - **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 43, 45, 51**
 - **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 10, 11, 13, 17, 21, 23, 25, 33, 45, 51**
+- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 12, 13, 17, 21, 23, 25, 33, 45, 51**
   (51 added 2026-10-05 by the ST-42 assignment: it states `agent.no-self-modification` and
   `agent.retrieved-content-not-instruction`, which Standard 23 stated until then)
 - `templates/` (twelve templates and `index.json`), `scripts/manifest.mjs`, `scripts/toolperms.mjs` and
@@ -549,6 +550,7 @@ governance until a sign-off exists.
    unapproved, and its own reasoning does not reach the word "propose". Standard 11's R7 was scoped
    narrowly rather than propagating it, so the two standards currently differ on adjacent ground.
    Q23 to Q25 can also change Standard 10's wording once answered.
+   Q27 also changes an already-written standard's wording; see section 9.
 5. **~~Whether to pin line endings repository-wide with a `.gitattributes`~~ — Q8, ANSWERED A on 2026-10-14.**
    `core.autocrlf` is `true`. The one `.gitattributes` that exists (ST-57) pins only `scripts/vendor/**` to LF so
    vendored hashes are checkout-independent, and that vendor-only rule is the owner's answer: no repository-wide
@@ -597,6 +599,9 @@ governance until a sign-off exists.
 13. **Whether the prohibitive form of human oversight is item 48's, whether the general intervention capability and Standard 11's halt
    record are one rule, and whether a model-instance reviewer may count as an overseer** — Q23 to Q25. Standard 10 is prose-first and
    ships no rule; each is unanswered.
+13. **Whether to add a structural rule over `dataSources[].provenance`, who owns training-data provenance, and where provenance ends and
+   licensing begins** — Q26 to Q28. Standard 12 follows the boundary review's owner division and does not edit
+   Standard 13's remark; Q27 asks which is intended. All three are unanswered and the standard is prose-first.
 
 ## 9 · The smallest next slice
 
@@ -623,6 +628,8 @@ starting rather than trusting this section. Candidates, all inferred rather than
 any evaluation requirement for systems MachineLearningStandards does not reach, and cannot be answered
 without that pack's maintainers or an owner decision to author on its ground. Q7 and Q23 to Q25 are among the
 open questions that change an already-written standard's wording. Q9 to Q12, Q15 to Q21 are also open
+without that pack's maintainers or an owner decision to author on its ground. Q7, Q18 and Q27 are among the
+open questions that change an already-written standard's wording. Q9 to Q12, Q15 to Q21 and Q26 to Q28 are also open
 (see §8).
 
 Completing the adoption slice does not complete Phase 2: 35 standards, nine missing shards and the
