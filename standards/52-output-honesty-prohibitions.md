@@ -117,12 +117,18 @@ record of that earlier run contradicts or does not support it.
 ### R3 — Do not instruct the model to claim an operation or to conceal a failure
 
 **A system's prompt, template or configuration MUST NOT instruct the model to state or imply an
-operation was performed, or to withhold or deny that an operation failed or could not be done.**
+operation was performed irrespective of whether it was, or to withhold or deny that an operation
+failed or could not be done.**
 
 Unlike R1 and R2, this prohibition is on text a reader of the repository can see. A prompt line that
 tells the model to confirm every request as completed, never to mention a tool error, or to say a lookup
 was done when it is queued, is a decision to produce R1's violation, taken in advance and applied to
 every interaction.
+
+An instruction that ties the claim to the outcome is not within R3: "after the send tool succeeds, tell the
+user the message was sent" asks for a claim R1 would find true, and a prompt that tells the model to report
+a failure as a failure is what R3 wants. The first limb reaches an instruction to claim completion whatever
+happened.
 
 A persona's name, tone and style assert nothing about an operation and are not the subject of R3. An
 instruction to keep a failure's technical detail out of the reply is not an instruction to deny it: the
@@ -204,7 +210,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | --- | --- | --- | --- |
 | R1 | For a sample of interactions, each operation claim matches the operation record for that interaction | An operation claim whose record shows no call, a failed call, a different result, or fewer operations than claimed | A reply that reports a failure, a partial result or a pending action accurately must **not** be faulted for its disappointing content |
 | R2 | For a sample of interactions, each check claim names a check that ran and whose outcome supports it | A check claim with no check in the record, or a check whose outcome contradicts the claim | A reply that says it did **not** verify something must **not** be faulted; nor a reply that states a result with no check claim at all; nor a reply that cites an earlier check as earlier and is supported by the record of that earlier run |
-| R3 | No prompt, template or configuration instructs the model to state an operation done, or to withhold or deny a failure | An instruction to confirm completion regardless of outcome, to never report a failed call, or to deny that an operation could not be done | A persona instruction, and an instruction to omit a failure's technical detail while still saying the operation failed, must **not** be faulted |
+| R3 | No prompt, template or configuration instructs the model to state an operation done irrespective of whether it was, or to withhold or deny a failure | An instruction to confirm completion regardless of outcome, to never report a failed call, or to deny that an operation could not be done | A persona instruction, an instruction to omit a failure's technical detail while still saying the operation failed, and an instruction that ties a completion statement to the operation's success or to a recorded outcome, must **not** be faulted |
 | R4 | No detector, rule, audit finding or generated report in this repository states output honesty from a presence or an absence | A detector, rule, audit finding or report that states a system honest about what it did because a prohibition line, filter, disclaimer or clean sample is present | Reporting that a prohibition line was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads this subject's artifact and no fixture carries
@@ -243,6 +249,9 @@ token and as authored. Specifically authored here, none of it owner-approved:
   re-reading its own answer is not a check on anything but itself.
 - **The ruling that R3 reaches an instruction and not the model's obedience**, and its line between omitting
   a failure's detail and denying the failure.
+- **The qualifier in R3's first limb, "irrespective of whether it was"**, added after review of the merged
+  text so that a truthful, outcome-tied completion instruction is not forbidden, with its negative control.
+  It narrows the requirement; it is authored content, severity `error` as for R3, not owner-approved.
 - **R4**, the constraint on this framework, in the form of the equivalent requirements in
   [Standard 25](25-grounding-and-hallucination-control.md) and Standard 28, extended to absence of a
   finding.
@@ -290,6 +299,8 @@ R3 lists `honesty.no-fabricated-capability-claim`, a later-phase id neither mint
 and the lines drawn above are this document's own and have not been reconciled with them by anyone. **Outside this pack.** EngineeringStandards'
 `ai.no-fabricated-capabilities` is named in Scope as a different subject and nothing here relies on it.
 No ADR covers this standard — `artifacts/adr/` does not exist in this release.
+
+**Open questions.** Q43 and Q58 record the divisions from Standards 28 and 25 and the overlap with Standard 28 R3's second sentence (near-identical to R1 here); neither is answered here.
 
 ## Implementation
 

@@ -306,6 +306,8 @@ then one output reported under both, and which standard records it is not decide
 **Outside this pack:** the boundary review records no adjacent-pack standard for this item, and none is
 cited. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
+**Open questions.** Q58 (overlap with the existing prohibitions and who owns each act), Q59 (whether R1 to R3 are exemptible and whether a rule belongs in the shared `disclosure.` segment) and Q60 (Standard 40's omission against this standard's act) concern this standard; none is answered here.
+
 ## Implementation
 
 **Normative. Nothing about R1 to R3 is enforced; R4 holds today because no such framework output exists.**

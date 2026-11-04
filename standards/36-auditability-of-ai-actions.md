@@ -223,6 +223,8 @@ Not authored here: the posture is the boundary review's.
 
 **Outside this pack.** No adjacent pack's standard is recorded as owning this subject, and nothing was read from one for it. The boundary review's entry for item 40 quotes UIUXDesignStandards' Standard 26 (`26-ai-user-experience.md`) as saying that authorization, attribution and auditability of AI actions belong to EngineeringStandards; that is an adjacency noted here with no claim of ownership and no reconciliation, and no EngineeringStandards standard was read for this document. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
+**Open questions.** Q54 (whether R5's independent reader needs structural separation), Q52 (templates and schemas) and Q53 (rule namespace) concern this standard; none is answered here.
+
 ## Implementation
 
 **Normative. Nothing about R1 to R5 is enforced; R6 holds today only because no such detector exists.**

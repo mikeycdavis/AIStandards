@@ -89,7 +89,7 @@ one has confirmed it.
 
 **A system MUST record, for each kind of output it presents as drawn from sources, whether a citation
 is owed to the reader, and when none is owed, why; and an output of a kind recorded as owing a citation
-MUST carry one.**
+MUST carry one, unless the response states that it has no source to cite.**
 
 A system that answers from retrieved documents, a tool result and its own training in the same
 response has outputs of different kinds, and the reader cannot tell which sentence came from where. A
@@ -115,7 +115,8 @@ output carries no citation, or states that it is from training and names no sour
 carries no citation is R1's decision. That a named source is real is not enough: a real source the
 response never used is a false attribution. Where the project keeps no record of a
 response's inputs, this requirement cannot be assessed for that response, and a reviewer reports it as
-not assessed, not as met.
+not assessed, not as met. A response that abstains or states that it found no
+source carries no citation to give, and R2 forbids inventing one.
 
 ### R3 — Give a citation a locator and, where the source can change, its revision
 
@@ -168,7 +169,7 @@ observation with no verdict, is permitted.
 
 | Requirement | Evidence | Where it lives | Established by |
 | --- | --- | --- | --- |
-| R1 | The per-kind decision on whether a citation is owed, with a reason where none is | A project document the project names; **no manifest or policy field points to it** | Human review |
+| R1 | The per-kind decision on whether a citation is owed, with a reason where none is, and sampled outputs of each kind recorded as owing one | A project document the project names; **no manifest or policy field points to it** | Human review |
 | R2 | A citation set read against the response's recorded inputs for sampled responses | The system's output and the recorded inputs; the inputs record exists only if the project keeps one | Human review |
 | R3 | A sample of citations, each opened at its locator | The system's output and the source | Human review |
 | R4 | A response at generation and the same response at the presentation layer, downstream process or log | The system's data at each boundary | Human review |
@@ -208,7 +209,7 @@ R3).
 
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
-| R1 | Each kind of output presented as drawn from sources has a recorded decision on whether a citation is owed, and a reason where none is | A kind of output presented as drawn from sources with no recorded decision, or "none owed" with no reason, or a recorded "owed" decision whose output carries no citation | A kind of output the system does not present as drawn from sources needs no entry; an output of a kind recorded "none owed, with reason" must **not** be faulted for carrying no citation |
+| R1 | Each kind of output presented as drawn from sources has a recorded decision on whether a citation is owed, and a reason where none is | A kind of output presented as drawn from sources with no recorded decision, or "none owed" with no reason, or a recorded "owed" decision whose output carries no citation and does not say it has no source to cite | A kind of output the system does not present as drawn from sources needs no entry; an output of a kind recorded "none owed, with reason" must **not** be faulted for carrying no citation; a response that states it found no source must **not** be faulted for lacking one |
 | R2 | Each citation in a sampled response names a source among that response's recorded inputs | A citation naming a source that is not among them, including a real one | A response carrying no citation, with the output stated to be from training, is not failed |
 | R3 | Each sampled citation, opened at its locator, reaches the cited material, and carries the revision used where the source can change | A citation that names a document and no locator where the source supports one, or an editable source with no revision | A whole-item identifier for a source the system holds no finer identifier for is complete |
 | R4 | Each citation is present at the boundary, on the output or span it was generated for | A citation missing, merged or moved between generation and the boundary | An output the system withheld, or passed on as lacking a citation, because the attachment could not be kept is not failed |
@@ -244,7 +245,10 @@ owner-approved:
   "none owed" is a legitimate answer with a reason. Added after review of the merged text: the second
   limb, that an output of a kind recorded as owing a citation MUST carry one (an owed-but-absent
   citation), which answers an unresolved Codex P2 on PR 142. It is new authored content, severity
-  `warning` as for R1, not owner-approved.
+  `warning` as for R1, not owner-approved. Also added after that review, none of it a requirement text change
+  except the exception noted: the exception in R1's second limb (a response that states it has no source to
+  cite), the paragraph saying a recorded "owed" decision binds the output, and the sentence in R2 that a response
+  whose inputs are not recorded is reported as not assessed rather than met (a reporting rule, not owner-approved).
 - **R2 in full**: that a citation must name a source among the response's inputs, and that a real
   source the response did not use is a false attribution.
 - **R3 in full**: the locator, and the revision where the source can change, with the allowance for a

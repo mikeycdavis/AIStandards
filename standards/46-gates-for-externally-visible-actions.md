@@ -99,11 +99,9 @@ not speak as the organisation, or may not publish to that channel, is a signatur
 *Recorded*: the elements are those Standard 45 R3 names, with content and audience in place of
 arguments.
 
-A gate the system can satisfy itself, or that lets the action through when the approval cannot be
-obtained, is not a gate for the purposes of this requirement. This repeats the reasoning of [Standard 45](45-approval-gates.md)
-R5 and R6, which are worded for "the approval its own action requires" and for any approval mechanism that is
-unavailable, and are not worded for irreversible actions only; this requirement adds no rule of its own beyond
-the approver's authority and the recording. Whether those two rules should be read as reaching an approval that
+[Standard 45](45-approval-gates.md) R5 and R6 are worded for "the approval its own action requires" and for any
+approval mechanism that is unavailable, and are not worded for irreversible actions only; this requirement adds
+no rule of its own beyond the approver's authority and the recording. Whether those two rules should be read as reaching an approval that
 Standard 45 R3 does not require is open question Q55.
 
 ### R3 — The approval binds the content and the audience it was given for
@@ -219,7 +217,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Each tool classed externally visible has its audience and its channel written down | An externally visible tool with no audience, or no channel | A tool classed `none` or `reversible` that names no audience must **not** be faulted |
-| R2 | Each externally visible action executed has a record of an approver with authority over the name and channel, a time, and the content and audience approved | An externally visible action that took effect with no matching record; an approver with no authority over the name or channel; a gate the system satisfies itself or that opens when approval is unavailable | An action whose audience is solely the party that invoked the system must **not** be faulted for lacking an approval |
+| R2 | Each externally visible action executed has a record of an approver with authority over the name and channel, a time, and the content and audience approved | An externally visible action that took effect with no matching record; an approver with no authority over the name or channel | An action whose audience is solely the party that invoked the system must **not** be faulted for lacking an approval |
 | R3 | The content and audience delivered are compared with those recorded as approved | A delivery whose content or audience differs from the record without a new approval | A delivery identical to the approved content, retried after a transient failure, must **not** be faulted |
 | R4 | For each channel, every route the system can use to reach it is listed and gated | A route to a gated channel that bypasses the gate | A tool that cannot reach any externally visible channel must **not** be faulted for having no gate |
 | R5 | The classification record for each externally visible tool is read for the stated reason | A record that omits or relaxes the gate because the action can be retracted, deleted or corrected | A record that notes retractability as a fact, with the gate in place, must **not** be faulted |

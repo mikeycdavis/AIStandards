@@ -470,7 +470,9 @@ Standard 28 R2 and R3 carry MUST NOT limbs that overlap the prohibition face (it
 [Standard 52](../../standards/52-output-honesty-prohibitions.md); it was unwritten when this question was raised),
 and "I did X" claims are also statements of the system's own state (Standard 25
 Scope). Standard 52 is the owner of the prohibition face and states its own four requirements; the
-division is recorded open there (Q58). **Not resolved here, because it concerns two standards' shared ground.**
+division is recorded open there (Q58). Since the repair of Standard 28 R3, its second sentence (an action presented
+as done that was not) and Standard 52 R1 state near-identical prohibitions at the same severity; the overlap is
+named here and in Q58, not resolved. **Not resolved here, because it concerns two standards' shared ground.**
 **Impact if unanswered:** one act may be reported under two standards. Recommended: Standard 28
 keeps the positive duty and its limbs, and Standard 52 holds the faces Standard 28 does not state, by
 reference.
@@ -490,12 +492,12 @@ for a prompt, the stricter identifier rule over the assembled whole (R1) and the
 as a revision (R5); 31 owns run parameters and repeat claims; 32 owns the rollback target and procedure.
 Identity is therefore shared ground between 29 R1 and 30 R1 and R5, not owned by one: the two are written
 to be met together and cross-reference each other, and 29's alias clause and 30 R5 are aligned (the revision
-is what the alias resolved to). Two further overlaps are cross-referenced and not owned by either side, and no order between them is stated:
-29 R4 against Standard 20 R1 (a re-run observing a change is one way an upstream change becomes known; whether
-a statement under 20 R1 that no re-run is made relieves a change learned of by other means is not decided here),
-and 31 R3 against Standard 20 R3. These two are in tension: 31 R3 does not allow a difference inside the
-variation to be called a change, and 20 R3 requires a pass or fail against a criterion fixed before the run,
-which may sit inside the variation; which yields is not decided here. The boundary review's O record for item 29 is a generic search and
+is what the alias resolved to). Two further overlaps are cross-referenced and not owned by either side: 29 R4 against Standard 20 R1 (a re-run
+observing a change is one way an upstream change becomes known) and 31 R3 against Standard 20 R3. Standards 29
+and 31 each state an order in their own text (29 R4 says a no-re-run statement under 20 R1 does not relieve it;
+31 R3 says 20 R3 governs the pass or fail recorded and 31 R3 the report's wording); Standard 20 states none. Those
+orders are authored in 29 and 31, unconfirmed by anyone, and 31 R3 and 20 R3 remain in tension where a criterion
+sits inside the variation. The boundary review's O record for item 29 is a generic search and
 does not address MachineLearningStandards dataset versioning or reproducibility. **Not resolved here,
 because the lines are authored and the posture check is a human recheck.** **Impact if unanswered:** shared
 ground may be stated twice. Recommended: keep the split as drawn.
@@ -602,7 +604,7 @@ Standard 48 R1 and R2 overlap `misuse.safety-controls-not-disabled`, `gate.no-se
 Standard 48 R1 is provisional pending Q23. Standard 49 R1 and R2 are new authored limbs beside Standard
 13's three privacy rules (Q12 open); Standard 50 R1 overlaps Standard 17 R4 (Q19 open) and Standard 20 R3, R4 and
 R6 (the regression run's criterion and verdict, against the reported result's instrument version); Standards 52 and
-53 divide ground with Standards 28 (53 R1 beside 28 R4), 25 and 40. **Not resolved here, because the owner holds the placement
+53 divide ground with Standards 28 (53 R1 beside 28 R4, and 52 R1 beside 28 R3's second sentence), 25 and 40. **Not resolved here, because the owner holds the placement
 questions Q9, Q12, Q19 and Q23 open (option C, 2026-10-15) and no rule was moved.** **Impact if
 unanswered:** one act may be reported under two standards. Recommended: one owner per act, decided with
 those questions.

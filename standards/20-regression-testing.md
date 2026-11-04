@@ -81,9 +81,9 @@ It does **not** cover, and claims none of the ground of:
   standard says a change is tested; how it is approved, recorded in a lineage or reversed is theirs.
 - **Reproducibility under nondeterminism** (item 31, [Standard 31](31-reproducibility-under-nondeterminism.md)). A hosted model's answers may differ
   between two runs of one version; how that difference enters a failure criterion is
-  [Standard 31](31-reproducibility-under-nondeterminism.md)'s subject, and R3 here asks only that the project say what it did. The
-  two requirements meet where a criterion sits inside the observed variation; which governs there is not stated
-  by this standard and is held open in Q45.
+  [Standard 31](31-reproducibility-under-nondeterminism.md)'s subject, and R3 here asks only that the project say what it did. Standard 31 R3
+  states how the two are ordered where a criterion sits inside the observed variation; this standard states no
+  order, and that ordering is unconfirmed (Q45).
 - **Prohibitions on tampering with or fabricating results** (item 50, Evaluation Integrity
   Prohibitions, written as [Standard 50](50-evaluation-integrity-prohibitions.md)). R4's refusal of a criterion changed after the run is a requirement of this
   standard, not a statement of what item 50 prohibits; Standard 50 R1 overlaps R3, R4 and R6 here and says so (Q58); Q19 is open and not answered here.
