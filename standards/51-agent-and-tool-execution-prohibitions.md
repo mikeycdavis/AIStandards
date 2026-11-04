@@ -75,11 +75,11 @@ The boundary with this standard's neighbours, none of whose ground is claimed:
   `gate.no-self-approval` is adjacent to R1 here.
 - **[Standard 9](09-misuse-and-abuse-prevention.md)** governs deliberate misuse of a system working as
   designed. An agent made to act on content that should not have directed it is R2's.
-- **Items whose ground is not claimed** (items 22 and 24 are written, as [Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md); items 35, 47 to 50 and 52 to 53 are unwritten): item 22, Tool and Function-Call Security (the
+- **Items whose ground is not claimed** (items 22, 24, 35 and 48 to 53 are written; item 47 is unwritten): item 22, Tool and Function-Call Security (the
   security of tools themselves, and of their outputs as inputs); item 24, Retrieval and Context Supply
-  Chain (where retrieved content comes from and whether it can be trusted); item 35, Red Teaming (how
+  Chain (where retrieved content comes from and whether it can be trusted); item 35, Red Teaming ([Standard 35](35-red-teaming.md); how
   the exercise R1's rule names is run and recorded); and the sibling prohibitions on other bullets,
-  items 47 to 50 and 52 to 53.
+  items 47 to 50 and 52 to 53 ([Standard 48](48-safety-and-oversight-prohibitions.md), [Standard 49](49-data-and-privacy-prohibitions.md), [Standard 50](50-evaluation-integrity-prohibitions.md), [Standard 52](52-output-honesty-prohibitions.md) and [Standard 53](53-disclosure-and-deception-prohibitions.md); item 47 is unwritten).
 - **MathematicsStandards** also uses the `agent.` rule-id segment, for `agent.explainable-findings` and
   `agent.refusal-on-invariant`. Neither was read for this document, and nothing here restates, relies
   on, or describes their ground. No full id collides.
@@ -431,7 +431,7 @@ not-applicable declaration for one.
 | Proposed | Why it is not here |
 | --- | --- |
 | A data-flow check that content from a retrieval call, a fetch or an upload does not reach the instruction position of a model request, for R2's rule | Phase 3 at the earliest. It needs data-flow analysis across request construction, and it can reach only R2's structural half; Standard 23 R5 forbids presenting its result as injection resistance |
-| A rule examining a committed adversarial exercise record for R1's rule, and for the rules whose notes promise one | Would give R1 a route to partial evidence for the exercised inputs. How such exercises are run and recorded is item 35's subject, and item 35 is unwritten |
+| A rule examining a committed adversarial exercise record for R1's rule, and for the rules whose notes promise one | Would give R1 a route to partial evidence for the exercised inputs. How such exercises are run and recorded is [Standard 35](35-red-teaming.md)'s subject |
 | Withdrawal of a not-applicable declaration when an agent detector observes the subject | Follows automatically from `checkApplicabilityContradictions()` once any detector above exists; nothing to build for this standard alone |
 
 **What no future release will implement.** A detector or report that states an agent cannot modify

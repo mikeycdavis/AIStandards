@@ -61,9 +61,10 @@ It does **not** cover, and claims none of the ground of:
   standard does not restate them and adds no second finding for the same output**; see Relationship.
 - **Whether a statement about the world is true or supported**, which [Standard 25](25-grounding-and-hallucination-control.md)
   owns, including its R4 for a generated referent presented as resolved.
-- **Whether a system says it does not know** (item 26), **how a source is attributed** (item 27), and
+- **Whether a system says it does not know** ([Standard 26](26-uncertainty-expression-and-abstention.md)), **how a
+  source is attributed** ([Standard 27](27-citation-and-source-attribution.md)), and
   **whether a user is told an AI is involved or a person is impersonated** ([Standard 40](40-user-disclosure-of-ai-involvement.md)
-  and item 53).
+  and [Standard 53](53-disclosure-and-deception-prohibitions.md)).
 - **Whether an action needs approval before it takes effect**, which [Standard 45](45-approval-gates.md)
   owns. A system that says an action is *pending* approval is not claiming it done.
 - **How a claim is presented**, including its accessibility, which [Standard 7](07-boundary-with-adjacent-standards.md)
@@ -105,7 +106,13 @@ having reasoned carefully; a model that re-reads its own answer has not verified
 itself, and a check claim that names no more than that is not supported by it.
 
 Resolving a generated referent before presenting it as real is Standard 25 R4's. R2 reaches every other
-check claim and does not restate that requirement.
+check claim and does not restate that requirement. [Standard 25](25-grounding-and-hallucination-control.md) R3 asks that
+a system claiming grounding apply a check of the output against its basis; R2 here asks only that a check the
+system says it ran did run, and neither restates the other.
+
+A reply that reports an earlier check as earlier, and cites it as such ("last night's scheduled run passed"), does
+not claim that a check ran in this interaction. It is a claim about a recorded operation and falls under R1 if the
+record of that earlier run contradicts or does not support it.
 
 ### R3 — Do not instruct the model to claim an operation or to conceal a failure
 
@@ -160,6 +167,9 @@ neither restates the other.
 | R3 | The prompts, templates and configuration that reach the model, read for instructions of the kind R3 names | Project code, prompt files and configuration | Human review |
 | R4 | The absence of any detector, rule, audit finding or generated report that reports output honesty from a presence or an absence | This repository's own detectors and tests | Code review; see Implementation |
 
+A project that keeps no operation record has nothing to pair a claim with. That is a finding about the record, as the
+paragraph on evidence below says; it is not a finding that every claim was false.
+
 Evidence for R1 and R2 is a pairing of what was said with what was done, and establishes the behaviour on
 the interactions examined. It says nothing about the next one. The one requirement a reader can check
 from the checkout alone is R3, and it checks an instruction, not the model's conduct.
@@ -193,7 +203,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | For a sample of interactions, each operation claim matches the operation record for that interaction | An operation claim whose record shows no call, a failed call, a different result, or fewer operations than claimed | A reply that reports a failure, a partial result or a pending action accurately must **not** be faulted for its disappointing content |
-| R2 | For a sample of interactions, each check claim names a check that ran and whose outcome supports it | A check claim with no check in the record, or a check whose outcome contradicts the claim | A reply that says it did **not** verify something must **not** be faulted; nor a reply that states a result with no check claim at all |
+| R2 | For a sample of interactions, each check claim names a check that ran and whose outcome supports it | A check claim with no check in the record, or a check whose outcome contradicts the claim | A reply that says it did **not** verify something must **not** be faulted; nor a reply that states a result with no check claim at all; nor a reply that cites an earlier check as earlier and is supported by the record of that earlier run |
 | R3 | No prompt, template or configuration instructs the model to state an operation done, or to withhold or deny a failure | An instruction to confirm completion regardless of outcome, to never report a failed call, or to deny that an operation could not be done | A persona instruction, and an instruction to omit a failure's technical detail while still saying the operation failed, must **not** be faulted |
 | R4 | No detector, rule, audit finding or generated report in this repository states output honesty from a presence or an absence | A detector, rule, audit finding or report that states a system honest about what it did because a prohibition line, filter, disclaimer or clean sample is present | Reporting that a prohibition line was *found*, as an observation with no verdict, is permitted |
 
@@ -263,7 +273,7 @@ not decided here.
 R4 governs a generated referent presented as real. R2 here leaves that case to it. Where an output is
 both an operation claim and a statement of the system's own state relied on as fact, the two meet; that
 is recorded open. [Standard 40](40-user-disclosure-of-ai-involvement.md) governs whether a user is told an
-AI is involved, and item 53 is provisionally the owner of deception about whether a person or an AI is
+AI is involved, and [Standard 53](53-disclosure-and-deception-prohibitions.md) is provisionally the owner of deception about whether a person or an AI is
 the source; neither is restated. [Standard 45](45-approval-gates.md) governs whether an action takes
 effect; a report that it is pending is accurate and is not R1's concern. [Standard 33](33-ai-observability.md)
 governs what a call record carries; the operation record R1 and R2 rely on is the project's, and nothing
@@ -275,8 +285,9 @@ R3 and R4 govern the applicability and non-lowering language used above, [Standa
 R3 is the requirement the Tests section answers, and [Standard 7](07-boundary-with-adjacent-standards.md)
 R3 lists `honesty.no-fabricated-capability-claim`, a later-phase id neither minted nor claimed here.
 
-Items 26, 27 and 53 are named in Scope and are not restated; they are unwritten in this release, and the
-lines drawn above are provisional until they are. **Outside this pack.** EngineeringStandards'
+[Standard 26](26-uncertainty-expression-and-abstention.md), [Standard 27](27-citation-and-source-attribution.md) and
+[Standard 53](53-disclosure-and-deception-prohibitions.md) are named in Scope and are not restated; they are written,
+and the lines drawn above are this document's own and have not been reconciled with them by anyone. **Outside this pack.** EngineeringStandards'
 `ai.no-fabricated-capabilities` is named in Scope as a different subject and nothing here relies on it.
 No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 

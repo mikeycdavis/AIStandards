@@ -39,7 +39,7 @@ as evidence inside that case; and the limit of what this framework can say about
 
 "Safety" here means harm to people, property, or the environment arising from the system operating as
 intended or failing to — a wrong, missing, late, or excessive output or effect. It does **not** cover,
-and this standard claims none of the ground of, the following; of these, items 9 and 10 are written as [Standard 9](09-misuse-and-abuse-prevention.md) and [Standard 10](10-human-oversight-and-intervention.md) and the others are unwritten in this release:
+and this standard claims none of the ground of, the following; of these, items 9, 10, 34, 35 and 48 are written as [Standard 9](09-misuse-and-abuse-prevention.md), [Standard 10](10-human-oversight-and-intervention.md), [Standard 34](34-ai-incident-response.md), [Standard 35](35-red-teaming.md) and [Standard 48](48-safety-and-oversight-prohibitions.md):
 
 - **Item 9, Misuse and Abuse Prevention** — which controls a system must have against deliberate
   misuse. It already owns `misuse.safety-controls-not-disabled`. A safety case may cite a misuse
@@ -197,7 +197,7 @@ recorded. It does not establish the property in general, and it is not treated h
 Stated anyway, at `required` level and `not-evaluable` validation type, so that the requirement is
 visible in every verdict rather than implied by the presence of a case. **It is `required` and not
 `forbidden` by decision:** the prohibitive form of AI safety requirements is item 48's, which is
-class `A`, unwritten, and listed by the specification as the negative face of this item's token.
+class `A`, written as [Standard 48](48-safety-and-oversight-prohibitions.md), and listed by the specification as the negative face of this item's token.
 Minting a `forbidden` rule here would take a decision that belongs to that item.
 
 Rule `lifecycle.safety-properties-hold-at-inference`, **not-evaluable**. Its `$notEvaluableNote`
@@ -474,7 +474,7 @@ general mechanisms, not work done for this standard.
 | A manifest field declaring the paths of the safety requirements record and the safety case | A schema change alters what a conformant consuming project may declare. It is a schema-versioning decision, not a side effect of writing this document |
 | A detector that the declared record and case exist | Would establish file presence, which R6 forbids reporting as compliance. At most it could supply audit evidence; with no path field it would have to guess filenames |
 | A check comparing the revisions a case's executed records name against the manifest's `models[].id` | The one part of R4 that is mechanical in principle. It needs a machine-readable citation format this pack does not define, and it would be Phase 3 detector work |
-| A rule checking that an exercise record against the stated properties exists and is current | Would give R5 a route out of `not-evaluable` for the exercised inputs. How such records are produced and kept is item 35's subject, and item 35 is unwritten |
+| A rule checking that an exercise record against the stated properties exists and is current | Would give R5 a route out of `not-evaluable` for the exercised inputs. How such records are produced and kept is [Standard 35](35-red-teaming.md)'s subject |
 
 **What no future release will implement.** A detector that reports a safety case sound, or a safety
 property holding, from the contents of a document. R6 forecloses it, and R5 explains why the evidence

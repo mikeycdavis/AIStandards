@@ -69,7 +69,7 @@ It does **not** cover, and claims none of the ground of:
 
 **Boundary posture O — owned outright.** The boundary review records that no pack in the portfolio
 governs this item. Standard 45 R2 defines the class and leaves it with no requirement of its own;
-Standard 10 records the item as unwritten. This document fills that and no more, and adds no
+Standard 10 recorded the item as unwritten before this standard existed, and now links it. This document fills that and no more, and adds no
 precedent to the review's.
 
 A system whose tool permission manifest declares no tool of impact `externally-visible` and that has no
@@ -100,8 +100,11 @@ not speak as the organisation, or may not publish to that channel, is a signatur
 arguments.
 
 A gate the system can satisfy itself, or that lets the action through when the approval cannot be
-obtained, is not a gate for the purposes of this requirement; Standard 45 R5 and R6 state the same
-reasoning for irreversible actions and are written only for them.
+obtained, is not a gate for the purposes of this requirement. This repeats the reasoning of [Standard 45](45-approval-gates.md)
+R5 and R6, which are worded for "the approval its own action requires" and for any approval mechanism that is
+unavailable, and are not worded for irreversible actions only; this requirement adds no rule of its own beyond
+the approver's authority and the recording. Whether those two rules should be read as reaching an approval that
+Standard 45 R3 does not require is open question Q52.
 
 ### R3 — The approval binds the content and the audience it was given for
 
@@ -273,15 +276,16 @@ Not authored here: the posture and the class definition are the boundary review'
 irreversible actions in R3; this standard supplies the gate for the class Standard 45 classifies and
 names, and deliberately restates none of Standard 45's rules.
 [Standard 10](10-human-oversight-and-intervention.md) owns what the approver is shown and may do, and
-records this item as unwritten. [Standard 11](11-autonomy-levels-and-delegated-authority.md) owns standing
+links this item. [Standard 11](11-autonomy-levels-and-delegated-authority.md) owns standing
 authority; a grant there does not satisfy R2 for a given invocation unless Standard 11 records it as the
 approval, and this standard does not decide that. [Standard 40](40-user-disclosure-of-ai-involvement.md)
 owns whether an audience is told an AI was involved. [Standard 51](51-agent-and-tool-execution-prohibitions.md)
 owns an agent not rewriting its own permissions, which is how a gate would be removed from inside.
 [Standard 1](01-ai-system-manifest.md) holds the declarations R1 reads and declares no audience field;
 none is proposed here. [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the
-Tests section answers. Item 36, Auditability of AI Actions, is Phase 2 and owns the shape of an action record; R2 and
-R3 depend on that record and do not specify it.
+Tests section answers. [Standard 36](36-auditability-of-ai-actions.md) R1 and R2 govern the audit record of an action and the principal and
+authority it names, including a reference to the approval record under Standard 45 R3; R2 and R3 here depend on
+that record and do not specify it. Standard 36 leaves the form of the record to the project.
 
 **Outside this pack.** No adjacent pack's standard is recorded for this subject.
 UIUXDesignStandards owns how an approval is presented, as the boundary review records for Standard 45. No ADR

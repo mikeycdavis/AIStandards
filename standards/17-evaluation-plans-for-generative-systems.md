@@ -131,9 +131,9 @@ The boundary with this standard's other neighbours, none of whose ground is clai
   different figure from the same subject; R2 asks that the suite can be run, not that its figures
   repeat, and Standard 7 R1 records remote-endpoint nondeterminism as this pack's addition to
   MachineLearningStandards' reproducibility ground.
-- **Item 35, Red Teaming** (unwritten) — adversarial exercises, which may be evaluations and whose
+- **Item 35, Red Teaming** (written as [Standard 35](35-red-teaming.md)) — adversarial exercises, which may be evaluations and whose
   conduct is item 35's subject.
-- **Item 50, Evaluation Integrity Prohibitions** (unwritten, class A) — see below.
+- **Item 50, Evaluation Integrity Prohibitions** (written as [Standard 50](50-evaluation-integrity-prohibitions.md), class A) — see below.
 - **EngineeringStandards**, whose `testing.no-fabricated-results` forbids reporting test, build or
   compilation results for a run that did not happen. R5's rule records it as precedent.
 
@@ -795,11 +795,10 @@ model-adjacent stores. Nothing here restates either.
 [Standard 21](21-prompt-and-instruction-security.md) R1 makes prompts versioned artifacts, which is
 what gives R6's prompt revision something to name.
 
-Items this standard defers to, by specification number (items 18, 19, 20, 29, 30 and 31 are written, as [Standard 18](18-benchmark-integrity-and-contamination.md), [Standard 19](19-robustness-evaluation.md), [Standard 20](20-regression-testing.md), [Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 30](30-model-and-prompt-lineage.md) and [Standard 31](31-reproducibility-under-nondeterminism.md); items 4, 35 and 50 are unwritten): item 4 (exceptions); item 18 (benchmark integrity and contamination); item 19 (what an
-evaluation must cover); item 20 (when regressions are tested and what fails a change, and the open
-question of R3's rule); items 29, 30 and 31 (versioning, lineage, and nondeterminism of re-runs);
-item 35 (adversarial exercises); and item 50 (evaluation integrity prohibitions, whose relationship to
-the two `forbidden` rules here the specification does not record). Item 20 is written: [Standard 20](20-regression-testing.md) (when regressions are tested and what fails a change, and the open question of R3's rule).
+Item 4 (exceptions) is the only item this standard defers to that is unwritten. Items 18, 19, 29, 30, 31, 35 and 50 are written: [Standard 18](18-benchmark-integrity-and-contamination.md) (benchmark integrity and contamination), [Standard 19](19-robustness-evaluation.md) (what an
+evaluation must cover), [Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 30](30-model-and-prompt-lineage.md) and [Standard 31](31-reproducibility-under-nondeterminism.md) (versioning, lineage, and nondeterminism of re-runs),
+[Standard 35](35-red-teaming.md) (adversarial exercises) and [Standard 50](50-evaluation-integrity-prohibitions.md) (evaluation integrity prohibitions, whose relationship to
+the two `forbidden` rules here the specification does not record and Q19 holds open). Item 20 is written: [Standard 20](20-regression-testing.md) (when regressions are tested and what fails a change, and the open question of R3's rule).
 
 Outside this repository: **MachineLearningStandards** owns metric selection, uncertainty, comparison,
 test-set separation and fabricated metrics for the evaluations it reaches. Its `standards/12-metric-selection.md`

@@ -112,13 +112,13 @@ Exit codes are process semantics. The verdict is the `status` field of the JSON 
 [34 AI Incident Response](standards/34-ai-incident-response.md) ·
 [35 Red Teaming](standards/35-red-teaming.md) ·
 [36 Auditability of AI Actions](standards/36-auditability-of-ai-actions.md) ·
-[43 Environmental Impact Accounting](standards/43-environmental-impact-accounting.md) ·
 [37 Fairness and Harm Distribution](standards/37-fairness-and-harm-distribution.md) ·
 [38 Accessibility of AI Features](standards/38-accessibility-of-ai-features.md) ·
 [39 Transparency and System Documentation](standards/39-transparency-and-system-documentation.md) ·
 [40 User Disclosure of AI Involvement](standards/40-user-disclosure-of-ai-involvement.md) ·
 [41 Inference Cost and Budget Control](standards/41-inference-cost-and-budget-control.md) ·
 [42 Latency Budgets for AI Interactions](standards/42-latency-budgets-for-ai-interactions.md) ·
+[43 Environmental Impact Accounting](standards/43-environmental-impact-accounting.md) ·
 [44 Operational Resilience, Degradation, and Provider Portability](standards/44-operational-resilience-degradation-and-provider-portability.md) ·
 [45 Approval Gates](standards/45-approval-gates.md) ·
 [46 Gates for Externally Visible Actions](standards/46-gates-for-externally-visible-actions.md) ·

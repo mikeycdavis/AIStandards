@@ -195,7 +195,7 @@ It was stated under Standard 23 until the owner assigned it to 51 on 2026-10-05.
 the world — this standard reduces the chance of the first, and that one bounds the consequence.
 [Standard 5](05-verdict-vocabulary.md) governs how R5's `not-evaluable` status is reported: beside
 the verdict, changing neither status nor score.
-Standard 35, Red Teaming *(Phase 2, not yet written)*, will own the exercise that is R5's only real
+[Standard 35](35-red-teaming.md), Red Teaming, owns the exercise that is R5's only real
 evidence.
 
 Outside this repository: nothing. This standard has no counterpart in any adjacent pack, and defers

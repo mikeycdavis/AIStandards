@@ -50,7 +50,7 @@ It does **not** cover, and claims none of the ground of:
 - **Item 40, User Disclosure of AI Involvement**: a document for a reader of the repository is not a
   disclosure to a user.
 - **The manifest, its schema and its pinned identifiers**, which are
-  [Standard 1](01-ai-system-manifest.md); and **items 37 and 38** (unwritten on this base).
+  [Standard 1](01-ai-system-manifest.md); and **items 37 and 38** ([Standard 37](37-fairness-and-harm-distribution.md) and [Standard 38](38-accessibility-of-ai-features.md)).
 
 **Boundary posture B — baseline, with a named half deferred.** The boundary review's owner entry reads
 "MachineLearningStandards for model cards and limitations; AIStandards for system-level
@@ -188,7 +188,7 @@ There is no policy-level exception mechanism in this release, because no rule ex
 An incident in which the system did something its description said it could not invalidates the
 description until it is re-examined. The code changes in review and the description does not: nobody's
 pull request fails for leaving a document behind. Nothing in this release detects the transition. Incident handling is item 34's subject
-(AI Incident Response, unwritten in this release).
+([Standard 34](34-ai-incident-response.md), AI Incident Response).
 
 ## Additions this standard makes beyond the source
 
@@ -214,8 +214,7 @@ them. [Standard 25](25-grounding-and-hallucination-control.md) is the closest si
 [Standard 6](06-standard-structure-and-rule-identity.md) R3 (each requirement carries a falsifier or is
 declared not-evaluable) is what the Tests section answers.
 
-Items 34, 37, 38 and 40 are unwritten on this base; the lines drawn above are provisional until they
-are. **Outside this pack:** MachineLearningStandards' `25-model-limitations.md` is named in Scope with
+Items 34, 37, 38 and 40 are written ([Standard 34](34-ai-incident-response.md), [Standard 37](37-fairness-and-harm-distribution.md), [Standard 38](38-accessibility-of-ai-features.md) and [Standard 40](40-user-disclosure-of-ai-involvement.md)); the lines drawn above were drawn before some of them existed and are unconfirmed by anyone. **Outside this pack:** MachineLearningStandards' `25-model-limitations.md` is named in Scope with
 what the boundary review recorded; this is a deference, not a crosswalk, and no maintainer has
 confirmed it. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 

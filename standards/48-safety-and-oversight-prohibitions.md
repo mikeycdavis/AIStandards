@@ -55,9 +55,9 @@ Two terms are this standard's:
 
 **Where each requirement reaches.** R1 reaches a system with an overseer. R2 and R3 reach a system with
 a stated safety requirement. R4 constrains this framework and reaches no project. A system with none of
-the first two subjects may declare so under [Standard 2](02-ai-risk-tiering-and-applicability.md) R4,
-with a reason and a `revisitWhen`, and the declaration is the only thing that records the subject's
-absence.
+the first two subjects may declare the matter not-applicable in its own documents; this standard ships
+no catalog rule, so there is no [Standard 2](02-ai-risk-tiering-and-applicability.md) R4 disposition to
+attach it to.
 
 It does **not** cover, and claims none of the ground of:
 
@@ -74,7 +74,8 @@ It does **not** cover, and claims none of the ground of:
   instruction.** [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1 and R2.
 - **Whether a safety property holds while the system runs.** Standard 8 R5. This standard concerns
   what the system must not do to the controls, not whether the property holds.
-- **Honesty and disclosure.** Items 52 and 53, unwritten.
+- **Honesty and disclosure.** [Standard 52](52-output-honesty-prohibitions.md) and
+  [Standard 53](53-disclosure-and-deception-prohibitions.md).
 
 **Boundary posture O — owned here.** The boundary review lists item 48 among the items for which it
 searched the nine packs' rule files and standard filenames and found no owner. That entry is the one
@@ -105,6 +106,14 @@ one decision: R5 forbids discarding, reversing or retrying past an overseer's us
 capability. R1 here concerns the capability itself, before any use of it. Where one act breaches both,
 both apply.
 
+The division from the other standards that touch R1 is the same. [Standard 11](11-autonomy-levels-and-delegated-authority.md)
+R6 (`oversight.no-authority-beyond-declared-tier`) concerns obtaining or acting on authority beyond the declared
+tier, including continuing past a refused or unavailable approval; R1 concerns an act on the intervention path, and
+an act can do both, in which case each applies. [Standard 45](45-approval-gates.md) R5 and R6
+(`gate.no-self-approval`, `gate.fail-closed`) concern an approval the system supplies for itself and a gate that
+opens when its mechanism fails; where the same act also removes or empties an overseer's decision point, R1
+applies as well. None of the three is restated or changed here.
+
 **A repository cannot show that R1 holds.** What a reviewer can read — which tools the system holds,
 whether its credentials can write to the stop flag, the notification route or the intervention log —
 narrows the question and does not answer it, for the reason R1 of Standard 51 gives: whether the system
@@ -126,7 +135,13 @@ It does not restate Standard 9 R2, which concerns a project's configuration turn
 provider's own content controls and is checkable in part as a literal in a file; R2 here concerns an
 act of the system on any control a requirement depends on, and is not so checkable. It does not restate
 Standard 51 R1, which names three objects: the system prompt, tool permissions and step budget. A
-control may be none of those. An act that breaches more than one of these applies each.
+control may be none of those. An act that breaches more than one of these applies each. The same holds for
+[Standard 45](45-approval-gates.md) R5 and R6 (`gate.no-self-approval`, `gate.fail-closed`): an approval gate
+that the system satisfies for itself, or that opens when its mechanism fails, is those rules' subject; where the
+gate is also a safety control that a stated safety requirement depends on, the same act is an R2 act too, and
+each applies. [Standard 11](11-autonomy-levels-and-delegated-authority.md) R6
+(`oversight.no-authority-beyond-declared-tier`) concerns authority the system's tier does not grant, not the
+integrity of a control, and is related to R2 only where one act does both.
 
 As with R1, a repository can show that a control exists and what can write to it, and cannot show what
 the system did to it. Standard 8 R5 states that a safety property holds at inference time and is
@@ -317,12 +332,16 @@ its overseers. Neither text is changed by this one. Their R6 and R12 are the for
 [Standard 9](09-misuse-and-abuse-prevention.md) R2, [Standard 11](11-autonomy-levels-and-delegated-authority.md)
 R6, [Standard 45](45-approval-gates.md) R5 and R6, and
 [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1 each overlap one requirement here, as set
-out under that requirement. Each keeps its rule unchanged.
+out under R1 and R2 above, with [Standard 10](10-human-oversight-and-intervention.md) R5 under R1. Each keeps its rule unchanged.
 
-Unwritten items this standard defers to, by specification number: item 46 (gates for externally visible
-actions); items 34 and 36 (the records of what the system did, which R1 and R2 rely on for evidence);
-item 35 (red teaming); item 47 (the umbrella for prohibitions not specific to one subject); and items
-49 to 50 and 52 to 53, the sibling prohibitions on other bullets.
+Written standards this one defers to: [Standard 46](46-gates-for-externally-visible-actions.md) (gates for
+externally visible actions); [Standard 34](34-ai-incident-response.md) and
+[Standard 36](36-auditability-of-ai-actions.md) (the records of what the system did, which R1 and R2 rely on
+for evidence); [Standard 35](35-red-teaming.md) (red teaming); and the sibling prohibitions on other
+bullets, [Standard 49](49-data-and-privacy-prohibitions.md), [Standard 50](50-evaluation-integrity-prohibitions.md),
+[Standard 52](52-output-honesty-prohibitions.md) and [Standard 53](53-disclosure-and-deception-prohibitions.md).
+Item 47 (the umbrella for prohibitions not specific to one subject) is the only item named here that is still
+unwritten.
 
 **Outside this pack.** The boundary review lists no adjacent pack's standard for this subject.
 
@@ -347,7 +366,7 @@ as a capability.
 
 | Requirement | What would be needed | Why it is not here |
 | --- | --- | --- |
-| R1, R2 | A place to name an intervention path and a safety control, and a committed record of an exercise against them | Both schemas are closed; a change is a schema-versioning decision outside this slice. How such exercises are run and recorded is item 35's, and item 35 is unwritten |
+| R1, R2 | A place to name an intervention path and a safety control, and a committed record of an exercise against them | Both schemas are closed; a change is a schema-versioning decision outside this slice. How such exercises are run and recorded is [Standard 35](35-red-teaming.md)'s |
 | R3 | A check that a change to the stated safety requirements carries a decision record | Needs a place where the stated requirements are declared; none exists |
 | R4 | A test asserting no detector, rule, audit finding or report states these prohibitions respected from an absence | None exists; it would be a regression guard even now, and is proposed here, not built |
 | Rule ids | Reserved-namespace ids and a shard, once the owner decides the placement (Q9, Q23) | Not decided; this standard names none |

@@ -81,13 +81,13 @@ The boundary with this standard's neighbours, none of whose ground is claimed:
   to act on content that should not have directed it is [Standard 51](51-agent-and-tool-execution-prohibitions.md) R2's.
 - **[Standard 10](10-human-oversight-and-intervention.md)** (Human Oversight and Intervention),
   whose ground is not claimed here.
-- **Items whose ground is not claimed** (items 16, 22 and 24 are written, as [Standard 16](16-access-control-for-models-context-and-tools.md), [Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md); items 35 and 36 are unwritten): item 16,
+- **Items whose ground is not claimed** (items 16, 22 and 24 are written, as [Standard 16](16-access-control-for-models-context-and-tools.md), [Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md); items 35, 36, 41 and 51 are also written, as noted below): item 16,
   Access Control for Models, Context, and Tools (who may use a model, read a context or invoke a tool —
   R2 asks only whether an agent's credentials exceed its declared tools); item 22, Tool and
   Function-Call Security (the security of tools themselves, and of their outputs as inputs); item 24,
   Retrieval and Context Supply Chain (where retrieved content comes from and whether it can be
-  trusted — [Standard 51](51-agent-and-tool-execution-prohibitions.md) R2 asks only that it never acquire instruction authority); item 35, Red Teaming (how the
-  exercise [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1's rule names is run and recorded); item 36, Auditability of AI Actions; and item 51, Agent and Tool Execution Prohibitions, which is written and states the two prohibitions
+  trusted — [Standard 51](51-agent-and-tool-execution-prohibitions.md) R2 asks only that it never acquire instruction authority); item 35, Red Teaming ([Standard 35](35-red-teaming.md); how the
+  exercise [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1's rule names is run and recorded); item 36, Auditability of AI Actions ([Standard 36](36-auditability-of-ai-actions.md)); and item 51, Agent and Tool Execution Prohibitions, which is written and states the two prohibitions
   this document stated until 2026-10-05 (below). Item 41, Inference Cost and Budget Control, is also
   written: [Standard 41](41-inference-cost-and-budget-control.md) owns cost and token budgets, which R1's step budget may share a mechanism with.
 - **MathematicsStandards** also uses the `agent.` rule-id segment, for `agent.explainable-findings` and
@@ -508,7 +508,7 @@ standard as the owner of sandboxing, which this document does not address; see S
 [Standard 10](10-human-oversight-and-intervention.md) (the general oversight obligation) is cited under
 Scope.
 
-Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 35 (the exercise [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1's rule names); item 36 (the record of what an
+Item 4 (exceptions) is the only item this standard defers to that is unwritten. Items 35 and 36 are written: [Standard 35](35-red-teaming.md) (the exercise [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1's rule names) and [Standard 36](36-auditability-of-ai-actions.md) (the record of what an
 agent did). Items 16, 22 and 24 are written: [Standard 16](16-access-control-for-models-context-and-tools.md) (who may use a model, context or tool), [Standard 22](22-tool-and-function-call-security.md) (tool security, and whether tool output other than fetched content is within [Standard 51](51-agent-and-tool-execution-prohibitions.md) R2) and [Standard 24](24-retrieval-and-context-supply-chain.md) (retrieval supply chain). Item 41 is written: [Standard 41](41-inference-cost-and-budget-control.md) owns cost and token budgets, and any aggregate budget across nested loops. Item 51, the
 prohibitions on bullet 4's ground, is written: [Standard 51](51-agent-and-tool-execution-prohibitions.md) states the two `forbidden` rules this document
 stated until 2026-10-05.

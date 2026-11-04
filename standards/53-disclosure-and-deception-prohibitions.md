@@ -54,7 +54,8 @@ It does **not** cover, and claims none of the ground of:
 - **Whether a disclosure is owed, when it must arrive, and the record of it**, which are Standard 40's.
   R3 below begins where an owed disclosure exists and stops at the act of removing it.
 - **How a disclosure is presented**, which Standard 7 records as UIUXDesignStandards'.
-- **Whether a statement is true** (item 25) and **what a system says about its capabilities** (item 28);
+- **Whether a statement is true** ([Standard 25](25-grounding-and-hallucination-control.md)) and **what a system
+  says about its capabilities** ([Standard 28](28-capability-honesty-to-users.md));
   a human-source claim is a statement about the speaker's nature and is within this standard, any other
   false statement is not.
 - **Deliberate misuse** of a system working as designed, which is Standard 9's.
@@ -243,8 +244,8 @@ requirement it was offered for until it is re-made.
 | R4 | A new detector, rule or report that touches deception or disclosure |
 
 A person's report that they were told they were speaking to a human contradicts a record that says no
-human-source claim exists until the record is re-examined. Incident handling is item 34's subject,
-unwritten in this release.
+human-source claim exists until the record is re-examined. Incident handling is
+[Standard 34](34-ai-incident-response.md)'s subject.
 
 ## Additions this standard makes beyond the source
 
@@ -292,10 +293,15 @@ language, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the
 section answers. [Standard 5](05-verdict-vocabulary.md) defines `not-evaluated`, the verdict this
 framework's own reports would carry on R1 to R3.
 
-[Standard 25](25-grounding-and-hallucination-control.md) governs whether a statement is true. Unwritten
-items whose ground is not claimed: item 28, Capability Honesty to Users, governs what a system says about
-its capabilities; item 34, AI Incident Response, governs handling an incident; and item 52, Output
-Honesty Prohibitions, is the sibling prohibition on `capability honesty`.
+[Standard 25](25-grounding-and-hallucination-control.md) governs whether a statement is true. Written
+standards whose ground is not claimed: [Standard 28](28-capability-honesty-to-users.md), Capability Honesty to Users,
+governs what a system says about its capabilities; [Standard 34](34-ai-incident-response.md), AI Incident Response,
+governs handling an incident; and [Standard 52](52-output-honesty-prohibitions.md), Output Honesty Prohibitions, is
+the sibling prohibition on `capability honesty`. Standard 28 R4 requires a capability statement that attributes
+memory, intent, understanding or agency to the system to be one the project's record holds true; R1 here concerns a
+first-person statement, made as fact, of a human attribute, experience or location the system does not have, and
+an assertion that a person is the source. A statement may touch both, as "I remember growing up in Leeds" does; it is
+then one output reported under both, and which standard records it is not decided here.
 
 **Outside this pack:** the boundary review records no adjacent-pack standard for this item, and none is
 cited. No ADR covers this standard — `artifacts/adr/` does not exist in this release.

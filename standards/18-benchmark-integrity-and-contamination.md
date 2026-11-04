@@ -91,7 +91,7 @@ It does **not** cover, and claims none of the ground of, the following:
 - **Whether an evaluation set holds personal data.** [Standard 13](13-personal-data-in-ai-systems.md)
   R1 governs it, and nothing below relaxes it.
 - **Prohibitions on tampering with or fabricating evaluation results** (item 50, Evaluation Integrity
-  Prohibitions, class `A`, unwritten). See the note on it below.
+  Prohibitions, class `A`; written as [Standard 50](50-evaluation-integrity-prohibitions.md)). See the note on it below.
 
 **Boundary posture B, narrowed — a baseline for one half of the concern, outright for the other.**
 The boundary review records the owner as "MachineLearningStandards for train/test leakage;
@@ -126,7 +126,7 @@ token. The two `forbidden` evaluation rules in `rules/eval.json` cite
 [Standard 17](17-evaluation-plans-for-generative-systems.md), and whether they are item 50's
 prohibitions stated early is open question Q19. This standard states positive requirements and mints
 no prohibition and no rule. It does not answer Q19, and its writing does not change the question:
-item 50 is still unwritten, and R3 below is a requirement, not one of its prohibitions.
+Standard 50 is written and records the question as open, and R3 below is a requirement, not one of its prohibitions.
 
 ## Requirements
 
@@ -485,7 +485,7 @@ R3 and R4 govern the applicability and non-lowering language used above, and
 falsifiers section answers, and the Validation section records why no rule is shipped, as plan 02
 section 6 asks.
 
-Item 50 is unwritten in this release; the line drawn above against it is provisional until it is, and the later standard may legitimately move it. Items 12, 19 and 20 have since been written ([Standard 12](12-context-and-corpus-provenance.md), [Standard 19](19-robustness-evaluation.md) and [Standard 20](20-regression-testing.md)); the lines drawn above against them were drawn before and have not been re-examined against them. Open questions Q19 (whether the two
+Items 12, 19, 20 and 50 are written ([Standard 12](12-context-and-corpus-provenance.md), [Standard 19](19-robustness-evaluation.md), [Standard 20](20-regression-testing.md) and [Standard 50](50-evaluation-integrity-prohibitions.md)); the lines drawn above against 12, 19 and 20 were drawn before and have not been re-examined against them, the line against 50 was drawn before it existed, and the later standards may legitimately move them. Open questions Q19 (whether the two
 forbidden evaluation rules are item 50's prohibitions) and Q22 (whether this pack should state an evaluation baseline where MachineLearningStandards does not
 reach a system) are recorded open and not answered here.
 

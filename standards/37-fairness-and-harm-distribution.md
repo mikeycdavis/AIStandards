@@ -221,8 +221,7 @@ group and none is proposed. [Standard 2](02-ai-risk-tiering-and-applicability.md
 non-lowering, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 (each requirement carries
 a falsifier or is declared not-evaluable) is what the Tests section answers.
 
-Items 34, 38, 39 and 40 are unwritten on this base; the lines drawn above are provisional until they
-are. **Outside this pack:** no adjacent pack is cited, and no ADR covers this standard —
+Items 34, 38, 39 and 40 are written ([Standard 34](34-ai-incident-response.md), [Standard 38](38-accessibility-of-ai-features.md), [Standard 39](39-transparency-and-system-documentation.md) and [Standard 40](40-user-disclosure-of-ai-involvement.md)); the lines drawn above were drawn before some of them existed and are unconfirmed by anyone. **Outside this pack:** no adjacent pack is cited, and no ADR covers this standard —
 `artifacts/adr/` does not exist in this release.
 
 ## Implementation

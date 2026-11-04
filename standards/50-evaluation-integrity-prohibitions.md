@@ -61,13 +61,26 @@ It does **not** cover, and claims none of the ground of:
 - **Writing the plan before the run, naming the evaluated subject, and recording the scorer.** Standard 17
   R1, R6 and R7 own them. A plan revised after results exist is already read there as governing the next
   run only; R1 below asks that the revision be visible, not that it be forbidden.
-- **What an evaluation must cover** (item 19) and **when regressions are tested** (item 20).
+- **What an evaluation must cover** ([Standard 19](19-robustness-evaluation.md)) and **when regressions are
+  tested and what difference fails a change** ([Standard 20](20-regression-testing.md)); the overlap with
+  Standard 20 R3, R4 and R6 is set out below.
 
 **Where this standard and Standard 17 meet.** A scorer adjusted until held-out scores look right is
 Standard 17's R4 case, and it is also an alteration of the instrument after the outcome was seen, so R1
 here reaches it too. The two are compatible and a project meets both; neither narrows the other. A
 reported result drawn from a run set by its outcome is not a fabricated number, since each figure traces
 to a run, and is R2's case here and not Standard 17 R5's.
+
+**Where this standard and Standard 20 meet.** [Standard 20](20-regression-testing.md) R3 requires the failure
+criterion of a regression run to be fixed before the run, R4 forbids changing a criterion, suite, baseline or
+scorer after a run to alter its verdict unless the change and its reason are recorded with the verdict, and R6
+bounds a regression claim to the suite, versions and criterion it names. R1 here reaches the same ground from the
+reported result's side: a bar moved from 90 to 85, an item dropped or a scorer reworded after a result was seen is
+both a change recorded with the verdict under Standard 20 R4 and a change after which the reported result names the
+instrument version it was obtained under, under R1 here. Standard 20 governs the regression run, its criterion and
+its verdict; R1 here governs any reported evaluation result, whether or not a regression run is involved, and the
+instrument version it names. The two are compatible, a project meets both, and neither narrows the other. Whether
+one owner should hold the act is Q55 and is not answered here.
 
 **Boundary posture O — owned outright.** The boundary review lists this item as one for which no pack in
 the portfolio was found to hold an owner. This document accepts that record for what a repository can
@@ -255,8 +268,8 @@ token. Specifically authored here, none of it owner-approved:
 - **The choice of which prohibitions this standard states.** Alteration of the instrument and selection
   from the run set are chosen because Standard 17 R4 and R5 do not state them. No other prohibition was
   considered or excluded by any source; the list is this author's.
-- **The division from Standard 17 and 18** in Scope, which no one has confirmed, and the statement that
-  R1 and R2 are compatible with Standard 17 R4 and R5 and a project meets both.
+- **The division from Standards 17, 18 and 20** in Scope, which no one has confirmed, and the statement that
+  R1 and R2 are compatible with Standard 17 R4 and R5, and R1 with Standard 20 R3, R4 and R6, and a project meets all.
 - **The severity assignments**, the non-exemptibility of R1 to R3, the statement that no attestation or
   scheduled expiry exists in this release, and the staleness table.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the
@@ -276,7 +289,7 @@ a conflict between packs, and no conflict is asserted here. [Standard 1](01-ai-s
 the evaluation paths and no field for a change record or run count; none is proposed by this standard.
 [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and non-lowering
 language used above, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the
-Tests section answers. Item 20 is unwritten in this release, and the line drawn above is provisional until it is. Open question Q19 stays open.
+Tests section answers. [Standard 19](19-robustness-evaluation.md) and [Standard 20](20-regression-testing.md) are written, and the Standard 20 R3, R4 and R6 overlap is set out in Scope. Open question Q19 stays open.
 **Outside this pack.** No adjacent pack's standard is recorded for this item, and none was read for it. No
 ADR covers this standard — `artifacts/adr/` does not exist in this release.
 

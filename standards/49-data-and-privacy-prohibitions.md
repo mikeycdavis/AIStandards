@@ -63,12 +63,13 @@ The boundary with this standard's neighbours, none of whose ground is claimed:
   requirement.
 - **[Standard 12](12-context-and-corpus-provenance.md)** governs where a corpus or evaluation set came
   from. R2 asks only whether a run reads live records about people.
-- **Item 14, Consent and Licensing**, **item 15, Retention, Deletion, and Memorization**, **item 16,
-  Access Control for Models, Context, and Tools** (all unwritten) — whether a use was agreed, how long
+- **[Standard 14](14-consent-and-licensing.md), Consent and Licensing**, **[Standard 15](15-retention-deletion-memorization.md),
+  Retention, Deletion, and Memorization**, **[Standard 16](16-access-control-for-models-context-and-tools.md),
+  Access Control for Models, Context, and Tools** — whether a use was agreed, how long
   data is kept and how deletion is enforced, and who may read a store. R1 does not state a deletion
   schedule or enforce deletion.
-- **Item 52, Output Honesty Prohibitions**, and **item 53, Disclosure and Deception Prohibitions**
-  (both unwritten) — honesty of a system's outputs and disclosures generally. R1 concerns one claim, a
+- **[Standard 52](52-output-honesty-prohibitions.md), Output Honesty Prohibitions**, and
+  **[Standard 53](53-disclosure-and-deception-prohibitions.md), Disclosure and Deception Prohibitions** — honesty of a system's outputs and disclosures generally. R1 concerns one claim, a
   deletion confirmation, and claims no wider ground.
 - **UIUXDesignStandards**, which uses the `privacy.` rule-id segment, governs how personal data is shown
   to a user and how consent is asked for. Nothing here does either.
@@ -174,7 +175,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | With one store named in the review record made to fail, the routine's completion report either is not emitted or names that store | A completion report, produced with a store in the review record not reached, that does not name the store | A report that says "deletion partial; vector store not reached" must **not** be faulted; a report issued after every named store was reached must **not** be faulted |
-| R2 | Each evaluation or test run's data sources are listed, and none is a production data source holding real people | A run reading from a production database, replica, live feed or a dump refreshed from one | A run reading a generated set, or a copy built by a documented process that describes nobody, must **not** be faulted; a system sampling its own live traffic for an online check must **not** be faulted under R2 |
+| R2 | Each evaluation or test run's data sources are listed, and none is a production data source holding real people | A run reading real personal data from a production database, replica, live feed or a dump refreshed from one | A run reading a generated set, or a copy built by a documented process that describes nobody, must **not** be faulted; a system sampling its own live traffic for an online check must **not** be faulted under R2 |
 
 **No falsifier is automated in this release.** No rule reads the artifacts these falsifiers need, and no
 fixture carries them. They are available for manual review; what this release lacks is a detector that
@@ -225,7 +226,7 @@ Not authored here: the posture, which is the boundary review's.
 [Standard 13](13-personal-data-in-ai-systems.md) is the sibling this item sits beside. It states the
 three forbidden privacy rules, the retention declaration and the deletion path; R1 here relies on its R5
 review record, and R2 extends the reach of its R1 from what is committed to what is read at run time.
-Its text calls item 49 unwritten; this document does not edit it. [Standard 12](12-context-and-corpus-provenance.md)
+It named item 49 as unwritten before this document existed and now links it; this document edits nothing else there. [Standard 12](12-context-and-corpus-provenance.md)
 governs origin of corpora, which R2 does not. [Standard 1](01-ai-system-manifest.md) draws the scope.
 [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 is relied on for the rule that a tier does not
 lower a requirement; this standard does not rely on its R2. [Standard 5](05-verdict-vocabulary.md) and
@@ -237,9 +238,10 @@ id in it.
 [Standard 51](51-agent-and-tool-execution-prohibitions.md) is the parallel item for agents, where the
 owner did move two rules (Q16). This standard differs: it moves none.
 
-Unwritten items this standard defers to, by specification number: item 14 (consent), item 15
-(retention and deletion enforcement), item 16 (access), item 52 and item 53 (honesty and disclosure
-prohibitions). No ADR covers this standard — `artifacts/adr/` does not exist in this release.
+Written standards this one defers to: [Standard 14](14-consent-and-licensing.md) (consent),
+[Standard 15](15-retention-deletion-memorization.md) (retention and deletion enforcement),
+[Standard 16](16-access-control-for-models-context-and-tools.md) (access), and [Standard 52](52-output-honesty-prohibitions.md)
+and [Standard 53](53-disclosure-and-deception-prohibitions.md) (honesty and disclosure prohibitions). No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
 ## Implementation
 

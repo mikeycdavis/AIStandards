@@ -232,8 +232,7 @@ There is no policy-level exception mechanism for R1 to R4 in this release, becau
 | R5 | A gap closed or opened: a runtime fetch added, or an alias replaced by a documented version |
 | R6 | A new detector, rule or report that touches lineage |
 
-Incident handling for a lineage discovered to be broken is item 34's subject (AI Incident Response,
-unwritten in this release).
+Incident handling for a lineage discovered to be broken is item 34's subject ([Standard 34](34-ai-incident-response.md), AI Incident Response).
 
 ## Additions this standard makes beyond the source
 
@@ -274,7 +273,7 @@ identifier the project cannot observe is handled; R1 and R5 here are written to 
 non-lowering language used above, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the
 requirement the Tests section answers.
 
-[Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 31](31-reproducibility-under-nondeterminism.md) and [Standard 32](32-rollback-and-recovery.md) were written in the same batch as this standard and the lines between them are unconfirmed by anyone (Q45). Item 34 is unwritten in this release; the line drawn above against it is provisional until it is. **Outside this pack:** MachineLearningStandards' `04-dataset-versioning.md` and
+[Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 31](31-reproducibility-under-nondeterminism.md) and [Standard 32](32-rollback-and-recovery.md) were written in the same batch as this standard and the lines between them are unconfirmed by anyone (Q45). [Standard 34](34-ai-incident-response.md) is written; the line drawn above against it was drawn before it existed and is unconfirmed by anyone. **Outside this pack:** MachineLearningStandards' `04-dataset-versioning.md` and
 `17-feature-lineage.md` are named in Scope with what the boundary review recorded; this is a deference,
 not a crosswalk, and no maintainer has confirmed it. No ADR covers this standard — `artifacts/adr/` does
 not exist in this release.
