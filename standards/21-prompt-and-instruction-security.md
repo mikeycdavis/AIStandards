@@ -102,6 +102,7 @@ Rule `promptsec.template-injection-guarded`, **`not-evaluable`**. See
 | Credential exfiltration | An injected instruction returns the key that was in context | R4 |
 | Delimiter theatre | A guard that reads as rigorous and is ignored by the model | R5 — and **not** by any check |
 | Assembled prompt | A prompt built from fragments; every static check misses it | Not caught. See Implementation |
+| Unreadable configuration | A YAML or JSON file the parser refuses, whose text would then be guessed at | Reported unknown for R1 and R2, never passed and never scanned as text. See Implementation |
 
 ## Evidence
 
@@ -150,6 +151,7 @@ in the repository.
 | R1 | A 200+ character literal at a `system:` parameter fails | Such a literal | `file-backed-prompt/` must not fire, and reports `not-evaluated` rather than `passed` |
 | R2 | The same fixture warns rather than fails | It reports `failed` | — |
 | R1, R2 | Prose and comments describing inline prompts do not fire | A finding on `mentions-only/` | **This is the control that matters** |
+| R1, R2 (YAML and JSON) | A `.yml`, `.yaml` or `.json` file the parser cannot read is reported unknown, and a long literal in a file that parsed still fires | It reports `passed`, produces a finding of its own, or is scanned as text instead | A parsed file with a literal under 200 code points must not fire |
 | R3 | No detector in this release | — | — |
 | R4 | No detector in this release. Phase 3 | — | — |
 | R5 | **No falsifier exists, and none is invented** | — | — |
@@ -181,7 +183,7 @@ signal and nothing enforces it.
 - **R5's `not-evaluable` classification.** The brief permits the validation type; the decision that
   injection resistance falls into it, rather than into manual review, is authored, and it is the
   clearest instance in this release of refusing to claim a check the framework cannot make.
-- **The 200-character threshold**, which is a chosen number and not a derived one. It is the point
+- **The 200-character threshold**, counted as set out under Reading configuration files, which is a chosen number and not a derived one. It is the point
   below which an inline instruction is more likely a label than a prompt; it will be wrong in some
   direction for some codebase.
 
@@ -215,7 +217,8 @@ Phase 3.**
 | R5 | `promptsec.template-injection-guarded` | **`not-evaluable`.** No detector, and none is planned |
 
 **The detector for R1 and R2 finds three shapes of one problem, each with its own name in the
-evidence.** Each is a quoted literal of 200 or more characters, found by a different grammar:
+evidence.** Each is a literal of 200 or more characters, found by a different grammar (what a character is here is
+set out under [Reading configuration files](#reading-configuration-files) below):
 
 - *The parameter shape* matches an instruction parameter name (`system`, `system_prompt`,
   `systemPrompt`, `instructions`, `systemInstruction`), then `:` or `=`, then the literal.
@@ -233,7 +236,7 @@ template-literal content, does not read a message whose `content` is an array of
 treat the `developer` role as the system role, does not read keyword-argument constructors
 (`ChatMessage(role="system", ...)`), TOML tables, YAML block scalars or a block-style YAML
 `systemInstruction`, and does not know whether a file-backed prompt is *reviewed* — only that it is a
-file. A system that assembles its prompt from three fragments is not flagged by this check and may satisfy
+file is. A system that assembles its prompt from three fragments is not flagged by this check and may satisfy
 nothing the standard actually asks for.
 
 **R4 is worth reading carefully as an example of the verdict vocabulary working.** It is a
@@ -241,3 +244,51 @@ nothing the standard actually asks for.
 `prohibited-but-unestablished` and prevents a `COMPLIANT` status — because a prohibition nobody
 looked for is not a prohibition anybody is meeting, and the alternative is a clean report for a
 repository with a credential in a prompt file.
+
+### Reading configuration files
+
+**The three shapes are read two ways.** A file whose name ends in `.yml`, `.yaml` or `.json`, matched
+case-insensitively on the file name, is read as a parsed tree with exact positions
+([`docs/structural-reader.md`](../docs/structural-reader.md)). Nothing is sniffed from content: JSON text in
+a `.yml` file is read as YAML, and YAML in a `.json` file does not parse. Every other file, including TOML
+and all source code, is scanned lexically, as described above. `misuse.safety-controls-not-disabled`
+(Standard 9) stays on the lexical layer; this standard does not move it.
+
+**A file the parser cannot read is unknown, not clean.** A syntax error in any document, a file that is not
+valid UTF-8 or begins with a UTF-16 byte order mark, a control character, a file past the 512 KiB read
+bound, an undefined alias and an unreadable file each make that one file *unknown* for `promptsec.prompt-is-versioned-artifact`
+and `promptsec.no-inline-system-prompt`. Unknown is never a pass and is not a finding of its own. The file
+is not scanned as text instead, and no part of it is recovered, because a guess made after the parser
+refused is the guess the parser exists to stop making. No file is exempt for being a template; a template
+that does not parse is unknown like any other file. Findings from files that did parse are unaffected and
+stand beside the unknown. The audit lists the refused files, bounded, under `evidenceSurface.unparseableFiles`
+and never carries their text.
+
+**Named non-claims.** Nothing here is read structurally, so no finding and no pass is claimed about it:
+
+- JSONC and JSON5 (a JSONC file named `*.json` does not parse, so it is unknown, not leniently read);
+- JSONL and NDJSON;
+- templates (`*.yaml.j2` and the like);
+- YAML or JSON inside Markdown fences;
+- Jupyter notebooks;
+- extensionless files;
+- content whose format does not match its extension;
+- a `system` mapping written inside a complex (`? `) YAML key, which is not scanned;
+- aliases and merge keys, which are parsed and recorded but not followed: a literal, `role` or `content`
+  supplied through one is not read;
+- a YAML block scalar (`|`, `>`) under an instruction key, and a block-style YAML `systemInstruction`
+  mapping. These two are recorded as **open for an owner decision**; they are not claimed and not decided
+  here.
+
+**What a character is.** For a YAML or JSON file the literal is the decoded value (escapes resolved, lines
+folded) and its length is counted in Unicode code points. For source code the literal is the text written
+between its quotes, with escapes counted as written, measured in UTF-16 code units, so a character outside
+the Basic Multilingual Plane counts as two. The 200 threshold applies to whichever count the file has, and
+the evidence string says `chars` for both. A structured location carries the code-point length for a
+parsed file. The two units agree for ordinary text and differ for escapes and astral characters; which unit
+should govern is not decided here.
+
+**Structured locations and the schemas.** For a parsed file each literal that fired is also reported as a
+structured location (file, document index for YAML, line, column, key and path, shape and length), beside
+the existing evidence strings, which are preserved. The reports that carry these are versioned and additive; see
+[`docs/structural-reader.md`](../docs/structural-reader.md#the-report-schemas).

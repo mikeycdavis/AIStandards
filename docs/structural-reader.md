@@ -9,8 +9,9 @@ Implemented by ST-57 (#119). The consumer that re-expresses the inline-prompt sh
 `scripts/structural-shapes.mjs` (ST-58, #120; see "The inline-prompt shapes over the tree" below). ST-59 (#121)
 migrated the YAML and JSON detector fixtures onto it, retired the YAML-specific lexical branches that nothing
 reads any more, and records the named regression ledger (see "The named regression ledger" and "Retired
-lexical branches" below). Standard 21 text, assurance notes and schema documentation are ST-60 (#122); moving Standard 9 or TOML
-onto this layer is ST-49 (#111) alone.
+lexical branches" below). ST-60 (#122) wrote Standard 21's text and the assurance notes of the two inline-prompt rules
+for this scope (see "Reading configuration files" in the standard) and the schema section below; moving Standard 9 or
+TOML onto this layer is ST-49 (#111) alone.
 
 ## Scope
 
@@ -83,7 +84,8 @@ Decisions applied:
 * **Named non-claims (retained).** A block-style YAML `systemInstruction` mapping (only the flow form
   `{...}` and JSON are the object form Standard 21 claims) is not read for the parts shape. A YAML **block scalar** (`|`, `>` and their indicators) is not a literal
   for these shapes: Standard 21 names it as a non-claim and the regression ledger lists no case that
-  changes it. The reader decodes it, so lifting the non-claim is a decision for ST-60, not a parser limit.
+  changes it. The reader decodes it, so lifting the non-claim is an owner decision and not a parser limit. It is
+  recorded in Standard 21 as open and is not made in ST-60 (a decision packet holds it).
 * **Named non-claim (E).** A `system` mapping nested inside a **complex key** (`? {system: "..."}`) is
   not scanned: the walk descends into values and sequence items, never into keys. (The value paired with
   a complex key is scanned.)
@@ -101,6 +103,38 @@ as raw source text. Three ledger cases that fired no longer do, because their de
 (`d09`, `d09b` and `d19`: escapes that decode 300, 240 and 250 raw characters to 50, 40 and 125). Seven that
 were missed now fire: `b02` and `b03` (an anchor or a tag on the value), `d06`, `d07` and `d08` (an escaped
 key or role), `d17` and `d18` (a folded or plain multi-line scalar).
+
+## The report schemas
+
+Both reports are closed schemas (`additionalProperties: false`) validated against real output by tests.
+
+| Report | Schema | `schemaVersion` | Added over the previous version |
+|---|---|---|---|
+| `audit --json` | `schemas/audit-report.schema.json` | `1.2` | `1.1` over `1.0`: `evidenceSurface.unparseableFiles` and `structuralSurface`. `1.2` over `1.1`: `structuralSurface.duplicateKeysEvaluated` |
+| `validate --json` | `schemas/validate-report.schema.json` | `1.1` | `1.1` over `1.0`: `results[].locations` and `results[].locationsOmitted` |
+
+The two reports are different envelopes and are versioned independently. The version is a `const` in each
+schema, so a report of another version fails validation and a consumer can refuse it; a test refuses a `1.0`
+envelope. The compatibility rule as implemented is **additive only**: a field is added in the same change that
+raises the version and extends the closed schema, nothing is removed or retyped, and the existing evidence
+strings (`file (N chars)` and its shape suffixes) are preserved. A policy for any change that is not additive is
+not written down and is an open owner decision.
+
+* `evidenceSurface.unparseableFiles` is `{ total, files, omitted }`: `total` is exact, `files` lists at most 50
+  entries and `omitted` counts the rest. An entry is `{ file, reason }` plus, where the parser gave them,
+  `code` (a plain identifier of at most 64 characters), `documentIndex`, `offset` (UTF-16 code units into the
+  text after any byte order mark), `line` and `column` (Unicode code points). The `reason` is one of the
+  closed list under "Failure outcomes". An entry never carries file text.
+* `structuralSurface` is `{ scope, filesParsed, aliasesNotFollowed, mergeKeysNotApplied, duplicateKeysEvaluated }`.
+  `scope` is `.yml`, `.yaml`, `.json`. The three lists are bounded at 50 with an exact `total`.
+* `results[].locations` entries are `{ file, documentIndex?, line, column, key, path, pathTruncated?, shape, length, duplicate }`
+  (at most 50 per result; `locationsOmitted` counts the rest). `length` is the decoded literal in Unicode code
+  points and `column` is in code points. **An offset is not part of a location.** Offsets exist only where the
+  tree and `unparseableFiles` give them, in UTF-16 code units; #118 asks that offset units agree with code
+  points, and that is an open owner decision.
+* A file read lexically (source code, TOML) has evidence strings and no location, because the lexical layer has
+  none. The lexical layer also measures a literal as written between its quotes in UTF-16 code units, where a
+  tree literal is its decoded value in code points.
 
 ## Failure outcomes
 

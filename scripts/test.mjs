@@ -42,6 +42,7 @@ const FILES = [
   "init-e2e.test.mjs",
   "validate.test.mjs",
   "standards-tables.test.mjs",
+  "standard-21-structural-docs.test.mjs",
   "standards-sections.test.mjs",
   "sync-rule-tables.test.mjs",
   "fidelity.test.mjs",

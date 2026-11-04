@@ -19,7 +19,7 @@
       "deprecatedIn": null,
       "supersededBy": null,
       "removedIn": null,
-      "$assuranceNote": "Literal recognition only. A prompt assembled from concatenated fragments or fetched at runtime is invisible here, so absence of a finding is not evidence that prompts are file-backed. A clean result therefore reports not-evaluated, never passed."
+      "$assuranceNote": "Literal recognition only. A prompt assembled from concatenated fragments or fetched at runtime is invisible here, so absence of a finding is not evidence that prompts are file-backed. A clean result therefore reports not-evaluated, never passed. YAML and JSON files (.yml, .yaml, .json, matched case-insensitively, nothing sniffed) are read as parsed trees; a file the parser refuses is reported unknown for this rule, never passed, never a finding and never scanned as text. Not read: JSONC, JSON5, JSONL/NDJSON, templates, Markdown fences, notebooks, extensionless files, content under a mismatched extension, aliases and merge keys (parsed, not followed), a system mapping inside a complex YAML key, YAML block scalars and a block-style systemInstruction. TOML and source code are scanned lexically. Length is decoded Unicode code points for YAML and JSON, and raw UTF-16 units between the quotes for source code."
     },
     {
       "id": "promptsec.no-inline-system-prompt",
@@ -39,7 +39,7 @@
       "deprecatedIn": null,
       "supersededBy": null,
       "removedIn": null,
-      "$assuranceNote": "Same recognition as promptsec.prompt-is-versioned-artifact, reported at warning severity."
+      "$assuranceNote": "Same recognition, structural scope, unknown outcome for an unparseable YAML or JSON file, named non-claims and length measurement as promptsec.prompt-is-versioned-artifact, reported at warning severity."
     },
     {
       "id": "promptsec.threat-model-exists",
