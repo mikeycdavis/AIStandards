@@ -118,7 +118,7 @@ The boundary with this standard's other neighbours, none of whose ground is clai
   input has leaked into a model's training data, and whether a public benchmark still measures
   anything. R4 concerns selection against the held-out set by the project, not contamination by a
   provider.
-- **Item 19, Robustness Evaluation** (unwritten) — what an evaluation must cover. Nothing here says
+- **Item 19, [Robustness Evaluation](19-robustness-evaluation.md)** — what an evaluation must cover. Nothing here says
   which inputs a plan must include.
 - **Item 20, Regression Testing Across Model and Prompt Versions** (unwritten) — when regression
   runs happen, and what difference from a baseline fails a change. R3's rule records a baseline and
