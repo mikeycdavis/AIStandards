@@ -68,9 +68,9 @@ with this standard's neighbours falls, and none of their ground is claimed:
   item 16, Access Control for Models, Context, and Tools (who may use the system at all); items 22
   and 24 (tool and retrieval security — attacks on the system's components); item 34, AI
   Incident Response (what happens once a misuse event is declared an incident); item 35, Red Teaming
-  (how the adversarial exercises R5 names are run and recorded); item 41, Inference Cost and Budget
-  Control (budgets whose mechanism R3's bound may share); and item 48, Safety and Oversight
-  Prohibitions (below).
+  (how the adversarial exercises R5 names are run and recorded); and item 48, Safety and Oversight
+  Prohibitions (below). Item 41, Inference Cost and Budget Control, is written: [Standard 41](41-inference-cost-and-budget-control.md) owns budgets
+  whose mechanism R3's bound may share.
 
 **R1 reaches every system in scope, and "we identified no foreseeable misuse" is an answer to it, not
 an exit from it.** A system whose analysis finds no case records that, with its reasoning, and the
