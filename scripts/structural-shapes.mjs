@@ -57,8 +57,14 @@ export const PATH_DEPTH_LIMIT = 64;
 // limit in UTF-16 units can be longer in code points, so the common case allocates nothing.
 const clip = (s) => {
   if (s.length <= PATH_STEP_LIMIT) return s;
-  const points = Array.from(s);
-  return points.length > PATH_STEP_LIMIT ? `${points.slice(0, PATH_STEP_LIMIT).join("")}…` : s;
+  // Stops after PATH_STEP_LIMIT code points: enumerating a 200000-character key for every entry below it
+  // would be quadratic in the size of the file.
+  let end = 0;
+  for (let points = 0; points < PATH_STEP_LIMIT && end < s.length; points += 1) {
+    const c = s.charCodeAt(end);
+    end += c >= 0xd800 && c <= 0xdbff && end + 1 < s.length && (s.charCodeAt(end + 1) & 0xfc00) === 0xdc00 ? 2 : 1;
+  }
+  return end < s.length ? `${s.slice(0, end)}…` : s;
 };
 
 // `line` and `column` cost O(length of the line) each, so a minified file of many entries on one line would be

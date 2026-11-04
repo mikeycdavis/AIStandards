@@ -640,3 +640,26 @@ test("an entry keeps no reference to the parsed result: it locates through the s
   parsed.text = null;
   assert.deepEqual([matches[0].line, matches[0].column], [1, 9]);
 });
+
+test("hostile: a very long ancestor key shared by many entries is clipped in bounded work", () => {
+  const key = "k".repeat(200000);
+  const kids = Array.from({ length: 1000 }, () => '{"role":0,"role":1}').join(",");
+  const parsed = read(`{"${key}":[${kids}]}`, "json");
+  const started = Date.now();
+  const r = findInlinePromptShapes(parsed, T);
+  assert.equal(r.duplicates.length, 1000);
+  assert.ok(Date.now() - started < 600, `took ${Date.now() - started} ms`);
+  assert.equal(Array.from(r.duplicates[0].path[0]).length, 129);
+});
+
+test("clipping by code points: exactly 128 points is whole, 129 is cut, a pair on the boundary is never split", () => {
+  const whole = "a".repeat(127) + "\u{1F600}"; // 128 code points, 129 UTF-16 units
+  const [a] = find(`{"${whole}": {"system": "${LONG}"}}`, "json").matches;
+  assert.equal(a.path[0], whole);
+  const cut = "a".repeat(128) + "b";
+  const [b] = find(`{"${cut}": {"system": "${LONG}"}}`, "json").matches;
+  assert.equal(b.path[0], `${"a".repeat(128)}…`);
+  const boundary = "a".repeat(127) + "\u{1F600}" + "z";
+  const [c] = find(`{"${boundary}": {"system": "${LONG}"}}`, "json").matches;
+  assert.equal(c.path[0], `${"a".repeat(127)}\u{1F600}…`);
+});
