@@ -66,7 +66,7 @@ It does **not** cover, and claims none of the ground of:
   prohibition beyond R5, the only must-not clause on the system's own behaviour (R2 and R10 constrain
   the project; see Q23).
 - **Records of what the system did and the investigation of failures** — items 36 and 34, unwritten.
-- **Entitlement to view data** — item 16, unwritten. [Standard 13](13-personal-data-in-ai-systems.md)
+- **Entitlement to view data** — item 16, written as [Standard 16](16-access-control-for-models-context-and-tools.md). [Standard 13](13-personal-data-in-ai-systems.md)
   states what records may hold and gives how personal data is shown to a user to UIUXDesignStandards.
 - **Safety cases** — [Standard 8](08-ai-safety-requirements-and-safety-cases.md); a case may cite an
   oversight arrangement as evidence, and which arrangement is owed is this standard's.

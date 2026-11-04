@@ -200,9 +200,9 @@ under [Authored items](#authored-items).
 | --- | --- | --- | --- | --- | --- |
 | 12 | Context and Corpus Provenance | D | `provenance` | B | standards/12-context-and-corpus-provenance.md |
 | 13 | Personal Data in AI Systems | D | `Data privacy` | O | standards/13-personal-data-in-ai-systems.md |
-| 14 | Consent and Licensing | D | `consent` | O | — |
-| 15 | Retention, Deletion, and Memorization | D | `retention` | O | — |
-| 16 | Access Control for Models, Context, and Tools | D | `access control` | O | — |
+| 14 | Consent and Licensing | D | `consent` | O | standards/14-consent-and-licensing.md |
+| 15 | Retention, Deletion, and Memorization | D | `retention` | O | standards/15-retention-deletion-memorization.md |
+| 16 | Access Control for Models, Context, and Tools | D | `access control` | O | standards/16-access-control-for-models-context-and-tools.md |
 
 ### Band D — Evaluation · bullet 3
 
@@ -211,16 +211,16 @@ under [Authored items](#authored-items).
 | 17 | Evaluation Plans for Generative Systems | D | `Model evaluation` | B | standards/17-evaluation-plans-for-generative-systems.md |
 | 18 | Benchmark Integrity and Contamination | D | `benchmark integrity` | B | standards/18-benchmark-integrity-and-contamination.md |
 | 19 | Robustness Evaluation | D | `robustness` | O | standards/19-robustness-evaluation.md |
-| 20 | Regression Testing Across Model and Prompt Versions | D | `regression testing` | O | — |
+| 20 | Regression Testing Across Model and Prompt Versions | D | `regression testing` | O | standards/20-regression-testing.md |
 
 ### Band E — Prompt, tool, agent, retrieval security · bullet 4
 
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
 | 21 | Prompt and Instruction Security | D | `Prompt, tool, agent, and retrieval security` | O | standards/21-prompt-and-instruction-security.md |
-| 22 | Tool and Function-Call Security | D | `tool, agent, and retrieval security` | O | — |
+| 22 | Tool and Function-Call Security | D | `tool, agent, and retrieval security` | O | standards/22-tool-and-function-call-security.md |
 | 23 | Agent Execution Security | D | `agent, and retrieval security` | O | standards/23-agent-execution-security.md |
-| 24 | Retrieval and Context Supply Chain | D | `retrieval security` | O | — |
+| 24 | Retrieval and Context Supply Chain | D | `retrieval security` | O | standards/24-retrieval-and-context-supply-chain.md |
 
 > Bullet 4 shares one head noun across four modifiers. Each item's token is the longest tail of the
 > bullet beginning at its own modifier, so every token is a real substring and each names its own

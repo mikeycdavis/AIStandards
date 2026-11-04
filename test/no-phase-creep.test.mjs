@@ -760,7 +760,7 @@ test("the Phase 2 tooling built so far exists, and the rest of Phase 2 does not"
 });
 
 test("only the standards written so far exist", () => {
-  // The guard is not that the corpus is frozen — Phase 2 writes the remaining 24. It is that a
+  // The guard is not that the corpus is frozen — Phase 2 writes the remaining 18. It is that a
   // standard arrives deliberately, by being added here, rather than by appearing unnoticed.
   const present = fs.readdirSync(path.join(REPO, "standards")).filter((f) => f.endsWith(".md")).sort();
   assert.deepEqual(present, [
@@ -776,11 +776,17 @@ test("only the standards written so far exist", () => {
     "11-autonomy-levels-and-delegated-authority.md",
     "12-context-and-corpus-provenance.md",
     "13-personal-data-in-ai-systems.md",
+    "14-consent-and-licensing.md",
+    "15-retention-deletion-memorization.md",
+    "16-access-control-for-models-context-and-tools.md",
     "17-evaluation-plans-for-generative-systems.md",
     "18-benchmark-integrity-and-contamination.md",
     "19-robustness-evaluation.md",
+    "20-regression-testing.md",
     "21-prompt-and-instruction-security.md",
+    "22-tool-and-function-call-security.md",
     "23-agent-execution-security.md",
+    "24-retrieval-and-context-supply-chain.md",
     "25-grounding-and-hallucination-control.md",
     "33-ai-observability.md",
     "37-fairness-and-harm-distribution.md",

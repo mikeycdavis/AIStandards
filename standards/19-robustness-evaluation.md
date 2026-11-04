@@ -83,7 +83,7 @@ It does **not** cover, and claims none of the ground of, the following:
   ([Standard 17](17-evaluation-plans-for-generative-systems.md) R1 to R9). Nothing below relaxes
   them; this standard says what a plan must cover where robustness is claimed, which Standard 17
   leaves to this item.
-- **When regressions are tested and what difference fails a change** (item 20, unwritten), and
+- **When regressions are tested and what difference fails a change** (item 20, written as [Standard 20](20-regression-testing.md)), and
   **contamination** (item 18, Benchmark Integrity and Contamination).
 - **Reproducibility under nondeterminism** (item 31, unwritten). R3 asks that a perturbation be
   reproducible; whether a hosted model's answers repeat is item 31's subject.
@@ -406,7 +406,7 @@ non-lowering language used above, and [Standard 6](06-standard-structure-and-rul
 the requirement the Tests and falsifiers section answers, and the Validation section records why no
 rule is shipped, as plan 02 section 6 asks.
 
-Items 18, 20, 31, 34, 35 and 50 are unwritten in this release; the lines drawn above are provisional until
+Items 18, 31, 34, 35 and 50 are unwritten in this release, and item 20 is written ([Standard 20](20-regression-testing.md)); the lines drawn above are provisional until
 they are, and the later standards may legitimately move them. Open question Q19 (whether the two
 forbidden evaluation rules are item 50's prohibitions) is recorded open and not answered here.
 No ADR covers this standard — `artifacts/adr/` does not exist in this release.

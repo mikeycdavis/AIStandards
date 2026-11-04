@@ -118,8 +118,8 @@ recorded explains the placement. Standard 13, written 2026-09-14, states both ru
 requires, claims for them only that retention is declared and that a deletion path reaches the
 model-adjacent stores, and leaves periods, schedules, backups and memorization to item 15.
 **Not resolved here, because the answer changes a rule's `standard` field.**
-**Impact if unanswered:** none today. Item 15's document, when written, will have to say whether it
-takes the two rules.
+**Impact if unanswered:** none today. [Standard 15](../../standards/15-retention-deletion-memorization.md) is now written and says
+it mints no id and moves neither rule; the question stays open.
 
 ### Q11 — Should the credentials rule stay under item 13?
 
@@ -361,9 +361,73 @@ the owner of training-data provenance.
 ### Q28 — Where does provenance end and consent and licensing (item 14) begin?
 
 A provenance statement may name a licence. Whether naming it is provenance, or the beginning of item
-14's subject, is undecided while item 14 is unwritten. **Not resolved here, because item 14 is
-unwritten.** **Impact if unanswered:** a licence named in a statement may be read as establishing
+14's subject, stays undecided. [Standard 14](../../standards/14-consent-and-licensing.md) is now written and leaves it open (it
+records this question and does not settle it). **Not resolved here, because the owner has not ruled.** **Impact if unanswered:** a licence named in a statement may be read as establishing
 permission, which it does not.
+
+### Q29 — Does licensing in Standard 14 reach model-weight and output licences only (R5)?
+
+Standard 14 R5 limits licensing to third-party model weights and their output licences. Widening it to
+datasets and software dependencies, or dropping R5, are the alternatives. **Not resolved here, because it
+is a scope judgment about the item's title.** **Impact if unanswered:** dataset and dependency licences
+have no owner in this pack. Recommended: keep R5 as authored.
+
+### Q30 — Where should a permission, retention, access or retrieval record live?
+
+Standards 14 (R1 to R3 and R5), 15 (R1 to R5), 16 (R1, R5), 20 (R1, R3 to R6), 22 (R2, R4, R6) and 24 (R1 to
+R3) each need a record that no closed schema can hold and no rule can find, per each standard's Implementation
+table. Options: a schema-versioning change, a named project document a
+future rule can find, or prose only. **Not resolved here, because it is a schema-versioning decision that
+Phase 2 section 8 puts out of scope.** **Impact if unanswered:** none of those requirements is
+machine-checkable. Recommended: a named document first, schema later.
+
+### Q31 — Is the expiry-driven versus request-driven deletion split between Standards 15 and 13 right?
+
+Standard 15 takes expiry-driven deletion, derived copies, backups, provider copies and training use;
+Standard 13 R5 takes request-driven deletion. Standard 15 R1, R2 and R4 also overlap Standard 13 R4 (a
+declaration of how long prompts, completions and traces are kept, what deletes them, and provider retention);
+Standard 15 says it extends that requirement and moves none. This is the placement question Q10 and owner option C
+(2026-10-15, #53) keeps open; no rule moved. **Not resolved here, because the owner holds Q10 open.**
+**Impact if unanswered:** the split stays provisional.
+
+### Q32 — Should Standard 15 name an interim memorization-test method?
+
+R6 requires a non-memorization claim to name the test it relies on and names none. **Not resolved here,
+because a method is an ML-pack matter.** **Impact if unanswered:** claims name private tests.
+
+### Q33 — Where is the line between Standards 16, 22 and 36 on whose rights a tool call is checked against?
+
+Standard 16 R3 (tool use authorised against the requesting principal) and Standard 22 R5 (a call carries
+no more authority than its principal) overlap, and Standard 36 will touch audit of the same calls.
+**Not resolved here, because the three standards were written concurrently and the owner has not ruled.**
+**Impact if unanswered:** one act may be reported under two standards. Recommended: one owner per act.
+
+### Q34 — Which namespace would tool-call rules use, and should the tool-permissions schema gain per-tool fields?
+
+No `tool` namespace is reserved. Standard 22 R2, R4 and R6 would need a parameter schema, a pinned
+definition revision and a result limit, which `schemas/tool-permissions.schema.json` cannot hold.
+**Not resolved here, because it is a catalog and schema-versioning decision.** **Impact if unanswered:**
+Standard 22 stays prose only. Recommended: defer to Phase 3 or later.
+
+### Q35 — Does Standard 51 R2 hand all trust-class ground to item 24, or only part of it?
+
+Standard 24 R4 carries source and trust class to the consumer; Standard 21 R3 and Standard 51 R2 touch the
+same ground, and Q18 (is non-fetched tool output within Standard 51 R2) is open. **Not resolved here,
+because it concerns the scope of an already-written standard.** **Impact if unanswered:** the split drawn
+in Standard 24 is unconfirmed. Recommended: keep the split as drawn.
+
+### Q36 — Is a user-supplied document or a connector a retrieval path (item 24) or a tool surface (item 22)?
+
+Standard 24 treats it as a retrieval path while item 22 was unwritten; Standard 22 now exists.
+**Not resolved here, because it is a boundary judgment between two standards.** **Impact if unanswered:**
+content fetched by a connector may be owned by both or by neither.
+
+### Q37 — Should Standard 20's "who decided" record (R4) be tied to Standard 45's approval gates?
+
+R4 requires a record naming the decider of an adopted failing change and defines no role.
+**Not resolved here, because the author's reading is that Standard 45's reach over model and prompt changes is not
+settled by its text; this is a judgment and no passage records it.**
+**Impact if unanswered:** the decider may be anyone. Recommended: leave as written.
 
 ## Not questions
 

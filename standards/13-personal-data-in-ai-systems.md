@@ -68,10 +68,10 @@ The boundary with this standard's neighbours, none of whose ground is claimed:
 
 - **Item 12, Context and Corpus Provenance** (written as [Standard 12](12-context-and-corpus-provenance.md), posture B) — where a corpus, fixture or
   evaluation set came from. R1 asks only whether its content is about real people.
-- **Item 14, Consent and Licensing** (unwritten) — whether anyone agreed to their data being used,
+- **Item 14, Consent and Licensing** (written as [Standard 14](14-consent-and-licensing.md)) — whether anyone agreed to their data being used,
   and on what terms. Nothing here makes a use of personal data permissible.
-- **Item 15, Retention, Deletion, and Memorization** (unwritten, token `retention`) — see below.
-- **Item 16, Access Control for Models, Context, and Tools** (unwritten) — who may read a log, a
+- **Item 15, Retention, Deletion, and Memorization** (written as [Standard 15](15-retention-deletion-memorization.md), token `retention`) — see below.
+- **Item 16, Access Control for Models, Context, and Tools** (written as [Standard 16](16-access-control-for-models-context-and-tools.md)) — who may read a log, a
   trace, a fixture or a vector store. R3 governs what a log holds, not who can open it.
 - **Item 33, AI Observability** (unwritten, posture B) — whether and how inference calls are traced.
   R3 constrains the text a trace holds; it requires no trace to exist.
@@ -548,11 +548,9 @@ A misuse log is a model-adjacent store, so R4 and R5 here reach it too.
 set out under R2. **21 governs what may enter a model's context at runtime; R2 here governs what may be
 committed in a prompt asset or fixture**, and the two are not reconciled.
 
-Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 14 (consent and licensing); item 15 (retention periods,
-deletion schedules and memorization, and the open question of R4's and R5's rules); item 16 (who may
-read a store); item 33 (whether inference calls are traced); item 34 (what follows a privacy incident);
+Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 33 (whether inference calls are traced); item 34 (what follows a privacy incident);
 and item 49 (prohibitions on bullet 2's ground, whose relationship to the three `forbidden` rules here
-the specification does not record).
+the specification does not record). Items 14, 15 and 16 are written: [Standard 14](14-consent-and-licensing.md) (consent and licensing), [Standard 15](15-retention-deletion-memorization.md) (retention periods, deletion schedules and memorization, and the open question of R4's and R5's rules) and [Standard 16](16-access-control-for-models-context-and-tools.md) (who may read a store).
 
 Outside this repository: **UIUXDesignStandards** uses the `privacy.` segment for
 `privacy.sensitive-data-masked`, under its Standard 25, Privacy UX, and `privacy.no-deceptive-consent`,
