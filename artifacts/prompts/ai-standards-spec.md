@@ -250,9 +250,9 @@ under [Authored items](#authored-items).
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
 | 33 | AI Observability | D | `Observability` | B | standards/33-ai-observability.md |
-| 34 | AI Incident Response | D | `incident response` | O | — |
-| 35 | Red Teaming | D | `red teaming` | O | — |
-| 36 | Auditability of AI Actions | D | `auditability` | O | — |
+| 34 | AI Incident Response | D | `incident response` | O | standards/34-ai-incident-response.md |
+| 35 | Red Teaming | D | `red teaming` | O | standards/35-red-teaming.md |
+| 36 | Auditability of AI Actions | D | `auditability` | O | standards/36-auditability-of-ai-actions.md |
 
 ### Band I — Accessibility, fairness, transparency, disclosure · bullet 8
 
@@ -277,19 +277,19 @@ under [Authored items](#authored-items).
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
 | 45 | Approval Gates for High-Impact, Destructive, and Irreversible Actions | D | `high-impact, destructive` | X | standards/45-approval-gates.md |
-| 46 | Gates for Externally Visible Actions | D | `externally visible actions` | O | — |
+| 46 | Gates for Externally Visible Actions | D | `externally visible actions` | O | standards/46-gates-for-externally-visible-actions.md |
 
 ### Band L — Prohibitions
 
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
 | 47 | AI Engineering Invariants | A | — | O | — |
-| 48 | Safety and Oversight Prohibitions | A | — | O | — |
-| 49 | Data and Privacy Prohibitions | A | — | O | — |
-| 50 | Evaluation Integrity Prohibitions | A | — | O | — |
+| 48 | Safety and Oversight Prohibitions | A | — | O | standards/48-safety-and-oversight-prohibitions.md |
+| 49 | Data and Privacy Prohibitions | A | — | O | standards/49-data-and-privacy-prohibitions.md |
+| 50 | Evaluation Integrity Prohibitions | A | — | O | standards/50-evaluation-integrity-prohibitions.md |
 | 51 | Agent and Tool Execution Prohibitions | A | — | O | standards/51-agent-and-tool-execution-prohibitions.md |
-| 52 | Output Honesty Prohibitions | A | — | O | — |
-| 53 | Disclosure and Deception Prohibitions | A | — | O | — |
+| 52 | Output Honesty Prohibitions | A | — | O | standards/52-output-honesty-prohibitions.md |
+| 53 | Disclosure and Deception Prohibitions | A | — | O | standards/53-disclosure-and-deception-prohibitions.md |
 
 ---
 

@@ -540,6 +540,66 @@ its end. The two can disagree. **Not resolved here, because it concerns two stan
 **Impact if unanswered:** a cited figure may name a revision the retention mechanism has deleted.
 Recommended: the period of the thing that names a revision should not outlast the revision's.
 
+### Q49 — Should the incident, red-team and audit-record templates and schemas gain fields the new standards need?
+
+Standard 34 R2 (cause labelling, containment actor and time, contradicted records) and Standard 35 R7
+(version tested) name content `templates/INCIDENT-REPORT.md` and `templates/RED-TEAM-REPORT.md` lack;
+Standards 34, 35 and 36 also need a declared home for criteria, exercise records and audit-record fields.
+**Not resolved here, because template and schema changes are outside this slice (plan 02 section 8).**
+**Impact if unanswered:** the templates and the standards drift. Recommended: amend templates separately.
+
+### Q50 — Should an `audit`, `incident` or `redteam` rule namespace be reserved, and should any rule examine a red-team record?
+
+`agent.no-self-modification` and `promptsec.template-injection-guarded` are `not-evaluable` and name a
+recorded red-team exercise as how they would be established. Standards 34, 35 and 36 mint no rule.
+**Not resolved here, because minting a rule or shard is owner-only.** **Impact if unanswered:** those
+properties stay not-evaluable. Recommended: mint nothing for now.
+
+### Q51 — Does Standard 36 R5's independent reader role need structural separation like Standard 45 R5?
+
+Standard 36 R5 requires a reader who is neither the actor nor the requester. Whether it should become a
+structural separation requirement is undecided. **Not resolved here, because it is a judgment about how
+far authored restrictions go.** **Impact if unanswered:** none for the text as written.
+
+### Q52 — Do Standard 45 R5 and R6 need re-scoping to every approval gate?
+
+Standard 45 R5 (no self-approval) and R6 (fail closed) apply only to irreversible actions; Standard 46 R2
+states the same reasoning for externally visible actions in one sentence, which risks drift. Options: keep;
+re-scope 45 R5 and R6 and drop the sentence from 46; cite 45 by reference. **Not resolved here, because it
+changes an already-written standard.** **Impact if unanswered:** drift. Recommended: re-scope in 45.
+
+### Q53 — Can a standing delegation under Standard 11 satisfy Standard 46 R2's per-action approval?
+
+**Not resolved here, because it concerns the reach of Standard 11.** **Impact if unanswered:** scheduled
+or auto-reply posting is undecided. Recommended: only if Standard 11 records it as the approval.
+
+### Q54 — Where does "outside the organisation" begin for Standards 45 and 46?
+
+Both inherit an undefined phrase (shared tenant, all-staff broadcast). **Not resolved here, because it is
+a definition for Standard 1 or 45.** **Impact if unanswered:** the externally-visible class is project-defined.
+
+### Q55 — Do the prohibitions of Standards 48 to 50, 52 and 53 overlap the existing forbidden rules, and who owns each act?
+
+Standard 48 R1 and R2 overlap `misuse.safety-controls-not-disabled`, `gate.no-self-approval`,
+`gate.fail-closed`, `oversight.no-authority-beyond-declared-tier` and `agent.no-self-modification`;
+Standard 48 R1 is provisional pending Q23. Standard 49 R1 and R2 are new authored limbs beside Standard
+13's three privacy rules (Q12 open); Standard 50 R1 overlaps Standard 17 R4 (Q19 open); Standards 52 and
+53 divide ground with Standards 28, 25 and 40. **Not resolved here, because the owner holds the placement
+questions Q9, Q12, Q19 and Q23 open (option C, 2026-10-15) and no rule was moved.** **Impact if
+unanswered:** one act may be reported under two standards. Recommended: one owner per act, decided with
+those questions.
+
+### Q56 — Are Standards 53 R1 to R3 exemptible, and does a rule belong in the shared `disclosure.` segment?
+
+FinancialStandards uses `disclosure.`; Standard 7 R4 forbids only a colliding full id. **Not resolved
+here, because it is an owner policy choice.** **Impact if unanswered:** exemptibility of the deception
+prohibitions is undecided. Recommended: R2 non-exemptible; mint no rule yet.
+
+### Q57 — Is Standard 53 R3 (suppressing an owed disclosure) Standard 40's omission or item 53's act?
+
+Standard 40 left the line provisional. **Not resolved here, because the owner has not ruled.** **Impact if
+unanswered:** the same act may be recorded against both. Recommended: 53 holds the act, 40 the omission.
+
 ## Not questions
 
 Per-shard rule counts are a plan, not a measurement. The catalog does not exist yet, and

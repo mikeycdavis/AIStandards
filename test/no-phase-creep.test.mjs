@@ -796,6 +796,9 @@ test("only the standards written so far exist", () => {
     "31-reproducibility-under-nondeterminism.md",
     "32-rollback-and-recovery.md",
     "33-ai-observability.md",
+    "34-ai-incident-response.md",
+    "35-red-teaming.md",
+    "36-auditability-of-ai-actions.md",
     "37-fairness-and-harm-distribution.md",
     "38-accessibility-of-ai-features.md",
     "39-transparency-and-system-documentation.md",
@@ -805,7 +808,13 @@ test("only the standards written so far exist", () => {
     "43-environmental-impact-accounting.md",
     "44-operational-resilience-degradation-and-provider-portability.md",
     "45-approval-gates.md",
+    "46-gates-for-externally-visible-actions.md",
+    "48-safety-and-oversight-prohibitions.md",
+    "49-data-and-privacy-prohibitions.md",
+    "50-evaluation-integrity-prohibitions.md",
     "51-agent-and-tool-execution-prohibitions.md",
+    "52-output-honesty-prohibitions.md",
+    "53-disclosure-and-deception-prohibitions.md",
   ]);
 });
 

@@ -179,10 +179,10 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
 - `scripts/sync-rule-tables.mjs` (writes the generated tables; `--check` is read-only; refuses a
   written standard missing a block for a shard that holds its rules) and
   `scripts/standards-sections.mjs` (read-only document conformance), both 2026-09-14
-- **42 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 37, 38, 39, 40, 41, 42, 43, 44, 45, 51**
+- **51 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 48, 49, 50, 51, 52, 53**
   (17 added 2026-09-15; 25 and 33 added 2026-10-03; 51 added 2026-10-05 by the ST-42 assignment: it states `agent.no-self-modification` and
   `agent.retrieved-content-not-instruction`, which Standard 23 stated until then; 10, 12, 18, 19, 37 to 42 and 44 added by the
-  open-draft consolidation: ST-02, ST-04, ST-12, ST-13, ST-29 to ST-34 and ST-36; 14, 15, 16, 20, 22, 24 added by overnight batch 1 (2026-11-04): ST-06, ST-08, ST-10, ST-14, ST-15, ST-16; 26 to 32 added by overnight batch 2 (2026-11-04): ST-18 to ST-24, refs #63 to #69)
+  open-draft consolidation: ST-02, ST-04, ST-12, ST-13, ST-29 to ST-34 and ST-36; 14, 15, 16, 20, 22, 24 added by overnight batch 1 (2026-11-04): ST-06, ST-08, ST-10, ST-14, ST-15, ST-16; 26 to 32 added by overnight batch 2 (2026-11-04): ST-18 to ST-24, refs #63 to #69; 34, 35, 36, 46, 48, 49, 50, 52, 53 added by overnight batch 3 (2026-11-04): ST-26 to ST-28, ST-37, ST-39 to ST-41, ST-43, ST-44, refs #71 to #73, #82, #84 to #86, #88, #89)
 - `templates/` (twelve templates and `index.json`), `scripts/manifest.mjs`, `scripts/toolperms.mjs` and
   `scripts/init.mjs`, all 2026-09-19 — see the sixth batch below
 
@@ -468,7 +468,7 @@ the coordinator's inference from the plan, the schemas and Standard 17, and the 
   bytes, so a target inherits the checkout's line endings; no `.gitattributes` was added (Q8; answered A, vendor-only rule, on 2026-10-14). Coverage is
   still declared, not measured. The human report's closing NOTE prints on a refused run too.
 
-**Deliberately not built, and asserted absent by test:** the remaining 11 standards, shards for
+**Deliberately not built, and asserted absent by test:** the remaining 2 standards, shards for
 the nine reserved namespaces that have none, `artifacts/standards-source-inventory.json`, attestations,
 containers, CI workflows, the adapter, and Phase 3's detectors. `test/no-phase-creep.test.mjs` fails if any of them appears early.
 
@@ -626,10 +626,10 @@ starting rather than trusting this section. Candidates, all inferred rather than
 **Q22 and Q7 are the open questions most likely to matter next.** Q22 decides whether this pack states
 any evaluation requirement for systems MachineLearningStandards does not reach, and cannot be answered
 without that pack's maintainers or an owner decision to author on its ground. Q7, Q18 and Q27 are among the
-open questions that change an already-written standard's wording. Q9 to Q12, Q15, Q17 to Q21 and Q23 to Q51 are also open
+open questions that change an already-written standard's wording. Q9 to Q12, Q15, Q17 to Q21 and Q23 to Q60 are also open
 (see §8).
 
-Completing the adoption slice does not complete Phase 2: 11 standards, nine missing shards and the
+Completing the adoption slice does not complete Phase 2: 2 standards, nine missing shards and the
 source inventory remain.
 
 ## 10 · Invariants — do not break these
