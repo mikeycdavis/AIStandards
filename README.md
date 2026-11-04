@@ -89,11 +89,17 @@ Exit codes are process semantics. The verdict is the `status` field of the JSON 
 [11 Autonomy Levels and Delegated Authority](standards/11-autonomy-levels-and-delegated-authority.md) ·
 [12 Context and Corpus Provenance](standards/12-context-and-corpus-provenance.md) ·
 [13 Personal Data in AI Systems](standards/13-personal-data-in-ai-systems.md) ·
+[14 Consent and Licensing](standards/14-consent-and-licensing.md) ·
+[15 Retention, Deletion, and Memorization](standards/15-retention-deletion-memorization.md) ·
+[16 Access Control for Models, Context, and Tools](standards/16-access-control-for-models-context-and-tools.md) ·
 [17 Evaluation Plans for Generative Systems](standards/17-evaluation-plans-for-generative-systems.md) ·
 [18 Benchmark Integrity and Contamination](standards/18-benchmark-integrity-and-contamination.md) ·
 [19 Robustness Evaluation](standards/19-robustness-evaluation.md) ·
+[20 Regression Testing Across Model and Prompt Versions](standards/20-regression-testing.md) ·
 [21 Prompt and Instruction Security](standards/21-prompt-and-instruction-security.md) ·
+[22 Tool and Function-Call Security](standards/22-tool-and-function-call-security.md) ·
 [23 Agent Execution Security](standards/23-agent-execution-security.md) ·
+[24 Retrieval and Context Supply Chain](standards/24-retrieval-and-context-supply-chain.md) ·
 [25 Grounding and Hallucination Control](standards/25-grounding-and-hallucination-control.md) ·
 [33 AI Observability](standards/33-ai-observability.md) ·
 [43 Environmental Impact Accounting](standards/43-environmental-impact-accounting.md) ·
