@@ -66,67 +66,23 @@ dated record of that slice and is left as written.)
 
 ---
 
-## 2. Current state, verified 2026-09-14 (counts updated through the Standard 18 slice)
-## 2. Current state, verified 2026-09-14 (counts updated through the Standard 19 slice)
+## 2. Current state, verified 2026-09-14 (counts updated through the open-draft consolidation)
 
-**Written: 18 of 53 standards** — `standards/01-ai-system-manifest.md`,
-`02-ai-risk-tiering-and-applicability.md`, `03-machine-readable-ai-policy.md`,
-`05-verdict-vocabulary.md`, `06-standard-structure-and-rule-identity.md`,
-`07-boundary-with-adjacent-standards.md`, `08-ai-safety-requirements-and-safety-cases.md`,
-`09-misuse-and-abuse-prevention.md`, `10-human-oversight-and-intervention.md`,
-`11-autonomy-levels-and-delegated-authority.md`,
-`13-personal-data-in-ai-systems.md`, `17-evaluation-plans-for-generative-systems.md`,
-`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `43-environmental-impact-accounting.md`, `45-approval-gates.md`,
-`09-misuse-and-abuse-prevention.md`, `11-autonomy-levels-and-delegated-authority.md`,
-`12-context-and-corpus-provenance.md`, `13-personal-data-in-ai-systems.md`, `17-evaluation-plans-for-generative-systems.md`,
-`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `45-approval-gates.md`,
-`51-agent-and-tool-execution-prohibitions.md`
+**Written: 29 of 53 standards** — `01-ai-system-manifest.md`, `02-ai-risk-tiering-and-applicability.md`, `03-machine-readable-ai-policy.md`, 
+`05-verdict-vocabulary.md`, `06-standard-structure-and-rule-identity.md`, `07-boundary-with-adjacent-standards.md`, 
+`08-ai-safety-requirements-and-safety-cases.md`, `09-misuse-and-abuse-prevention.md`, `10-human-oversight-and-intervention.md`, 
+`11-autonomy-levels-and-delegated-authority.md`, `12-context-and-corpus-provenance.md`, `13-personal-data-in-ai-systems.md`, 
+`17-evaluation-plans-for-generative-systems.md`, `18-benchmark-integrity-and-contamination.md`, `19-robustness-evaluation.md`, 
+`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, 
+`33-ai-observability.md`, `37-fairness-and-harm-distribution.md`, `38-accessibility-of-ai-features.md`, 
+`39-transparency-and-system-documentation.md`, `40-user-disclosure-of-ai-involvement.md`, `41-inference-cost-and-budget-control.md`, 
+`42-latency-budgets-for-ai-interactions.md`, `43-environmental-impact-accounting.md`, `44-operational-resilience-degradation-and-provider-portability.md`, 
+`45-approval-gates.md`, `51-agent-and-tool-execution-prohibitions.md`
 (Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
-owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 43 added 2026-10-15, ST-35, #80).
-(Standard 10 added 2026-10-15; Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
-owner's assignment of the two `forbidden` agent rules to it — ST-42, #87).
-`09-misuse-and-abuse-prevention.md`, `11-autonomy-levels-and-delegated-authority.md`,
-`13-personal-data-in-ai-systems.md`, `17-evaluation-plans-for-generative-systems.md`, `18-benchmark-integrity-and-contamination.md`,
-`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `45-approval-gates.md`,
-`51-agent-and-tool-execution-prohibitions.md`
-(Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
-owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 18 added by ST-12 (#57), prose-first, ships no rule).
-`09-misuse-and-abuse-prevention.md`, `11-autonomy-levels-and-delegated-authority.md`,
-`13-personal-data-in-ai-systems.md`, `17-evaluation-plans-for-generative-systems.md`, `19-robustness-evaluation.md`,
-`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `45-approval-gates.md`,
-`51-agent-and-tool-execution-prohibitions.md`
-(Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
-owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 19 added by ST-13 (#58), prose-first, ships no rule).
-`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `37-fairness-and-harm-distribution.md`, `45-approval-gates.md`,
-`51-agent-and-tool-execution-prohibitions.md`
-(Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
-owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 37 added by ST-29, #74).
-`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `38-accessibility-of-ai-features.md`, `45-approval-gates.md`,
-`51-agent-and-tool-execution-prohibitions.md`
-(Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
-owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 38 added by ST-30, #75).
-`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `39-transparency-and-system-documentation.md`, `45-approval-gates.md`,
-`51-agent-and-tool-execution-prohibitions.md`
-(Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
-owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 39 added by ST-31, #76).
-`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `40-user-disclosure-of-ai-involvement.md`, `45-approval-gates.md`,
-`51-agent-and-tool-execution-prohibitions.md`
-(Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
-owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 40 added by ST-32, #77).
-`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `41-inference-cost-and-budget-control.md`, `45-approval-gates.md`,
-`51-agent-and-tool-execution-prohibitions.md`
-(Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
-owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 41 added 2026-10-15, ST-33, #78).
-`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `42-latency-budgets-for-ai-interactions.md`, `45-approval-gates.md`,
-`51-agent-and-tool-execution-prohibitions.md`
-(Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
-owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 42 added 2026-10-15, ST-34, #79).
-`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `44-operational-resilience-degradation-and-provider-portability.md`, `45-approval-gates.md`,
-`51-agent-and-tool-execution-prohibitions.md`
-(Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
-owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 44 added 2026-10-15, ST-36, #81).
+owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 43 added 2026-10-15, ST-35, #80;
+Standards 10, 12, 18, 19, 37 to 42 and 44 added by the open-draft consolidation: ST-02, ST-04, ST-12, ST-13, ST-29 to ST-34, ST-36),
 
-**35 standards remain unwritten.**
+**24 standards remain unwritten.**
 
 **Rules: 46 across 8 shards** — `rules/agent.json` (4), `eval.json` (5), `gate.json` (6),
 `lifecycle.json` (11, five of them Standard 08's), `misuse.json` (5, four of them Standard 09's),
@@ -259,7 +215,7 @@ specification rather than about your new file. That is exactly what happened whi
 `test/no-phase-creep.test.mjs` holds a sorted literal list of the standards that exist, under the
 test named `only the standards written so far exist`. Add the new filename in sorted position.
 
-The guard is not that the corpus is frozen — this phase writes the remaining 35. It is that a standard
+The guard is not that the corpus is frozen — this phase writes the remaining 24. It is that a standard
 arrives *deliberately*, by being added to that list, rather than by appearing unnoticed.
 
 **Verify (steps 1–5):**
@@ -319,7 +275,7 @@ node scripts/test.mjs && node scripts/inventory.mjs && node scripts/fidelity.mjs
 
 `node scripts/standards-sections.mjs` runs inside `node scripts/test.mjs` through
 `test/standards-sections.test.mjs`, and may also be run directly. Passing this command does not
-complete the phase: 35 standards, the nine missing shards and
+complete the phase: 24 standards, the nine missing shards and
 `artifacts/standards-source-inventory.json` remain.
 
 ## 8. Out of scope for this phase — a closed list
@@ -522,7 +478,7 @@ Q7, Q9 to Q12, Q15 to Q22 and Q26 to Q28 remain open.
 `scripts/toolperms.mjs` and `scripts/init.mjs` as Phase 2 deliverables (§4) and names no file set, marker
 form, conflict behaviour or module boundary. Each decision below is inferred from the evidence cited and
 is the coordinator's, not the owner's; the owner may reverse any of them. **Completing this slice does not
-complete Phase 2**: 35 standards, shards for nine namespaces and the foreign-crosswalk id check remain.
+complete Phase 2**: 24 standards, shards for nine namespaces and the foreign-crosswalk id check remain.
 
 ### 12.1 Why detectors changed first
 

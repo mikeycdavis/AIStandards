@@ -179,27 +179,10 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
 - `scripts/sync-rule-tables.mjs` (writes the generated tables; `--check` is read-only; refuses a
   written standard missing a block for a shard that holds its rules) and
   `scripts/standards-sections.mjs` (read-only document conformance), both 2026-09-14
-- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 43, 45, 51**
-- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 10, 11, 13, 17, 21, 23, 25, 33, 45, 51**
-- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 12, 13, 17, 21, 23, 25, 33, 45, 51**
-- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 18, 21, 23, 25, 33, 45, 51**
-- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 41, 45, 51**
-- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 42, 45, 51**
-- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 44, 45, 51**
+- **29 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 10, 11, 12, 13, 17, 18, 19, 21, 23, 25, 33, 37, 38, 39, 40, 41, 42, 43, 44, 45, 51**
   (51 added 2026-10-05 by the ST-42 assignment: it states `agent.no-self-modification` and
-  `agent.retrieved-content-not-instruction`, which Standard 23 stated until then; 18 added by ST-12 (#57), prose-first, ships no rule)
-- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 19, 21, 23, 25, 33, 45, 51**
-  (51 added 2026-10-05 by the ST-42 assignment: it states `agent.no-self-modification` and
-  `agent.retrieved-content-not-instruction`, which Standard 23 stated until then; 19 added by ST-13 (#58), prose-first, ships no rule)
-- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 37, 45, 51**
-  (37 added by ST-29, #74; 51 added 2026-10-05 by the ST-42 assignment: it states `agent.no-self-modification` and
-- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 38, 45, 51**
-  (38 added by ST-30, #75; 51 added 2026-10-05 by the ST-42 assignment: it states `agent.no-self-modification` and
-- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 39, 45, 51**
-  (39 added by ST-31, #76; 51 added 2026-10-05 by the ST-42 assignment: it states `agent.no-self-modification` and
-- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 40, 45, 51**
-  (40 added by ST-32, #77; 51 added 2026-10-05 by the ST-42 assignment: it states `agent.no-self-modification` and
-  `agent.retrieved-content-not-instruction`, which Standard 23 stated until then)
+  `agent.retrieved-content-not-instruction`, which Standard 23 stated until then; 10, 12, 18, 19, 37 to 42 and 44 added by the
+  open-draft consolidation: ST-02, ST-04, ST-12, ST-13, ST-29 to ST-34 and ST-36)
 - `templates/` (twelve templates and `index.json`), `scripts/manifest.mjs`, `scripts/toolperms.mjs` and
   `scripts/init.mjs`, all 2026-09-19 — see the sixth batch below
 
@@ -485,7 +468,7 @@ the coordinator's inference from the plan, the schemas and Standard 17, and the 
   bytes, so a target inherits the checkout's line endings; no `.gitattributes` was added (Q8; answered A, vendor-only rule, on 2026-10-14). Coverage is
   still declared, not measured. The human report's closing NOTE prints on a refused run too.
 
-**Deliberately not built, and asserted absent by test:** the remaining 35 standards, shards for
+**Deliberately not built, and asserted absent by test:** the remaining 24 standards, shards for
 the nine reserved namespaces that have none, `artifacts/standards-source-inventory.json`, attestations,
 containers, CI workflows, the adapter, and Phase 3's detectors. `test/no-phase-creep.test.mjs` fails if any of them appears early.
 
@@ -638,7 +621,7 @@ starting rather than trusting this section. Candidates, all inferred rather than
   standards and the nine missing shards.
 - **Another standard.** None now owns rules, so each would be prose only; pick by what later work
   cites. Follow `artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` §5 and cite code by
-  symbol name. Do not start the remaining 35 in one pass.
+  symbol name. Do not start the remaining 24 in one pass.
 
 **Q22 and Q7 are the open questions most likely to matter next.** Q22 decides whether this pack states
 any evaluation requirement for systems MachineLearningStandards does not reach, and cannot be answered
@@ -648,7 +631,7 @@ without that pack's maintainers or an owner decision to author on its ground. Q7
 open questions that change an already-written standard's wording. Q9 to Q12, Q15 to Q21 and Q26 to Q28 are also open
 (see §8).
 
-Completing the adoption slice does not complete Phase 2: 35 standards, nine missing shards and the
+Completing the adoption slice does not complete Phase 2: 24 standards, nine missing shards and the
 source inventory remain.
 
 ## 10 · Invariants — do not break these
