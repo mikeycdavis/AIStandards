@@ -115,7 +115,7 @@ Exit codes are process semantics. The verdict is the `status` field of the JSON 
 
 1, 3, 5, 6 and 7 are machinery — each documents something the code does, so no behaviour ships
 undocumented. 21 and 45, written in Phase 1, are the easiest and hardest domain standards, chosen to
-prove the document skeleton at both extremes. 2, 8, 9, 10, 11, 12, 13, 17, 18, 19, 23, 25, 33, 37, 38, 39, 40, 41, 42, 43, 44 and 51 are the Phase 2 corpus written so far.
+prove the document skeleton at both extremes. 2, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 33, 37, 38, 39, 40, 41, 42, 43, 44 and 51 are the Phase 2 corpus written so far.
 
 **Rules** — 46 across eight shards; **9 have a detector**. The rest report as unevaluated. That ratio
 is not a defect to be hidden: an AI standards pack is mostly manual review, and a design claiming

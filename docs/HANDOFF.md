@@ -621,14 +621,14 @@ starting rather than trusting this section. Candidates, all inferred rather than
   standards and the nine missing shards.
 - **Another standard.** None now owns rules, so each would be prose only; pick by what later work
   cites. Follow `artifacts/project-plan-breakdown/02-phase-2-normative-corpus.md` §5 and cite code by
-  symbol name. Do not start the remaining 24 in one pass.
+  symbol name. Do not start the remaining 18 in one pass.
 
 **Q22 and Q7 are the open questions most likely to matter next.** Q22 decides whether this pack states
 any evaluation requirement for systems MachineLearningStandards does not reach, and cannot be answered
 without that pack's maintainers or an owner decision to author on its ground. Q7 and Q23 to Q25 are among the
 open questions that change an already-written standard's wording. Q9 to Q12, Q15 to Q21 are also open
 without that pack's maintainers or an owner decision to author on its ground. Q7, Q18 and Q27 are among the
-open questions that change an already-written standard's wording. Q9 to Q12, Q15 to Q21 and Q26 to Q28 are also open
+open questions that change an already-written standard's wording. Q9 to Q12, Q15 to Q21 and Q26 to Q37 are also open
 (see §8).
 
 Completing the adoption slice does not complete Phase 2: 18 standards, nine missing shards and the
