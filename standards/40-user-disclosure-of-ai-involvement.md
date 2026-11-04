@@ -52,7 +52,7 @@ Terms, defined once and used verbatim below:
 - **Presence artifact** — a notice string, a label, a policy page or a declaration.
 
 **Provisionally not covered, recorded open.** A system asserting that a person, not an AI, produced or
-is producing its output is, on this standard's provisional reading, the case item 53 would address. The
+is producing its output is, on this standard's provisional reading, the case [Standard 53](53-disclosure-and-deception-prohibitions.md) addresses. The
 specification lists item 53 as "Disclosure and Deception Prohibitions", class `A`, derived from the same `user disclosure`
 token, written as [Standard 53](53-disclosure-and-deception-prohibitions.md). Provisionally it is item 53's; the division is recorded open (see
 Relationship), and nothing here states, restates or pre-empts such a prohibition.

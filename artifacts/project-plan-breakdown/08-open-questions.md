@@ -466,13 +466,14 @@ those requirements are not machine-checkable. Recommended: leave project-private
 
 ### Q43 — Where is the line between Standards 28, 52 and 25 for claims about capability and the system's own state?
 
-Standard 28 R2 and R3 carry MUST NOT limbs that overlap the prohibition face (item 52, unwritten; its faces
-are not yet drawn), and "I did X" claims are also statements of the system's own state (Standard 25
-Scope). Item 52 is the future owner of the prohibition face; until it is written nothing states what it
-will hold. **Not resolved here, because it concerns two standards' shared ground and one of them does not
-exist.** **Impact if unanswered:** one act may be reported under two standards. Recommended: Standard 28
-keeps the positive duty and its limbs, and item 52 holds the faces Standard 28 does not state, by
-reference, when it is written.
+Standard 28 R2 and R3 carry MUST NOT limbs that overlap the prohibition face (item 52, now written as
+[Standard 52](../../standards/52-output-honesty-prohibitions.md); it was unwritten when this question was raised),
+and "I did X" claims are also statements of the system's own state (Standard 25
+Scope). Standard 52 is the owner of the prohibition face and states its own four requirements; the
+division is recorded open there (Q58). **Not resolved here, because it concerns two standards' shared ground.**
+**Impact if unanswered:** one act may be reported under two standards. Recommended: Standard 28
+keeps the positive duty and its limbs, and Standard 52 holds the faces Standard 28 does not state, by
+reference.
 
 ### Q44 — Does model lineage (Standard 30 R3) belong here or with MachineLearningStandards?
 

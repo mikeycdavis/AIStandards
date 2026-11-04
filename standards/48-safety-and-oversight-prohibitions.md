@@ -315,8 +315,9 @@ Not authored here: the posture, and the search behind it, are the boundary revie
 no field for an intervention path or a safety control, and none is proposed here.
 
 [Standard 2](02-ai-risk-tiering-and-applicability.md) is relied on for its R3 rule that a tier narrows
-scope and never lowers a requirement, and its R4 dispositions, which are why "no overseer" or "no stated
-safety requirement" must be a reasoned declaration. [Standard 5](05-verdict-vocabulary.md) defines
+scope and never lowers a requirement, and notes that its R4 dispositions attach to catalog rules, which this standard
+has none of, so "no overseer" or "no stated safety requirement" is declared in the
+project's own documents, as Scope says. [Standard 5](05-verdict-vocabulary.md) defines
 `not-evaluated` and `prohibited-but-unestablished`, relied on in Validation.
 [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the Tests section answers.
 [Standard 7](07-boundary-with-adjacent-standards.md) records the row this item sits in and R4 governs

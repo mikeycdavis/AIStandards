@@ -392,7 +392,7 @@ Its R6 rule overlaps R1 and R2 as set out under each. [Standard 45](45-approval-
 `gate.no-self-approval` is adjacent to R1. [Standard 9](09-misuse-and-abuse-prevention.md) governs
 deliberate misuse; an agent directed by retrieved content is R2's case.
 
-Unwritten items this standard defers to, by specification number: item 4 (exceptions); and item 35 (the exercise R1's rule names). Items 22 and 24 are written: [Standard 22](22-tool-and-function-call-security.md) (tool security, and whether tool output other than fetched content is within R2) and [Standard 24](24-retrieval-and-context-supply-chain.md) (retrieval supply chain).
+Item 4 (exceptions) is the only item this standard defers to that is unwritten. Items 22, 24 and 35 are written: [Standard 35](35-red-teaming.md) (the exercise R1's rule names), [Standard 22](22-tool-and-function-call-security.md) (tool security, and whether tool output other than fetched content is within R2) and [Standard 24](24-retrieval-and-context-supply-chain.md) (retrieval supply chain).
 
 Outside this repository: **MathematicsStandards** uses the `agent.` segment for
 `agent.explainable-findings` and `agent.refusal-on-invariant`. Neither was read for this document, and
