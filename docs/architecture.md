@@ -13,7 +13,7 @@ reading the module headers, the exported surface and the call sites it names. It
 generation of 2026-09-14, which predated: `init`, the manifest and tool-permission modules and the
 templates; the `--strict` audit flag; the lexical-contract freeze (ST-48); and the structural reader
 with its vendored YAML parser (ST-57). It describes the implementation at that commit — 18 modules under
-`scripts/` plus the vendored tree, 17 of 53 standards written, 46 rules in 8 shards, 35 test files.
+`scripts/` plus the vendored tree, 17 of 53 standards written, 46 rules in 8 shards, 36 test files.
 Line numbers were taken from that tree. It is **not** a plan and does not describe Phases 4–7.
 The superseded pre-implementation capture is preserved separately as
 `docs/architecture-baseline-2026-09-03.md`, which must not be overwritten: it is the evidence that
@@ -37,7 +37,7 @@ architecture. Regenerate this document rather than hand-patching it.
 |---|---|
 | Runtime | Node.js ≥ 18 declared (`engines` in `package.json`), ESM `.mjs` throughout. Which versions have executed which tree is recorded per commit in `docs/HANDOFF.md` §3; the ST-57 integration ran the full suite on Node 24.15.0 and 18.20.8 |
 | Dependencies | **No install-time or environment-resolved third-party dependency** (invariant 4, as amended). No `dependencies` or `devDependencies` key, no lockfile, no install step, no bare import under `scripts/` — structurally enforced by `test/no-phase-creep.test.mjs`. One third-party parser is **vendored** as reviewed repository content: `yaml@2.9.1` (ISC) under `scripts/vendor/yaml`, identity and per-file SHA-256 pinned in `scripts/vendor/yaml.vendor.json` and held by `test/vendor-yaml.test.mjs`; kept LF by `.gitattributes` |
-| Test framework | `node:test` + `node:assert/strict`, run via `scripts/test.mjs` with an explicit list of 35 files (1063 tests at this commit) |
+| Test framework | `node:test` + `node:assert/strict`, run via `scripts/test.mjs` with an explicit list of 36 files (1155 tests at this commit) |
 | YAML (policy, manifest) | `scripts/yaml.mjs` — a hand-written subset parser that *refuses* constructs it cannot represent rather than guessing. Kept separate from the structural reader on purpose |
 | YAML (structural) | the vendored `yaml` library, used only by `scripts/structural.mjs`, never `toJS`, aliases never dereferenced |
 | JSON (structural) | an owned strict RFC 8259 tokenizer in `scripts/structural.mjs` (duplicates and offsets kept; `JSON.parse` is not the semantic parser) |
@@ -57,7 +57,7 @@ There is one product process. AIStandards has no server, no daemon, and no backg
 ### `standards` CLI
 **Host:** invoked directly by a developer, by `npm run` scripts, by CI, or by StandardsEnforcer as a
 subprocess.
-**Entry point:** `scripts/standards.mjs` (1227 lines); `main(argv)` at line 1175, dispatched from the
+**Entry point:** `scripts/standards.mjs` (1277 lines); `main(argv)` at line 1225, dispatched from the
 `import.meta.url` guard at the foot of the file. `init` is routed to `runInitCommand` before flag parsing.
 **Purpose:** Walks a target repository, reads every in-scope YAML and JSON file once with the
 structural reader, runs a fixed sequence of detectors over it, and emits either an evidence report
@@ -84,7 +84,7 @@ equivalent of an endpoint inventory. `package.json` wraps each as an npm script:
 ### `scripts/standards.mjs`
 | Command | Flags | Purpose |
 |---|---|---|
-| `audit <path>` | `--json`, `--strict`, `--dir=` | Evidence discovery. Prints the file surface, the unparseable-file count, the detected AI surface and all findings. Emits **no status and no score**, and prints the literal line `This is evidence, not a verdict.` (`NOT_A_VERDICT`, line 1010). The JSON report is `schemaVersion` `1.2` and carries `evidenceSurface.unparseableFiles` and `structuralSurface` (with `duplicateKeysEvaluated`). `--strict` exits 1 when a finding of severity `error` or `warning` exists; without it audit is diagnostic and exits 0 |
+| `audit <path>` | `--json`, `--strict`, `--dir=` | Evidence discovery. Prints the file surface, the unparseable-file count, the detected AI surface and all findings. Emits **no status and no score**, and prints the literal line `This is evidence, not a verdict.` (`NOT_A_VERDICT`, line 1059). The JSON report is `schemaVersion` `1.2` and carries `evidenceSurface.unparseableFiles` and `structuralSurface` (with `duplicateKeysEvaluated`). `--strict` exits 1 when a finding of severity `error` or `warning` exists; without it audit is diagnostic and exits 0 |
 | `validate <path>` | `--policy=`, `--json`, `--dir=` | The policy-aware verdict. Loads the target's `ai-policy.yml`, applies applicability, runs the same detectors, and emits an envelope (`schemaVersion` `1.1`, with `results[].locations`) whose top-level `status` is one of five values. The human form lists every result that is not `passed`, then "Prohibitions not established. These are not passes:", then the not-evaluable rules |
 | `init <target>` | `--docs`, `--dry-run`, `--force-overwrite=<file>`, `--json` | Copies templates byte for byte into an explicitly selected target. Never defaults to the working directory, refuses the pack root, rolls back on a write failure, and produces scaffolding that satisfies no rule. Exit 0 or 2 only |
 
@@ -228,7 +228,7 @@ security-relevant seam.
 ### Judgment layer
 **Responsibility:** turning observations into a verdict, and deriving the six-way distinction.
 
-- `scripts/compliance.mjs` (317 lines) — holds **four separate vocabularies** that are never
+- `scripts/compliance.mjs` (330 lines) — holds **four separate vocabularies** that are never
   merged: `STATUS` (5 values), `RESULT` (4), `DISPOSITION` (5), `DISTINCTION` (6). `distinction()`
   (line 58) is a **pure derived function** of `(result, disposition, level)` — never stored, so it
   cannot drift from the vocabularies it summarises. Its branch order is load-bearing: the
