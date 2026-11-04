@@ -27,7 +27,7 @@ sequenceDiagram
     Note over Det: Descriptive detectors first (rule: null),<br/>judgmental after. A shortened walk<br/>withdraws content-derived rules.
     Det->>Rdr: readStructuralFiles: parse every .yml/.yaml/.json once
     Rdr-->>Det: parsed (counts, aliases not followed)<br/>or a failure value per file
-    Note over Det: A file that failed is never scanned lexically.<br/>The inline-prompt rules get an unknown for it.
+    Note over Det: The inline-prompt rules never scan a failed file lexically<br/>and get an unknown for it. Standard 9 still scans it (lexical).
     Det-->>CLI: observations[], findings[], invariantViolations[]
     CLI->>CLI: assertBindings(catalog, observed rule ids)
     CLI->>CLI: checkApplicabilityContradictions(run, resolved)
