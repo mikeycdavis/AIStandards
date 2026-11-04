@@ -75,8 +75,8 @@ It does **not** cover, and claims none of the ground of:
   defensible measure of its own confidence, the interface SHOULD convey it. An interface MUST NOT invent a
   confidence indication that the underlying system does not produce." Nothing here restates it.
 - **Whether an output is anchored to a basis**, which is [Standard 25](25-grounding-and-hallucination-control.md),
-  and **how a source is named to a reader** (item 27) and **what a system says about its capabilities**
-  (item 28).
+  and **how a source is named to a reader** ([Standard 27](27-citation-and-source-attribution.md)) and **what a system says about its capabilities**
+  ([Standard 28](28-capability-honesty-to-users.md)).
 - **Refusals on misuse, safety or authority grounds**, which belong to
   [Standard 9](09-misuse-and-abuse-prevention.md) and [Standard 10](10-human-oversight-and-intervention.md).
 - **The method of calibration or metric selection**, which [Standard 7](07-boundary-with-adjacent-standards.md)
@@ -216,7 +216,7 @@ in Additions, and are not owner-approved:
 | R3 | `manual-review` | `warning` |
 | R4 | `manual-review` | `error` |
 | R5 | `manual-review` | `warning` |
-| R6 | none (a constraint on the framework) | none |
+| R6 | none (a constraint on the framework) | `error` |
 
 **Exemptibility.** R6 is not exemptible, for the reason R6 of Standard 25 is not. R4 is not exemptible,
 because an exception would record a project as knowingly making a claim nothing supports. R1 to R3 and R5
@@ -288,12 +288,18 @@ source of R6's form; this standard says what the system does about an output it 
 and abstention on a prediction record and that this pack owns the general case, and gives calibration
 and metric selection to MachineLearningStandards; its R2 (link, do not copy) is why none is restated.
 [Standard 40](40-user-disclosure-of-ai-involvement.md) is the structural precedent for the decision,
-record and listed-change requirements. [Standard 1](01-ai-system-manifest.md) declares no abstention or
+record and listed-change requirements. [Standard 10](10-human-oversight-and-intervention.md) R3 requires an
+overseer to be presented with the decision material and points here for what an uncertainty signal is;
+the definition is this standard's and R3 of Standard 10 is not restated. R4 here has the same shape as
+[Standard 25](25-grounding-and-hallucination-control.md) R5 and [Standard 41](41-inference-cost-and-budget-control.md)
+R5 (a claim names its measurement and subject) over different objects: the rate of ungrounded output is
+Standard 25 R5's, the support for a cost claim is Standard 41 R5's, and a claim that confidence or
+abstention is reliable is R4's. A project making more than one names the support for each. R4 restates neither. [Standard 1](01-ai-system-manifest.md) declares no abstention or
 uncertainty property, and none is proposed. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and
 R4 govern the non-lowering and disposition language used above, and
 [Standard 6](06-standard-structure-and-rule-identity.md) R3 is what the Tests section answers.
 
-Items 27, 28 and 34 are named in Scope or above and are not restated. **Outside this pack:**
+[Standard 27](27-citation-and-source-attribution.md) and [Standard 28](28-capability-honesty-to-users.md) are named in Scope and are not restated; they were written in the same batch as this standard, and the lines between the three are unconfirmed by anyone. Item 34 is unwritten and is named above only. **Outside this pack:**
 PredictionStandards' `02-uncertainty.md` and `17-abstention.md` and UIUXDesignStandards'
 `26-ai-user-experience.md` are named in Scope with what the boundary review recorded; this is a
 deference, not a crosswalk, and no maintainer has confirmed it. No ADR covers this standard —

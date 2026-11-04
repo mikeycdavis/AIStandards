@@ -81,7 +81,7 @@ The boundary with this standard's neighbours, none of whose ground is claimed:
   to act on content that should not have directed it is [Standard 51](51-agent-and-tool-execution-prohibitions.md) R2's.
 - **[Standard 10](10-human-oversight-and-intervention.md)** (Human Oversight and Intervention),
   whose ground is not claimed here.
-- **Items whose ground is not claimed** (items 16, 22 and 24 are written, as [Standard 16](16-access-control-for-models-context-and-tools.md), [Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md); the rest are unwritten, except items 41 and 51 noted below): item 16,
+- **Items whose ground is not claimed** (items 16, 22 and 24 are written, as [Standard 16](16-access-control-for-models-context-and-tools.md), [Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md); items 35 and 36 are unwritten): item 16,
   Access Control for Models, Context, and Tools (who may use a model, read a context or invoke a tool —
   R2 asks only whether an agent's credentials exceed its declared tools); item 22, Tool and
   Function-Call Security (the security of tools themselves, and of their outputs as inputs); item 24,

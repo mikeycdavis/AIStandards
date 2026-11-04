@@ -57,15 +57,15 @@ Two terms, each defined here rather than by the brief:
 - A **generated referent** is an identifier, URL, file path, record key, quotation, function name or
   figure that the model produced and that names something expected to exist outside the output.
 
-It does **not** cover, and claims none of the ground of, three items that are unwritten in this
-release and that the specification lists under the same bullet:
+It does **not** cover, and claims none of the ground of, three items that are written as separate
+standards and that the specification lists under the same bullet:
 
-- **Item 26, Uncertainty Expression and Abstention** — whether and how a system says it does not
+- **Item 26, [Uncertainty Expression and Abstention](26-uncertainty-expression-and-abstention.md)** — whether and how a system says it does not
   know. This standard says what an output is anchored to; item 26 owns the system's disclosure of
   doubt and its refusal to answer.
-- **Item 27, Citation and Source Attribution** — how a source is named and attributed to a reader.
+- **Item 27, [Citation and Source Attribution](27-citation-and-source-attribution.md)** — how a source is named and attributed to a reader.
   R1 below requires a *basis* to be stated; it does not require the basis to be shown to a user.
-- **Item 28, Capability Honesty to Users** — what a system says about itself.
+- **Item 28, [Capability Honesty to Users](28-capability-honesty-to-users.md)** — what a system says about itself.
 
 It also does not cover the **presentation** of generated content. Marking generated output so a user
 does not take it for verified fact is UIUXDesignStandards' subject, recorded as an adjacency below, and
@@ -386,8 +386,8 @@ applicability and non-lowering language used above. [Standard 6](06-standard-str
 R3 is the requirement the Validation section's no-rule record answers.
 
 Items 26 (Uncertainty Expression and Abstention), 27 (Citation and Source Attribution) and 28
-(Capability Honesty to Users) are unwritten in this release; the lines drawn above are provisional until
-they are, and the later standards may legitimately move them.
+(Capability Honesty to Users) have since been written ([Standard 26](26-uncertainty-expression-and-abstention.md), [Standard 27](27-citation-and-source-attribution.md) and [Standard 28](28-capability-honesty-to-users.md)); the lines drawn above were drawn before
+and have not been re-examined against them, and those standards may legitimately move them.
 
 **Outside this pack.** EngineeringStandards' `ai.no-fabricated-capabilities` and UIUXDesignStandards'
 `ai-ux.no-generated-as-verified` are named in Scope with what the boundary review recorded about each.

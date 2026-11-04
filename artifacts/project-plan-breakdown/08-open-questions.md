@@ -429,6 +429,117 @@ R4 requires a record naming the decider of an adopted failing change and defines
 settled by its text; this is a judgment and no passage records it.**
 **Impact if unanswered:** the decider may be anyone. Recommended: leave as written.
 
+### Q38 — Which namespace would any uncertainty, reproducibility or lineage rule use?
+
+`uncertainty`, `abstention` and `reproducibility` are other packs' namespaces; `honesty` and `lineage` are
+reserved here and have no shard. Standards 26, 30 and 31 mint no rule. **Not resolved here, because
+minting a rule or shard is owner-only.** **Impact if unanswered:** those standards stay prose only.
+Recommended: mint nothing for now.
+
+### Q39 — Is a self-reported confidence a defensible measure for a generative system (Standard 26)?
+
+The boundary review records this as unknown. Standard 26 R3 and R4 are written not to depend on the answer
+(the basis is recorded; a correctness claim names its measurement). **Not resolved here, because it is a
+judgment about an evaluation method.** **Impact if unanswered:** none for the text as written.
+
+### Q40 — Is a refusal on misuse, safety or authority grounds an abstention (Standard 26 R1)?
+
+Standard 26 excludes it and points to Standards 9 and 10; Standard 10 R5 says a decline must stick.
+**Not resolved here, because it is a boundary judgment.** **Impact if unanswered:** a decline for
+authority reasons is outside Standard 26. Recommended: keep the exclusion.
+
+### Q41 — Where does "whether a citation resolves" sit between Standards 25 R4 and 27?
+
+Standard 7 and the boundary review give item 27 "whether a citation is owed and whether it resolves";
+Standard 25 R4 requires a generated referent to be resolved before use. Standard 27 leaves resolution to
+25 R4. **Not resolved here, because it concerns the scope of an already-written standard.** **Impact if
+unanswered:** the Standard 7 boundary table and Standard 27 differ. Recommended: 25 R4 owns resolution;
+amend Standard 7 line 63 to say so.
+
+### Q42 — Should a response-inputs record (Standard 27) be a declared artifact?
+
+Standard 27 R2 depends on a record of the sources a response was produced with; the schemas have no
+place for it. **Not resolved here, because it is a schema-versioning decision.** **Impact if unanswered:**
+those requirements are not machine-checkable. Recommended: leave project-private until Phase 3.
+
+### Q43 — Where is the line between Standards 28, 52 and 25 for claims about capability and the system's own state?
+
+Standard 28 R2 and R3 carry MUST NOT limbs that overlap the prohibition face (item 52, unwritten; its faces
+are not yet drawn), and "I did X" claims are also statements of the system's own state (Standard 25
+Scope). Item 52 is the future owner of the prohibition face; until it is written nothing states what it
+will hold. **Not resolved here, because it concerns two standards' shared ground and one of them does not
+exist.** **Impact if unanswered:** one act may be reported under two standards. Recommended: Standard 28
+keeps the positive duty and its limbs, and item 52 holds the faces Standard 28 does not state, by
+reference, when it is written.
+
+### Q44 — Does model lineage (Standard 30 R3) belong here or with MachineLearningStandards?
+
+The boundary entry records evidence only for dataset, feature and prompt lineage. Standard 30 R3 also
+covers a consumed model's replacement and a derived model's base. **Not resolved here, because it
+concerns another pack's scope.** **Impact if unanswered:** overlap with MachineLearningStandards is
+possible. Recommended: keep R3 here, check with that pack's maintainers.
+
+### Q45 — Where does item 29 end and items 30, 31 and 32 begin, and does posture O hold for item 29?
+
+Standards 29 to 32 were written concurrently. Standard 29 owns the change record and release record and
+asks a version identifier of every behaviour-determining component (R1); 30 owns the lineage chain and,
+for a prompt, the stricter identifier rule over the assembled whole (R1) and the refusal of a moving alias
+as a revision (R5); 31 owns run parameters and repeat claims; 32 owns the rollback target and procedure.
+Identity is therefore shared ground between 29 R1 and 30 R1 and R5, not owned by one: the two are written
+to be met together and cross-reference each other, and 29's alias clause and 30 R5 are aligned (the revision
+is what the alias resolved to). Two further overlaps are cross-referenced and not owned by either side:
+29 R4 against Standard 20 R1 (a re-run observing a change is one way an upstream change becomes known),
+and 31 R3 against Standard 20 R3 (20 R3 governs the pass or fail recorded, 31 R3 what the report says a
+difference inside the variation is). The boundary review's O record for item 29 is a generic search and
+does not address MachineLearningStandards dataset versioning or reproducibility. **Not resolved here,
+because the lines are authored and the posture check is a human recheck.** **Impact if unanswered:** shared
+ground may be stated twice. Recommended: keep the split as drawn.
+
+### Q46 — Should retrieval corpus versioning fall under item 29, item 12 or 30, or MachineLearningStandards?
+
+Standard 29 covers retrieval configuration and excludes corpus content. Standard 7 records this pack as adding
+retrieval corpora, prompt fixtures and eval sets to MachineLearningStandards' dataset ground; Standard 12
+covers where they came from, and Standard 30 does not claim their lineage. **Not resolved here, because it
+concerns three owners' scope.** **Impact if unanswered:** corpus content has no versioning owner.
+
+### Q47 — Should a change, rollback target or release record have a declared home?
+
+Standards 29 (R2, R3), 30 (R2, R3, R5) and 32 (R1, R2, R6) each need a record the closed schemas cannot
+hold. Same shape as Q30. **Not resolved here, because it is a schema-versioning decision.** **Impact if
+unanswered:** not machine-checkable. Recommended: a named document first.
+
+### Q48 — Is the rollback versus fallback split between Standards 32 and 44 right?
+
+Standard 44 covers system-chosen run-time fallback and provider-side change; Standard 32 covers
+person-invoked reversion of a project change. **Not resolved here, because it is a boundary judgment.**
+**Impact if unanswered:** the two exercise requirements (44 R5, 32 R6) may drift. Recommended: keep the
+split and cross-reference.
+
+### Q49 — Should a requirement that constrains the framework carry a severity?
+
+Standards 25, 33, 39 and 40 give their framework-constraint requirement no severity; Standards 41 and 44 and
+the batch 2 standards 26 to 32 give it `error`. Both readings are in the repository. **Not resolved here,
+because it is a convention across written standards.** **Impact if unanswered:** the same kind of
+requirement is tabled differently. Recommended: `error` for all, since each is non-exemptible and no
+rule yet carries it.
+
+### Q50 — Is "no later than the next release record" the right deadline for a change outside a release?
+
+Standard 29 R3 requires a change record before a change takes effect in a release, which cannot be met by a
+change made directly on a running system or by someone else. R4 gives an upstream change the deadline of the
+next release record, and R5 gives an out-of-release change the same one. That deadline is authored here, not
+derived. **Not resolved here, because it is a normative judgment.** **Impact if unanswered:** a hot edit may
+go unrecorded for as long as the project does not release. Recommended: keep it, and review a tighter
+deadline for changes to safety-relevant components.
+
+### Q51 — Which yields when a retention period ends while a revision is still named (Standard 30 R4 against Standard 15 R1)?
+
+Standard 30 R4 requires a prompt revision to be kept as long as a retained output, call record or cited
+result names it; Standard 15 R1 and R2 give the store holding it a period and a mechanism that deletes at
+its end. The two can disagree. **Not resolved here, because it concerns two standards' shared ground.**
+**Impact if unanswered:** a cited figure may name a revision the retention mechanism has deleted.
+Recommended: the period of the thing that names a revision should not outlast the revision's.
+
 ## Not questions
 
 Per-shard rule counts are a plan, not a measurement. The catalog does not exist yet, and

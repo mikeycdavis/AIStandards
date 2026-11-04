@@ -52,7 +52,7 @@ Terms, each defined once here and used verbatim below:
 
 It does **not** cover, and claims none of the ground of:
 
-- **Recording and approving the change itself.** Item 29 owns versioning and change control and item 30 owns lineage; both are unwritten in this release. This standard needs a change to be identifiable and does not say how it is recorded.
+- **Recording and approving the change itself.** [Standard 29](29-ai-system-versioning-and-change-control.md) owns versioning and change control and [Standard 30](30-model-and-prompt-lineage.md) owns lineage. This standard needs a change to be identifiable and does not say how it is recorded.
 - **A dependency failing.** [Standard 44](44-operational-resilience-degradation-and-provider-portability.md) owns what the system does when a model, provider or service it depends on is unavailable, slow, rate-limited or changed by the provider. A fallback is chosen by the system at run time; a rollback is chosen by a person about a project change.
 - **Approval of irreversible actions.** [Standard 45](45-approval-gates.md) R3 owns the gate before an irreversible action; R3 here concerns only recording what a rollback leaves behind.
 - **Responding to an incident**, which is item 34's, and **the record of which subject served a call**, which is [Standard 33](33-ai-observability.md) R1 and R2.
@@ -69,9 +69,9 @@ A change with no recorded target is one that can only be undone by working out w
 
 ### R2 — Keep the rollback target available through the rollback window
 
-**The project MUST NOT retire, overwrite or delete a rollback target before the end of its rollback window, and MUST state the window.**
+**Where a rollback target is recorded under R1, the project MUST NOT retire, overwrite or delete it before the end of its rollback window, and MUST state the window.**
 
-An index rebuilt in place, a prompt edited rather than versioned, or a model deployment removed when the new one goes live each make the stated window false. Where a provider withdraws the target during the window, the target is no longer available and the record under R1 is updated to say so.
+An index rebuilt in place, a prompt edited rather than versioned, or a model deployment removed when the new one goes live each make the stated window false. Where a provider withdraws the target during the window, the target is no longer available and the record under R1 is updated to say so. A change recorded under R1 as having no rollback target has no window to state and is outside this requirement.
 
 ### R3 — Record the effects a rollback does not reach
 
@@ -83,13 +83,13 @@ Putting the old prompt back does not retract answers already given, actions an a
 
 **A rollback MUST NOT return the system to a withdrawn state unless the record states why the reason for withdrawal does not apply.**
 
-The previous value is the usual target and is the one most likely to have been withdrawn: a prompt replaced because it leaked an instruction, a model version removed after a finding, an index containing data a subject asked to have deleted ([Standard 13](13-personal-data-in-ai-systems.md) R5 concerns the path that reaches such stores). Rolling back is the fastest way to reintroduce them.
+The previous value is the usual target and is the one most likely to have been withdrawn: a prompt replaced because it leaked an instruction, a model version removed after a finding, an index containing data a subject asked to have deleted ([Standard 13](13-personal-data-in-ai-systems.md) R5 concerns the path that reaches such stores, and [Standard 15](15-retention-deletion-memorization.md) R3 asks whether deletion reaches derived copies and backups, which a retained rollback target can be). Rolling back is the fastest way to reintroduce them.
 
 ### R5 — Confirm what is served after a rollback
 
-**After a rollback, the project MUST record that the value now served is the rollback target, by an identifier the running system reports.**
+**After a rollback, the project MUST record that the value now served is the rollback target, by an identifier the running system reports or, for a component that reports none (a threshold or a permission set, for instance), by reading the served value back and recording where it was read.**
 
-A command that returned success does not say that every replica, cache, queued job and long-running agent run switched. The identifiers a call record carries are [Standard 33](33-ai-observability.md) R1 and R2's subject; this requirement relies on them and states only that the rollback is not complete until one has been read back.
+A command that returned success does not say that every replica, cache, queued job and long-running agent run switched. The identifiers a call record carries are [Standard 33](33-ai-observability.md) R1 and R2's subject; this requirement relies on them and states only that the rollback is not complete until one has been read back. Where a component reports no identifier, the served value itself is read back: the requirement is that something served was read, not that a particular field exists.
 
 ### R6 — Exercise the rollback, and keep the result current
 
@@ -123,7 +123,7 @@ This is a constraint on the framework, not on a project. A repository can show t
 | R2 | The stated rollback window and the retention of the target across it | Project code, deployment and index configuration, and retention settings | Human review |
 | R3 | The effects a rollback does not reverse and the recovery step or statement for each | A project document the project names | Human review |
 | R4 | The record of withdrawn states and, for any rollback to one, the stated reason it does not apply | A project document the project names | Human review |
-| R5 | The identifier the running system reported after the rollback and where it was read | Trace or call records, release records | Human review |
+| R5 | The identifier the running system reported after the rollback, or the served value read back where none is reported, and where it was read | Trace or call records, release records | Human review |
 | R6 | The date, result and stated interval of each exercise and the date of the latest change to the component | Test records, drill records or incident records | Human review |
 | R7 | The absence of any detector, rule, audit finding or generated report that reports rollback capability from a presence | This repository's own detectors and tests | Code review; see Implementation |
 
@@ -161,10 +161,10 @@ Three reasons, stated so a reader can disagree with any one of them:
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Each change to a release component has a record of its rollback target, who may invoke the rollback and its steps, or of there being no target | A change with none of these recorded, or a record missing the target, the invoker or the steps | A record stating that no rollback target exists is a complete R1 record and must **not** be faulted |
-| R2 | The rollback target for each change in its window still exists and is servable on the last day of the window | A target retired, overwritten or deleted inside its stated window, or a change with no stated window | A target retired after its window ended must **not** be faulted |
+| R2 | The rollback target recorded for each change still exists and is servable on the last day of its window | A target retired, overwritten or deleted inside its stated window, or a change with a recorded target and no stated window | A target retired after its window ended, and a change recorded under R1 as having no rollback target, must **not** be faulted |
 | R3 | Each release component's record lists what a rollback leaves in place and a recovery step or a statement that there is none | A release component with no such list, or a listed effect with neither a recovery step nor the statement | A record that states there is nothing a rollback fails to reach, with the reason, must **not** be faulted for listing no effects |
 | R4 | Every rollback performed was checked against the record of withdrawn states | A rollback to a withdrawn state with no stated reason the withdrawal no longer applies | A rollback to a state never withdrawn must **not** be faulted for lacking such a statement |
-| R5 | After each rollback an identifier reported by the running system is recorded and equals the target's | A rollback recorded complete with no identifier read back, or with one that differs from the target | An identifier read from the running system that equals the target satisfies R5 and must **not** be faulted for a further check |
+| R5 | After each rollback an identifier reported by the running system, or the served value read back where none is reported, is recorded and equals the target's | A rollback recorded complete with no identifier or served value read back, or with one that differs from the target | An identifier or served value read from the running system that equals the target satisfies R5 and must **not** be faulted for a further check |
 | R6 | Each rollback described as available has a dated exercise with result and interval; the latest succeeded within the interval and postdates the latest change to the component or its dependencies | A rollback described as available with no exercise, no result or no interval, whose latest exercise failed, is overdue, or predates such a change | A rollback not described as available, and one exercised only in a test and recorded as such, must **not** be faulted for lacking a production use |
 | R7 | No detector, rule, audit finding or generated report in this repository states a rollback or recovery verdict from presence | A detector, rule, audit finding or report that states a system able to be rolled back or recovered because a tag, previous identifier, revert command or retained artifact is present | Reporting that a tag or previous identifier was *found*, as an observation with no verdict, is permitted |
 
@@ -202,7 +202,7 @@ Not authored here: the posture is the boundary review's, which holds no entry fo
 
 ## Relationship to other standards and ADRs
 
-[Standard 44](44-operational-resilience-degradation-and-provider-portability.md) R5 requires a fallback to be exercised and its result kept current; R6 here has the same shape over a different object, and the two are cross-referenced and not merged. Standard 44's Scope assigns the reversion of a project change to this item. [Standard 45](45-approval-gates.md) R3 governs the approval before an irreversible action; R3 here records what a rollback cannot reach and does not restate it. [Standard 33](33-ai-observability.md) R1 and R2 govern the identifiers a call record carries, which R5 relies on. [Standard 13](13-personal-data-in-ai-systems.md) R5 governs the deletion path across model-adjacent stores, whose result R4 must not undo. [Standard 1](01-ai-system-manifest.md) R4 asks the manifest to pin the model, which makes a model a release component with a target; it declares no rollback fields and none is proposed here. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and non-lowering language used above, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the Tests section answers. Items 29, 30 and 34 are not part of this change. No pack outside this repository is cited, and no crosswalk is claimed. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
+[Standard 44](44-operational-resilience-degradation-and-provider-portability.md) R5 requires a fallback to be exercised and its result kept current; R6 here has the same shape over a different object, and the two are cross-referenced and not merged. Standard 44's Scope assigns the reversion of a project change to this item. [Standard 45](45-approval-gates.md) R3 governs the approval before an irreversible action; R3 here records what a rollback cannot reach and does not restate it. [Standard 33](33-ai-observability.md) R1 and R2 govern the identifiers a call record carries, which R5 relies on. [Standard 13](13-personal-data-in-ai-systems.md) R5 governs the deletion path across model-adjacent stores, whose result R4 must not undo. [Standard 1](01-ai-system-manifest.md) R4 asks the manifest to pin the model, which makes a model a release component with a target; it declares no rollback fields and none is proposed here. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and non-lowering language used above, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the Tests section answers. [Standard 29](29-ai-system-versioning-and-change-control.md) and [Standard 30](30-model-and-prompt-lineage.md) were written in the same batch as this standard (Q45) and are not restated; item 34 is unwritten. [Standard 15](15-retention-deletion-memorization.md) R3 accounts for derived copies and backups, a retained rollback target being one where it holds the data; R2 and R4 here are set against that in R4's body. No pack outside this repository is cited, and no crosswalk is claimed. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
 ## Implementation
 

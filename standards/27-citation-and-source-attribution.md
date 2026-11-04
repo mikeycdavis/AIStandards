@@ -62,8 +62,8 @@ It does **not** cover, and claims none of the ground of:
   was one the response used (R2 below).
 - **How a citation is presented** — placement, wording, whether a user can open it from the
   interface. That is UIUXDesignStandards' subject.
-- **Item 26, Uncertainty Expression and Abstention** and **item 28, Capability Honesty to Users**,
-  both unwritten on this base. Whether a system says it does not know a source is item 26's; this
+- **[Standard 26](26-uncertainty-expression-and-abstention.md), Uncertainty Expression and Abstention** and **[Standard 28](28-capability-honesty-to-users.md), Capability Honesty to Users**.
+  Whether a system says it does not know a source is Standard 26's; this
   standard requires only that it does not name one it did not use.
 - **Copyright, licence terms and the legal duty to attribute.** Nothing here is a statement of what
   a licence requires.
@@ -176,7 +176,7 @@ The Phase 2 plan (`artifacts/project-plan-breakdown/02-phase-2-normative-corpus.
 
 Three reasons, stated so a reader can disagree with any one of them:
 
-1. **There is no artifact a rule could read.** A rule for R1 would look for a declared decision, and R2 to R4 need a record of a response's inputs and its outputs; neither `schemas/ai-system-manifest.schema.json` nor `schemas/ai-policy.schema.json` has a place for either, and both are closed. A rule failing every project for omitting what no schema accepts would measure this framework's own incompleteness and blame the project for it. Adding a schema field is a schema-versioning decision, outside this slice (plan 02 section 8).
+1. **There is no artifact a rule could read.** A rule for R1 would look for a declared decision, R2 would need a record of a response's inputs, and R3 and R4 would need the citations and outputs themselves; neither `schemas/ai-system-manifest.schema.json` nor `schemas/ai-policy.schema.json` has a place for any of them, and both are closed. A rule failing every project for omitting what no schema accepts would measure this framework's own incompleteness and blame the project for it. Adding a schema field is a schema-versioning decision, outside this slice (plan 02 section 8).
 2. **R2 to R4 are properties of individual responses at inference time, not of a checkout.** A detector could only read a field or an instruction, which R5 forbids this framework from reporting as a result.
 3. **No rule namespace exists for it.** This standard mints no id and edits no shard; naming one is a decision for the owner. A proposed rule, if one is natural, is recorded in the pull request that introduced this document for per-rule approval, and not here.
 
@@ -188,7 +188,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | R2 | `manual-review` | `error` |
 | R3 | `manual-review` | `warning` |
 | R4 | `manual-review` | `warning` |
-| R5 | none (a constraint on the framework) | none |
+| R5 | none (a constraint on the framework) | `error` |
 
 These are the levels a rule would carry if one is minted; this release emits no framework finding at
 them.
@@ -262,7 +262,12 @@ the boundary review's.
 the line is finest. It requires a basis to be recorded (R1), a claimed basis to be checked against the
 output (R3) and a generated referent to be resolved before use (R4). This standard requires that a
 citation name a source the response used, with a locator, preserved to the reader. A citation can pass
-here and fail there, and the reverse. Nothing is restated.
+here and fail there, and the reverse. Nothing is restated. R4 here also opens in the same shape as
+Standard 25 R2 (output returned to a presentation layer, a downstream process or a log carries a
+property with each output) over a different property: R2 there carries whether the output was
+produced with its basis available and whether a grounding check ran, and R4 here carries each citation
+with the output or span it attaches to. A transformation that drops both is a failure of each, and
+neither requirement restates the other.
 
 [Standard 7](07-boundary-with-adjacent-standards.md) records "How a citation's sources are presented"
 as deferred to UIUXDesignStandards, with this pack owning whether a citation is owed and whether it
@@ -274,7 +279,7 @@ sources and declares no citation duty, and none is proposed. [Standard 2](02-ai-
 R3 governs non-lowering, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 (each
 requirement carries a falsifier or is declared not-evaluable) is what the Tests section answers.
 
-Items 26 and 28 are unwritten on this base; the lines drawn above are provisional until they are.
+[Standard 26](26-uncertainty-expression-and-abstention.md) and [Standard 28](28-capability-honesty-to-users.md) were written in the same batch as this standard; the lines drawn above against them are unconfirmed by anyone.
 **Outside this pack:** UIUXDesignStandards' `standards/26-ai-user-experience.md` R7 is named in Scope
 with what the boundary review recorded; this is a deference, not a crosswalk, and no maintainer has
 confirmed it. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
@@ -287,7 +292,7 @@ confirmed it. No ADR covers this standard — `artifacts/adr/` does not exist in
 
 | Requirement | State |
 | --- | --- |
-| R5 | **Holds by construction, not by assertion.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` has a concept of a system's citations: a search of `scripts`, `schemas`, `templates`, `rules` and `ai-policy.yml` for the word finds the safety-case citation language of the lifecycle shard (Standard 8's subject), a comment in `scripts/inventory.mjs` about numbering, and nothing about an AI output's sources. No test asserts the absence, so a future detector could break R5 without failing one |
+| R5 | **Holds by construction, not by assertion.** No detector, rule or report in `scripts/`, `rules/` or `ai-policy.yml` has a concept of a system's citations: a search of `scripts`, `schemas`, `templates`, `rules` and `ai-policy.yml` for the word finds the safety-case citation language of the lifecycle shard (Standard 8's subject), two finding messages in `scripts/inventory.mjs` that use the word for a reference to a standard (one about numbering, one about titles), and nothing about an AI output's sources. No test asserts the absence, so a future detector could break R5 without failing one |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's attribution |
 
 **Proposed, and deliberately absent. None of the following exists:**
@@ -295,7 +300,7 @@ confirmed it. No ADR covers this standard — `artifacts/adr/` does not exist in
 | Requirement | What would be needed | Why it is not here |
 | --- | --- | --- |
 | R1 | A named document a rule can find, or a manifest or policy field recording the decision | Both schemas are closed; a change is a schema-versioning decision and plan 02 section 8 puts it out of scope |
-| R2, R3 | Fixtures with a rejected and an accepted citation, and a detector that runs project-supplied checks against recorded response inputs | Phase 3 detector and evidence-availability work; the plan says detectors wait for the corpus |
+| R2, R3 | Fixtures with a rejected and an accepted citation, and a detector that runs project-supplied checks against recorded response inputs (R2) or the cited source (R3) | Phase 3 detector and evidence-availability work; the plan says detectors wait for the corpus |
 | R4 | A convention for the attachment at the output boundary | The shape is the project's; this framework would be guessing |
 | R5 | A test asserting no framework output states an attribution verdict | Meaningful only once a detector exists for it to constrain |
 | Rule id | A reserved-namespace id and a shard, once an owner is decided | Not decided; this standard names none |

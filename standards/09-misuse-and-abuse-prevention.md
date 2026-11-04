@@ -541,9 +541,8 @@ standards 13 (whose `privacy.no-unredacted-prompt-logging` governs R4's records)
 under Scope.
 
 Unwritten items this standard defers to, by specification number: item 4 (exceptions, which R2's
-exemptibility needs); item 34 (what follows a misuse incident); item 35 (the adversarial exercises R5 names); item 41 (budget
-mechanisms R3's bounds may share); and item 48 (prohibitions on bullet 1's ground, whose relationship to
-`misuse prevention` the specification does not record). Items 16, 22 and 24 are written: [Standard 16](16-access-control-for-models-context-and-tools.md) (who may use the system at all), [Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md) (tool and retrieval security).
+exemptibility needs); item 34 (what follows a misuse incident); item 35 (the adversarial exercises R5 names); and item 48 (prohibitions on bullet 1's ground, whose relationship to
+`misuse prevention` the specification does not record). Items 16, 22 and 24 are written: [Standard 16](16-access-control-for-models-context-and-tools.md) (who may use the system at all), [Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md) (tool and retrieval security). Item 41 is written: [Standard 41](41-inference-cost-and-budget-control.md) owns the budget mechanisms R3's bounds may share.
 
 No ADR covers this standard. `artifacts/adr/` does not exist in this release.
 

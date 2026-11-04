@@ -126,7 +126,7 @@ The boundary with this standard's other neighbours, none of whose ground is clai
 - **Item 12, Context and Corpus Provenance** (written as [Standard 12](12-context-and-corpus-provenance.md), posture B) — where an evaluation set came
   from. **[Standard 13](13-personal-data-in-ai-systems.md) R1** governs whether it holds real personal
   data.
-- **Items 29, 30 and 31** (unwritten) — versioning and change control, model and prompt lineage, and
+- **Items 29, 30 and 31** ([Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 30](30-model-and-prompt-lineage.md) and [Standard 31](31-reproducibility-under-nondeterminism.md)) — versioning and change control, model and prompt lineage, and
   reproducibility under nondeterminism. Re-running a suite against a hosted model can produce a
   different figure from the same subject; R2 asks that the suite can be run, not that its figures
   repeat, and Standard 7 R1 records remote-endpoint nondeterminism as this pack's addition to
@@ -215,7 +215,7 @@ committed in an evaluation fixture is what [Standard 13](13-personal-data-in-ai-
 
 **Runnable is not repeatable.** A suite run twice against a hosted model may produce two different
 figures from one subject. R2 asks that it can be run, not that its figures reproduce; nondeterminism
-is item 31's subject. For an experiment MachineLearningStandards reaches, the record needed to rerun
+is [Standard 31](31-reproducibility-under-nondeterminism.md)'s subject. For an experiment MachineLearningStandards reaches, the record needed to rerun
 it is that pack's Standard 15 R1, under `reproducibility.experiment-config-recorded`, and R2 does not
 restate it.
 
@@ -795,8 +795,9 @@ model-adjacent stores. Nothing here restates either.
 [Standard 21](21-prompt-and-instruction-security.md) R1 makes prompts versioned artifacts, which is
 what gives R6's prompt revision something to name.
 
-Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 18 (benchmark integrity and contamination); item 19 (what an
-evaluation must cover); items 29, 30 and 31 (versioning, lineage, and nondeterminism of re-runs);
+Items this standard defers to, by specification number (items 18, 19, 20, 29, 30 and 31 are written, as [Standard 18](18-benchmark-integrity-and-contamination.md), [Standard 19](19-robustness-evaluation.md), [Standard 20](20-regression-testing.md), [Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 30](30-model-and-prompt-lineage.md) and [Standard 31](31-reproducibility-under-nondeterminism.md); items 4, 35 and 50 are unwritten): item 4 (exceptions); item 18 (benchmark integrity and contamination); item 19 (what an
+evaluation must cover); item 20 (when regressions are tested and what fails a change, and the open
+question of R3's rule); items 29, 30 and 31 (versioning, lineage, and nondeterminism of re-runs);
 item 35 (adversarial exercises); and item 50 (evaluation integrity prohibitions, whose relationship to
 the two `forbidden` rules here the specification does not record). Item 20 is written: [Standard 20](20-regression-testing.md) (when regressions are tested and what fails a change, and the open question of R3's rule).
 

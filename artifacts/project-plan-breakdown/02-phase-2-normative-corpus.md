@@ -71,7 +71,7 @@ dated record of that slice and is left as written.)
 **Written: 42 of 53 standards** — `01-ai-system-manifest.md`, `02-ai-risk-tiering-and-applicability.md`, `03-machine-readable-ai-policy.md`, `05-verdict-vocabulary.md`, `06-standard-structure-and-rule-identity.md`, `07-boundary-with-adjacent-standards.md`, `08-ai-safety-requirements-and-safety-cases.md`, `09-misuse-and-abuse-prevention.md`, `10-human-oversight-and-intervention.md`, `11-autonomy-levels-and-delegated-authority.md`, `12-context-and-corpus-provenance.md`, `13-personal-data-in-ai-systems.md`, `14-consent-and-licensing.md`, `15-retention-deletion-memorization.md`, `16-access-control-for-models-context-and-tools.md`, `17-evaluation-plans-for-generative-systems.md`, `18-benchmark-integrity-and-contamination.md`, `19-robustness-evaluation.md`, `20-regression-testing.md`, `21-prompt-and-instruction-security.md`, `22-tool-and-function-call-security.md`, `23-agent-execution-security.md`, `24-retrieval-and-context-supply-chain.md`, `25-grounding-and-hallucination-control.md`, `26-uncertainty-expression-and-abstention.md`, `27-citation-and-source-attribution.md`, `28-capability-honesty-to-users.md`, `29-ai-system-versioning-and-change-control.md`, `30-model-and-prompt-lineage.md`, `31-reproducibility-under-nondeterminism.md`, `32-rollback-and-recovery.md`, `33-ai-observability.md`, `37-fairness-and-harm-distribution.md`, `38-accessibility-of-ai-features.md`, `39-transparency-and-system-documentation.md`, `40-user-disclosure-of-ai-involvement.md`, `41-inference-cost-and-budget-control.md`, `42-latency-budgets-for-ai-interactions.md`, `43-environmental-impact-accounting.md`, `44-operational-resilience-degradation-and-provider-portability.md`, `45-approval-gates.md`, `51-agent-and-tool-execution-prohibitions.md`
 (Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
 owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 43 added 2026-10-15, ST-35, #80;
-Standards 10, 12, 18, 19, 37 to 42 and 44 added by the open-draft consolidation: ST-02, ST-04, ST-12, ST-13, ST-29 to ST-34, ST-36; Standards 14, 15, 16, 20, 22, 24 added by overnight batch 1 (2026-11-04): ST-06, ST-08, ST-10, ST-14, ST-15, ST-16),
+Standards 10, 12, 18, 19, 37 to 42 and 44 added by the open-draft consolidation: ST-02, ST-04, ST-12, ST-13, ST-29 to ST-34, ST-36; Standards 14, 15, 16, 20, 22, 24 added by overnight batch 1 (2026-11-04): ST-06, ST-08, ST-10, ST-14, ST-15, ST-16; Standards 26 to 32 added by overnight batch 2 (2026-11-04): ST-18 to ST-24, refs #63 to #69).
 
 **11 standards remain unwritten.**
 
@@ -460,8 +460,7 @@ git worktree created outside the repository at `a2d5069`; shared cells were edit
 item that owns catalog rules has a document, so the rule that picked items 23 and 17 picks nothing.
 Re-run `/whats-next` before starting; `docs/HANDOFF.md` §9 lists the candidates (inferred).
 
-Q7, Q9 to Q12, Q15 to Q22 and Q23 to Q25 remain open.
-Q7, Q9 to Q12, Q15 to Q22 and Q26 to Q37 remain open.
+Q7, Q9 to Q12, Q15 and Q17 to Q51 remain open.
 
 ## 12. The adoption slice contract
 

@@ -58,12 +58,16 @@ It does **not** cover, and claims none of the ground of:
   time" and `17-feature-lineage.md` as "Applies to every feature supplied to a model, including features
   that appear to be raw columns". That is the owner's ground, and nothing here restates it.
   [Standard 7](07-boundary-with-adjacent-standards.md) records this pack as adding only retrieval
-  corpora, prompt fixtures and eval sets, which are [Standard 12](12-context-and-corpus-provenance.md)'s.
+  corpora, prompt fixtures and eval sets to that ground. Where such a thing came from is
+  [Standard 12](12-context-and-corpus-provenance.md)'s; who owns its versioning or lineage once it
+  changes is not settled (Q46) and this standard does not claim it.
 - **Which revision a given call used**, which is [Standard 33](33-ai-observability.md) R1's record.
 - **Pinning a declared model**, which is [Standard 1](01-ai-system-manifest.md) R4's, and **the prompt
   being a committed file**, which is [Standard 21](21-prompt-and-instruction-security.md) R1's.
-- **Versioning and change control as a process** (item 29), **reproducibility under nondeterminism**
-  (item 31) and **rollback** (item 32), which are unwritten in this release.
+- **Versioning and change control as a process** ([Standard 29](29-ai-system-versioning-and-change-control.md)), **reproducibility under nondeterminism**
+  ([Standard 31](31-reproducibility-under-nondeterminism.md)) and **rollback** ([Standard 32](32-rollback-and-recovery.md)). Identity overlaps [Standard 29](29-ai-system-versioning-and-change-control.md) R1, which asks a version
+  identifier of every behaviour-determining component; the two are written to be met together (see
+  R1 and R5 below, and Q45).
 - **Training or run configuration of a model the project trains itself**, which is
   MachineLearningStandards' ([Standard 1](01-ai-system-manifest.md) R4 draws the same line).
 
@@ -85,7 +89,9 @@ An identifier chosen by hand ("v3") survives an edit made in place; a content ha
 identifier does not. The requirement is on the binding, not on the scheme. It reaches a revision
 assembled from fragments: the identifier covers the assembled whole, so that editing one fragment
 changes it. A prompt built so that its parts are separately versioned and nothing identifies the
-combination has no revision identifier in this sense.
+combination has no revision identifier in this sense. [Standard 29](29-ai-system-versioning-and-change-control.md) R1 asks a version identifier of every
+behaviour-determining component; an identifier that meets this requirement meets that one for a prompt,
+and this is the stricter statement, since it covers the assembled whole and each fragment.
 
 ### R2 — Record what each prompt revision replaced
 
@@ -114,7 +120,10 @@ text is not recoverable, the figure describes nothing that can be found
 ([Standard 17](17-evaluation-plans-for-generative-systems.md) R6 requires the evaluation result to name
 the revision, and this requirement asks that the name still resolves). Retaining a prompt revision is
 also bound by [Standard 13](13-personal-data-in-ai-systems.md) and
-`privacy.no-credentials-in-prompts`: a revision holding either is not retained as it stands.
+`privacy.no-credentials-in-prompts`: a revision holding either is not retained as it stands. How long a store keeps a revision is
+[Standard 15](15-retention-deletion-memorization.md) R1's and what deletes it at the end of the period is its R2's; where that period would end
+while something retained or cited still names the revision, it and this requirement disagree, and which
+yields is recorded open (Q51), not decided here.
 
 ### R5 — Show a lineage gap as a gap
 
@@ -125,7 +134,10 @@ history, the project does not know which revision was in force, and a record tha
 the location has quietly turned an unknown into a fact. [Standard 1](01-ai-system-manifest.md) R4 asks
 that a declared identifier be pinned and allows a recorded reason where it cannot be; this requirement
 asks that the lineage say where that has left a hole. A gap is a legitimate state. A chain that looks
-continuous across one is the failure.
+continuous across one is the failure. [Standard 29](29-ai-system-versioning-and-change-control.md) R1 lets a re-pointable alias serve as a component's version
+identifier where the record also names what it resolved to and when; that agrees with this requirement,
+because the revision recorded is what the alias resolved to and the alias itself is never recorded as the
+revision.
 
 ### R6 — This framework MUST NOT report lineage established from a presence
 
@@ -256,12 +268,13 @@ R1 records the model identifier and prompt revision on each call, and R4 here as
 resolve. [Standard 17](17-evaluation-plans-for-generative-systems.md) R6 requires an evaluation result
 to name its subject. [Standard 12](12-context-and-corpus-provenance.md) governs where a prompt fixture
 came from. [Standard 13](13-personal-data-in-ai-systems.md) governs personal data a retained revision
-might hold. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and
+might hold, and [Standard 15](15-retention-deletion-memorization.md) governs retention periods and deletion for the store that holds it. [Standard 29](29-ai-system-versioning-and-change-control.md) R1 asks for a
+version identifier of every behaviour-determining component, and [Standard 20](20-regression-testing.md) R1 asks how a change behind an
+identifier the project cannot observe is handled; R1 and R5 here are written to agree with both. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and
 non-lowering language used above, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the
 requirement the Tests section answers.
 
-Items 29, 31, 32 and 34 are unwritten in this release; the lines drawn above are provisional until they
-are. **Outside this pack:** MachineLearningStandards' `04-dataset-versioning.md` and
+[Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 31](31-reproducibility-under-nondeterminism.md) and [Standard 32](32-rollback-and-recovery.md) were written in the same batch as this standard and the lines between them are unconfirmed by anyone (Q45). Item 34 is unwritten in this release; the line drawn above against it is provisional until it is. **Outside this pack:** MachineLearningStandards' `04-dataset-versioning.md` and
 `17-feature-lineage.md` are named in Scope with what the boundary review recorded; this is a deference,
 not a crosswalk, and no maintainer has confirmed it. No ADR covers this standard — `artifacts/adr/` does
 not exist in this release.
@@ -277,7 +290,7 @@ Stated as two separate lists, because a reader scanning one table will otherwise
 | Requirement | State |
 | --- | --- |
 | R1 to R5 | Not enforced; held by review. Two existing rules touch adjacent ground and neither reads a lineage record: `lifecycle.model-version-pinned` (Standard 1) recognises alias shapes in a declared identifier and `promptsec.prompt-is-versioned-artifact` (Standard 21) recognises an inline literal; each reports `not-evaluated` rather than `passed` on a clean result |
-| R6 | Holds today because no such detector exists; nothing prevents or tests one being added. No detector, rule or report in `scripts/`, `rules/`, `test/` or `templates/` states a lineage verdict. The word `lineage` appears in this repository's code only as a reserved namespace name in `scripts/catalog.mjs`, and in a comment in `rules/lifecycle.json` |
+| R6 | Holds today because no such detector exists; nothing prevents or tests one being added. No detector, rule or report in `scripts/`, `rules/`, `test/` or `templates/` states a lineage verdict. The word `lineage` appears in this repository's code only as a reserved namespace name in `scripts/catalog.mjs`, in a comment in `rules/lifecycle.json`, and in `test/no-phase-creep.test.mjs` as part of this standard's own filename |
 | This document | Conformance of structure only, checked by `scripts/standards-sections.mjs`, `scripts/inventory.mjs` and the standards-tables test. That a document exists and is well-formed is not evidence of any project's practice |
 
 **Proposed, and deliberately absent from this release. None of the following exists:**

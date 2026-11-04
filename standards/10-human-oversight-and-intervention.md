@@ -106,7 +106,7 @@ named person who is also the operator, author or requester is not excluded.
 **At each oversight point the overseer MUST be presented with the decision material.**
 
 A review of a one-line description the system wrote about itself is a review of the system's account
-of itself. What counts as an uncertainty signal is item 26's subject (unwritten, posture B); whether an
+of itself. What counts as an uncertainty signal is [Standard 26](26-uncertainty-expression-and-abstention.md)'s subject (its Scope defines the term); whether an
 output is grounded is [Standard 25](25-grounding-and-hallucination-control.md)'s (its Scope defines
 ungrounded output and its R2 the signal that carries it).
 
@@ -372,10 +372,10 @@ requirement governs its own subject. [Standard 45](45-approval-gates.md) governs
 gated; its R5 is the independence R2 applies generally. [Standard 8](08-ai-safety-requirements-and-safety-cases.md)
 may cite an oversight arrangement as evidence, and [Standard 9](09-misuse-and-abuse-prevention.md) and
 [Standard 23](23-agent-execution-security.md) each record this item as the general obligation they do
-not claim. Item 26 (unwritten) will define what an uncertainty signal is;
+not claim. [Standard 26](26-uncertainty-expression-and-abstention.md) defines what an uncertainty signal is;
 [Standard 25](25-grounding-and-hallucination-control.md) defines ungrounded output.
 [Standard 13](13-personal-data-in-ai-systems.md) governs what a record may contain; entitlement to view
-it is item 16's. [Standard 7](07-boundary-with-adjacent-standards.md) R4 and R5 order conflicts and keep
+it is [Standard 16](16-access-control-for-models-context-and-tools.md)'s. [Standard 7](07-boundary-with-adjacent-standards.md) R4 and R5 order conflicts and keep
 ids from colliding, and [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the
 applicability and non-lowering language used above.
 

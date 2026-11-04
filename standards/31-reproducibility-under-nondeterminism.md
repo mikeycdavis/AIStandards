@@ -50,7 +50,7 @@ It does **not** cover, and claims none of the ground of:
   [Standard 33](33-ai-observability.md) R1 and R2, and **how an evaluation names its subject**, which is
   [Standard 17](17-evaluation-plans-for-generative-systems.md) R6.
 - **Pinning a model identifier**, which is [Standard 1](01-ai-system-manifest.md) R4.
-- **Versioning, model and prompt lineage and rollback**, items 29, 30 and 32.
+- **Versioning, model and prompt lineage and rollback**, [Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 30](30-model-and-prompt-lineage.md) and [Standard 32](32-rollback-and-recovery.md).
 
 **Boundary posture B — baseline, deferring the whole of the owner's ground.** The boundary review
 confirms the posture with owner MachineLearningStandards. Its evidence is two standards of that pack,
@@ -93,6 +93,8 @@ is a claim that the subject differs, and it needs the spread of the source to be
 requirement sets no threshold, no number of runs and no statistic; the project states which it used.
 [Standard 17](17-evaluation-plans-for-generative-systems.md) R3 records what a prior version scored and
 R6 names the evaluated subject; neither asks how many runs a figure rests on.
+
+[Standard 20](20-regression-testing.md) R3 fixes a regression criterion before a run and requires each run reported as pass or fail against it; that is a decision rule, and this requirement does not displace it. Where a criterion sits inside the observed variation, Standard 20 R3 governs the pass or fail recorded, and this requirement governs what the report says the difference is: it does not call a difference inside the variation an improvement or a regression of the subject. A criterion the project fixed below the variation remains a criterion and is not a finding that the subject changed.
 
 ### R4 — This framework MUST NOT report a result reproducible from the presence of a setting
 
@@ -154,7 +156,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | --- | --- | --- | --- |
 | R1 | For each reported endpoint result, the parameters sent are recorded and each parameter left to a default is recorded as such | A reported endpoint result with no parameter record, or a default not recorded as a default | A project that reports no endpoint result is out of scope and must **not** be faulted for lacking a parameter record |
 | R2 | Each reproducibility claim names its repeats, their number and dates, and the observed variation | A reproducibility claim resting on a setting alone, or naming no repeats, number, dates or variation | A statement that a parameter was set, with no claim that results repeat, must **not** be faulted |
-| R3 | Each comparison or decision states the runs behind each figure and the variation, and reports no change inside the variation | A change reported from one run per side, or from a difference smaller than the stated variation | A comparison whose stated variation is zero over a named number of repeats must **not** be faulted for lacking a spread |
+| R3 | Each comparison or decision states the runs behind each figure and the variation, and reports no change inside the variation | A change reported from one run per side, or from a difference smaller than the stated variation | A comparison whose stated variation is zero over a named number of repeats must **not** be faulted for lacking a spread; a pass or fail against a criterion fixed in advance under [Standard 20](20-regression-testing.md) R3 must **not** be faulted for being a verdict, provided the report states the variation and does not call a difference inside it a change |
 | R4 | No detector, rule, audit finding or generated report in this repository states a reproducibility verdict from presence | A detector, rule, audit finding or report that states an endpoint result reproducible because a seed, temperature or pinned identifier is present | Reporting that a seed or temperature parameter was *found*, as an observation with no verdict, is permitted |
 
 **No falsifier is automated in this release.** No rule reads this subject's artifact and no fixture carries one, so R1 to R3 are enforced by review or not at all, and R4 holds today only because no such detector exists. The falsifiers in the table are available for manual review; what this release lacks is a detector that applies them. A record made stale by the event in the staleness table below does not satisfy the minimum test it was offered for until it is re-made.
@@ -180,7 +182,7 @@ There is no policy-level exception mechanism for R1 to R3 in this release, becau
 
 - **R1 to R3 in full**, with the defined terms endpoint result, repeat, variation and reproducibility claim, and the rulings that a parameter setting is not a repeat and that a difference inside the observed variation is not a change.
 - **R4**, the constraint on this framework, in the same form as the equivalent requirement in [Standard 25](25-grounding-and-hallucination-control.md) and [Standard 33](33-ai-observability.md).
-- **The exclusions in Scope** as division lines; where this standard stops and items 29, 30 and 32 begin is unconfirmed by anyone.
+- **The exclusions in Scope** as division lines; where this standard stops and items 29, 30 and 32 begin, and the order given to Standard 20 R3 in R3's body, are unconfirmed by anyone.
 - **The severity assignments** (one level per requirement, in Validation), the statement that no attestation or scheduled expiry exists in this release, and the staleness table.
 - **The ruling that this standard ships with no catalog rules**, the three reasons for it, and the decision to name no rule id.
 
@@ -188,7 +190,7 @@ Not authored here: the posture, its owner and the two evidence entries are the b
 
 ## Relationship to other standards and ADRs
 
-[Standard 7](07-boundary-with-adjacent-standards.md) R1 records reproducibility, random seeds and run configuration as MachineLearningStandards', with this pack adding only remote-endpoint nondeterminism. [Standard 17](17-evaluation-plans-for-generative-systems.md) leaves to this item whether a hosted model's results repeat (its R2 asks that a suite be runnable, not that figures reproduce), and [Standard 19](19-robustness-evaluation.md) does the same for a perturbed result; R2 and R3 here are what they defer to. [Standard 33](33-ai-observability.md) R1 and R2 govern the record of which subject served a call, and R2's staleness rule relies on them. [Standard 1](01-ai-system-manifest.md) R4 asks for the pinned identifier; a pin names a version and does not make its output repeat, which is R2's reading. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and non-lowering language used above, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the Tests section answers. Items 29, 30 and 32 are not part of this change. **Outside this pack.** MachineLearningStandards' `15-reproducibility.md` and `16-random-seeds.md` are named in Scope with what the boundary review recorded; this is a deference, not a crosswalk, and no maintainer has confirmed it. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
+[Standard 7](07-boundary-with-adjacent-standards.md) R1 records reproducibility, random seeds and run configuration as MachineLearningStandards', with this pack adding only remote-endpoint nondeterminism. [Standard 17](17-evaluation-plans-for-generative-systems.md) leaves to this item whether a hosted model's results repeat (its R2 asks that a suite be runnable, not that figures reproduce), and [Standard 19](19-robustness-evaluation.md) does the same for a perturbed result; R2 and R3 here are what they defer to. [Standard 33](33-ai-observability.md) R1 and R2 govern the record of which subject served a call, and R2's staleness rule relies on them. [Standard 1](01-ai-system-manifest.md) R4 asks for the pinned identifier; a pin names a version and does not make its output repeat, which is R2's reading. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability and non-lowering language used above, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 is the requirement the Tests section answers. [Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 30](30-model-and-prompt-lineage.md) and [Standard 32](32-rollback-and-recovery.md) were written in the same batch as this standard and the lines between them are unconfirmed by anyone (Q45). [Standard 20](20-regression-testing.md) R3 fixes a criterion before a run, and R3 here is set against it in R3's body. **Outside this pack.** MachineLearningStandards' `15-reproducibility.md` and `16-random-seeds.md` are named in Scope with what the boundary review recorded; this is a deference, not a crosswalk, and no maintainer has confirmed it. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
 ## Implementation
 
