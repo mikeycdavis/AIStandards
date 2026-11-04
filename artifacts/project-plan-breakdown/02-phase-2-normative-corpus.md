@@ -109,6 +109,10 @@ owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Stan
 `51-agent-and-tool-execution-prohibitions.md`
 (Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
 owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 39 added by ST-31, #76).
+`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `40-user-disclosure-of-ai-involvement.md`, `45-approval-gates.md`,
+`51-agent-and-tool-execution-prohibitions.md`
+(Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
+owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 40 added by ST-32, #77).
 
 **35 standards remain unwritten.**
 
