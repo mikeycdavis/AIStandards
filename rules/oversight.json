@@ -1,5 +1,5 @@
 {
-  "$comment": "Autonomy levels and the authority delegated at each. Standard 11. The manifest schema has carried an autonomyTier enum since 0.1.0, but until this shard no rule required one to be declared, and none distinguished the declaration from evidence that the bound is enforced. Standard 10 (Human Oversight and Intervention) is unwritten; where these rules touch intervention they cover only the autonomy-tier form of it, and the general obligation is item 10's.",
+  "$comment": "Autonomy levels and the authority delegated at each. Standard 11. The manifest schema has carried an autonomyTier enum since 0.1.0, but until this shard no rule required one to be declared, and none distinguished the declaration from evidence that the bound is enforced. Standard 10 (Human Oversight and Intervention) is written and ships no rule; where these rules touch intervention they cover only the autonomy-tier form of it, and the general obligation is Standard 10's.",
   "rules": [
     {
       "id": "oversight.autonomy-tier-declared",

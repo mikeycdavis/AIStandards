@@ -79,16 +79,17 @@ The boundary with this standard's neighbours, none of whose ground is claimed:
 - **[Standard 9](09-misuse-and-abuse-prevention.md)** governs deliberate misuse through interfaces a
   system offers. An agent that is misused while working as designed is Standard 9's case; an agent made
   to act on content that should not have directed it is [Standard 51](51-agent-and-tool-execution-prohibitions.md) R2's.
-- **Unwritten items, whose ground is not claimed:** item 10, Human Oversight and Intervention; item 16,
+- **[Standard 10](10-human-oversight-and-intervention.md)** (Human Oversight and Intervention),
+  whose ground is not claimed here.
+- **Unwritten items, whose ground is not claimed:** item 16,
   Access Control for Models, Context, and Tools (who may use a model, read a context or invoke a tool —
   R2 asks only whether an agent's credentials exceed its declared tools); item 22, Tool and
   Function-Call Security (the security of tools themselves, and of their outputs as inputs); item 24,
   Retrieval and Context Supply Chain (where retrieved content comes from and whether it can be
   trusted — [Standard 51](51-agent-and-tool-execution-prohibitions.md) R2 asks only that it never acquire instruction authority); item 35, Red Teaming (how the
-  exercise [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1's rule names is run and recorded); item 36, Auditability of AI Actions; item 41, Inference
-  Cost and Budget Control (cost and token budgets, which R1's step budget may share a mechanism with);
-  and item 51, Agent and Tool Execution Prohibitions, which is written and states the two prohibitions
-  this document stated until 2026-10-05 (below).
+  exercise [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1's rule names is run and recorded); item 36, Auditability of AI Actions; and item 51, Agent and Tool Execution Prohibitions, which is written and states the two prohibitions
+  this document stated until 2026-10-05 (below). Item 41, Inference Cost and Budget Control, is also
+  written: [Standard 41](41-inference-cost-and-budget-control.md) owns cost and token budgets, which R1's step budget may share a mechanism with.
 - **MathematicsStandards** also uses the `agent.` rule-id segment, for `agent.explainable-findings` and
   `agent.refusal-on-invariant`. This repository records those two ids, in
   `artifacts/foreign-namespace-inventory.json` and `artifacts/boundary-review.json`, and nothing about
@@ -504,11 +505,13 @@ specifically.** The two are not reconciled, and [Standard 51](51-agent-and-tool-
 against, and R5's `gate.no-self-approval` is adjacent to [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1. Its Relationship section names this
 standard as the owner of sandboxing, which this document does not address; see Scope.
 
-Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 10 (the
-general oversight obligation); item 16 (who may use a model, context or tool); item 22 (tool security,
+[Standard 10](10-human-oversight-and-intervention.md) (the general oversight obligation) is cited under
+Scope.
+
+Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 16 (who may use a model, context or tool); item 22 (tool security,
 and whether tool output other than fetched content is within [Standard 51](51-agent-and-tool-execution-prohibitions.md) R2); item 24 (retrieval supply
 chain); item 35 (the exercise [Standard 51](51-agent-and-tool-execution-prohibitions.md) R1's rule names); item 36 (the record of what an
-agent did); and item 41 (cost and token budgets, and any aggregate budget across nested loops). Item 51, the
+agent did). Item 41 is written: [Standard 41](41-inference-cost-and-budget-control.md) owns cost and token budgets, and any aggregate budget across nested loops. Item 51, the
 prohibitions on bullet 4's ground, is written: [Standard 51](51-agent-and-tool-execution-prohibitions.md) states the two `forbidden` rules this document
 stated until 2026-10-05.
 

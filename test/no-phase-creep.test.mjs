@@ -760,7 +760,7 @@ test("the Phase 2 tooling built so far exists, and the rest of Phase 2 does not"
 });
 
 test("only the standards written so far exist", () => {
-  // The guard is not that the corpus is frozen — Phase 2 writes the remaining 45. It is that a
+  // The guard is not that the corpus is frozen — Phase 2 writes the remaining 24. It is that a
   // standard arrives deliberately, by being added here, rather than by appearing unnoticed.
   const present = fs.readdirSync(path.join(REPO, "standards")).filter((f) => f.endsWith(".md")).sort();
   assert.deepEqual(present, [
@@ -772,14 +772,25 @@ test("only the standards written so far exist", () => {
     "07-boundary-with-adjacent-standards.md",
     "08-ai-safety-requirements-and-safety-cases.md",
     "09-misuse-and-abuse-prevention.md",
+    "10-human-oversight-and-intervention.md",
     "11-autonomy-levels-and-delegated-authority.md",
+    "12-context-and-corpus-provenance.md",
     "13-personal-data-in-ai-systems.md",
     "17-evaluation-plans-for-generative-systems.md",
+    "18-benchmark-integrity-and-contamination.md",
+    "19-robustness-evaluation.md",
     "21-prompt-and-instruction-security.md",
     "23-agent-execution-security.md",
     "25-grounding-and-hallucination-control.md",
     "33-ai-observability.md",
+    "37-fairness-and-harm-distribution.md",
+    "38-accessibility-of-ai-features.md",
+    "39-transparency-and-system-documentation.md",
+    "40-user-disclosure-of-ai-involvement.md",
+    "41-inference-cost-and-budget-control.md",
+    "42-latency-budgets-for-ai-interactions.md",
     "43-environmental-impact-accounting.md",
+    "44-operational-resilience-degradation-and-provider-portability.md",
     "45-approval-gates.md",
     "51-agent-and-tool-execution-prohibitions.md",
   ]);

@@ -85,20 +85,31 @@ Exit codes are process semantics. The verdict is the `status` field of the JSON 
 [7 Boundary with Adjacent Standards Packs](standards/07-boundary-with-adjacent-standards.md) ·
 [8 AI Safety Requirements and Safety Cases](standards/08-ai-safety-requirements-and-safety-cases.md) ·
 [9 Misuse and Abuse Prevention](standards/09-misuse-and-abuse-prevention.md) ·
+[10 Human Oversight and Intervention](standards/10-human-oversight-and-intervention.md) ·
 [11 Autonomy Levels and Delegated Authority](standards/11-autonomy-levels-and-delegated-authority.md) ·
+[12 Context and Corpus Provenance](standards/12-context-and-corpus-provenance.md) ·
 [13 Personal Data in AI Systems](standards/13-personal-data-in-ai-systems.md) ·
 [17 Evaluation Plans for Generative Systems](standards/17-evaluation-plans-for-generative-systems.md) ·
+[18 Benchmark Integrity and Contamination](standards/18-benchmark-integrity-and-contamination.md) ·
+[19 Robustness Evaluation](standards/19-robustness-evaluation.md) ·
 [21 Prompt and Instruction Security](standards/21-prompt-and-instruction-security.md) ·
 [23 Agent Execution Security](standards/23-agent-execution-security.md) ·
 [25 Grounding and Hallucination Control](standards/25-grounding-and-hallucination-control.md) ·
 [33 AI Observability](standards/33-ai-observability.md) ·
 [43 Environmental Impact Accounting](standards/43-environmental-impact-accounting.md) ·
+[37 Fairness and Harm Distribution](standards/37-fairness-and-harm-distribution.md) ·
+[38 Accessibility of AI Features](standards/38-accessibility-of-ai-features.md) ·
+[39 Transparency and System Documentation](standards/39-transparency-and-system-documentation.md) ·
+[40 User Disclosure of AI Involvement](standards/40-user-disclosure-of-ai-involvement.md) ·
+[41 Inference Cost and Budget Control](standards/41-inference-cost-and-budget-control.md) ·
+[42 Latency Budgets for AI Interactions](standards/42-latency-budgets-for-ai-interactions.md) ·
+[44 Operational Resilience, Degradation, and Provider Portability](standards/44-operational-resilience-degradation-and-provider-portability.md) ·
 [45 Approval Gates](standards/45-approval-gates.md) ·
 [51 Agent and Tool Execution Prohibitions](standards/51-agent-and-tool-execution-prohibitions.md)
 
 1, 3, 5, 6 and 7 are machinery — each documents something the code does, so no behaviour ships
 undocumented. 21 and 45, written in Phase 1, are the easiest and hardest domain standards, chosen to
-prove the document skeleton at both extremes. 2, 8, 9, 11, 13, 17, 23, 25, 33, 43 and 51 are the Phase 2 corpus written so far.
+prove the document skeleton at both extremes. 2, 8, 9, 10, 11, 12, 13, 17, 18, 19, 23, 25, 33, 37, 38, 39, 40, 41, 42, 43, 44 and 51 are the Phase 2 corpus written so far.
 
 **Rules** — 46 across eight shards; **9 have a detector**. The rest report as unevaluated. That ratio
 is not a defect to be hidden: an AI standards pack is mostly manual review, and a design claiming

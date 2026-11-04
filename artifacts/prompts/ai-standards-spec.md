@@ -191,14 +191,14 @@ under [Authored items](#authored-items).
 | --- | --- | --- | --- | --- | --- |
 | 8 | AI Safety Requirements and Safety Cases | D | `AI safety` | O | standards/08-ai-safety-requirements-and-safety-cases.md |
 | 9 | Misuse and Abuse Prevention | D | `misuse prevention` | O | standards/09-misuse-and-abuse-prevention.md |
-| 10 | Human Oversight and Intervention | D | `human oversight` | O | — |
+| 10 | Human Oversight and Intervention | D | `human oversight` | O | standards/10-human-oversight-and-intervention.md |
 | 11 | Autonomy Levels and Delegated Authority | D | `autonomous` | X | standards/11-autonomy-levels-and-delegated-authority.md |
 
 ### Band C — Data · bullet 2
 
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
-| 12 | Context and Corpus Provenance | D | `provenance` | B | — |
+| 12 | Context and Corpus Provenance | D | `provenance` | B | standards/12-context-and-corpus-provenance.md |
 | 13 | Personal Data in AI Systems | D | `Data privacy` | O | standards/13-personal-data-in-ai-systems.md |
 | 14 | Consent and Licensing | D | `consent` | O | — |
 | 15 | Retention, Deletion, and Memorization | D | `retention` | O | — |
@@ -209,8 +209,8 @@ under [Authored items](#authored-items).
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
 | 17 | Evaluation Plans for Generative Systems | D | `Model evaluation` | B | standards/17-evaluation-plans-for-generative-systems.md |
-| 18 | Benchmark Integrity and Contamination | D | `benchmark integrity` | B | — |
-| 19 | Robustness Evaluation | D | `robustness` | O | — |
+| 18 | Benchmark Integrity and Contamination | D | `benchmark integrity` | B | standards/18-benchmark-integrity-and-contamination.md |
+| 19 | Robustness Evaluation | D | `robustness` | O | standards/19-robustness-evaluation.md |
 | 20 | Regression Testing Across Model and Prompt Versions | D | `regression testing` | O | — |
 
 ### Band E — Prompt, tool, agent, retrieval security · bullet 4
@@ -258,19 +258,19 @@ under [Authored items](#authored-items).
 
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
-| 37 | Fairness and Harm Distribution | D | `fairness` | O | — |
-| 38 | Accessibility of AI Features | D | `Accessibility` | D | — |
-| 39 | Transparency and System Documentation | D | `transparency` | B | — |
-| 40 | User Disclosure of AI Involvement | D | `user disclosure` | B | — |
+| 37 | Fairness and Harm Distribution | D | `fairness` | O | standards/37-fairness-and-harm-distribution.md |
+| 38 | Accessibility of AI Features | D | `Accessibility` | D | standards/38-accessibility-of-ai-features.md |
+| 39 | Transparency and System Documentation | D | `transparency` | B | standards/39-transparency-and-system-documentation.md |
+| 40 | User Disclosure of AI Involvement | D | `user disclosure` | B | standards/40-user-disclosure-of-ai-involvement.md |
 
 ### Band J — Cost, latency, environment, resilience · bullet 9
 
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
-| 41 | Inference Cost and Budget Control | D | `Cost` | O | — |
-| 42 | Latency Budgets for AI Interactions | D | `latency` | O | — |
+| 41 | Inference Cost and Budget Control | D | `Cost` | O | standards/41-inference-cost-and-budget-control.md |
+| 42 | Latency Budgets for AI Interactions | D | `latency` | O | standards/42-latency-budgets-for-ai-interactions.md |
 | 43 | Environmental Impact Accounting | D | `environmental impact` | O | standards/43-environmental-impact-accounting.md |
-| 44 | Operational Resilience, Degradation, and Provider Portability | D | `operational resilience` | X | — |
+| 44 | Operational Resilience, Degradation, and Provider Portability | D | `operational resilience` | X | standards/44-operational-resilience-degradation-and-provider-portability.md |
 
 ### Band K — Approval gates · bullet 10
 
