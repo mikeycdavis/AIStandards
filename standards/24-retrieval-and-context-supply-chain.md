@@ -72,9 +72,9 @@ A path the project cannot list is a path nobody reviews. The requirement is not 
 
 ### R2 — Record how each store was built
 
-**The project MUST record, for each store, the revision or snapshot of each feed it was built from, the parsing and chunking configuration, the embedding model as [Standard 1](01-ai-system-manifest.md) R4 pins it, and the date of the build.**
+**The project MUST record, for each store, the revision or snapshot of each feed it was built from, the parsing and chunking configuration where the store is parsed or chunked, the embedding model as [Standard 1](01-ai-system-manifest.md) R4 pins it where the store holds embeddings, and the date of the build; a stage the store does not have is recorded as not used.**
 
-An index built from last month's feed with a different chunker and a replaced embedding model is a different index under the same name. The record is what lets a later reader say what the store contained when a bad passage was served. It does not require rebuilds to be reproducible bit for bit; it requires that what went in be written down.
+An index built from last month's feed with a different chunker and a replaced embedding model is a different index under the same name. The record is what lets a later reader say what the store contained when a bad passage was served. A keyword index or a SQL table has no embedding model, and an explicit "not used" entry for that stage satisfies the requirement. It does not require rebuilds to be reproducible bit for bit; it requires that what went in be written down.
 
 ### R3 — Tie each stored item to the upstream revision it came from
 
@@ -105,7 +105,7 @@ This is a constraint on the framework, not on a project. A repository can show t
 | Failure | What it looks like | Requirement |
 | --- | --- | --- |
 | Unnamed path | A retrieval call, a fetch or a connector in code with no entry for its feeds, its writer, or its permitted origins; a `retrieval-index` data source with no record of what feeds it | R1 |
-| Store with no build record | An index with no record of the feed revisions, the chunking and parsing configuration, the embedding model or the build date; an embedding model changed with no rebuild recorded | R2 |
+| Store with no build record | An index with no record of the feed revisions, the build date, or, where those stages exist, the chunking and parsing configuration or the embedding model (a stage not used is recorded as not used); an embedding model changed with no rebuild recorded | R2 |
 | Item with no way back | A stored item that cannot be traced to an upstream item and revision; no digest of what was ingested; a feed that changed after ingestion and cannot be told from one that did not | R3 |
 | Trust lost in transit | A retrieval function returning text only; a result whose source or trust class is dropped before the consuming code; one trust class for a store that mixes project-writable and outside-writable feeds | R4 |
 | Unremovable content | No written means of withdrawal; a source removed upstream and still returned; embeddings or a cache left behind; a withdrawal with no record | R5 |
@@ -155,7 +155,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Every retrieval call, fetch and connector in the code has an entry naming its feeds, the writing process and identity, and, for a live fetch, its permitted origins | A retrieval path with no entry, an entry without a writer, or a live fetch with no permitted origins recorded | A path whose only feed is a directory in the project's own repository, entered with that feed and no external origins, must **not** be faulted for listing none |
-| R2 | Each store has a record of the feed revisions, parsing and chunking configuration, embedding model and build date | A store missing any of the four, or an embedding model replaced with no record of the rebuild | A store rebuilt weekly from a snapshot, with the snapshot identifier and configuration in each build's output, must **not** be faulted for rebuilding often |
+| R2 | Each store has a record of the feed revisions and build date, and of the parsing and chunking configuration and embedding model for each of those stages the store has, or a "not used" entry | A store missing a feed revision or build date, or missing a record or "not used" entry for a stage it has, or an embedding model replaced with no record of the rebuild | A store rebuilt weekly from a snapshot, with the snapshot identifier and configuration in each build's output, must **not** be faulted for rebuilding often |
 | R3 | One item per store traced to an upstream item and revision, with a recorded digest of the ingested content or its snapshot | An item that cannot be traced, or a store with no digest of either kind | A store recording the upstream path of each item and a digest of the snapshot in which every path resolves must **not** be faulted for having no per-item digest |
 | R4 | The retrieval function returns source identifier, revision and trust class to its caller, and the trust class separates outside-writable from project-only content | A retrieval result reaching its caller as text alone; a result dropping any of the three; a store mixing feeds of both kinds under one class | A store whose every feed is project-only, carrying one recorded store-level class, must **not** be faulted for having no per-item class |
 | R5 | A written means of withdrawal that names the derived copies it covers; a record of each withdrawal | No written means; derived copies unaddressed; a withdrawal with no record | A written means that rebuilds the store from a snapshot without the item must **not** be faulted for lacking an in-place delete |

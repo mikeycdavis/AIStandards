@@ -73,7 +73,7 @@ about the dispatcher: the set it can reach is the declared set and nothing wider
 
 **A system MUST validate the arguments of a tool call against that tool's parameter schema before the tool runs, and MUST refuse the call, without executing it, when they do not conform.**
 
-A parameter schema shown to a model is a request. Models emit missing fields, extra fields, wrong types
+A parameter schema shown to a model is a request. Models emit missing fields, fields the schema does not allow, wrong types
 and values far outside the range the author imagined, and a model steered by hostile text emits them on
 purpose. The validation is the system's, performed on the system's side of the boundary; a model that
 was told the schema and complied is not validation. "Refuse" means the call does not run and the model
@@ -138,7 +138,7 @@ presence would turn a declaration into a guarantee.
 | Failure | What it looks like | Requirement |
 | --- | --- | --- |
 | Undeclared tool reached | A dispatcher resolves a tool by dynamic lookup of the model's string, so a callable absent from the manifest runs | R1 |
-| Unvalidated arguments | A tool receives a missing field, an extra field, a wrong type or an out-of-range value and runs | R2 |
+| Unvalidated arguments | A tool receives a missing required field, a field the declared schema forbids, a wrong type or an out-of-range value and runs | R2 |
 | Argument as syntax | A path escapes its directory, a URL reaches an internal address, a query or command is built by concatenation with a model's string | R3 |
 | Drifted definition | A tool server changes a description or schema after review, and the model is shown the new text | R4 |
 | Confused deputy | A tool run under a service account returns another principal's data to the person asking | R5 |
@@ -193,7 +193,7 @@ Three reasons, stated so a reader can disagree with any one of them:
 | Requirement | Minimum test | Falsifier | Negative control |
 | --- | --- | --- | --- |
 | R1 | Submit a call naming a tool absent from the declared set, including one that exists as a callable in the process | The call runs, or the dispatcher can reach a callable outside the declared set by resolving the model's string | A call naming a declared tool must **not** be faulted for running |
-| R2 | Submit calls with a missing required field, an extra field, a wrong type and an out-of-range value | Any such call reaches the tool, or is silently corrected and run | A conforming call must **not** be faulted for running |
+| R2 | Submit calls whose arguments violate the tool's declared parameter schema: a missing required field, a field the schema forbids, a wrong type, an out-of-range value | Any such call reaches the tool, or is silently corrected and run | A call that conforms to the declared schema must **not** be faulted for running, including a call with an additional field where the declared schema permits additional properties; R2 does not require a schema to forbid them |
 | R3 | For each tool reaching a filesystem, network, shell or database, submit an argument built to escape it: a path that resolves outside the directory, a URL that redirects to an internal address, a string carrying query or shell syntax | The argument is interpreted as syntax or reaches a location outside the permitted set | A tool that passes the same string to a parameterised query and returns no rows must **not** be faulted |
 | R4 | Present a tool definition whose description or schema differs from the reviewed revision | The changed definition reaches a model before review | A third-party definition identical to its reviewed revision must **not** be faulted; a definition the project wrote itself is outside R4 |
 | R5 | Make a call as a principal who may not read an object the tool's own credential can read | The tool returns or changes it | A call for an object the principal may read must **not** be faulted for returning it |
