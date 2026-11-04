@@ -53,7 +53,24 @@ const EXAMINED_KEYS = new Set([...PARAMETER_KEYS, "system_instruction", "role", 
 export const PATH_STEP_LIMIT = 128;
 export const PATH_DEPTH_LIMIT = 64;
 
-const clip = (s) => (s.length > PATH_STEP_LIMIT ? `${s.slice(0, PATH_STEP_LIMIT)}…` : s);
+// Clipped by code points, so a clip never ends in half of a surrogate pair. Only a string longer than the
+// limit in UTF-16 units can be longer in code points, so the common case allocates nothing.
+const clip = (s) => {
+  if (s.length <= PATH_STEP_LIMIT) return s;
+  const points = Array.from(s);
+  return points.length > PATH_STEP_LIMIT ? `${points.slice(0, PATH_STEP_LIMIT).join("")}…` : s;
+};
+
+// `line` and `column` cost O(length of the line) each, so a minified file of many entries on one line would be
+// quadratic if every entry were located. An entry is located the first time its line or column is READ, and
+// the report reads only the entries it lists (at most 50), so the rest never are.
+function withLazyWhere(entry, parsed, offset) {
+  let where = null;
+  const at = () => (where ??= parsed.locate(offset));
+  Object.defineProperty(entry, "line", { enumerable: true, configurable: true, get: () => at().line });
+  Object.defineProperty(entry, "column", { enumerable: true, configurable: true, get: () => at().column });
+  return entry;
+}
 const COMPLEX_KEY = "[complex key]";
 
 function stepsOf(frame) {
@@ -92,7 +109,6 @@ export function findInlinePromptShapes(parsed, threshold) {
   const matches = [];
   const duplicates = [];
 
-  const locate = (offset) => parsed.locate(offset);
 
   for (const doc of parsed.documents) {
     if (doc.root === null || doc.root === undefined) continue;
@@ -101,21 +117,18 @@ export function findInlinePromptShapes(parsed, threshold) {
     const record = (shape, valueNode, key, frame, duplicate) => {
       if (!isScalar(valueNode) || valueNode.length < threshold) return;
       if (valueNode.style === "block-literal" || valueNode.style === "block-folded") return; // named non-claim
-      const where = locate(valueNode.range.start);
       const { path, truncated } = pathOfFrame(frame);
       const entry = {
         shape,
         length: valueNode.length,
         documentIndex,
         offset: valueNode.range.start,
-        line: where.line,
-        column: where.column,
         key,
         path,
         duplicate,
       };
       if (truncated) entry.pathTruncated = true;
-      matches.push(entry);
+      matches.push(withLazyWhere(entry, parsed, valueNode.range.start));
     };
 
     // Iterative: a hostile nesting depth is not a stack hazard. Stack entries are [node, frame, inParts].
@@ -146,9 +159,8 @@ export function findInlinePromptShapes(parsed, threshold) {
         if (list.length < 2) continue;
         dupNames.add(name);
         const first = list[0].key;
-        const where = locate(first.range.start);
         const { path, truncated } = pathOfFrame(frame);
-        const entry = { documentIndex, offset: first.range.start, line: where.line, column: where.column, key: name, path, occurrences: list.length };
+        const entry = withLazyWhere({ documentIndex, offset: first.range.start, key: name, path, occurrences: list.length }, parsed, first.range.start);
         if (truncated) entry.pathTruncated = true;
         duplicates.push(entry);
       }

@@ -177,7 +177,7 @@
                 "column": { "description": "1-based, in Unicode code points from the start of the line.", "type": "integer", "minimum": 1 },
                 "key": { "description": "The key that holds the literal.", "type": "string", "maxLength": 129 },
                 "path": {
-                  "description": "From the document root: a string is a mapping key (clipped at 128 characters), an integer is a sequence index. At most the last 64 steps.",
+                  "description": "From the document root: a string is a mapping key (clipped at 128 code points), an integer is a sequence index. At most the last 64 steps.",
                   "type": "array",
                   "maxItems": 64,
                   "items": { "type": ["string", "integer"] }

@@ -87,7 +87,7 @@ Decisions applied:
   a complex key is scanned.)
 * **Locations (G).** `validate` adds `results[].locations`: for each literal that fired, `file`,
   `documentIndex` (YAML only), `line`, `column` (code points), `key`, `path` (mapping keys as strings,
-  sequence indexes as integers; keys clipped at 128 characters and at most the last 64 steps, marked
+  sequence indexes as integers; keys clipped at 128 code points and at most the last 64 steps, marked
   `pathTruncated`), `shape`, `length` (decoded code points) and `duplicate`. At most 50 are listed per
   result and `locationsOmitted` counts the rest. A lexically scanned file has evidence strings and no
   location, because the lexical layer has none. The validate report is `schemaVersion` `1.1` and the audit

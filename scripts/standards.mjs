@@ -186,7 +186,7 @@ function readStructuralFiles(run) {
       if (duplicates.length < ALIAS_LIST_LIMIT) {
         const entry = { file };
         if (outcome.format === "yaml") entry.documentIndex = d.documentIndex;
-        Object.assign(entry, { key: d.key, occurrences: d.occurrences, line: d.line, column: d.column, path: d.path });
+        Object.assign(entry, { key: d.key, occurrences: d.occurrences, line: d.line, column: d.column, path: d.path }); // only the 50 listed are located
         if (d.pathTruncated) entry.pathTruncated = true;
         duplicates.push(entry);
       }
@@ -837,7 +837,10 @@ function collectShapeHits(file, read, hits, locations) {
   for (const m of read.matches) {
     const entry = { file };
     if (read.format === "yaml") entry.documentIndex = m.documentIndex;
-    Object.assign(entry, { line: m.line, column: m.column, key: m.key, path: m.path, shape: m.shape, length: m.length, duplicate: m.duplicate });
+    // line and column stay lazy: only the (at most 50) listed locations are ever read, and locating costs a line.
+    Object.defineProperty(entry, "line", { enumerable: true, get: () => m.line });
+    Object.defineProperty(entry, "column", { enumerable: true, get: () => m.column });
+    Object.assign(entry, { key: m.key, path: m.path, shape: m.shape, length: m.length, duplicate: m.duplicate });
     if (m.pathTruncated) entry.pathTruncated = true;
     locations.push(entry);
   }

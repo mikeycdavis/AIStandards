@@ -532,3 +532,83 @@ test("duplicate context reaches the parts shape: a duplicated parts or systemIns
   const unrelated = find(`{"other":1,"other":2,"systemInstruction":{"parts":[{"text":"${LONG}"}]}}`, "json").matches;
   assert.deepEqual(unrelated.map((m) => m.duplicate), [false], "a duplicate that is not on the path does not flag it");
 });
+
+// --- Review repairs (independent review of fbe4e34) ---------------------------------------------------
+
+test("hostile: a minified 500 KB JSON of duplicated objects on one line is not quadratic", () => {
+  const text = `[${Array.from({ length: 17000 }, () => '{"system":"a","system":"b"}').join(",")}]`;
+  assert.ok(Buffer.byteLength(text) < 512 * 1024);
+  const parsed = read(text, "json");
+  const started = Date.now();
+  const r = findInlinePromptShapes(parsed, T);
+  assert.equal(r.duplicates.length, 17000);
+  assert.ok(Date.now() - started < 3000, `took ${Date.now() - started} ms; locating every entry would take seconds`);
+  const first = r.duplicates[0];
+  assert.deepEqual([first.line, first.column], [1, 3], "an entry is still located when it is read");
+});
+
+test("hostile: thousands of literals on one line are located only when read", () => {
+  const text = `[${Array.from({ length: 3500 }, () => `{"system":"${LONG}"}`).join(",")}]`;
+  const parsed = read(text, "json");
+  const started = Date.now();
+  const r = findInlinePromptShapes(parsed, T);
+  assert.equal(r.matches.length, 3500);
+  assert.ok(Date.now() - started < 3000, `took ${Date.now() - started} ms`);
+  assert.equal(r.matches[1].column, 1 + 1 + `{"system":"${LONG}"},`.length + `{"system":`.length);
+});
+
+test("CLI: the same minified file is reported in bounded time, with exact totals and 50 listed", () => {
+  const text = `[${Array.from({ length: 12000 }, () => '{"system":"a","system":"b"}').join(",")}]`;
+  const dir = target({ "min.json": text });
+  const started = Date.now();
+  const { json } = audit(dir);
+  assert.ok(Date.now() - started < 15000);
+  assert.equal(json.structuralSurface.duplicateKeysEvaluated.total, 12000);
+  assert.equal(json.structuralSurface.duplicateKeysEvaluated.listed.length, 50);
+});
+
+test("a clipped path step never ends in half of a surrogate pair, and is clipped by code points", () => {
+  const key = `a${"\u{1F600}".repeat(200)}`;
+  const [m] = find(`{"${key}": {"system": "${LONG}"}}`, "json").matches;
+  const step = m.path[0];
+  assert.ok(step.endsWith("…"));
+  assert.equal(step.isWellFormed ? step.isWellFormed() : !/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(step), true, "well-formed UTF-16");
+  assert.equal(Array.from(step).length, 129, "128 code points and the ellipsis");
+});
+
+test("a duplicated role alone flags the message-role match", () => {
+  const [m] = find(`role: user\nrole: system\ncontent: "${LONG}"\n`).matches;
+  assert.equal(m.duplicate, true);
+  const [clean] = find(`role: system\ncontent: "${LONG}"\n`).matches;
+  assert.equal(clean.duplicate, false);
+});
+
+test("the report schemas pin what a location and a duplicate entry must carry, and the 50 bound", () => {
+  const json = validate(target({ "p.yml": `system: "${LONG}"\n` })).json;
+  const base = ruleIn(json, NO_INLINE);
+  for (const field of ["file", "line", "column", "key", "path", "shape", "length", "duplicate"]) {
+    const copy = structuredClone(json);
+    delete ruleIn(copy, NO_INLINE).locations[0][field];
+    assert.ok(validateSchema(copy, VALIDATE_SCHEMA).length > 0, `a location without ${field} is refused`);
+  }
+  const over = structuredClone(json);
+  ruleIn(over, NO_INLINE).locations = Array.from({ length: 51 }, () => structuredClone(base.locations[0]));
+  assert.ok(validateSchema(over, VALIDATE_SCHEMA).length > 0, "51 listed locations are refused");
+
+  const a = audit(target({ "d.yml": "system: a\nsystem: b\n" })).json;
+  for (const field of ["file", "key", "occurrences", "line", "column", "path"]) {
+    const copy = structuredClone(a);
+    delete copy.structuralSurface.duplicateKeysEvaluated.listed[0][field];
+    assert.ok(validateSchema(copy, AUDIT_SCHEMA).length > 0, `a duplicate entry without ${field} is refused`);
+  }
+  const tooMany = structuredClone(a);
+  tooMany.structuralSurface.duplicateKeysEvaluated.listed = Array.from({ length: 51 }, () => structuredClone(a.structuralSurface.duplicateKeysEvaluated.listed[0]));
+  assert.ok(validateSchema(tooMany, AUDIT_SCHEMA).length > 0, "51 listed duplicates are refused");
+});
+
+test("a JSON duplicate entry carries no documentIndex and a YAML one does", () => {
+  const { json } = audit(target({ "d.yml": "system: a\nsystem: b\n", "j.json": "{\"role\": \"x\", \"role\": \"y\"}\n" }));
+  const byFile = Object.fromEntries(json.structuralSurface.duplicateKeysEvaluated.listed.map((d) => [d.file, d]));
+  assert.equal("documentIndex" in byFile["j.json"], false);
+  assert.equal(byFile["d.yml"].documentIndex, 0);
+});
