@@ -184,6 +184,7 @@ reaching `COMPLIANT` as a goal in itself. Record whatever the repository honestl
 - **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 12, 13, 17, 21, 23, 25, 33, 45, 51**
 - **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 18, 21, 23, 25, 33, 45, 51**
 - **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 41, 45, 51**
+- **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 21, 23, 25, 33, 42, 45, 51**
   (51 added 2026-10-05 by the ST-42 assignment: it states `agent.no-self-modification` and
   `agent.retrieved-content-not-instruction`, which Standard 23 stated until then; 18 added by ST-12 (#57), prose-first, ships no rule)
 - **18 of 53 standards written: 01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 17, 19, 21, 23, 25, 33, 45, 51**

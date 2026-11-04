@@ -102,6 +102,7 @@ Exit codes are process semantics. The verdict is the `status` field of the JSON 
 [39 Transparency and System Documentation](standards/39-transparency-and-system-documentation.md) ·
 [40 User Disclosure of AI Involvement](standards/40-user-disclosure-of-ai-involvement.md) ·
 [41 Inference Cost and Budget Control](standards/41-inference-cost-and-budget-control.md) ·
+[42 Latency Budgets for AI Interactions](standards/42-latency-budgets-for-ai-interactions.md) ·
 [45 Approval Gates](standards/45-approval-gates.md) ·
 [51 Agent and Tool Execution Prohibitions](standards/51-agent-and-tool-execution-prohibitions.md)
 
@@ -117,6 +118,7 @@ prove the document skeleton at both extremes. 2, 8, 9, 11, 13, 17, 23, 25, 33, 3
 prove the document skeleton at both extremes. 2, 8, 9, 11, 13, 17, 23, 25, 33, 39 and 51 are the Phase 2 corpus written so far.
 prove the document skeleton at both extremes. 2, 8, 9, 11, 13, 17, 23, 25, 33, 40 and 51 are the Phase 2 corpus written so far.
 prove the document skeleton at both extremes. 2, 8, 9, 11, 13, 17, 23, 25, 33, 41 and 51 are the Phase 2 corpus written so far.
+prove the document skeleton at both extremes. 2, 8, 9, 11, 13, 17, 23, 25, 33, 42 and 51 are the Phase 2 corpus written so far.
 
 **Rules** — 46 across eight shards; **9 have a detector**. The rest report as unevaluated. That ratio
 is not a defect to be hidden: an AI standards pack is mostly manual review, and a design claiming
