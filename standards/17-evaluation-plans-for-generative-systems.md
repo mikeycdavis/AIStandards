@@ -120,7 +120,7 @@ The boundary with this standard's other neighbours, none of whose ground is clai
   provider.
 - **Item 19, [Robustness Evaluation](19-robustness-evaluation.md)** — what an evaluation must cover. Nothing here says
   which inputs a plan must include.
-- **Item 20, Regression Testing Across Model and Prompt Versions** (unwritten) — when regression
+- **Item 20, Regression Testing Across Model and Prompt Versions** (written as [Standard 20](20-regression-testing.md)) — when regression
   runs happen, and what difference from a baseline fails a change. R3's rule records a baseline and
   cites this standard; whether it belongs to item 20 is recorded under Additions and not decided.
 - **Item 12, Context and Corpus Provenance** (written as [Standard 12](12-context-and-corpus-provenance.md), posture B) — where an evaluation set came
@@ -796,10 +796,9 @@ model-adjacent stores. Nothing here restates either.
 what gives R6's prompt revision something to name.
 
 Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 18 (benchmark integrity and contamination); item 19 (what an
-evaluation must cover); item 20 (when regressions are tested and what fails a change, and the open
-question of R3's rule); items 29, 30 and 31 (versioning, lineage, and nondeterminism of re-runs);
+evaluation must cover); items 29, 30 and 31 (versioning, lineage, and nondeterminism of re-runs);
 item 35 (adversarial exercises); and item 50 (evaluation integrity prohibitions, whose relationship to
-the two `forbidden` rules here the specification does not record).
+the two `forbidden` rules here the specification does not record). Item 20 is written: [Standard 20](20-regression-testing.md) (when regressions are tested and what fails a change, and the open question of R3's rule).
 
 Outside this repository: **MachineLearningStandards** owns metric selection, uncertainty, comparison,
 test-set separation and fabricated metrics for the evaluations it reaches. Its `standards/12-metric-selection.md`

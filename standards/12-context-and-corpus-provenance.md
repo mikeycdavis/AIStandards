@@ -62,10 +62,10 @@ It does **not** cover, and claims none of the ground of:
 - **MachineLearningStandards' own requirements for a dataset with an evaluation use or a development
   use.** The boundary review gives that pack "training data"; a source with such a use stays in Scope
   for the requirements below, which are not offered in place of that pack's (R11).
-- **Whether anyone agreed to the use, and on what terms** — item 14, unwritten.
+- **Whether anyone agreed to the use, and on what terms** — item 14, written as [Standard 14](14-consent-and-licensing.md).
 - **Whether a source holds real personal data** — [Standard 13](13-personal-data-in-ai-systems.md) R1.
-- **Retention and deletion** (item 15), **access control** (item 16), **benchmark contamination**
-  (item 18), all unwritten.
+- **Retention and deletion** (item 15, written as [Standard 15](15-retention-deletion-memorization.md)), **access control** (item 16, written as [Standard 16](16-access-control-for-models-context-and-tools.md)), **benchmark contamination**
+  (item 18, [Standard 18](18-benchmark-integrity-and-contamination.md)).
 - **What a retrieved passage supports in an output** — [Standard 25](25-grounding-and-hallucination-control.md).
 - **Whether a source is true.** A statement of origin is not a statement of accuracy.
 
@@ -393,7 +393,7 @@ retrieved content as untrusted; nothing here makes any origin trusted.
 colliding, and [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability
 and non-lowering language used above.
 
-Items 14, 15, 16, 18 and 34 are unwritten; the lines drawn above are provisional until they are.
+Item 34 is unwritten, and Items 14, 15, 16 and 18 are written ([Standard 14](14-consent-and-licensing.md), [Standard 15](15-retention-deletion-memorization.md), [Standard 16](16-access-control-for-models-context-and-tools.md) and [Standard 18](18-benchmark-integrity-and-contamination.md)); the lines drawn above are provisional until the unwritten item is, and the written standards may legitimately move them.
 **Outside this pack.** MachineLearningStandards' `03-dataset-provenance.md` and
 `04-dataset-versioning.md` are named in Scope with what the boundary review recorded; they are not
 crosswalks, nothing in them is restated, and no maintainer has confirmed this reading. No ADR covers this

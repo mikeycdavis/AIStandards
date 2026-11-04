@@ -85,7 +85,7 @@ It does **not** cover, and claims none of the ground of, the following:
   MachineLearningStandards' subject; see the posture note below. Exposure a fine-tuned model
   inherits from its third-party base model is not introduced by that pipeline and stays under R2.
 - **What an evaluation must cover** (item 19, Robustness Evaluation) and **when regressions are
-  tested** (item 20, Regression Testing Across Model and Prompt Versions), both unwritten in this
+  tested** (item 20, Regression Testing Across Model and Prompt Versions; written as [Standard 20](20-regression-testing.md)), item 19 unwritten in this
   release.
 - **Where an evaluation set came from as a matter of corpus provenance** (item 12, Context and Corpus
   Provenance, unwritten). R1 asks only that the origin be recorded as it bears on exposure.
@@ -486,7 +486,7 @@ R3 and R4 govern the applicability and non-lowering language used above, and
 falsifiers section answers, and the Validation section records why no rule is shipped, as plan 02
 section 6 asks.
 
-Items 12, 19, 20 and 50 are unwritten in this release; the lines drawn above are provisional until
+Items 12, 19 and 50 are unwritten in this release, and item 20 is written ([Standard 20](20-regression-testing.md)); the lines drawn above are provisional until
 they are, and the later standards may legitimately move them. Open questions Q19 (whether the two
 forbidden evaluation rules are item 50's prohibitions) and Q22 (whether this pack should state an evaluation baseline where MachineLearningStandards does not
 reach a system) are recorded open and not answered here.

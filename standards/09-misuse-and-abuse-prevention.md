@@ -64,9 +64,9 @@ with this standard's neighbours falls, and none of their ground is claimed:
 - **[Standard 13](13-personal-data-in-ai-systems.md)** (Personal Data in AI Systems — what a misuse log may
   retain) and **[Standard 23](23-agent-execution-security.md)** (Agent Execution Security), whose ground is
   not claimed here.
-- **Unwritten items, whose ground is not claimed:**
-  item 16, Access Control for Models, Context, and Tools (who may use the system at all); items 22
-  and 24 (tool and retrieval security — attacks on the system's components); item 34, AI
+- **Items whose ground is not claimed** (items 16, 22 and 24 are written; the others named here are unwritten):
+  item 16, Access Control for Models, Context, and Tools ([Standard 16](16-access-control-for-models-context-and-tools.md); who may use the system at all); items 22
+  and 24 ([Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md); tool and retrieval security — attacks on the system's components); item 34, AI
   Incident Response (what happens once a misuse event is declared an incident); item 35, Red Teaming
   (how the adversarial exercises R5 names are run and recorded); and item 48, Safety and Oversight
   Prohibitions (below). Item 41, Inference Cost and Budget Control, is written: [Standard 41](41-inference-cost-and-budget-control.md) owns budgets
@@ -541,10 +541,9 @@ standards 13 (whose `privacy.no-unredacted-prompt-logging` governs R4's records)
 under Scope.
 
 Unwritten items this standard defers to, by specification number: item 4 (exceptions, which R2's
-exemptibility needs); item 16 (who may use the system at all); items 22 and 24 (tool and retrieval
-security); item 34 (what follows a misuse incident); item 35 (the adversarial exercises R5 names); item 41 (budget
+exemptibility needs); item 34 (what follows a misuse incident); item 35 (the adversarial exercises R5 names); item 41 (budget
 mechanisms R3's bounds may share); and item 48 (prohibitions on bullet 1's ground, whose relationship to
-`misuse prevention` the specification does not record).
+`misuse prevention` the specification does not record). Items 16, 22 and 24 are written: [Standard 16](16-access-control-for-models-context-and-tools.md) (who may use the system at all), [Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md) (tool and retrieval security).
 
 No ADR covers this standard. `artifacts/adr/` does not exist in this release.
 

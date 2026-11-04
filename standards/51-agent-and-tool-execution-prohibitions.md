@@ -75,7 +75,7 @@ The boundary with this standard's neighbours, none of whose ground is claimed:
   `gate.no-self-approval` is adjacent to R1 here.
 - **[Standard 9](09-misuse-and-abuse-prevention.md)** governs deliberate misuse of a system working as
   designed. An agent made to act on content that should not have directed it is R2's.
-- **Unwritten items, whose ground is not claimed:** item 22, Tool and Function-Call Security (the
+- **Items whose ground is not claimed** (items 22 and 24 are written, as [Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md); the rest are unwritten): item 22, Tool and Function-Call Security (the
   security of tools themselves, and of their outputs as inputs); item 24, Retrieval and Context Supply
   Chain (where retrieved content comes from and whether it can be trusted); item 35, Red Teaming (how
   the exercise R1's rule names is run and recorded); and the sibling prohibitions on other bullets,
@@ -392,9 +392,7 @@ Its R6 rule overlaps R1 and R2 as set out under each. [Standard 45](45-approval-
 `gate.no-self-approval` is adjacent to R1. [Standard 9](09-misuse-and-abuse-prevention.md) governs
 deliberate misuse; an agent directed by retrieved content is R2's case.
 
-Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 22 (tool
-security, and whether tool output other than fetched content is within R2); item 24 (retrieval supply
-chain); and item 35 (the exercise R1's rule names).
+Unwritten items this standard defers to, by specification number: item 4 (exceptions); and item 35 (the exercise R1's rule names). Items 22 and 24 are written: [Standard 22](22-tool-and-function-call-security.md) (tool security, and whether tool output other than fetched content is within R2) and [Standard 24](24-retrieval-and-context-supply-chain.md) (retrieval supply chain).
 
 Outside this repository: **MathematicsStandards** uses the `agent.` segment for
 `agent.explainable-findings` and `agent.refusal-on-invariant`. Neither was read for this document, and
