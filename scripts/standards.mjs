@@ -563,24 +563,27 @@ function measureLiteral(text, start) {
 // evidence. Both read the code-only view (index-aligned with the text, strings blanked except a quoted
 // property NAME) to find KEYS, and the original text to measure the literal a key holds.
 //
-//   message role shape        a message object whose `role` is the quoted word `system` (a bare
-//                             `system` in YAML) and whose `content` is a quoted literal, in either key
-//                             order: `{"role": "system", "content": "..."}`, and the YAML list-of-messages
-//                             form. The `content` must be a key of the SAME object (or YAML mapping) that
-//                             holds the role, not of a nested or neighbouring one.
+//   message role shape        a message object whose `role` is the quoted word `system` and whose
+//                             `content` is a quoted literal, in either key order:
+//                             `{"role": "system", "content": "..."}`. The `content` must be a key of the
+//                             SAME object that holds the role, not of a nested or neighbouring one.
 //   systemInstruction parts   the Gemini object form `systemInstruction: { parts: [{ text: "..." }] }`,
 //   shape                     also spelled `system_instruction`: a `text` key inside the `parts` of the
 //                             object.
 //
-// A role is a key only when it opens a mapping entry (the previous code character is `{` or `,`, or it
-// begins a YAML line after any `- ` markers) and its separator is `:`. So `const role = "system"`, a
-// keyword argument, a ternary branch and a hyphenated or prefixed name are not the key. Not claimed:
-// a role or content held in a variable, template-literal or concatenated content, content that is an
-// array of typed parts, the `developer` role, TOML tables, keyword-argument constructors, block scalars,
-// and block-style YAML `systemInstruction` (Standard 21, "The detector for R1 and R2").
+// A role is a key only when it opens a mapping entry (the previous code character is `{` or `,`) and its
+// separator is `:`. So `const role = "system"`, a keyword argument, a ternary branch and a hyphenated or
+// prefixed name are not the key. Not claimed: a role or content held in a variable, template-literal or
+// concatenated content, content that is an array of typed parts, the `developer` role, TOML tables and
+// keyword-argument constructors (Standard 21, "The detector for R1 and R2").
+//
+// This layer reads SOURCE CODE. A YAML or JSON file is read over its parsed tree (scripts/structural-shapes.mjs)
+// and never reaches it. The YAML-specific branches it once carried (a bare `system` role, explicit `?` keys,
+// flow-sequence entries, mapping keys found by indentation) were retired by ST-59 (#121), which is why none of
+// the helpers below takes a YAML flag.
 const KEY_PREFIX = String.raw`(?<![\w$-])(["']?)`;
 const ROLE_KEY = new RegExp(String.raw`${KEY_PREFIX}role\1[ \t\r\n]*:[ \t\r\n]*`, "g");
-const SYSTEM_BARE = /system(?=[ \t]*(?:\r?\n|$|[,}]))/y;
+
 const CONTENT_KEY = /(["']?)content\1[ \t\r\n]*:[ \t\r\n]*(["'])/y;
 const PARTS_KEY = /(["']?)parts\1[ \t\r\n]*:[ \t\r\n]*(?=[[{])/y;
 const TEXT_KEY = new RegExp(String.raw`${KEY_PREFIX}text\1[ \t\r\n]*:[ \t\r\n]*(["'])`, "g");
@@ -619,51 +622,29 @@ function enclosingBrace(view, idx) {
 // True when the code character before `idx` is the `?` of a ternary: in `ok ? system : "..."` the word is
 // an operand and the colon is the ternary's, so the word is not a key. (A quoted name in operand position
 // is already blanked in the view, so only a bare name reaches this check.)
-// In YAML there is no ternary: a `?` that begins a line (after any `- ` markers) or follows `{`, `[` or `,`
-// is the explicit-key indicator, `? system\n: "..."`, and the word after it IS a key (Codex review of
-// PR #98). A `?` after other text in YAML stays a plain-scalar character, which is not a key either.
-const SAME_LINE_KEY = /[^\s:]+[ \t]*:/y;
-function followsTernaryMark(view, idx, yaml = false) {
+function followsTernaryMark(view, idx) {
   let k = idx - 1;
   while (k >= 0 && /\s/.test(view[k])) k -= 1;
-  if (k < 0 || view[k] !== "?") return false;
-  if (!yaml) return true;
-  // The indicator must be separated from the key by whitespace: `?system` is a plain key named `?system`.
-  if (!/\s/.test(view[k + 1])) return true;
-  const lineStart = view.lastIndexOf("\n", k - 1) + 1;
-  if (/^[ \t]*(?:-[ \t]+)*$/.test(view.slice(lineStart, k))) {
-    // Block form: a name whose `:` is on the same line (`? system: "..."`) is an inline mapping used as
-    // the complex KEY, so the literal is inside a key and not the entry's value. Only a name whose colon
-    // starts a later line (`? system` then `: "..."`) is the explicit key (Codex review of PR #103).
-    SAME_LINE_KEY.lastIndex = idx;
-    return SAME_LINE_KEY.test(view);
-  }
-  let p = k - 1;
-  while (p >= 0 && /\s/.test(view[p])) p -= 1;
-  return !(p >= 0 && "{[,".includes(view[p]));
+  return k >= 0 && view[k] === "?";
 }
 
 // True when the role literal that ends just before `after` is the WHOLE value: what follows must close the
 // entry, so `"system" + "-admin"`, `"system".toUpperCase()`, `"system" || x` and `"system" ? a : b` do not
-// name the system role. In braced code the entry ends at `,` or `}`, after an optional TypeScript
-// `as const`; in YAML it ends at the line, or at `,` or `}` in flow style. Comments are blanked in the
-// view, so a trailing comment is whitespace here.
-const CLOSES_ENTRY_CODE = /\s*(?:as[ \t\r\n]+const\s*)?[,}]/y;
-const CLOSES_ENTRY_YAML = /[ \t]*(?:\r?\n|$|[,}])/y;
-function closesEntry(view, after, yaml) {
-  const re = yaml ? CLOSES_ENTRY_YAML : CLOSES_ENTRY_CODE;
-  re.lastIndex = after;
-  return re.test(view);
+// name the system role. The entry ends at `,` or `}`, after an optional TypeScript `as const`. Comments are
+// blanked in the view, so a trailing comment is whitespace here.
+const CLOSES_ENTRY = /\s*(?:as[ \t\r\n]+const\s*)?[,}]/y;
+function closesEntry(view, after) {
+  CLOSES_ENTRY.lastIndex = after;
+  return CLOSES_ENTRY.test(view);
 }
 
 // True when the key at `idx` opens a mapping entry in a braced object: the previous code character is
-// `{` or `,`; in YAML also `[`, since a flow sequence's item may be an implicit single-pair mapping,
-// `[systemInstruction: {...}]` (Codex review of PR #98). In code `[` opens an array or a TypeScript tuple
-// type, whose `name: type` elements are labels and not keys.
-function opensEntry(view, idx, yaml = false) {
+// `{` or `,`. In code `[` opens an array or a TypeScript tuple type, whose `name: type` elements are
+// labels and not keys.
+function opensEntry(view, idx) {
   for (let k = idx - 1; k >= 0; k -= 1) {
     if (/\s/.test(view[k])) continue;
-    return view[k] === "{" || view[k] === "," || (yaml && view[k] === "[");
+    return view[k] === "{" || view[k] === ",";
   }
   return false;
 }
@@ -689,106 +670,37 @@ function contentInObject(view, text, open, close) {
   return longest;
 }
 
-// The YAML block mapping that holds the key at `idx` (a key that begins its line, after any `- `
-// markers): the start offsets of every key of that mapping, found by indentation. `col` is the key's
-// column, which is the same for every key of one mapping, including a first key that follows `- `.
-function yamlMappingKeys(view, idx, lineStart) {
-  const col = idx - lineStart;
-  const keys = [idx];
-  const lineInfo = (start) => {
-    const nl = view.indexOf("\n", start);
-    const line = view.slice(start, nl === -1 ? view.length : nl);
-    const lead = /^([ \t]*)((?:-[ \t]+)*)/.exec(line);
-    return { line, nl, indent: lead[1].length, keyCol: lead[0].length, dashed: lead[2] !== "", blank: line.trim() === "" };
-  };
-  const boundary = (line) => /^(---|\.\.\.)/.test(line);
-
-  // Upward, unless this key itself follows a `- ` marker: then it opens its item and nothing above is
-  // in its mapping.
-  if (/^[ \t]*$/.test(view.slice(lineStart, idx))) {
-    let cur = lineStart;
-    while (cur > 0) {
-      const start = view.lastIndexOf("\n", cur - 2) + 1;
-      const info = lineInfo(start);
-      cur = start;
-      if (info.blank) continue;
-      if (boundary(info.line)) break;
-      if (info.dashed && info.indent < col) {
-        if (info.keyCol === col) keys.push(start + col);
-        break;
-      }
-      if (info.indent === col && !info.dashed) keys.push(start + col);
-      else if (info.indent < col) break;
-    }
-  }
-
-  // Downward: keys at the same column belong; a shallower line ends the mapping.
-  let next = view.indexOf("\n", idx);
-  while (next !== -1 && next + 1 < view.length) {
-    const start = next + 1;
-    const info = lineInfo(start);
-    next = info.nl;
-    if (info.blank) continue;
-    if (boundary(info.line)) break;
-    if (info.indent < col) break;
-    if (info.indent === col && !info.dashed) keys.push(start + col);
-  }
-  return keys;
-}
-
-function messageRoleLength(view, text, yaml) {
+function messageRoleLength(view, text) {
   let longest = -1;
   ROLE_KEY.lastIndex = 0;
   for (let m = ROLE_KEY.exec(view); m; m = ROLE_KEY.exec(view)) {
     const idx = m.index;
     const valueAt = idx + m[0].length;
-    let isSystem = false;
-    if (view[valueAt] === "\"" || view[valueAt] === "'") {
-      const body = measureLiteral(text, valueAt);
-      isSystem = body === "system".length && text.slice(valueAt + 1, valueAt + 1 + body) === "system"
-        && closesEntry(view, valueAt + body + 2, yaml);
-    } else if (yaml) {
-      SYSTEM_BARE.lastIndex = valueAt;
-      isSystem = SYSTEM_BARE.test(view);
-    }
-    if (!isSystem) continue;
+    if (view[valueAt] !== "\"" && view[valueAt] !== "'") continue;
+    const body = measureLiteral(text, valueAt);
+    const isSystem = body === "system".length && text.slice(valueAt + 1, valueAt + 1 + body) === "system"
+      && closesEntry(view, valueAt + body + 2);
+    if (!isSystem || !opensEntry(view, idx)) continue;
 
-    if (opensEntry(view, idx)) {
-      const open = enclosingBrace(view, idx);
-      if (open !== -1) {
-        const close = matchClose(view, open);
-        if (close !== -1) longest = Math.max(longest, contentInObject(view, text, open, close));
-        continue;
-      }
-    }
-    if (!yaml) continue;
-    const lineStart = view.lastIndexOf("\n", idx - 1) + 1;
-    if (!/^[ \t]*(?:-[ \t]+)*$/.test(view.slice(lineStart, idx))) continue;
-    for (const key of yamlMappingKeys(view, idx, lineStart)) {
-      CONTENT_KEY.lastIndex = key;
-      const c = CONTENT_KEY.exec(view);
-      if (c) longest = Math.max(longest, measureLiteral(text, key + c[0].length - 1));
-    }
+    const open = enclosingBrace(view, idx);
+    if (open === -1) continue;
+    const close = matchClose(view, open);
+    if (close !== -1) longest = Math.max(longest, contentInObject(view, text, open, close));
   }
   return longest;
 }
 
-// After the name, a `:` makes it a mapping KEY only where an entry can open: after `{` or `,` (or, in YAML,
-// at the start of a line after any `- ` markers). Anywhere else the colon is a ternary's or a label's. An
-// `=` assignment or keyword argument is not constrained.
-function isInstructionKey(view, match, yaml) {
-  if (/=[ \t\r\n]*\{$/.test(match[0])) return true;
-  if (opensEntry(view, match.index, yaml)) return true;
-  if (!yaml) return false;
-  const lineStart = view.lastIndexOf("\n", match.index - 1) + 1;
-  return /^[ \t]*(?:-[ \t]+)*$/.test(view.slice(lineStart, match.index));
+// After the name, a `:` makes it a mapping KEY only where an entry can open: after `{` or `,`. Anywhere else
+// the colon is a ternary's or a label's. An `=` assignment or keyword argument is not constrained.
+function isInstructionKey(view, match) {
+  return /=[ \t\r\n]*\{$/.test(match[0]) || opensEntry(view, match.index);
 }
 
-function systemInstructionPartsLength(view, text, yaml) {
+function systemInstructionPartsLength(view, text) {
   let longest = -1;
   SYSTEM_INSTRUCTION_KEY.lastIndex = 0;
   for (let m = SYSTEM_INSTRUCTION_KEY.exec(view); m; m = SYSTEM_INSTRUCTION_KEY.exec(view)) {
-    if (!isInstructionKey(view, m, yaml)) continue;
+    if (!isInstructionKey(view, m)) continue;
     const open = m.index + m[0].length - 1;
     const close = matchClose(view, open);
     if (close === -1) continue;
@@ -808,7 +720,7 @@ function systemInstructionPartsLength(view, text, yaml) {
             const inside = view.slice(valueOpen, valueClose);
             TEXT_KEY.lastIndex = 0;
             for (let t = TEXT_KEY.exec(inside); t; t = TEXT_KEY.exec(inside)) {
-              if (!opensEntry(inside, t.index, yaml)) continue;
+              if (!opensEntry(inside, t.index)) continue;
               const literal = valueOpen + t.index + t[0].length - 1;
               longest = Math.max(longest, measureLiteral(text, literal));
             }
@@ -878,19 +790,19 @@ function detectInlineSystemPrompt(run, withdrawn) {
     // literal is measured, so the match's own opening quote is the literal's start. EVERY match is
     // measured, not the first: a short instruction earlier in a file does not describe a long one later.
     const view = split.codeOnly;
-    const yaml = [".yml", ".yaml"].includes(extensionOf(file));
+
     INSTRUCTION_PARAM.lastIndex = 0;
     let longest = -1;
     for (let match = INSTRUCTION_PARAM.exec(view); match; match = INSTRUCTION_PARAM.exec(view)) {
-      if (followsTernaryMark(view, match.index, yaml)) continue;
+      if (followsTernaryMark(view, match.index)) continue;
       const length = measureLiteral(read.text, match.index + match[0].length - 1);
       longest = Math.max(longest, length);
     }
     if (longest >= INLINE_THRESHOLD) hits.push(`${file} (${longest} chars)`);
 
-    const role = messageRoleLength(view, read.text, yaml);
+    const role = messageRoleLength(view, read.text);
     if (role >= INLINE_THRESHOLD) hits.push(`${file} (${role} chars, message role shape)`);
-    const gemini = systemInstructionPartsLength(view, read.text, yaml);
+    const gemini = systemInstructionPartsLength(view, read.text);
     if (gemini >= INLINE_THRESHOLD) hits.push(`${file} (${gemini} chars, systemInstruction parts shape)`);
   }
 
