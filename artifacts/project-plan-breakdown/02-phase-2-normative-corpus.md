@@ -66,7 +66,7 @@ dated record of that slice and is left as written.)
 
 ---
 
-## 2. Current state, verified 2026-09-14
+## 2. Current state, verified 2026-09-14 (counts updated through the Standard 18 slice)
 
 **Written: 18 of 53 standards** — `standards/01-ai-system-manifest.md`,
 `02-ai-risk-tiering-and-applicability.md`, `03-machine-readable-ai-policy.md`,
@@ -84,6 +84,12 @@ dated record of that slice and is left as written.)
 owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 43 added 2026-10-15, ST-35, #80).
 (Standard 10 added 2026-10-15; Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
 owner's assignment of the two `forbidden` agent rules to it — ST-42, #87).
+`09-misuse-and-abuse-prevention.md`, `11-autonomy-levels-and-delegated-authority.md`,
+`13-personal-data-in-ai-systems.md`, `17-evaluation-plans-for-generative-systems.md`, `18-benchmark-integrity-and-contamination.md`,
+`21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `45-approval-gates.md`,
+`51-agent-and-tool-execution-prohibitions.md`
+(Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
+owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 18 added by ST-12 (#57), prose-first, ships no rule).
 
 **35 standards remain unwritten.**
 

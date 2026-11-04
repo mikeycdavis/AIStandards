@@ -114,7 +114,7 @@ an open edge.** Every statement about that pack below was read through git objec
 
 The boundary with this standard's other neighbours, none of whose ground is claimed:
 
-- **Item 18, Benchmark Integrity and Contamination** (unwritten, posture B) — whether evaluation
+- **Item 18, [Benchmark Integrity and Contamination](18-benchmark-integrity-and-contamination.md)** (posture B) — whether evaluation
   input has leaked into a model's training data, and whether a public benchmark still measures
   anything. R4 concerns selection against the held-out set by the project, not contamination by a
   provider.
