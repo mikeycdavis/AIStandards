@@ -362,9 +362,10 @@ error has been corrected in Standard 2.
 [Standard 5](05-verdict-vocabulary.md) defines what `prohibited-but-unestablished` and `not-evaluable`
 mean in a report, which is what R6 relies on to be worth stating at all.
 
-**Item 10, Human Oversight and Intervention, is unwritten.** R4 covers only the autonomy-tier form of
-intervention — the halt path for a system that acts alone. The general oversight obligation is item
-10's and is not claimed here. Where the two overlap when 10 is written, the more specific requirement
+**Item 10, Human Oversight and Intervention, is written as
+[Standard 10](10-human-oversight-and-intervention.md).** R4 covers only the autonomy-tier form of
+intervention — the halt path for a system that acts alone. The general oversight obligation is
+Standard 10's and is not claimed here. Where the two overlap, the more specific requirement
 governs its own subject and neither is carried as independently authoritative.
 
 No ADR has been written for this standard. The ADR corpus (0001–0024 in the plan) is Phase 6.

@@ -72,12 +72,15 @@ dated record of that slice and is left as written.)
 `02-ai-risk-tiering-and-applicability.md`, `03-machine-readable-ai-policy.md`,
 `05-verdict-vocabulary.md`, `06-standard-structure-and-rule-identity.md`,
 `07-boundary-with-adjacent-standards.md`, `08-ai-safety-requirements-and-safety-cases.md`,
-`09-misuse-and-abuse-prevention.md`, `11-autonomy-levels-and-delegated-authority.md`,
+`09-misuse-and-abuse-prevention.md`, `10-human-oversight-and-intervention.md`,
+`11-autonomy-levels-and-delegated-authority.md`,
 `13-personal-data-in-ai-systems.md`, `17-evaluation-plans-for-generative-systems.md`,
 `21-prompt-and-instruction-security.md`, `23-agent-execution-security.md`, `25-grounding-and-hallucination-control.md`, `33-ai-observability.md`, `43-environmental-impact-accounting.md`, `45-approval-gates.md`,
 `51-agent-and-tool-execution-prohibitions.md`
 (Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
 owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 43 added 2026-10-15, ST-35, #80).
+(Standard 10 added 2026-10-15; Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
+owner's assignment of the two `forbidden` agent rules to it — ST-42, #87).
 
 **35 standards remain unwritten.**
 
@@ -115,7 +118,7 @@ were built on 2026-09-19.
   `Implemented by` column as its standard is written.
 - `artifacts/standards-source-inventory.json` — `expectedCount`, `reviewedOn`, and per item
   `{number, title, class, derivedFrom, implementedBy}`. **Not written.**
-- All 53 standards, each with the ten H2 sections carrying the brief's nine requirements. **13 done.**
+- All 53 standards, each with the ten H2 sections carrying the brief's nine requirements. **18 done.**
 - Shards for the nine reserved namespaces that have none, to roughly 96 rules. **Eight shards exist,
   46 rules**; Standards 11, 08 and 09 added rules during this phase.
 - All templates: manifest, threat model, evaluation plan, tool permissions, incident report,
@@ -466,7 +469,7 @@ git worktree created outside the repository at `a2d5069`; shared cells were edit
 item that owns catalog rules has a document, so the rule that picked items 23 and 17 picks nothing.
 Re-run `/whats-next` before starting; `docs/HANDOFF.md` §9 lists the candidates (inferred).
 
-Q7, Q9 to Q12 and Q15 to Q22 remain open.
+Q7, Q9 to Q12, Q15 to Q22 and Q23 to Q25 remain open.
 
 ## 12. The adoption slice contract
 

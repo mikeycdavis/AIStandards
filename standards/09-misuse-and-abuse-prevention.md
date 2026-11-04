@@ -59,10 +59,14 @@ with this standard's neighbours falls, and none of their ground is claimed:
   **[Standard 45](45-approval-gates.md)** govern how much authority a system holds and whether an
   individual action is gated. A misuse case whose harm is an effect rather than an output is bounded
   in part by them, and R1 may name a gate as a control.
-- **Unwritten items, whose ground is not claimed:** item 10, Human Oversight and Intervention (the
-  general oversight obligation); item 13, Personal Data in AI Systems (what a misuse log may retain);
-  item 16, Access Control for Models, Context, and Tools (who may use the system at all); items 22,
-  23 and 24 (tool, agent and retrieval security — attacks on the system's components); item 34, AI
+- **[Standard 10](10-human-oversight-and-intervention.md)** (Human Oversight and Intervention — the
+  general oversight obligation, whose ground is not claimed here).
+- **[Standard 13](13-personal-data-in-ai-systems.md)** (Personal Data in AI Systems — what a misuse log may
+  retain) and **[Standard 23](23-agent-execution-security.md)** (Agent Execution Security), whose ground is
+  not claimed here.
+- **Unwritten items, whose ground is not claimed:**
+  item 16, Access Control for Models, Context, and Tools (who may use the system at all); items 22
+  and 24 (tool and retrieval security — attacks on the system's components); item 34, AI
   Incident Response (what happens once a misuse event is declared an incident); item 35, Red Teaming
   (how the adversarial exercises R5 names are run and recorded); item 41, Inference Cost and Budget
   Control (budgets whose mechanism R3's bound may share); and item 48, Safety and Oversight
@@ -532,11 +536,13 @@ harm and what stands in the way. The two may share a document, and neither subst
 exercise, and [Standard 45](45-approval-gates.md) gates the individual actions a misuse case may try to
 cause; either may be named as a control under R1.
 
+[Standard 10](10-human-oversight-and-intervention.md) (the general oversight obligation) and written
+standards 13 (whose `privacy.no-unredacted-prompt-logging` governs R4's records) and 23 are cited
+under Scope.
+
 Unwritten items this standard defers to, by specification number: item 4 (exceptions, which R2's
-exemptibility needs); item 10 (the general oversight obligation); item 13, whose shard
-`rules/privacy.json` already carries `privacy.no-unredacted-prompt-logging`, which governs R4's records;
-item 16 (who may use the system at all); items 22, 23 and 24 (tool, agent and retrieval security);
-item 34 (what follows a misuse incident); item 35 (the adversarial exercises R5 names); item 41 (budget
+exemptibility needs); item 16 (who may use the system at all); items 22 and 24 (tool and retrieval
+security); item 34 (what follows a misuse incident); item 35 (the adversarial exercises R5 names); item 41 (budget
 mechanisms R3's bounds may share); and item 48 (prohibitions on bullet 1's ground, whose relationship to
 `misuse prevention` the specification does not record).
 
