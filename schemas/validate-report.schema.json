@@ -11,7 +11,11 @@
   ],
   "additionalProperties": false,
   "properties": {
-    "schemaVersion": { "type": "string", "const": "1.0" },
+    "schemaVersion": {
+      "description": "1.1 is additive over 1.0: results[].locations and results[].locationsOmitted. Nothing was removed or retyped.",
+      "type": "string",
+      "const": "1.1"
+    },
     "standard": {
       "type": "object",
       "required": ["id", "version"],
@@ -134,7 +138,7 @@
         "type": "object",
         "required": [
           "rule", "standardRef", "level", "severity", "result", "disposition",
-          "distinction", "assurance", "validationType", "evidence", "message"
+          "distinction", "assurance", "validationType", "evidence", "locations", "locationsOmitted", "message"
         ],
         "additionalProperties": false,
         "properties": {
@@ -158,6 +162,34 @@
             "enum": ["structural", "document", "configuration", "code-analysis", "manual-review", "not-evaluable"]
           },
           "evidence": { "type": "array", "items": { "type": "string" } },
+          "locations": {
+            "description": "Structured locations beside the evidence strings (ST-58, decision G): where each literal that fired a rule is, in a YAML or JSON file read as a tree. At most 50 are listed and locationsOmitted counts the rest. Empty for a result with no tree-derived evidence, and for a file the lexical layer scanned, which has none.",
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "object",
+              "required": ["file", "line", "column", "key", "path", "shape", "length", "duplicate"],
+              "additionalProperties": false,
+              "properties": {
+                "file": { "type": "string", "minLength": 1 },
+                "documentIndex": { "description": "YAML only: the zero-based document of a stream. Absent for JSON, which has one.", "type": "integer", "minimum": 0 },
+                "line": { "description": "1-based; LF is the break.", "type": "integer", "minimum": 1 },
+                "column": { "description": "1-based, in Unicode code points from the start of the line.", "type": "integer", "minimum": 1 },
+                "key": { "description": "The key that holds the literal.", "type": "string", "maxLength": 129 },
+                "path": {
+                  "description": "From the document root: a string is a mapping key (clipped at 128 code points), an integer is a sequence index. At most the last 64 steps.",
+                  "type": "array",
+                  "maxItems": 64,
+                  "items": { "type": ["string", "integer"] }
+                },
+                "pathTruncated": { "description": "Present and true when the path was cut to its last 64 steps.", "type": "boolean", "const": true },
+                "shape": { "type": "string", "enum": ["parameter", "message-role", "system-instruction-parts"] },
+                "length": { "description": "The DECODED literal, in Unicode code points.", "type": "integer", "minimum": 0 },
+                "duplicate": { "description": "True when a key this shape reads occurs more than once in the same mapping.", "type": "boolean" }
+              }
+            }
+          },
+          "locationsOmitted": { "type": "integer", "minimum": 0 },
           "message": { "type": "string", "minLength": 1 },
           "remediation": { "type": ["string", "null"] }
         }

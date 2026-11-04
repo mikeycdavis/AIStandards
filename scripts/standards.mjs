@@ -26,6 +26,7 @@ import { resolvePolicyPath, loadPolicy, assertVersionIdentity, applyPolicy, Poli
 import { evaluate, envelope, distinction, STATUS, DISPOSITION } from "./compliance.mjs";
 import { splitSource, isCode, extensionOf } from "./source.mjs";
 import { isStructuralScope, parseStructuralBytes } from "./structural.mjs";
+import { findInlinePromptShapes } from "./structural-shapes.mjs";
 import { inspectScaffolding } from "./scaffolding.mjs";
 import { MANIFEST_NAMES, classifyManifest, manifestToolNames } from "./manifest.mjs";
 import { TOOLPERM_NAMES, classifyToolPermissions, compareToolNames } from "./toolperms.mjs";
@@ -163,6 +164,9 @@ function readStructuralFiles(run) {
   let aliasTotal = 0;
   let mergeTotal = 0;
   let parsed = 0;
+  const shapes = new Map();
+  const duplicates = [];
+  let duplicateTotal = 0;
 
   for (const file of run.files) {
     if (!isStructuralScope(file)) continue;
@@ -173,6 +177,20 @@ function readStructuralFiles(run) {
       continue;
     }
     parsed += 1;
+    // The inline-prompt shapes, read over the tree (ST-58). Only what the detector needs is kept: the tree
+    // itself is not retained.
+    const found = findInlinePromptShapes(outcome, INLINE_THRESHOLD);
+    shapes.set(file, { format: outcome.format, matches: found.matches });
+    duplicateTotal += found.duplicates.length;
+    for (const d of found.duplicates) {
+      if (duplicates.length < ALIAS_LIST_LIMIT) {
+        const entry = { file };
+        if (outcome.format === "yaml") entry.documentIndex = d.documentIndex;
+        Object.assign(entry, { key: d.key, occurrences: d.occurrences, line: d.line, column: d.column, path: d.path }); // only the 50 listed are located
+        if (d.pathTruncated) entry.pathTruncated = true;
+        duplicates.push(entry);
+      }
+    }
     aliasTotal += outcome.aliases.length;
     mergeTotal += outcome.merges.length;
     for (const a of outcome.aliases) {
@@ -189,7 +207,7 @@ function readStructuralFiles(run) {
     }
   }
 
-  run.structural = { failures, parsed };
+  run.structural = { failures, parsed, shapes };
   run.surface.unparseableFiles = {
     total: failed.length,
     files: failed.slice(0, UNPARSEABLE_LIST_LIMIT),
@@ -200,6 +218,7 @@ function readStructuralFiles(run) {
     filesParsed: parsed,
     aliasesNotFollowed: { total: aliasTotal, listed: aliases, omitted: aliasTotal - aliases.length },
     mergeKeysNotApplied: { total: mergeTotal, listed: merges, omitted: mergeTotal - merges.length },
+    duplicateKeysEvaluated: { total: duplicateTotal, listed: duplicates, omitted: duplicateTotal - duplicates.length },
   };
 }
 
@@ -243,7 +262,7 @@ function createRun(root) {
     aiSurface: { manifest: null, promptAssets: [], toolDefinitions: [] },
     manifest: null,
     toolPermissions: null,
-    structural: { failures: new Map(), parsed: 0 },
+    structural: { failures: new Map(), parsed: 0, shapes: new Map() },
     structuralSurface: null,
 
     // The single writer. `rule` is null for descriptive findings, because binding an observation to
@@ -254,8 +273,8 @@ function createRun(root) {
 
     // A judgement about a rule. `violation` means one was confirmed; `unknown` means the check
     // could not run, which is never a pass.
-    observe({ rule, violation = false, unknown = false, message, evidence = [] }) {
-      this.observations.push({ rule, violation, unknown, message, evidence });
+    observe({ rule, violation = false, unknown = false, message, evidence = [], locations = [] }) {
+      this.observations.push({ rule, violation, unknown, message, evidence, locations });
     },
 
     breakInvariant({ id, message, evidence = [] }) {
@@ -805,6 +824,28 @@ function systemInstructionPartsLength(view, text, yaml) {
   return longest;
 }
 
+// Evidence for the matches the tree reader found in one parsed file. The evidence STRINGS keep the form the
+// lexical layer produced (one per shape per file, the longest literal, now measured in decoded code points);
+// the structured locations list every literal at or above the threshold (decision G, additive).
+const SHAPE_EVIDENCE_SUFFIX = { "parameter": "", "message-role": ", message role shape", "system-instruction-parts": ", systemInstruction parts shape" };
+function collectShapeHits(file, read, hits, locations) {
+  for (const shape of ["parameter", "message-role", "system-instruction-parts"]) {
+    let longest = -1;
+    for (const m of read.matches) if (m.shape === shape) longest = Math.max(longest, m.length);
+    if (longest >= INLINE_THRESHOLD) hits.push(`${file} (${longest} chars${SHAPE_EVIDENCE_SUFFIX[shape]})`);
+  }
+  for (const m of read.matches) {
+    const entry = { file };
+    if (read.format === "yaml") entry.documentIndex = m.documentIndex;
+    // line and column stay lazy: only the (at most 50) listed locations are ever read, and locating costs a line.
+    Object.defineProperty(entry, "line", { enumerable: true, get: () => m.line });
+    Object.defineProperty(entry, "column", { enumerable: true, get: () => m.column });
+    Object.assign(entry, { key: m.key, path: m.path, shape: m.shape, length: m.length, duplicate: m.duplicate });
+    if (m.pathTruncated) entry.pathTruncated = true;
+    locations.push(entry);
+  }
+}
+
 function detectInlineSystemPrompt(run, withdrawn) {
   const rules = ["promptsec.prompt-is-versioned-artifact", "promptsec.no-inline-system-prompt"];
 
@@ -812,12 +853,20 @@ function detectInlineSystemPrompt(run, withdrawn) {
   // collected is a violation whatever else was excluded. So the files are always scanned, and the
   // withdrawal applies only when nothing was found.
   const hits = [];
+  const locations = [];
   for (const file of run.files) {
     if (!isCode(file)) continue;
     // A YAML or JSON file the structural reader could not read is NOT scanned lexically. Reading its
     // text anyway would be a guess made after the parser refused, which is the guess the parser
     // exists to stop making. It is reported below as unknown for these rules instead.
     if (run.structural.failures.has(file)) continue;
+    // A YAML or JSON file that parsed is read from its TREE, never as text (ST-58). The lexical layer
+    // still reads every other file.
+    if (isStructuralScope(file)) {
+      const read = run.structural.shapes.get(file);
+      if (read !== undefined) collectShapeHits(file, read, hits, locations);
+      continue;
+    }
     const read = readText(run.root, file);
     if (!read.ok) continue;
     const split = splitSource(read.text, file);
@@ -863,7 +912,7 @@ function detectInlineSystemPrompt(run, withdrawn) {
 
   if (hits.length > 0) {
     for (const rule of rules) {
-      run.observe({ rule, violation: true, message: `Instruction literal of ${INLINE_THRESHOLD}+ characters passed inline at a model call site.`, evidence: hits.slice(0, 10) });
+      run.observe({ rule, violation: true, message: `Instruction literal of ${INLINE_THRESHOLD}+ characters passed inline at a model call site.`, evidence: hits.slice(0, 10), locations });
     }
     if (unreadable.length > 0) noteUnreadable();
     return;
@@ -1016,8 +1065,9 @@ function commandAudit(target, flags) {
 
   const report = {
     // 1.1: additive. evidenceSurface.unparseableFiles and structuralSurface are new, and the closed
-    // schema admits them in the same change. validate's envelope did not change shape and stays 1.0.
-    schemaVersion: "1.1",
+    // schema admits them in the same change. 1.2: additive again, structuralSurface.duplicateKeysEvaluated
+    // (ST-58). validate's envelope is versioned separately (1.1: results[].locations).
+    schemaVersion: "1.2",
     standard: { id: "ai", version: FRAMEWORK_VERSION },
     project: path.basename(path.resolve(target)),
     auditedAt: new Date().toISOString(),

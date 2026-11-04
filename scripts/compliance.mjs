@@ -67,6 +67,14 @@ export function distinction(result, disposition, level) {
   return DISTINCTION.skipped;
 }
 
+// How many structured locations one result lists. This bounds the REPORT, never the detection.
+export const LOCATION_LIST_LIMIT = 50;
+
+function boundedLocations(violations) {
+  const all = violations.flatMap((o) => o.locations ?? []);
+  return { locations: all.slice(0, LOCATION_LIST_LIMIT), locationsOmitted: Math.max(0, all.length - LOCATION_LIST_LIMIT) };
+}
+
 /**
  * Evaluate one rule against what was observed.
  *
@@ -99,6 +107,10 @@ function evaluateRule(entry, observations, evaluatedRules) {
     assurance: rule.assurance,
     validationType: rule.validationType,
     evidence: [],
+    // Structured locations (ST-58, decision G), additive beside the evidence strings. Always present, so a
+    // consumer can tell "no location" from "an older validator". Bounded; the count of those left out is exact.
+    locations: [],
+    locationsOmitted: 0,
     remediation: rule.remediation ?? null,
   };
 
@@ -148,6 +160,7 @@ function evaluateRule(entry, observations, evaluatedRules) {
       result: level === "recommended" || rule.severity === "warning" ? RESULT.warning : RESULT.failed,
       disposition: DISPOSITION.evaluated,
       evidence: violations.flatMap((o) => o.evidence ?? []),
+      ...boundedLocations(violations),
       message: violations[0].message,
     };
   }
@@ -295,7 +308,7 @@ export function evaluate({ resolved, observations, evaluatedRules, invariantViol
 /** Wrap a verdict in the envelope a consumer reads. */
 export function envelope({ verdict, project, standardVersion, frameworkVersion, policyPath, policySource, auditedAt, frameworkCoverage }) {
   return {
-    schemaVersion: "1.0",
+    schemaVersion: "1.1",
     standard: { id: "ai", version: frameworkVersion },
     standardVersion: standardVersion ?? null,
     project: project ?? null,

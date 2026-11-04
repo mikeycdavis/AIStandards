@@ -7,8 +7,9 @@
 //   * findings from files that parsed stand, whatever else failed;
 //   * the failure is reported on an additive, bounded `unparseableFiles` evidence surface, and that
 //     surface ships in the same change as the closed schema that has to admit it;
-//   * the audit report carries schemaVersion "1.1" and validates against its closed schema; validate
-//     keeps "1.0" because its own shape did not change.
+//   * the audit report validates against its closed schema: schemaVersion "1.1" when ST-57 added the
+//     unparseable and structural surfaces, "1.2" since ST-58 added structuralSurface.duplicateKeysEvaluated;
+//     validate was "1.0" and is "1.1" since ST-58 added results[].locations.
 //
 // Targets are built in temp directories the way review-findings.test.mjs builds them.
 
@@ -42,12 +43,12 @@ function target(files) {
 
 const verdictOf = (dir, rule) => ruleIn(validate(dir).json, rule);
 
-test("the audit report validates against its closed schema, and carries schemaVersion 1.1", () => {
+test("the audit report validates against its closed schema, and carries schemaVersion 1.2", () => {
   // The first audit-schema conformance test: until now nothing checked an audit report against
   // schemas/audit-report.schema.json at all.
   const dir = target({ "a.yml": "k: v\n" });
   const { json } = audit(dir);
-  assert.equal(json.schemaVersion, "1.1");
+  assert.equal(json.schemaVersion, "1.2");
   assert.deepEqual(validateSchema(json, AUDIT_SCHEMA), []);
 });
 
@@ -60,16 +61,16 @@ test("the audit schema is closed: an unknown key anywhere the schema describes i
   const unparseable = { ...json.evidenceSurface.unparseableFiles, extra: 1 };
   const withUnparseable = { ...json, evidenceSurface: { ...json.evidenceSurface, unparseableFiles: unparseable } };
   assert.ok(validateSchema(withUnparseable, AUDIT_SCHEMA).length > 0, "unparseableFiles is closed");
-  assert.ok(validateSchema({ ...json, schemaVersion: "1.0" }, AUDIT_SCHEMA).length > 0, "a 1.0 envelope is not a 1.1 envelope");
+  assert.ok(validateSchema({ ...json, schemaVersion: "1.1" }, AUDIT_SCHEMA).length > 0, "a 1.1 envelope is not a 1.2 envelope");
   const { structuralSurface, ...without } = json;
   assert.ok(structuralSurface !== undefined);
   assert.ok(validateSchema(without, AUDIT_SCHEMA).length > 0, "structuralSurface is required in 1.1");
 });
 
-test("validate keeps schemaVersion 1.0 and validates against its own schema", () => {
+test("validate carries schemaVersion 1.1 (results[].locations) and validates against its own schema", () => {
   const dir = target({ "a.yml": "k: v\n" });
   const { json } = validate(dir);
-  assert.equal(json.schemaVersion, "1.0");
+  assert.equal(json.schemaVersion, "1.1");
   assert.deepEqual(validateSchema(json, VALIDATE_SCHEMA), []);
 });
 

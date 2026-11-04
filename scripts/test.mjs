@@ -53,6 +53,7 @@ const FILES = [
   "structural-audit.test.mjs",
   "vendor-yaml.test.mjs",
   "structural-ledger.test.mjs",
+  "structural-shapes.test.mjs",
   "source-yaml-freeze.test.mjs",
 ];
 
