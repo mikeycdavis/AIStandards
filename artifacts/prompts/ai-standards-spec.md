@@ -232,18 +232,18 @@ under [Authored items](#authored-items).
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
 | 25 | Grounding and Hallucination Control | D | `Hallucination` | O | standards/25-grounding-and-hallucination-control.md |
-| 26 | Uncertainty Expression and Abstention | D | `uncertainty` | B | — |
-| 27 | Citation and Source Attribution | D | `citation` | B | — |
-| 28 | Capability Honesty to Users | D | `capability honesty` | X | — |
+| 26 | Uncertainty Expression and Abstention | D | `uncertainty` | B | standards/26-uncertainty-expression-and-abstention.md |
+| 27 | Citation and Source Attribution | D | `citation` | B | standards/27-citation-and-source-attribution.md |
+| 28 | Capability Honesty to Users | D | `capability honesty` | X | standards/28-capability-honesty-to-users.md |
 
 ### Band G — Lineage, reproducibility, rollback · bullet 6
 
 | # | Title | Class | Derived from | Posture | Implemented by |
 | --- | --- | --- | --- | --- | --- |
-| 29 | AI System Versioning and Change Control | D | `versioning` | O | — |
-| 30 | Model and Prompt Lineage | D | `model/data lineage` | B | — |
-| 31 | Reproducibility Under Nondeterminism | D | `Reproducibility` | B | — |
-| 32 | Rollback and Recovery | D | `rollback` | O | — |
+| 29 | AI System Versioning and Change Control | D | `versioning` | O | standards/29-ai-system-versioning-and-change-control.md |
+| 30 | Model and Prompt Lineage | D | `model/data lineage` | B | standards/30-model-and-prompt-lineage.md |
+| 31 | Reproducibility Under Nondeterminism | D | `Reproducibility` | B | standards/31-reproducibility-under-nondeterminism.md |
+| 32 | Rollback and Recovery | D | `rollback` | O | standards/32-rollback-and-recovery.md |
 
 ### Band H — Observability, incident, red team, audit · bullet 7
 
