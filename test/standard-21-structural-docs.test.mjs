@@ -51,6 +51,8 @@ const NON_CLAIMS = [
 
 test("Standard 21 names the structural scope exactly as the code has it", () => {
   for (const ext of STRUCTURAL_EXTENSIONS) assert.ok(SECTION.includes("`" + ext + "`"), `scope names ${ext}`);
+  assert.match(SECTION, /A file whose name ends in `\.yml`, `\.yaml` or `\.json`, matched case-insensitively on the file name, is read as a parsed tree/);
+  assert.match(SECTION, /JSON text in a `\.yml` file is read as YAML, and YAML in a `\.json` file does not parse/);
   assert.match(SECTION, /case-insensitively/);
   assert.match(SECTION, /Nothing is sniffed from content/);
   assert.match(SECTION, /TOML/);
@@ -70,12 +72,17 @@ for (const [label, pattern] of NON_CLAIMS) {
   });
 }
 
+test("the JSONC and JSON5 non-claim states that a JSONC file named .json is unknown, not leniently read", () => {
+  assert.match(SECTION, /- JSONC and JSON5 \(a JSONC file named `\*\.json` does not parse, so it is unknown, not leniently read\);/);
+});
+
 test("the unparseable outcome is unknown, never a pass, with no lexical fallback or recovery", () => {
   assert.match(SECTION, /unknown, not clean/);
   assert.match(SECTION, /Unknown is never a pass/);
   assert.match(SECTION, /not scanned as text instead/);
-  assert.match(SECTION, /no part of it is recovered/);
-  assert.match(SECTION, /No file is exempt for being a template/);
+  assert.match(SECTION, /in the first release no part of it is recovered/);
+  assert.match(SECTION, /In the first release no file is exempt for being a template/);
+  assert.match(SECTION, /Lifting either limit would be a later decision, not made here\./);
   assert.match(SECTION, /evidenceSurface\.unparseableFiles/);
   // The second rule's note defers to the first by name (checked above); the first carries the outcome.
   const note = flat(RULES.find((r) => r.id === "promptsec.prompt-is-versioned-artifact").$assuranceNote);
@@ -83,6 +90,12 @@ test("the unparseable outcome is unknown, never a pass, with no lexical fallback
   assert.match(note, /never passed/);
   assert.match(note, /never scanned as text/);
   assert.match(flat(RULES.find((r) => r.id === "promptsec.no-inline-system-prompt").$assuranceNote), /unknown outcome for an unparseable YAML or JSON file/);
+});
+
+test("every failure reason the reader can return has a cause in the Standard 21 unknown paragraph", () => {
+  const para = SECTION.slice(SECTION.indexOf("A file the parser cannot read is unknown"), SECTION.indexOf("Named non-claims"));
+  for (const phrase of ["syntax error", "not valid UTF-8", "UTF-16 byte order mark", "control character", "lone carriage return", "512 KiB", "undefined alias", "empty JSON document", "parser exception", "unreadable file"])
+    assert.ok(para.includes(phrase), `cause named: ${phrase}`);
 });
 
 test("the measurement is stated in code points, and the source-code unit is stated as different", () => {

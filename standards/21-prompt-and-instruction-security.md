@@ -236,7 +236,7 @@ template-literal content, does not read a message whose `content` is an array of
 treat the `developer` role as the system role, does not read keyword-argument constructors
 (`ChatMessage(role="system", ...)`), TOML tables, YAML block scalars or a block-style YAML
 `systemInstruction`, and does not know whether a file-backed prompt is *reviewed* — only that it is a
-file is. A system that assembles its prompt from three fragments is not flagged by this check and may satisfy
+file. A system that assembles its prompt from three fragments is not flagged by this check and may satisfy
 nothing the standard actually asks for.
 
 **R4 is worth reading carefully as an example of the verdict vocabulary working.** It is a
@@ -255,12 +255,12 @@ and all source code, is scanned lexically, as described above. `misuse.safety-co
 (Standard 9) stays on the lexical layer; this standard does not move it.
 
 **A file the parser cannot read is unknown, not clean.** A syntax error in any document, a file that is not
-valid UTF-8 or begins with a UTF-16 byte order mark, a control character, a file past the 512 KiB read
-bound, an undefined alias and an unreadable file each make that one file *unknown* for `promptsec.prompt-is-versioned-artifact`
+valid UTF-8 or begins with a UTF-16 byte order mark, a control character, a lone carriage return (not part of CRLF), a file past the 512 KiB read
+bound, an undefined alias, an empty JSON document, a parser exception and an unreadable file each make that one file *unknown* for `promptsec.prompt-is-versioned-artifact`
 and `promptsec.no-inline-system-prompt`. Unknown is never a pass and is not a finding of its own. The file
-is not scanned as text instead, and no part of it is recovered, because a guess made after the parser
-refused is the guess the parser exists to stop making. No file is exempt for being a template; a template
-that does not parse is unknown like any other file. Findings from files that did parse are unaffected and
+is not scanned as text instead, and in the first release no part of it is recovered, because a guess made after the parser
+refused is the guess the parser exists to stop making. In the first release no file is exempt for being a template; a template
+that does not parse is unknown like any other file. Lifting either limit would be a later decision, not made here. Findings from files that did parse are unaffected and
 stand beside the unknown. The audit lists the refused files, bounded, under `evidenceSurface.unparseableFiles`
 and never carries their text.
 
