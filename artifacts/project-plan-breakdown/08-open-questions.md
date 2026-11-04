@@ -118,8 +118,8 @@ recorded explains the placement. Standard 13, written 2026-09-14, states both ru
 requires, claims for them only that retention is declared and that a deletion path reaches the
 model-adjacent stores, and leaves periods, schedules, backups and memorization to item 15.
 **Not resolved here, because the answer changes a rule's `standard` field.**
-**Impact if unanswered:** none today. Item 15's document, when written, will have to say whether it
-takes the two rules.
+**Impact if unanswered:** none today. [Standard 15](../../standards/15-retention-deletion-memorization.md) is now written and says
+it mints no id and moves neither rule; the question stays open.
 
 ### Q11 — Should the credentials rule stay under item 13?
 
@@ -361,8 +361,8 @@ the owner of training-data provenance.
 ### Q28 — Where does provenance end and consent and licensing (item 14) begin?
 
 A provenance statement may name a licence. Whether naming it is provenance, or the beginning of item
-14's subject, is undecided while item 14 is unwritten. **Not resolved here, because item 14 is
-unwritten.** **Impact if unanswered:** a licence named in a statement may be read as establishing
+14's subject, stays undecided. [Standard 14](../../standards/14-consent-and-licensing.md) is now written and leaves it open (it
+records this question and does not settle it). **Not resolved here, because the owner has not ruled.** **Impact if unanswered:** a licence named in a statement may be read as establishing
 permission, which it does not.
 
 ### Q29 — Does licensing in Standard 14 reach model-weight and output licences only (R5)?
@@ -374,8 +374,9 @@ have no owner in this pack. Recommended: keep R5 as authored.
 
 ### Q30 — Where should a permission, retention, access or retrieval record live?
 
-Standards 14 (R1 to R3), 15 (R1 to R6), 16 (R1, R5) and 24 (R1 to R5) each need a record that no closed
-schema can hold and no rule can find. Options: a schema-versioning change, a named project document a
+Standards 14 (R1 to R3 and R5), 15 (R1 to R5), 16 (R1, R5), 20 (R1, R3 to R6), 22 (R2, R4, R6) and 24 (R1 to
+R3) each need a record that no closed schema can hold and no rule can find, per each standard's Implementation
+table. Options: a schema-versioning change, a named project document a
 future rule can find, or prose only. **Not resolved here, because it is a schema-versioning decision that
 Phase 2 section 8 puts out of scope.** **Impact if unanswered:** none of those requirements is
 machine-checkable. Recommended: a named document first, schema later.
@@ -383,7 +384,9 @@ machine-checkable. Recommended: a named document first, schema later.
 ### Q31 — Is the expiry-driven versus request-driven deletion split between Standards 15 and 13 right?
 
 Standard 15 takes expiry-driven deletion, derived copies, backups, provider copies and training use;
-Standard 13 R5 takes request-driven deletion. This is the placement question Q10 and owner option C
+Standard 13 R5 takes request-driven deletion. Standard 15 R1, R2 and R4 also overlap Standard 13 R4 (a
+declaration of how long prompts, completions and traces are kept, what deletes them, and provider retention);
+Standard 15 says it extends that requirement and moves none. This is the placement question Q10 and owner option C
 (2026-10-15, #53) keeps open; no rule moved. **Not resolved here, because the owner holds Q10 open.**
 **Impact if unanswered:** the split stays provisional.
 
@@ -422,7 +425,8 @@ content fetched by a connector may be owned by both or by neither.
 ### Q37 — Should Standard 20's "who decided" record (R4) be tied to Standard 45's approval gates?
 
 R4 requires a record naming the decider of an adopted failing change and defines no role.
-**Not resolved here, because Standard 45's reach over model and prompt changes is unsettled.**
+**Not resolved here, because the author's reading is that Standard 45's reach over model and prompt changes is not
+settled by its text; this is a judgment and no passage records it.**
 **Impact if unanswered:** the decider may be anyone. Recommended: leave as written.
 
 ## Not questions

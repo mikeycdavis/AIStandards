@@ -295,7 +295,7 @@ owner-approved:
 | R7 | error |
 
 **Exemptibility.** R7 is not exemptible, because a mechanism for excepting the prohibition would be
-self-defeating. R6 and the second limb of R4, the ban on altering a verdict by an unrecorded change,
+self-defeating. R6 and the third limb of R4, the ban on altering a verdict by an unrecorded change,
 are not exemptible, because an exception would record a project as knowingly publishing a claim its
 test does not support. R1 to R5 reach a system only where it makes a version change or a regression
 claim, as Scope says, and have no exemption mechanism in this release: a project that does not meet
@@ -384,8 +384,8 @@ and the numbering are the specification's.
 
 ## Relationship to other standards and ADRs
 
-[Standard 17](17-evaluation-plans-for-generative-systems.md) assigns "when regression runs happen, and
-what difference from a baseline fails a change" to this item. R1 to R6 are that content. They sit
+[Standard 17](17-evaluation-plans-for-generative-systems.md) names, as item 20's subject, when a regression is checked for and what
+difference fails a change. R1 to R6 are that content. They sit
 inside Standard 17's plan (R1), suite (R2), baseline (R3), subject (R6) and scorer (R7) requirements
 and restate none. `eval.regression-baseline-recorded` stays attributed to Standard 17, which cites it
 under R3; whether it belongs here is Q20 and is open.
