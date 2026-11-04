@@ -101,6 +101,13 @@ Exit codes are process semantics. The verdict is the `status` field of the JSON 
 [23 Agent Execution Security](standards/23-agent-execution-security.md) ·
 [24 Retrieval and Context Supply Chain](standards/24-retrieval-and-context-supply-chain.md) ·
 [25 Grounding and Hallucination Control](standards/25-grounding-and-hallucination-control.md) ·
+[26 Uncertainty Expression and Abstention](standards/26-uncertainty-expression-and-abstention.md) ·
+[27 Citation and Source Attribution](standards/27-citation-and-source-attribution.md) ·
+[28 Capability Honesty to Users](standards/28-capability-honesty-to-users.md) ·
+[29 AI System Versioning and Change Control](standards/29-ai-system-versioning-and-change-control.md) ·
+[30 Model and Prompt Lineage](standards/30-model-and-prompt-lineage.md) ·
+[31 Reproducibility Under Nondeterminism](standards/31-reproducibility-under-nondeterminism.md) ·
+[32 Rollback and Recovery](standards/32-rollback-and-recovery.md) ·
 [33 AI Observability](standards/33-ai-observability.md) ·
 [43 Environmental Impact Accounting](standards/43-environmental-impact-accounting.md) ·
 [37 Fairness and Harm Distribution](standards/37-fairness-and-harm-distribution.md) ·
@@ -115,7 +122,7 @@ Exit codes are process semantics. The verdict is the `status` field of the JSON 
 
 1, 3, 5, 6 and 7 are machinery — each documents something the code does, so no behaviour ships
 undocumented. 21 and 45, written in Phase 1, are the easiest and hardest domain standards, chosen to
-prove the document skeleton at both extremes. 2, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 33, 37, 38, 39, 40, 41, 42, 43, 44 and 51 are the Phase 2 corpus written so far.
+prove the document skeleton at both extremes. 2, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 37, 38, 39, 40, 41, 42, 43, 44 and 51 are the Phase 2 corpus written so far.
 
 **Rules** — 46 across eight shards; **9 have a detector**. The rest report as unevaluated. That ratio
 is not a defect to be hidden: an AI standards pack is mostly manual review, and a design claiming

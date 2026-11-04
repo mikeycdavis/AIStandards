@@ -84,11 +84,10 @@ It does **not** cover, and claims none of the ground of, the following:
   duplicates spanning partitions, features unavailable at prediction time. That is
   MachineLearningStandards' subject; see the posture note below. Exposure a fine-tuned model
   inherits from its third-party base model is not introduced by that pipeline and stays under R2.
-- **What an evaluation must cover** (item 19, Robustness Evaluation) and **when regressions are
-  tested** (item 20, Regression Testing Across Model and Prompt Versions; written as [Standard 20](20-regression-testing.md)), item 19 unwritten in this
-  release.
-- **Where an evaluation set came from as a matter of corpus provenance** (item 12, Context and Corpus
-  Provenance, unwritten). R1 asks only that the origin be recorded as it bears on exposure.
+- **What an evaluation must cover** (item 19, [Standard 19](19-robustness-evaluation.md)) and **when regressions are
+  tested** (item 20, [Standard 20](20-regression-testing.md)).
+- **Where an evaluation set came from as a matter of corpus provenance** (item 12, [Standard 12](12-context-and-corpus-provenance.md),
+  Context and Corpus Provenance). R1 asks only that the origin be recorded as it bears on exposure.
 - **Whether an evaluation set holds personal data.** [Standard 13](13-personal-data-in-ai-systems.md)
   R1 governs it, and nothing below relaxes it.
 - **Prohibitions on tampering with or fabricating evaluation results** (item 50, Evaluation Integrity
@@ -486,8 +485,7 @@ R3 and R4 govern the applicability and non-lowering language used above, and
 falsifiers section answers, and the Validation section records why no rule is shipped, as plan 02
 section 6 asks.
 
-Items 12, 19 and 50 are unwritten in this release, and item 20 is written ([Standard 20](20-regression-testing.md)); the lines drawn above are provisional until
-they are, and the later standards may legitimately move them. Open questions Q19 (whether the two
+Item 50 is unwritten in this release; the line drawn above against it is provisional until it is, and the later standard may legitimately move it. Items 12, 19 and 20 have since been written ([Standard 12](12-context-and-corpus-provenance.md), [Standard 19](19-robustness-evaluation.md) and [Standard 20](20-regression-testing.md)); the lines drawn above against them were drawn before and have not been re-examined against them. Open questions Q19 (whether the two
 forbidden evaluation rules are item 50's prohibitions) and Q22 (whether this pack should state an evaluation baseline where MachineLearningStandards does not
 reach a system) are recorded open and not answered here.
 

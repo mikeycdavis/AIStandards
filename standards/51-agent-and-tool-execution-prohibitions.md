@@ -75,7 +75,7 @@ The boundary with this standard's neighbours, none of whose ground is claimed:
   `gate.no-self-approval` is adjacent to R1 here.
 - **[Standard 9](09-misuse-and-abuse-prevention.md)** governs deliberate misuse of a system working as
   designed. An agent made to act on content that should not have directed it is R2's.
-- **Items whose ground is not claimed** (items 22 and 24 are written, as [Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md); the rest are unwritten): item 22, Tool and Function-Call Security (the
+- **Items whose ground is not claimed** (items 22 and 24 are written, as [Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md); items 35, 47 to 50 and 52 to 53 are unwritten): item 22, Tool and Function-Call Security (the
   security of tools themselves, and of their outputs as inputs); item 24, Retrieval and Context Supply
   Chain (where retrieved content comes from and whether it can be trusted); item 35, Red Teaming (how
   the exercise R1's rule names is run and recorded); and the sibling prohibitions on other bullets,

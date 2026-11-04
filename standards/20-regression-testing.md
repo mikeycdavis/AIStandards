@@ -77,11 +77,18 @@ It does **not** cover, and claims none of the ground of:
   [Standard 19](19-robustness-evaluation.md)'s. Nothing here says which inputs a suite includes.
 - **Exposure of an evaluation set to a model** (item 18,
   [Benchmark Integrity and Contamination](18-benchmark-integrity-and-contamination.md)).
-- **Versioning, change control, lineage and rollback** (items 29, 30 and 32, unwritten). This
+- **Versioning, change control, lineage and rollback** (items 29, 30 and 32: [Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 30](30-model-and-prompt-lineage.md) and [Standard 32](32-rollback-and-recovery.md)). This
   standard says a change is tested; how it is approved, recorded in a lineage or reversed is theirs.
-- **Reproducibility under nondeterminism** (item 31, unwritten). A hosted model's answers may differ
-  between two runs of one version; how that difference enters a failure criterion is item 31's
-  subject, and R3 asks only that the project say what it did.
+  One point meets R1 below: [Standard 29](29-ai-system-versioning-and-change-control.md) R4 requires a change record once a change to a component the
+  project does not control is known, and a re-run made under R1 that observes a difference is one way
+  such a change becomes known. A statement under R1 that no re-run is made does not relieve that
+  requirement for a change learned of by other means; nothing here restates it.
+- **Reproducibility under nondeterminism** (item 31, [Standard 31](31-reproducibility-under-nondeterminism.md)). A hosted model's answers may differ
+  between two runs of one version. [Standard 31](31-reproducibility-under-nondeterminism.md) R3 requires a comparison to report the number of runs and
+  the variation and not to report a difference inside the variation as a change; R3 here fixes the
+  failure criterion before the run and requires pass or fail against it. Where a criterion sits inside
+  the observed variation, R3 here governs the pass or fail recorded and [Standard 31](31-reproducibility-under-nondeterminism.md) R3 governs what the
+  report says the difference is. R3 here asks only that the project say what it did.
 - **Prohibitions on tampering with or fabricating results** (item 50, Evaluation Integrity
   Prohibitions, unwritten). R4's refusal of a criterion changed after the run is a requirement of this
   standard, not a statement of what item 50 will prohibit; Q19 is open and not answered here.
@@ -401,8 +408,7 @@ non-lowering language used above, and [Standard 6](06-standard-structure-and-rul
 the requirement the Tests and falsifiers section answers, and the Validation section records why no
 rule is shipped, as plan 02 section 6 asks.
 
-Items 29, 30, 31, 32 and 50 are unwritten in this release; the lines drawn above are provisional until
-they are, and the later standards may legitimately move them. Open questions Q19 (whether the two
+Item 50 is unwritten in this release; the line drawn above against it is provisional until it is, and the later standard may legitimately move it. Items 29, 30, 31 and 32 have since been written ([Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 30](30-model-and-prompt-lineage.md), [Standard 31](31-reproducibility-under-nondeterminism.md) and [Standard 32](32-rollback-and-recovery.md)); the lines drawn above against them were drawn before and have not been re-examined, apart from the two cross-references stated under Scope. Open questions Q19 (whether the two
 forbidden evaluation rules are item 50's prohibitions) and Q20 are recorded open and not answered
 here. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 
