@@ -760,7 +760,7 @@ test("the Phase 2 tooling built so far exists, and the rest of Phase 2 does not"
 });
 
 test("only the standards written so far exist", () => {
-  // The guard is not that the corpus is frozen — Phase 2 writes the remaining 11. It is that a
+  // The guard is not that the corpus is frozen — Phase 2 writes the remaining 2. It is that a
   // standard arrives deliberately, by being added here, rather than by appearing unnoticed.
   const present = fs.readdirSync(path.join(REPO, "standards")).filter((f) => f.endsWith(".md")).sort();
   assert.deepEqual(present, [
@@ -796,6 +796,9 @@ test("only the standards written so far exist", () => {
     "31-reproducibility-under-nondeterminism.md",
     "32-rollback-and-recovery.md",
     "33-ai-observability.md",
+    "34-ai-incident-response.md",
+    "35-red-teaming.md",
+    "36-auditability-of-ai-actions.md",
     "37-fairness-and-harm-distribution.md",
     "38-accessibility-of-ai-features.md",
     "39-transparency-and-system-documentation.md",
@@ -805,7 +808,13 @@ test("only the standards written so far exist", () => {
     "43-environmental-impact-accounting.md",
     "44-operational-resilience-degradation-and-provider-portability.md",
     "45-approval-gates.md",
+    "46-gates-for-externally-visible-actions.md",
+    "48-safety-and-oversight-prohibitions.md",
+    "49-data-and-privacy-prohibitions.md",
+    "50-evaluation-integrity-prohibitions.md",
     "51-agent-and-tool-execution-prohibitions.md",
+    "52-output-honesty-prohibitions.md",
+    "53-disclosure-and-deception-prohibitions.md",
   ]);
 });
 

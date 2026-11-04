@@ -60,12 +60,12 @@ It does **not** cover, and claims none of the ground of:
   [Standard 11](11-autonomy-levels-and-delegated-authority.md) R1 and R4, and R5 for raising the tier.
 - **Whether an individual action is gated** — [Standard 45](45-approval-gates.md) R3 (irreversible
   actions await approval), R5 and R6. This standard asks what the approver is shown and may do.
-- **Gates for externally visible actions** — item 46, unwritten.
+- **Gates for externally visible actions** — item 46, written as [Standard 46](46-gates-for-externally-visible-actions.md).
 - **What the system must never do to its overseers** — item 48, Safety and Oversight Prohibitions,
-  unwritten and the negative face of this item's token. This standard mints no forbidden-level
+  written as [Standard 48](48-safety-and-oversight-prohibitions.md), and the negative face of this item's token. This standard mints no forbidden-level
   prohibition beyond R5, the only must-not clause on the system's own behaviour (R2 and R10 constrain
   the project; see Q23).
-- **Records of what the system did and the investigation of failures** — items 36 and 34, unwritten.
+- **Records of what the system did and the investigation of failures** — items 36 and 34, written as [Standard 36](36-auditability-of-ai-actions.md) and [Standard 34](34-ai-incident-response.md).
 - **Entitlement to view data** — item 16, written as [Standard 16](16-access-control-for-models-context-and-tools.md). [Standard 13](13-personal-data-in-ai-systems.md)
   states what records may hold and gives how personal data is shown to a user to UIUXDesignStandards.
 - **Safety cases** — [Standard 8](08-ai-safety-requirements-and-safety-cases.md); a case may cite an
@@ -325,7 +325,7 @@ detects the transition and nobody is prompted.
 
 **Contradicted by operation.** An incident in which an overseer could not stop the system, was not shown
 what it did, or never saw the item contradicts what the project recorded and invalidates it until
-re-examined. What follows is item 34's subject (unwritten).
+re-examined. What follows is item 34's subject ([Standard 34](34-ai-incident-response.md)).
 
 ## Additions this standard makes beyond the source
 
@@ -379,7 +379,7 @@ it is [Standard 16](16-access-control-for-models-context-and-tools.md)'s. [Stand
 ids from colliding, and [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the
 applicability and non-lowering language used above.
 
-Items 34, 36, 46 and 48 are unwritten; the lines drawn above are provisional until they are. Standards
+Items 34, 36, 46 and 48 are written ([Standard 34](34-ai-incident-response.md), [Standard 36](36-auditability-of-ai-actions.md), [Standard 46](46-gates-for-externally-visible-actions.md) and [Standard 48](48-safety-and-oversight-prohibitions.md)); the lines drawn above were drawn before they existed and are unconfirmed by anyone. Standards
 8, 9, 11 and 23, which said item 10 was unwritten, are updated in the same change to point here. No ADR
 covers this standard — `artifacts/adr/` does not exist in this release.
 

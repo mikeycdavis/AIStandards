@@ -52,9 +52,9 @@ Terms, defined once and used verbatim below:
 - **Presence artifact** — a notice string, a label, a policy page or a declaration.
 
 **Provisionally not covered, recorded open.** A system asserting that a person, not an AI, produced or
-is producing its output is, on this standard's provisional reading, the case item 53 would address. The
+is producing its output is, on this standard's provisional reading, the case [Standard 53](53-disclosure-and-deception-prohibitions.md) addresses. The
 specification lists item 53 as "Disclosure and Deception Prohibitions", class `A`, derived from the same `user disclosure`
-token and unwritten on this base. Provisionally it is item 53's; the division is recorded open (see
+token, written as [Standard 53](53-disclosure-and-deception-prohibitions.md). Provisionally it is item 53's; the division is recorded open (see
 Relationship), and nothing here states, restates or pre-empts such a prohibition.
 
 It does **not** cover, and claims none of the ground of:
@@ -205,7 +205,7 @@ A person's report that they did not know AI was involved, in a case where the re
 told, contradicts the record until it is re-examined. The decision is written once and the interface
 changes weekly: a redesign removes a notice and nothing
 records that a decision depended on it. A change in the law is not detected by this release. Incident
-handling is item 34's subject (AI Incident Response, unwritten in this release).
+handling is item 34's subject ([Standard 34](34-ai-incident-response.md), AI Incident Response).
 
 ## Additions this standard makes beyond the source
 
@@ -227,17 +227,17 @@ evidence are the boundary review's, and Standard 7's table is where the line was
 
 ## Relationship to other standards and ADRs
 
-**Item 53, Disclosure and Deception Prohibitions** is listed by the specification as derived from the same `user disclosure` token: class `A`, authored, posture `O`, unwritten on this base. This
+**Item 53, Disclosure and Deception Prohibitions** is listed by the specification as derived from the same `user disclosure` token: class `A`, authored, posture `O`, written as [Standard 53](53-disclosure-and-deception-prohibitions.md). This
 standard says whether a disclosure is owed and when it must arrive; whether and how a system may state
 or imply that a person rather than an AI is the source is provisionally item 53's. The line is
-provisional until item 53 is written; **it is recorded open, not decided**. Which of the two items owns
+provisional until the owner rules, and Standard 53 is written without settling it; **it is recorded open, not decided** (Q60 concerns R3 of Standard 53). Which of the two items owns
 each deception case, and whether either is non-exemptible, needs an owner's ruling and is not settled
 by this document.
 
 [Standard 7](07-boundary-with-adjacent-standards.md) records that UIUXDesignStandards owns how a
 disclosure is presented and this pack whether one is owed; R2 there (link, do not copy) is why presentation is not restated here, and no `disclosure.*` id is minted here (Standard 6 R5 reserves the
 namespace, and Standard 7 R4 forbids only a colliding full id). Item 39 is Transparency and System Documentation
-per the specification and is unwritten on this base. [Standard 13](13-personal-data-in-ai-systems.md) governs
+per the specification and is written as [Standard 39](39-transparency-and-system-documentation.md). [Standard 13](13-personal-data-in-ai-systems.md) governs
 any personal data a capture would contain. [Standard 2](02-ai-risk-tiering-and-applicability.md) R3
 governs non-lowering, and [Standard 6](06-standard-structure-and-rule-identity.md) R3 (each requirement
 carries a falsifier or is declared not-evaluable) is what the Tests section answers.

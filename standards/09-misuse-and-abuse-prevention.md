@@ -64,12 +64,12 @@ with this standard's neighbours falls, and none of their ground is claimed:
 - **[Standard 13](13-personal-data-in-ai-systems.md)** (Personal Data in AI Systems — what a misuse log may
   retain) and **[Standard 23](23-agent-execution-security.md)** (Agent Execution Security), whose ground is
   not claimed here.
-- **Items whose ground is not claimed** (items 16, 22 and 24 are written; the others named here are unwritten):
+- **Items whose ground is not claimed** (items 16, 22, 24, 34, 35 and 48 are written):
   item 16, Access Control for Models, Context, and Tools ([Standard 16](16-access-control-for-models-context-and-tools.md); who may use the system at all); items 22
   and 24 ([Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md); tool and retrieval security — attacks on the system's components); item 34, AI
-  Incident Response (what happens once a misuse event is declared an incident); item 35, Red Teaming
-  (how the adversarial exercises R5 names are run and recorded); and item 48, Safety and Oversight
-  Prohibitions (below). Item 41, Inference Cost and Budget Control, is written: [Standard 41](41-inference-cost-and-budget-control.md) owns budgets
+  Incident Response ([Standard 34](34-ai-incident-response.md); what happens once a misuse event is declared an incident); item 35, Red Teaming
+  ([Standard 35](35-red-teaming.md); how the adversarial exercises R5 names are run and recorded); and item 48, Safety and Oversight
+  Prohibitions ([Standard 48](48-safety-and-oversight-prohibitions.md); below). Item 41, Inference Cost and Budget Control, is written: [Standard 41](41-inference-cost-and-budget-control.md) owns budgets
   whose mechanism R3's bound may share.
 
 **R1 reaches every system in scope, and "we identified no foreseeable misuse" is an answer to it, not
@@ -540,9 +540,10 @@ cause; either may be named as a control under R1.
 standards 13 (whose `privacy.no-unredacted-prompt-logging` governs R4's records) and 23 are cited
 under Scope.
 
-Unwritten items this standard defers to, by specification number: item 4 (exceptions, which R2's
-exemptibility needs); item 34 (what follows a misuse incident); item 35 (the adversarial exercises R5 names); and item 48 (prohibitions on bullet 1's ground, whose relationship to
-`misuse prevention` the specification does not record). Items 16, 22 and 24 are written: [Standard 16](16-access-control-for-models-context-and-tools.md) (who may use the system at all), [Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md) (tool and retrieval security). Item 41 is written: [Standard 41](41-inference-cost-and-budget-control.md) owns the budget mechanisms R3's bounds may share.
+Item 4 (exceptions, which R2's
+exemptibility needs) is the only item this standard defers to that is unwritten. Items 34, 35, 41 and 48 are written: [Standard 34](34-ai-incident-response.md) (what follows a misuse incident), [Standard 35](35-red-teaming.md) (the adversarial exercises R5 names), [Standard 41](41-inference-cost-and-budget-control.md) (budget
+mechanisms R3's bounds may share) and [Standard 48](48-safety-and-oversight-prohibitions.md) (prohibitions on bullet 1's ground, whose relationship to
+`misuse prevention` the specification does not record and Q9 holds open). Items 16, 22 and 24 are written: [Standard 16](16-access-control-for-models-context-and-tools.md) (who may use the system at all), [Standard 22](22-tool-and-function-call-security.md) and [Standard 24](24-retrieval-and-context-supply-chain.md) (tool and retrieval security).
 
 No ADR covers this standard. `artifacts/adr/` does not exist in this release.
 
@@ -645,7 +646,7 @@ the two still produce the same result and message.
 | Tests pinning the `OFF` literal, the `false` form of the off-pattern, the key gate and the truncation path | Each is behaviour the detector has and no test asserts. The quoted form of the off-pattern has been pinned by `test/safety-detector.test.mjs` since the 2026-09-14 repair; the rest is Phase 3 work, and a test asserting that a blind spot reports `passed` would pin it as intended behaviour |
 | A manifest field declaring the path of the misuse analysis | A schema change alters what a conformant consuming project may declare. It is a schema-versioning decision, not a side effect of writing this document |
 | A detector that the misuse analysis, the bounds record, or the signal runbook exists | Would establish file presence, which R6 forbids reporting as more. With no path field it would have to guess filenames |
-| A rule checking that an adversarial exercise record against the named cases exists and is current | Would give R5 a route out of `not-evaluable` for the exercised inputs. How such records are produced and kept is item 35's subject, and item 35 is unwritten |
+| A rule checking that an adversarial exercise record against the named cases exists and is current | Would give R5 a route out of `not-evaluable` for the exercised inputs. How such records are produced and kept is [Standard 35](35-red-teaming.md)'s subject |
 
 **What no future release will implement.** A detector that reports a misuse control enabled or
 effective, or a misuse case addressed, from the presence of a document or a setting or from the absence

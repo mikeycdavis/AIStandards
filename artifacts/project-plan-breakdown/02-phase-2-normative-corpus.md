@@ -68,12 +68,12 @@ dated record of that slice and is left as written.)
 
 ## 2. Current state, verified 2026-09-14 (counts updated through the open-draft consolidation)
 
-**Written: 42 of 53 standards** — `01-ai-system-manifest.md`, `02-ai-risk-tiering-and-applicability.md`, `03-machine-readable-ai-policy.md`, `05-verdict-vocabulary.md`, `06-standard-structure-and-rule-identity.md`, `07-boundary-with-adjacent-standards.md`, `08-ai-safety-requirements-and-safety-cases.md`, `09-misuse-and-abuse-prevention.md`, `10-human-oversight-and-intervention.md`, `11-autonomy-levels-and-delegated-authority.md`, `12-context-and-corpus-provenance.md`, `13-personal-data-in-ai-systems.md`, `14-consent-and-licensing.md`, `15-retention-deletion-memorization.md`, `16-access-control-for-models-context-and-tools.md`, `17-evaluation-plans-for-generative-systems.md`, `18-benchmark-integrity-and-contamination.md`, `19-robustness-evaluation.md`, `20-regression-testing.md`, `21-prompt-and-instruction-security.md`, `22-tool-and-function-call-security.md`, `23-agent-execution-security.md`, `24-retrieval-and-context-supply-chain.md`, `25-grounding-and-hallucination-control.md`, `26-uncertainty-expression-and-abstention.md`, `27-citation-and-source-attribution.md`, `28-capability-honesty-to-users.md`, `29-ai-system-versioning-and-change-control.md`, `30-model-and-prompt-lineage.md`, `31-reproducibility-under-nondeterminism.md`, `32-rollback-and-recovery.md`, `33-ai-observability.md`, `37-fairness-and-harm-distribution.md`, `38-accessibility-of-ai-features.md`, `39-transparency-and-system-documentation.md`, `40-user-disclosure-of-ai-involvement.md`, `41-inference-cost-and-budget-control.md`, `42-latency-budgets-for-ai-interactions.md`, `43-environmental-impact-accounting.md`, `44-operational-resilience-degradation-and-provider-portability.md`, `45-approval-gates.md`, `51-agent-and-tool-execution-prohibitions.md`
+**Written: 51 of 53 standards** — `01-ai-system-manifest.md`, `02-ai-risk-tiering-and-applicability.md`, `03-machine-readable-ai-policy.md`, `05-verdict-vocabulary.md`, `06-standard-structure-and-rule-identity.md`, `07-boundary-with-adjacent-standards.md`, `08-ai-safety-requirements-and-safety-cases.md`, `09-misuse-and-abuse-prevention.md`, `10-human-oversight-and-intervention.md`, `11-autonomy-levels-and-delegated-authority.md`, `12-context-and-corpus-provenance.md`, `13-personal-data-in-ai-systems.md`, `14-consent-and-licensing.md`, `15-retention-deletion-memorization.md`, `16-access-control-for-models-context-and-tools.md`, `17-evaluation-plans-for-generative-systems.md`, `18-benchmark-integrity-and-contamination.md`, `19-robustness-evaluation.md`, `20-regression-testing.md`, `21-prompt-and-instruction-security.md`, `22-tool-and-function-call-security.md`, `23-agent-execution-security.md`, `24-retrieval-and-context-supply-chain.md`, `25-grounding-and-hallucination-control.md`, `26-uncertainty-expression-and-abstention.md`, `27-citation-and-source-attribution.md`, `28-capability-honesty-to-users.md`, `29-ai-system-versioning-and-change-control.md`, `30-model-and-prompt-lineage.md`, `31-reproducibility-under-nondeterminism.md`, `32-rollback-and-recovery.md`, `33-ai-observability.md`, `34-ai-incident-response.md`, `35-red-teaming.md`, `36-auditability-of-ai-actions.md`, `37-fairness-and-harm-distribution.md`, `38-accessibility-of-ai-features.md`, `39-transparency-and-system-documentation.md`, `40-user-disclosure-of-ai-involvement.md`, `41-inference-cost-and-budget-control.md`, `42-latency-budgets-for-ai-interactions.md`, `43-environmental-impact-accounting.md`, `44-operational-resilience-degradation-and-provider-portability.md`, `45-approval-gates.md`, `46-gates-for-externally-visible-actions.md`, `48-safety-and-oversight-prohibitions.md`, `49-data-and-privacy-prohibitions.md`, `50-evaluation-integrity-prohibitions.md`, `51-agent-and-tool-execution-prohibitions.md`, `52-output-honesty-prohibitions.md`, `53-disclosure-and-deception-prohibitions.md`
 (Standard 17 added 2026-09-15; Standards 25 and 33 added 2026-10-03; Standard 51 added 2026-10-05, by the
 owner's assignment of the two `forbidden` agent rules to it — ST-42, #87; Standard 43 added 2026-10-15, ST-35, #80;
-Standards 10, 12, 18, 19, 37 to 42 and 44 added by the open-draft consolidation: ST-02, ST-04, ST-12, ST-13, ST-29 to ST-34, ST-36; Standards 14, 15, 16, 20, 22, 24 added by overnight batch 1 (2026-11-04): ST-06, ST-08, ST-10, ST-14, ST-15, ST-16; Standards 26 to 32 added by overnight batch 2 (2026-11-04): ST-18 to ST-24, refs #63 to #69).
+Standards 10, 12, 18, 19, 37 to 42 and 44 added by the open-draft consolidation: ST-02, ST-04, ST-12, ST-13, ST-29 to ST-34, ST-36; Standards 14, 15, 16, 20, 22, 24 added by overnight batch 1 (2026-11-04): ST-06, ST-08, ST-10, ST-14, ST-15, ST-16; Standards 26 to 32 added by overnight batch 2 (2026-11-04): ST-18 to ST-24, refs #63 to #69; Standards 34, 35, 36, 46, 48, 49, 50, 52 and 53 added by overnight batch 3 (2026-11-04): ST-26 to ST-28, ST-37, ST-39 to ST-41, ST-43, ST-44, refs #71 to #73, #82, #84 to #86, #88, #89).
 
-**11 standards remain unwritten.**
+**2 standards remain unwritten.**
 
 **Rules: 46 across 8 shards** — `rules/agent.json` (4), `eval.json` (5), `gate.json` (6),
 `lifecycle.json` (11, five of them Standard 08's), `misuse.json` (5, four of them Standard 09's),
@@ -97,7 +97,7 @@ namespaces have no shard. **Nine** of the 46 rules are reachable by a detector (
 ## 3. Purpose
 
 Write the full normative corpus and prove it traces to the brief. The two blocking catalog reviews
-that gate this phase have run and pass mechanically (see §9). The remaining work is the 11 unwritten
+that gate this phase have run and pass mechanically (see §9). The remaining work is the 2 unwritten
 standards, shards for the nine reserved namespaces that have none, and
 `artifacts/standards-source-inventory.json`. `manifest.mjs`, `toolperms.mjs`, the templates and `init`
 were built on 2026-09-19.
@@ -109,7 +109,7 @@ were built on 2026-09-19.
   `Implemented by` column as its standard is written.
 - `artifacts/standards-source-inventory.json` — `expectedCount`, `reviewedOn`, and per item
   `{number, title, class, derivedFrom, implementedBy}`. **Not written.**
-- All 53 standards, each with the ten H2 sections carrying the brief's nine requirements. **42 done.**
+- All 53 standards, each with the ten H2 sections carrying the brief's nine requirements. **51 done.**
 - Shards for the nine reserved namespaces that have none, to roughly 96 rules. **Eight shards exist,
   46 rules**; Standards 11, 08 and 09 added rules during this phase.
 - All templates: manifest, threat model, evaluation plan, tool permissions, incident report,
@@ -206,7 +206,7 @@ specification rather than about your new file. That is exactly what happened whi
 `test/no-phase-creep.test.mjs` holds a sorted literal list of the standards that exist, under the
 test named `only the standards written so far exist`. Add the new filename in sorted position.
 
-The guard is not that the corpus is frozen — this phase writes the remaining 11. It is that a standard
+The guard is not that the corpus is frozen — this phase writes the remaining 2. It is that a standard
 arrives *deliberately*, by being added to that list, rather than by appearing unnoticed.
 
 **Verify (steps 1–5):**
@@ -266,7 +266,7 @@ node scripts/test.mjs && node scripts/inventory.mjs && node scripts/fidelity.mjs
 
 `node scripts/standards-sections.mjs` runs inside `node scripts/test.mjs` through
 `test/standards-sections.test.mjs`, and may also be run directly. Passing this command does not
-complete the phase: 11 standards, the nine missing shards and
+complete the phase: 2 standards, the nine missing shards and
 `artifacts/standards-source-inventory.json` remain.
 
 ## 8. Out of scope for this phase — a closed list
@@ -460,7 +460,7 @@ git worktree created outside the repository at `a2d5069`; shared cells were edit
 item that owns catalog rules has a document, so the rule that picked items 23 and 17 picks nothing.
 Re-run `/whats-next` before starting; `docs/HANDOFF.md` §9 lists the candidates (inferred).
 
-Q7, Q9 to Q12, Q15 and Q17 to Q51 remain open.
+Q7, Q9 to Q12, Q15 and Q17 to Q61 remain open.
 
 ## 12. The adoption slice contract
 
@@ -468,7 +468,7 @@ Q7, Q9 to Q12, Q15 and Q17 to Q51 remain open.
 `scripts/toolperms.mjs` and `scripts/init.mjs` as Phase 2 deliverables (§4) and names no file set, marker
 form, conflict behaviour or module boundary. Each decision below is inferred from the evidence cited and
 is the coordinator's, not the owner's; the owner may reverse any of them. **Completing this slice does not
-complete Phase 2**: 11 standards, shards for nine namespaces and the foreign-crosswalk id check remain.
+complete Phase 2**: 2 standards, shards for nine namespaces and the foreign-crosswalk id check remain.
 
 ### 12.1 Why detectors changed first
 

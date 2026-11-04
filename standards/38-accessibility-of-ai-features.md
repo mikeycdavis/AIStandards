@@ -46,7 +46,7 @@ It does **not** cover, and claims none of the ground of:
   [Standard 7](07-boundary-with-adjacent-standards.md) R2 forbids it.
 - **How a disclosure is presented**, which Standard 7 records as UIUXDesignStandards' and which is
   item 40.
-- **Unequal outcomes between groups**, which is item 37 (unwritten on this base).
+- **Unequal outcomes between groups**, which is item 37 ([Standard 37](37-fairness-and-harm-distribution.md)).
 - **Legal conformance**, a legal question this standard does not answer.
 
 **Boundary posture D — deferred.** The boundary review's reasoning is that this pack MUST NOT mint an
@@ -125,8 +125,8 @@ This standard defines no test, falsifier or negative control for the owner's req
 This standard defines no exception mechanism and no invalidating event. R1 constrains this repository:
 an accessibility definition or accessibility verdict is invalidated by nothing, because it is never
 valid. How long accessibility evidence remains valid, and how a reported
-barrier is handled, is the owner's to state; incident handling is item 34's subject (AI Incident
-Response, unwritten in this release).
+barrier is handled, is the owner's to state; incident handling is item 34's subject ([Standard 34](34-ai-incident-response.md), AI Incident
+Response).
 
 ## Additions this standard makes beyond the source
 
@@ -153,8 +153,7 @@ is the source of R1's form. [Standard 6](06-standard-structure-and-rule-identity
 carries a falsifier or is declared not-evaluable) is what the Tests section answers.
 [Standard 1](01-ai-system-manifest.md) declares no accessibility property and none is proposed.
 
-Items 34, 37, 39 and 40 are unwritten in this release; the lines drawn above are provisional until they
-are. **Outside this pack:** UIUXDesignStandards' standards are named in Scope with what the boundary
+Items 34, 37, 39 and 40 are written ([Standard 34](34-ai-incident-response.md), [Standard 37](37-fairness-and-harm-distribution.md), [Standard 39](39-transparency-and-system-documentation.md) and [Standard 40](40-user-disclosure-of-ai-involvement.md)); the lines drawn above were drawn before some of them existed and are unconfirmed by anyone. **Outside this pack:** UIUXDesignStandards' standards are named in Scope with what the boundary
 review recorded; this is a deference, not a crosswalk, and no maintainer has confirmed it. No ADR covers
 this standard — `artifacts/adr/` does not exist in this release.
 

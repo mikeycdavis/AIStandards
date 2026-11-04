@@ -107,8 +107,8 @@ stands, and records the gap in its Scope and Additions sections rather than reso
 **Not resolved here, because the answer changes a specification row.** Whether item 48 takes the
 token, or misuse prevention has no prohibitive face, is a catalog-identity decision, not an evidence
 correction.
-**Impact if unanswered:** none on the wording of any written standard today. Item 48's document, when
-written, will have to say whether misuse prohibitions are its ground.
+**Impact if unanswered:** none on the wording of any written standard today. Note, 2026-11-04: Standard 48 is
+now written, records this question as open (Q9) and does not take the token; the question is not answered.
 
 ### Q10 — Do the retention and deletion rules belong to item 15 rather than item 13?
 
@@ -137,8 +137,8 @@ token. `privacy.no-real-personal-data-in-fixtures`, `privacy.no-credentials-in-p
 `privacy.no-unredacted-prompt-logging` are `forbidden`, were minted in Phase 1, and cite standard 13.
 Unlike Q9, the specification does name the token; what it does not record is whether these rules are
 item 49's stated early. Standard 13 states them as they stand.
-**Impact if unanswered:** none on the wording of any written standard today. Item 49's document, when
-written, will have to say.
+**Impact if unanswered:** none on the wording of any written standard today. Note, 2026-11-04: Standard 49 is
+now written and records the question as open (Q12), stating its own limbs beside the three rules; the question is not answered.
 
 ### Q13 — May a partial-assurance check's clean result be `passed` and count toward `COMPLIANT`? — **resolved 2026-09-14: no**
 
@@ -278,7 +278,8 @@ ground. **Impact if unanswered:** none while no detector binds the rule.
 cite standard 17. Item 50, Evaluation Integrity Prohibitions, is the authored negative face of
 `benchmark integrity` — item 18's token, not item 17's `Model evaluation` — so the parallel with Q12
 and Q16 is weaker than it looks. **Impact if unanswered:** none on the wording of any written standard
-today. Item 50's document, when written, will have to say.
+today. Note, 2026-11-04: Standard 50 is now written and records the
+question as open (Q19); the question is not answered.
 
 ### Q20 — Does `eval.regression-baseline-recorded` belong to item 20?
 
@@ -316,8 +317,9 @@ The specification lists item 48 (Safety and Oversight Prohibitions) as the negat
 decline or stop stick, which is the only must-not clause on the system's own behaviour it states (R2
 and R10 constrain the project). Whether the remaining prohibitive
 form, "a system must not disable, evade or degrade its overseers", is item 48's prohibition, or belongs in Standard
-10, is undecided. **Not resolved here, because item 48 is unwritten and the placement decides which
-standard owns a forbidden-level requirement.** **Impact if unanswered:** a prohibition may be written
+10, is undecided. **Not resolved here, because the placement decides which standard owns a forbidden-level
+requirement.** Note, 2026-11-04: Standard 48 is now written, with R1 provisional on this answer (it was unwritten
+when this question was raised); the question is not answered. **Impact if unanswered:** a prohibition may be written
 twice or in neither place.
 
 ### Q24 — Are the general intervention capability and Standard 11's halt record one rule or two?
@@ -464,13 +466,16 @@ those requirements are not machine-checkable. Recommended: leave project-private
 
 ### Q43 — Where is the line between Standards 28, 52 and 25 for claims about capability and the system's own state?
 
-Standard 28 R2 and R3 carry MUST NOT limbs that overlap the prohibition face (item 52, unwritten; its faces
-are not yet drawn), and "I did X" claims are also statements of the system's own state (Standard 25
-Scope). Item 52 is the future owner of the prohibition face; until it is written nothing states what it
-will hold. **Not resolved here, because it concerns two standards' shared ground and one of them does not
-exist.** **Impact if unanswered:** one act may be reported under two standards. Recommended: Standard 28
-keeps the positive duty and its limbs, and item 52 holds the faces Standard 28 does not state, by
-reference, when it is written.
+Standard 28 R2 and R3 carry MUST NOT limbs that overlap the prohibition face (item 52, now written as
+[Standard 52](../../standards/52-output-honesty-prohibitions.md); it was unwritten when this question was raised),
+and "I did X" claims are also statements of the system's own state (Standard 25
+Scope). Standard 52 is the owner of the prohibition face and states its own four requirements; the
+division is recorded open there (Q58). Since the repair of Standard 28 R3, its second sentence (an action presented
+as done that was not) and Standard 52 R1 state near-identical prohibitions at the same severity; the overlap is
+named here and in Q58, not resolved. **Not resolved here, because it concerns two standards' shared ground.**
+**Impact if unanswered:** one act may be reported under two standards. Recommended: Standard 28
+keeps the positive duty and its limbs, and Standard 52 holds the faces Standard 28 does not state, by
+reference.
 
 ### Q44 — Does model lineage (Standard 30 R3) belong here or with MachineLearningStandards?
 
@@ -487,10 +492,12 @@ for a prompt, the stricter identifier rule over the assembled whole (R1) and the
 as a revision (R5); 31 owns run parameters and repeat claims; 32 owns the rollback target and procedure.
 Identity is therefore shared ground between 29 R1 and 30 R1 and R5, not owned by one: the two are written
 to be met together and cross-reference each other, and 29's alias clause and 30 R5 are aligned (the revision
-is what the alias resolved to). Two further overlaps are cross-referenced and not owned by either side:
-29 R4 against Standard 20 R1 (a re-run observing a change is one way an upstream change becomes known),
-and 31 R3 against Standard 20 R3 (20 R3 governs the pass or fail recorded, 31 R3 what the report says a
-difference inside the variation is). The boundary review's O record for item 29 is a generic search and
+is what the alias resolved to). Two further overlaps are cross-referenced and not owned by either side: 29 R4 against Standard 20 R1 (a re-run
+observing a change is one way an upstream change becomes known) and 31 R3 against Standard 20 R3. Standards 29
+and 31 each state an order in their own text (29 R4 says a no-re-run statement under 20 R1 does not relieve it;
+31 R3 says 20 R3 governs the pass or fail recorded and 31 R3 the report's wording); Standard 20 states none. Those
+orders are authored in 29 and 31, unconfirmed by anyone, and 31 R3 and 20 R3 remain in tension where a criterion
+sits inside the variation. The boundary review's O record for item 29 is a generic search and
 does not address MachineLearningStandards dataset versioning or reproducibility. **Not resolved here,
 because the lines are authored and the posture check is a human recheck.** **Impact if unanswered:** shared
 ground may be stated twice. Recommended: keep the split as drawn.
@@ -539,6 +546,90 @@ result names it; Standard 15 R1 and R2 give the store holding it a period and a 
 its end. The two can disagree. **Not resolved here, because it concerns two standards' shared ground.**
 **Impact if unanswered:** a cited figure may name a revision the retention mechanism has deleted.
 Recommended: the period of the thing that names a revision should not outlast the revision's.
+
+### Q52 — Should the incident, red-team and audit-record templates and schemas gain fields the new standards need?
+
+`templates/INCIDENT-REPORT.md` already has headings for the timeline sources, the components involved, and
+established evidence and hypothesis under Cause (Standard 34 R2). It lacks a containment time (it asks "by whom"
+only; Standard 34 R3), a section naming the records the incident contradicts (Standard 34 R4), and a place for
+the record that a follow-up has no owner (Standard 34 R2, "or the record that it has none").
+`templates/RED-TEAM-REPORT.md` already asks which system version was tested (Standard 35 R1); what it lacks is the
+statement of what changed since the tested version, or that nothing did (Standard 35 R7). Standards 34, 35 and 36
+also need a declared home for criteria, exercise records and audit-record fields.
+**Not resolved here, because template and schema changes are outside this slice (plan 02 section 8).**
+**Impact if unanswered:** the templates and the standards drift. Recommended: amend templates separately.
+
+### Q53 — Should an `audit`, `incident` or `redteam` rule namespace be reserved, and should any rule examine a red-team record?
+
+`agent.no-self-modification` and `promptsec.template-injection-guarded` are `not-evaluable` and name a
+recorded red-team exercise as how they would be established. Standards 34, 35 and 36 mint no rule.
+**Not resolved here, because minting a rule or shard is owner-only.** **Impact if unanswered:** those
+properties stay not-evaluable. Recommended: mint nothing for now.
+
+### Q54 — Does Standard 36 R5's independent reader role need structural separation like Standard 45 R5?
+
+Standard 36 R5 requires a reader who is neither the actor nor the requester. Whether it should become a
+structural separation requirement is undecided. **Not resolved here, because it is a judgment about how
+far authored restrictions go.** **Impact if unanswered:** none for the text as written.
+
+### Q55 — Do Standard 45 R5 and R6 need re-scoping to every approval gate?
+
+Standard 45 R5 ("the approval its own action requires") and R6 ("where the approval mechanism is unavailable")
+are worded without reference to irreversibility, and Standard 45 says only R3 is bounded by *irreversible*. The
+rules `gate.no-self-approval` and `gate.fail-closed` are likewise worded without it; `gate.irreversible-approval`
+is the only gate rule whose description names irreversible. Standard 46 R2 now cites 45 R5 and R6 for the
+same reasoning rather than restating them. What is open is whether 45 R5 and R6 should be read as reaching the
+approval of an action that 45 R3 does not require approval for, such as an externally visible one that is not
+irreversible, since "the approval its own action requires" has nothing to point at until a gate exists (Standard
+46 R2 supplies one for that class). Options: keep as worded; add a sentence to 45 saying R5 and R6 reach any
+approval a gate requires; leave 46 R2 as the only statement for its class. **Not resolved here, because it
+would change an already-written standard.** **Impact if unanswered:** a reader may take 45 R5 and R6 as
+irreversible-only and 46 R2 as a separate rule. Recommended: state in 45 that R5 and R6 reach any approval a gate
+requires.
+
+### Q56 — Can a standing delegation under Standard 11 satisfy Standard 46 R2's per-action approval?
+
+**Not resolved here, because it concerns the reach of Standard 11.** **Impact if unanswered:** scheduled
+or auto-reply posting is undecided. Recommended: only if Standard 11 records it as the approval.
+
+### Q57 — Where does "outside the organisation" begin for Standards 45 and 46?
+
+Both inherit an undefined phrase (shared tenant, all-staff broadcast). **Not resolved here, because it is
+a definition for Standard 1 or 45.** **Impact if unanswered:** the externally-visible class is project-defined.
+
+### Q58 — Do the prohibitions of Standards 48 to 50, 52 and 53 overlap the existing forbidden rules, and who owns each act?
+
+Standard 48 R1 and R2 overlap `misuse.safety-controls-not-disabled`, `gate.no-self-approval`,
+`gate.fail-closed`, `oversight.no-authority-beyond-declared-tier` and `agent.no-self-modification`;
+Standard 48 R1 is provisional pending Q23. Standard 49 R1 and R2 are new authored limbs beside Standard
+13's three privacy rules (Q12 open); Standard 50 R1 overlaps Standard 17 R4 (Q19 open) and Standard 20 R3, R4 and
+R6 (the regression run's criterion and verdict, against the reported result's instrument version); Standards 52 and
+53 divide ground with Standards 28 (53 R1 beside 28 R4, and 52 R1 beside 28 R3's second sentence), 25 and 40. **Not resolved here, because the owner holds the placement
+questions Q9, Q12, Q19 and Q23 open (option C, 2026-10-15) and no rule was moved.** **Impact if
+unanswered:** one act may be reported under two standards. Recommended: one owner per act, decided with
+those questions.
+
+### Q59 — Are Standards 53 R1 to R3 exemptible, and does a rule belong in the shared `disclosure.` segment?
+
+FinancialStandards uses `disclosure.`; Standard 7 R4 forbids only a colliding full id. **Not resolved
+here, because it is an owner policy choice.** **Impact if unanswered:** exemptibility of the deception
+prohibitions is undecided. Recommended: R2 non-exemptible; mint no rule yet.
+
+### Q60 — Is Standard 53 R3 (suppressing an owed disclosure) Standard 40's omission or Standard 53's act?
+
+Standard 40 left the line provisional. **Not resolved here, because the owner has not ruled.** **Impact if
+unanswered:** the same act may be recorded against both. Recommended: 53 holds the act, 40 the omission.
+
+### Q61 — Which yields when a deletion obligation reaches a rollback target (Standard 32 R2 against Standard 13 R5 and Standard 15 R3)?
+
+Standard 32 R2 says the project must not retire, overwrite or delete a recorded rollback target before the
+end of its window; a withdrawn state in R4 includes data removed for a data-subject or legal requirement,
+and Standards 13 R5 and 15 R3 ask that deletion reach derived copies and backups, which a retained
+rollback target can be. A target that must be deleted for a deletion obligation therefore conflicts with R2
+as written. **Not resolved here, because it concerns two standards' shared ground and the order is a
+normative judgment.** **Impact if unanswered:** a project may be faulted under one standard for the act the
+other requires. No direction is recommended here: each reading protects a different party, and the
+order is for the owner to rule.
 
 ## Not questions
 

@@ -79,19 +79,14 @@ It does **not** cover, and claims none of the ground of:
   [Benchmark Integrity and Contamination](18-benchmark-integrity-and-contamination.md)).
 - **Versioning, change control, lineage and rollback** (items 29, 30 and 32: [Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 30](30-model-and-prompt-lineage.md) and [Standard 32](32-rollback-and-recovery.md)). This
   standard says a change is tested; how it is approved, recorded in a lineage or reversed is theirs.
-  One point meets R1 below: [Standard 29](29-ai-system-versioning-and-change-control.md) R4 requires a change record once a change to a component the
-  project does not control is known, and a re-run made under R1 that observes a difference is one way
-  such a change becomes known. A statement under R1 that no re-run is made does not relieve that
-  requirement for a change learned of by other means; nothing here restates it.
 - **Reproducibility under nondeterminism** (item 31, [Standard 31](31-reproducibility-under-nondeterminism.md)). A hosted model's answers may differ
-  between two runs of one version. [Standard 31](31-reproducibility-under-nondeterminism.md) R3 requires a comparison to report the number of runs and
-  the variation and not to report a difference inside the variation as a change; R3 here fixes the
-  failure criterion before the run and requires pass or fail against it. Where a criterion sits inside
-  the observed variation, R3 here governs the pass or fail recorded and [Standard 31](31-reproducibility-under-nondeterminism.md) R3 governs what the
-  report says the difference is. R3 here asks only that the project say what it did.
+  between two runs of one version; how that difference enters a failure criterion is
+  [Standard 31](31-reproducibility-under-nondeterminism.md)'s subject, and R3 here asks only that the project say what it did. Standard 31 R3
+  states how the two are ordered where a criterion sits inside the observed variation; this standard states no
+  order, and that ordering is unconfirmed (Q45).
 - **Prohibitions on tampering with or fabricating results** (item 50, Evaluation Integrity
-  Prohibitions, unwritten). R4's refusal of a criterion changed after the run is a requirement of this
-  standard, not a statement of what item 50 will prohibit; Q19 is open and not answered here.
+  Prohibitions, written as [Standard 50](50-evaluation-integrity-prohibitions.md)). R4's refusal of a criterion changed after the run is a requirement of this
+  standard, not a statement of what item 50 prohibits; Standard 50 R1 overlaps R3, R4 and R6 here and says so (Q58); Q19 is open and not answered here.
 - **Detecting a change the project cannot see**, such as a provider replacing the model behind an
   identifier it does not publish a version for. R1 asks that the project say how it handles that
   case and claims no ability to detect it.
@@ -408,7 +403,7 @@ non-lowering language used above, and [Standard 6](06-standard-structure-and-rul
 the requirement the Tests and falsifiers section answers, and the Validation section records why no
 rule is shipped, as plan 02 section 6 asks.
 
-Item 50 is unwritten in this release; the line drawn above against it is provisional until it is, and the later standard may legitimately move it. Items 29, 30, 31 and 32 have since been written ([Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 30](30-model-and-prompt-lineage.md), [Standard 31](31-reproducibility-under-nondeterminism.md) and [Standard 32](32-rollback-and-recovery.md)); the lines drawn above against them were drawn before and have not been re-examined, apart from the two cross-references stated under Scope. Open questions Q19 (whether the two
+Items 29, 30, 31, 32 and 50 are written ([Standard 29](29-ai-system-versioning-and-change-control.md), [Standard 30](30-model-and-prompt-lineage.md), [Standard 31](31-reproducibility-under-nondeterminism.md), [Standard 32](32-rollback-and-recovery.md) and [Standard 50](50-evaluation-integrity-prohibitions.md)); the lines drawn above against 29 to 32 were drawn before and have not been re-examined, and the line against 50 was drawn before it existed and is the overlap stated under Scope; the later standards may legitimately move them. Open questions Q19 (whether the two
 forbidden evaluation rules are item 50's prohibitions) and Q20 are recorded open and not answered
 here. No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 

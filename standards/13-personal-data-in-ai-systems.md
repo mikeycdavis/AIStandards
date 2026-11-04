@@ -75,9 +75,9 @@ The boundary with this standard's neighbours, none of whose ground is claimed:
   trace, a fixture or a vector store. R3 governs what a log holds, not who can open it.
 - **Item 33, AI Observability** ([Standard 33](33-ai-observability.md), posture B) — whether and how inference calls are traced.
   R3 constrains the text a trace holds; it requires no trace to exist.
-- **Item 34, AI Incident Response** (unwritten) — what happens once personal data is found somewhere
+- **Item 34, AI Incident Response** (written as [Standard 34](34-ai-incident-response.md)) — what happens once personal data is found somewhere
   it should not be.
-- **Item 49, Data and Privacy Prohibitions** (unwritten, class A) — see below.
+- **Item 49, Data and Privacy Prohibitions** (written as [Standard 49](49-data-and-privacy-prohibitions.md), class A) — see below.
 - **[Standard 21](21-prompt-and-instruction-security.md)** — credentials in model context, which its
   R4 prohibits. R2 here overlaps it, and the overlap is recorded under R2 rather than resolved.
 - **UIUXDesignStandards**, which also uses the `privacy.` rule-id segment. Its Standard 25, Privacy
@@ -548,9 +548,7 @@ A misuse log is a model-adjacent store, so R4 and R5 here reach it too.
 set out under R2. **21 governs what may enter a model's context at runtime; R2 here governs what may be
 committed in a prompt asset or fixture**, and the two are not reconciled.
 
-Unwritten items this standard defers to, by specification number: item 4 (exceptions); item 34 (what follows a privacy incident);
-and item 49 (prohibitions on bullet 2's ground, whose relationship to the three `forbidden` rules here
-the specification does not record). Items 14, 15, 16 and 33 are written: [Standard 14](14-consent-and-licensing.md) (consent and licensing), [Standard 15](15-retention-deletion-memorization.md) (retention periods, deletion schedules and memorization, and the open question of R4's and R5's rules), [Standard 16](16-access-control-for-models-context-and-tools.md) (who may read a store) and [Standard 33](33-ai-observability.md) (whether inference calls are traced).
+Item 4 (exceptions) is the only item this standard defers to that is unwritten. Items 33, 34 and 49 are written: [Standard 33](33-ai-observability.md) (whether inference calls are traced), [Standard 34](34-ai-incident-response.md) (what follows a privacy incident) and [Standard 49](49-data-and-privacy-prohibitions.md) (prohibitions on bullet 2's ground, whose relationship to the three `forbidden` rules here the specification does not record and Q12 holds open). Items 14, 15 and 16 are written: [Standard 14](14-consent-and-licensing.md) (consent and licensing), [Standard 15](15-retention-deletion-memorization.md) (retention periods, deletion schedules and memorization, and the open question of R4's and R5's rules) and [Standard 16](16-access-control-for-models-context-and-tools.md) (who may read a store).
 
 Outside this repository: **UIUXDesignStandards** uses the `privacy.` segment for
 `privacy.sensitive-data-masked`, under its Standard 25, Privacy UX, and `privacy.no-deceptive-consent`,

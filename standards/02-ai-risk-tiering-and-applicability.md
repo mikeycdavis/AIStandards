@@ -42,7 +42,7 @@ repository contents.
 
 Does **not** cover: what any specific tier requires — that is each subject standard's business;
 autonomy levels and delegated authority, which are item 11's subject
-and are declared rather than judged (that standard is unwritten in this release); or model risk in the statistical sense, which
+and are declared rather than judged ([Standard 11](11-autonomy-levels-and-delegated-authority.md)); or model risk in the statistical sense, which
 MachineLearningStandards owns.
 
 **Boundary posture O — owned outright.** The boundary review searched the nine adjacent packs for an

@@ -336,7 +336,7 @@ stops being true on a revisit event and nothing prompts anyone.
 
 **Contradicted by operation.** Finding that a source came from somewhere other than recorded
 contradicts the statement and everything resting on it (an evaluation result, a grounding claim) until
-re-examined. What follows is item 34's subject (unwritten).
+re-examined. What follows is item 34's subject ([Standard 34](34-ai-incident-response.md)).
 
 ## Additions this standard makes beyond the source
 
@@ -393,7 +393,7 @@ retrieved content as untrusted; nothing here makes any origin trusted.
 colliding, and [Standard 2](02-ai-risk-tiering-and-applicability.md) R3 and R4 govern the applicability
 and non-lowering language used above.
 
-Item 34 is unwritten, and Items 14, 15, 16 and 18 are written ([Standard 14](14-consent-and-licensing.md), [Standard 15](15-retention-deletion-memorization.md), [Standard 16](16-access-control-for-models-context-and-tools.md) and [Standard 18](18-benchmark-integrity-and-contamination.md)); the lines drawn above are provisional until the unwritten item is, and the written standards may legitimately move them.
+Items 14, 15, 16, 18 and 34 are written ([Standard 14](14-consent-and-licensing.md), [Standard 15](15-retention-deletion-memorization.md), [Standard 16](16-access-control-for-models-context-and-tools.md), [Standard 18](18-benchmark-integrity-and-contamination.md) and [Standard 34](34-ai-incident-response.md)); the lines drawn above were drawn before some of them existed, and the written standards may legitimately move them.
 **Outside this pack.** MachineLearningStandards' `03-dataset-provenance.md` and
 `04-dataset-versioning.md` are named in Scope with what the boundary review recorded; they are not
 crosswalks, nothing in them is restated, and no maintainer has confirmed this reading. No ADR covers this

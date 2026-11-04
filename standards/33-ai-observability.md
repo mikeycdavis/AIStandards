@@ -65,7 +65,7 @@ It does **not** cover, and claims none of the ground of, the following:
   while its critical failure paths are invisible. EngineeringStandards owns that prohibition for every
   repository; this standard does not restate it and adds only the inference-specific outcomes in R3.
 - **Item 34, AI Incident Response**, **item 35, Red Teaming** and **item 36, Auditability of AI
-  Actions** — the other subjects of the same bullet, all unwritten in this release. What a project
+  Actions** — the other subjects of the same bullet, all written ([Standard 34](34-ai-incident-response.md), [Standard 35](35-red-teaming.md) and [Standard 36](36-auditability-of-ai-actions.md)). What a project
   does *with* a trace is theirs. Item 36 in particular may require records this standard does not;
   where it does, it states them.
 - **What may be recorded.** Whether a prompt or completion may be stored, and in what form, is
@@ -336,8 +336,8 @@ Nothing in this release detects the transition; the events above are a note to a
 
 **Contradicted by operation.** An incident in which a call could not be found, or a failure was found
 to have been recorded as a success, contradicts what the project recorded under R1 to R3 and
-invalidates it until re-examined. What happens operationally is item 34's subject (AI Incident
-Response, unwritten in this release); this standard says only that the record no longer stands.
+invalidates it until re-examined. What happens operationally is item 34's subject ([Standard 34](34-ai-incident-response.md), AI Incident
+Response); this standard says only that the record no longer stands.
 
 ## Additions this standard makes beyond the source
 
@@ -391,8 +391,7 @@ whether an output was produced with its basis be carried in the system's own dat
 one place it may be carried, and this standard does not require it. [Standard 2](02-ai-risk-tiering-and-applicability.md)
 R3 and R4 govern the applicability and non-lowering language used above.
 
-Items 34 (AI Incident Response), 35 (Red Teaming) and 36 (Auditability of AI Actions) are unwritten in
-this release; the lines drawn above are provisional until they are, and the later standards may
+Items 34 (AI Incident Response), 35 (Red Teaming) and 36 (Auditability of AI Actions) are written ([Standard 34](34-ai-incident-response.md), [Standard 35](35-red-teaming.md) and [Standard 36](36-auditability-of-ai-actions.md)); the lines drawn above were drawn before they existed, and the later standards may
 legitimately move them.
 
 **Outside this pack.** MachineLearningStandards' Standards 24 (Monitoring) and 21 (Drift) and

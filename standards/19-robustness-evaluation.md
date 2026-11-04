@@ -77,7 +77,7 @@ It does **not** cover, and claims none of the ground of, the following:
   it should not. Prompt injection is [Standard 21](21-prompt-and-instruction-security.md)'s and
   [Standard 51](51-agent-and-tool-execution-prohibitions.md)'s subject, misuse is
   [Standard 9](09-misuse-and-abuse-prevention.md)'s, and the conduct of adversarial exercises is
-  item 35's (Red Teaming, unwritten). A perturbation class here is a variation a legitimate user
+  item 35's ([Standard 35](35-red-teaming.md), Red Teaming). A perturbation class here is a variation a legitimate user
   or an upstream system can produce without intent.
 - **The plan, the suite, the baseline and the held-out set as such**
   ([Standard 17](17-evaluation-plans-for-generative-systems.md) R1 to R9). Nothing below relaxes
@@ -88,9 +88,9 @@ It does **not** cover, and claims none of the ground of, the following:
 - **Reproducibility under nondeterminism** (item 31, [Standard 31](31-reproducibility-under-nondeterminism.md)). R3 asks that a perturbation be
   reproducible; whether a hosted model's answers repeat is [Standard 31](31-reproducibility-under-nondeterminism.md)'s subject.
 - **Prohibitions on tampering with or fabricating evaluation results** (item 50, Evaluation
-  Integrity Prohibitions, class `A`, unwritten). Nothing here is one of its prohibitions, and R3's
+  Integrity Prohibitions, class `A`; written as [Standard 50](50-evaluation-integrity-prohibitions.md)). Nothing here is one of its prohibitions, and R3's
   ban on choosing variants by failure is a requirement of this standard, not a statement of what
-  item 50 will prohibit; Q19 is open and not answered here.
+  item 50 prohibits; Q19 is open and not answered here.
 - **Comparing classes with one another.** This standard asks that each class be reported against
   its own bar and does not define a score, margin or ordering across classes. A project that wants
   one defines it itself and states how.
@@ -352,7 +352,7 @@ this release detects the transition; the events above are a note to a future rea
 
 **Contradicted by operation.** A production failure on input of a kind the project claimed to
 withstand contradicts the result for that class and invalidates it until re-examined. What follows
-operationally is item 34's subject (AI Incident Response, unwritten in this release).
+operationally is item 34's subject ([Standard 34](34-ai-incident-response.md), AI Incident Response).
 
 ## Additions this standard makes beyond the source
 
@@ -406,7 +406,7 @@ non-lowering language used above, and [Standard 6](06-standard-structure-and-rul
 the requirement the Tests and falsifiers section answers, and the Validation section records why no
 rule is shipped, as plan 02 section 6 asks.
 
-Items 34, 35 and 50 are unwritten in this release; the lines drawn above against them are provisional until they are, and the later standards may legitimately move them. Items 18, 20 and 31 have since been written ([Standard 18](18-benchmark-integrity-and-contamination.md), [Standard 20](20-regression-testing.md) and [Standard 31](31-reproducibility-under-nondeterminism.md)); the lines drawn above against them were drawn before and have not been re-examined against them. Open question Q19 (whether the two
+Items 18, 20, 31, 34, 35 and 50 are written ([Standard 18](18-benchmark-integrity-and-contamination.md), [Standard 20](20-regression-testing.md), [Standard 31](31-reproducibility-under-nondeterminism.md), [Standard 34](34-ai-incident-response.md), [Standard 35](35-red-teaming.md) and [Standard 50](50-evaluation-integrity-prohibitions.md)); the lines drawn above against 18, 20 and 31 were drawn before and have not been re-examined against them, the lines against 34, 35 and 50 were drawn before they existed, and the later standards may legitimately move them. Open question Q19 (whether the two
 forbidden evaluation rules are item 50's prohibitions) is recorded open and not answered here.
 No ADR covers this standard — `artifacts/adr/` does not exist in this release.
 

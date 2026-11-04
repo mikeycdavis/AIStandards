@@ -299,7 +299,7 @@ uncertainty property, and none is proposed. [Standard 2](02-ai-risk-tiering-and-
 R4 govern the non-lowering and disposition language used above, and
 [Standard 6](06-standard-structure-and-rule-identity.md) R3 is what the Tests section answers.
 
-[Standard 27](27-citation-and-source-attribution.md) and [Standard 28](28-capability-honesty-to-users.md) are named in Scope and are not restated; they were written in the same batch as this standard, and the lines between the three are unconfirmed by anyone. Item 34 is unwritten and is named above only. **Outside this pack:**
+[Standard 27](27-citation-and-source-attribution.md) and [Standard 28](28-capability-honesty-to-users.md) are named in Scope and are not restated; they were written in the same batch as this standard, and the lines between the three are unconfirmed by anyone. [Standard 34](34-ai-incident-response.md) is written and is named above only. **Outside this pack:**
 PredictionStandards' `02-uncertainty.md` and `17-abstention.md` and UIUXDesignStandards'
 `26-ai-user-experience.md` are named in Scope with what the boundary review recorded; this is a
 deference, not a crosswalk, and no maintainer has confirmed it. No ADR covers this standard —

@@ -322,7 +322,7 @@ system.
 
 **Contradicted by operation.** An observed ungrounded output that reached a user is a contradiction of
 whatever the project recorded under R3 and R5, and invalidates it until re-examined. What happens
-operationally is item 34's subject (AI Incident Response, unwritten in this release); this standard
+operationally is item 34's subject ([Standard 34](34-ai-incident-response.md), AI Incident Response); this standard
 says only that the record no longer stands.
 
 ## Additions this standard makes beyond the source
