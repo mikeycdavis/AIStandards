@@ -408,6 +408,42 @@ function skipBackBlanksAndComments(text, pos) {
   }
 }
 
+// The index of the closing quote of the quoted scalar that opens at j, or -1 when it does not close before limit.
+function closingQuote(text, j, limit) {
+  const quote = text[j];
+  for (let c = j + 1; c < limit; c += 1) {
+    if (quote === '"' && text[c] === "\\") c += 1;
+    else if (text[c] === quote) {
+      if (quote === "'" && text[c + 1] === "'") c += 1;
+      else return c;
+    }
+  }
+  return -1;
+}
+
+// When the word text[begin, end) holds the colon that follows a quoted key and then a ! or & property, the index of
+// that colon; otherwise -1. The key's opening quote is looked for behind the closing quote (a key may hold blanks and
+// the colon may follow a blank) and must start a token and enclose exactly up to that closing quote.
+function quotedKeyColon(text, begin, end, word) {
+  const candidates = [];
+  const re = /(["']):(?=[!&])/g;
+  for (let m = re.exec(word); m !== null; m = re.exec(word)) candidates.push({ q: begin + m.index, colon: begin + m.index + 1 });
+  if (word[0] === ":" && (word[1] === "!" || word[1] === "&")) {
+    let q = begin - 1;
+    while (q >= 0 && isWs(text[q])) q -= 1;
+    if (q >= 0 && (text[q] === '"' || text[q] === "'")) candidates.push({ q, colon: begin });
+  }
+  for (const { q, colon } of candidates) {
+    const quote = text[q];
+    for (let j = q - 1; j >= 0 && q - j < 4096; j -= 1) {
+      if (text[j] !== quote) continue;
+      if (j > 0 && !isWs(text[j - 1]) && !FLOW_INDICATORS.includes(text[j - 1])) continue;
+      if (closingQuote(text, j, q + 1) === q) return colon;
+    }
+  }
+  return -1;
+}
+
 function propsBefore(text, start, anchorName, hasTag) {
   let anchor = null;
   let tag = null;
@@ -429,24 +465,14 @@ function propsBefore(text, start, anchorName, hasTag) {
       while (begin > 0 && !isWs(text[begin - 1]) && !FLOW_INDICATORS.includes(text[begin - 1])) begin -= 1;
     }
     if (begin === end) break;
-    // JSON-compatible flow YAML allows a value to follow a quoted key's colon with no blank
-    // (`{"k":!!str v}`): the word then starts at the key's closing quote, and the property begins after
-    // the colon. The colon must follow a closing quote and be followed by `!` or `&`.
-    // The word must start with the key's opening quote, and the colon is the one after the quote that CLOSES
-    // that key (a backslash escapes in a double-quoted key, '' in a single-quoted one): a colon followed by
-    // ! or & inside the key is key content.
-    if ((text[begin] === '"' || text[begin] === "'")) {
-      const quote = text[begin];
-      let c = begin + 1;
-      for (; c < end; c += 1) {
-        if (quote === '"' && text[c] === "\\") {
-          c += 1;
-        } else if (text[c] === quote) {
-          if (quote === "'" && text[c + 1] === "'") c += 1;
-          else break;
-        }
-      }
-      if (c + 2 < end && text[c] === quote && text[c + 1] === ":" && (text[c + 2] === "!" || text[c + 2] === "&")) begin = c + 2;
+    // JSON-compatible flow YAML allows a value to follow a quoted key's colon with no blank ({"k":!!str v}), a key
+    // may hold blanks ({"a b":!!str v}), and the colon may stand apart from the key ({"a" :!!str v}). The property
+    // begins after a colon that follows the quote CLOSING a key (a backslash escapes in a double-quoted key, '' in a
+    // single-quoted one): a colon followed by ! or & inside the key is key content.
+    {
+      const first = text.slice(begin, end);
+      const found = quotedKeyColon(text, begin, end, first);
+      if (found !== -1) begin = found + 1;
     }
     const word = text.slice(begin, end);
     if (word[0] === "&" && anchorName !== null && anchor === null && word === `&${anchorName}`) {

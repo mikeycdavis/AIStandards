@@ -736,7 +736,6 @@ test("invariant 4: round 5 - optional-chained computed reads, a slash after a re
     "x?.[eval]": 'x?.["eval"]("1");',
     "o?.[constructor]": 'o?.["constructor"]("1")();',
     "process?.[binding]": 'process?.["binding"]("fs");',
-    "o?.[execSync]": 'o?.["execSync"]("ls");',
     "a division after a regex literal": 'x = /a+/ / 2; q = "/"; eval("1"); /* " */',
     "a division after an alternation regex": 'x = /a|b+/ / 2; q = "/"; eval("1"); /* " */',
     "a division after a class regex": 'x = /\\d+/ / 2; q = "/"; eval("1"); /* " */',

@@ -26,7 +26,10 @@ const REGEX_KEYWORDS = new Set(["return", "typeof", "case", "do", "else", "in", 
 function trailingKeyword(text) {
   const m = /[\w$]+$/.exec(text);
   if (m === null || !REGEX_KEYWORDS.has(m[0])) return null;
-  return /\.\s*$/.test(text.slice(0, m.index)) ? null : m[0];
+  const head = text.slice(0, m.index);
+  // after a member dot (but not the last dot of a spread) or a # (a private name) the word is a name, not a keyword
+  if (/(?<!\.)\.\s*$/.test(head) || head.endsWith("#")) return null;
+  return m[0];
 }
 
 // Whether the `)` that ends `before` closes the head of `if`, `while`, `for` or `with`: the statement
@@ -41,7 +44,7 @@ function closesControlHead(before) {
       if (depth === 0) {
         const pre = before.slice(0, k);
         const head = /([A-Za-z_$][\w$]*)\s*$/.exec(pre);
-        if (head !== null && /\.\s*$/.test(pre.slice(0, head.index))) return false; // o.if(x) is a method call
+        if (head !== null && (/(?<!\.)\.\s*$/.test(pre.slice(0, head.index)) || pre.slice(0, head.index).endsWith("#"))) return false; // o.if(x) is a method call
         return head !== null && (["if", "while", "for", "with"].includes(head[1]) || (head[1] === "await" && /\bfor\s+await\s*$/.test(before.slice(0, k))));
       }
     }
@@ -202,6 +205,10 @@ function decodeEscape(source, i) {
     }
   } else if (c === "x" && /^[0-9a-fA-F]{2}$/.test(source.slice(i + 2, i + 4))) {
     return { value: String.fromCharCode(parseInt(source.slice(i + 2, i + 4), 16)), next: i + 4 };
+  } else if (c >= "0" && c <= "7") {
+    // Annex B legacy octal escape: \0 to \377 (a lone \0 is NUL)
+    const m = /^(?:[0-3][0-7]{0,2}|[4-7][0-7]?)/.exec(source.slice(i + 1, i + 4));
+    return { value: String.fromCharCode(parseInt(m[0], 8)), next: i + 1 + m[0].length };
   } else if (c === "\r" && source[i + 2] === "\n") {
     return { value: "", next: i + 3 };
   } else if (c === "\n" || c === "\r" || c === " " || c === " ") {
@@ -211,17 +218,46 @@ function decodeEscape(source, i) {
   return { value: SIMPLE_ESCAPES[c] ?? c, next: i + 2 };
 }
 
+// Words that are keywords only in some positions: ~of~, ~yield~ and ~await~ are ordinary names in a script, so a slash
+// after one of them is ambiguous (a division after a name, or a regex after a keyword).
+const CONTEXTUAL_KEYWORDS = new Set(["of", "yield", "await"]);
+
+// Whether the token at idx is a keyword that is used as a keyword: not after a member dot (o.of), not a private name
+// (#in) and, for the others, not the last dot of a spread.
+function keywordUse(toks, idx) {
+  const x = toks[idx];
+  return Boolean(x) && x.t === "id" && !x.inRegex && REGEX_KEYWORDS.has(x.v) && !isMemberDot(toks, idx - 1) && !isPrivateName(toks, idx);
+}
+
+function isPrivateName(toks, idx) {
+  const h = toks[idx - 1];
+  return Boolean(h) && h.t === "punct" && h.v === "#" && !h.inRegex && h.e === toks[idx].s;
+}
+
 // Whether a token can be followed by a postfix ++ / --: a name that is not a keyword, a literal, `)` or `]`.
-function postfixOperandToken(x, before) {
+function postfixOperandToken(toks, idx) {
+  const x = toks[idx];
   if (!x || x.inRegex) return false;
-  if (x.t === "id") return !REGEX_KEYWORDS.has(x.v) || isMemberDot(before);
+  if (x.t === "id") return !keywordUse(toks, idx) || CONTEXTUAL_KEYWORDS.has(x.v);
   if (x.t === "num" || x.t === "str" || x.t === "tmpl") return true;
   return x.t === "punct" && (x.v === ")" || x.v === "]");
 }
 
-// Whether a token is the "." of a member access ("?." is a "?" and then a ".").
-function isMemberDot(x) {
-  return Boolean(x) && x.t === "punct" && x.v === "." && !x.inRegex;
+// Whether the token at idx is the "." of a member access ("?." is a "?" and then a "."). The last dot of a spread
+// (...) is not: it follows another dot with no gap.
+function isMemberDot(toks, idx) {
+  const x = toks[idx];
+  if (!x || x.t !== "punct" || x.v !== "." || x.inRegex) return false;
+  const before = toks[idx - 1];
+  return !(before && before.t === "punct" && before.v === "." && before.e === x.s);
+}
+
+// Whether only blanks and comments precede position i on its line (the token list ends before i).
+function lineStartAt(source, toks, i) {
+  const last = toks[toks.length - 1];
+  if (!last) return true;
+  for (let k = last.e; k < i; k += 1) if (isLineEnd(source[k])) return true;
+  return false;
 }
 
 // The tokens of the source, read the way the code most likely runs. A slash the scan cannot place (after a closing
@@ -229,14 +265,21 @@ function isMemberDot(x) {
 // the two readings disagree about where strings, templates or comments begin and end, nothing the scan found can be
 // trusted and the source is reported as unparseable (toward detecting, never toward accepting).
 export function tokenize(source) {
-  const first = tokenizeOnce(source, false);
-  if (!first.ambiguous) return first;
-  const second = tokenizeOnce(source, true);
-  if (first.ok && second.ok && first.bounds === second.bounds) return first;
+  const first = tokenizeOnce(source, false, false);
+  if (!first.ambiguous && !first.htmlSeen) return first;
+  // HTML-like comments (<!-- and a line-start -->) are comments in a script and code in a module: both are read too.
+  const others = [];
+  for (const divide of first.ambiguous ? [false, true] : [false]) {
+    for (const html of first.htmlSeen ? [false, true] : [false]) {
+      if (divide || html) others.push(tokenizeOnce(source, divide, html));
+    }
+  }
+  if (first.ok && others.every((o) => o.ok && o.bounds === first.bounds)) return first;
   return { tokens: first.tokens, ok: false };
 }
 
-function tokenizeOnce(source, divide) {
+function tokenizeOnce(source, divide, html) {
+  let htmlSeen = false;
   const toks = [];
   const comments = [];
   let ambiguous = false;
@@ -254,6 +297,14 @@ function tokenizeOnce(source, divide) {
       if (/\s/.test(c)) {
         i += 1;
         continue;
+      }
+      if ((c === "<" && source.startsWith("<!--", i)) || (c === "-" && source.startsWith("-->", i) && lineStartAt(source, toks, i))) {
+        htmlSeen = true;
+        if (html) {
+          comments.push(i);
+          while (i < n && !isLineEnd(source[i])) i += 1;
+          continue;
+        }
       }
       if (c === "/" && d === "/") {
         comments.push(i);
@@ -361,20 +412,26 @@ function tokenizeOnce(source, divide) {
         continue;
       }
       if (c === "/") {
-        const p = toks[toks.length - 1];
+        // the last token outside any regex body already read (a regex literal is followed by its own body's tokens)
+        let li = toks.length - 1;
+        while (li >= 0 && toks[li].inRegex) li -= 1;
+        const p = toks[li];
         let regex = true;
         let ambiguousRegex = false;
         if (p) {
           if (p.t === "punct") regex = p.v === ")" ? lastCloseControl : p.v !== "]";
-          else if (p.t === "id") regex = REGEX_KEYWORDS.has(p.v) && !isMemberDot(toks[toks.length - 2]);
+          else if (p.t === "id") {
+            regex = keywordUse(toks, li);
+            if (regex && CONTEXTUAL_KEYWORDS.has(p.v)) ambiguousRegex = true;
+          }
           else regex = false;
           // After a postfix ++ / -- (two adjacent signs, the second after an operand) a slash divides. A prefix
           // ++ / -- before a slash is not valid code, and a slash after a closing brace may be a block end or
           // an object end: both are read as a regex and marked ambiguous, so the body is still scanned as code.
           if (p.t === "punct" && (p.v === "+" || p.v === "-")) {
-            const p2 = toks[toks.length - 2];
+            const p2 = toks[li - 1];
             if (p2 && p2.t === "punct" && p2.v === p.v && p2.e === p.s && !p2.inRegex) {
-              if (postfixOperandToken(toks[toks.length - 3], toks[toks.length - 4])) regex = false;
+              if (postfixOperandToken(toks, li - 2)) regex = false;
               else ambiguousRegex = true;
             }
           } else if (p.t === "punct" && p.v === "}") {
@@ -411,7 +468,7 @@ function tokenizeOnce(source, divide) {
             toks.push({ t: "regex", v: source.slice(s, j), s, e: j, ambiguous: ambiguousRegex, body: source.slice(s + 1, bodyEnd) });
             // A regex body is also read as code, toward detecting: its tokens follow the literal, flagged so
             // that stray delimiters inside it cannot unbalance an enclosing call.
-            const inner = tokenizeOnce(source.slice(s + 1, bodyEnd), divide);
+            const inner = tokenizeOnce(source.slice(s + 1, bodyEnd), divide, html);
             for (const t of inner.tokens) toks.push({ ...t, s: t.s + s + 1, e: t.e + s + 1, inRegex: true });
             continue;
           }
@@ -421,7 +478,7 @@ function tokenizeOnce(source, divide) {
       if (c === "(") {
         const p = toks[toks.length - 1];
         const p2 = toks[toks.length - 2];
-        parens.push(Boolean(p && p.t === "id" && ((["if", "while", "for", "with"].includes(p.v) && !isMemberDot(p2)) || (p.v === "await" && p2 && p2.t === "id" && p2.v === "for"))));
+        parens.push(Boolean(p && p.t === "id" && ((["if", "while", "for", "with"].includes(p.v) && !isMemberDot(toks, toks.length - 2) && !isPrivateName(toks, toks.length - 1)) || (p.v === "await" && p2 && p2.t === "id" && p2.v === "for"))));
       } else if (c === ")") {
         lastCloseControl = parens.length > 0 ? parens.pop() : true;
       } else if (c === "{") {
@@ -439,7 +496,7 @@ function tokenizeOnce(source, divide) {
   if (source.startsWith("#!")) while (i < n && !isLineEnd(source[i])) i += 1; // a hashbang line is a comment
   lex(false);
   const bounds = [...comments.map((c) => "c" + c), ...toks.filter((x) => (x.t === "str" || x.t === "tmpl") && !x.inRegex).map((x) => x.s + ":" + x.e)].join(",");
-  return { tokens: toks, ok, ambiguous, bounds };
+  return { tokens: toks, ok, ambiguous, htmlSeen, bounds };
 }
 
 const CLOSERS = { "(": ")", "[": "]", "{": "}" };
@@ -691,7 +748,7 @@ function arrayElementStrings(tokens) {
     if (tk.inRegex) continue;
     if (tk.t === "punct" && (tk.v === "(" || tk.v === "[" || tk.v === "{")) {
       const prev = tokens[k - 1];
-      let literal = tk.v === "[" && (!prev || (prev.t === "punct" && ![")", "]", "}"].includes(prev.v)) || (prev.t === "id" && LITERAL_PRECEDERS.has(prev.v)));
+      let literal = tk.v === "[" && (!prev || (prev.t === "punct" && ![")", "]", "}"].includes(prev.v) && !isMemberDot(tokens, k - 1)) || (prev.t === "id" && LITERAL_PRECEDERS.has(prev.v)));
       if (literal) {
         // `{ ["eval"]: true }` and `{ ["run"]() {} }`: a bracket group in key position that is followed by `:`
         // or `(` is a computed property name, whose string names a member; it is not a list of names.
