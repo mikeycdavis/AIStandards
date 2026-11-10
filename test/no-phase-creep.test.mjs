@@ -772,6 +772,34 @@ test("invariant 4: round 5 - optional-chained computed reads, a slash after a re
 });
 
 // Round 6 review of 0bf32b7 (PR #147): a slash that automatic semicolon insertion or a prefix operator makes a regex.
+test("invariant 4: round 9 - a code-running name inside a computed member bracket is reported even as an array element", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const caught = (src) => refs(src).length > 0;
+  const must = {};
+  for (const name of ["constructor", "eval", "Function", "getBuiltinModule", "dlopen", "_load", "runInContext", "compileFunction", "NODE_OPTIONS", "setTimeout"]) {
+    const q = JSON.stringify(name);
+    must["array key " + name] = "const h = o[[" + q + "]];";
+    must["array key, called " + name] = "o[[" + q + "]]('return 7');";
+    must["conditional element " + name] = "const h = o[[1 ? " + q + " : 2]];";
+    must["second element " + name] = "const h = o[[x, " + q + "]];";
+    must["function value " + name] = "const f = () => {};\nconst h = f[[" + q + "]];";
+    must["parenthesised function " + name] = "const h = (() => {})[[" + q + "]];";
+  }
+  must["chained constructor"] = "const h = [][[\"at\"]][[\"constructor\"]];";
+  must["async function constructor"] = "const h = (async () => {})[[\"constructor\"]];";
+  assert.deepEqual(Object.entries(must).filter(([, src]) => !caught(src)).map(([label]) => label), [], "array keys that hide a code-running member");
+  const may = {
+    "a bare array of names": "const names = [\"eval\", \"Function\", \"constructor\"];",
+    "an array in a call": "log([\"eval\"]);",
+    "an indexed slot assigned an array": "const x = [];\nx[0] = [\"eval\"];",
+    "an array after return": "function f() { return [\"eval\", \"setTimeout\"]; }",
+    "an array in an object": "const o = { list: [\"eval\", \"dlopen\"] };",
+    "an array indexed by a number": "const a = [\"eval\"];\nconst b = a[0];",
+  };
+  assert.deepEqual(Object.entries(may).filter(([, src]) => caught(src)).map(([label]) => label), [], "clean forms that are reported");
+});
+
 test("invariant 4: round 8 - a denied process name anywhere inside a computed member bracket is reported", () => {
   const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
   const refs = (src) => externalReferences(src + "\n", where);
