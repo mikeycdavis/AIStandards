@@ -772,6 +772,44 @@ test("invariant 4: round 5 - optional-chained computed reads, a slash after a re
 });
 
 // Round 6 review of 0bf32b7 (PR #147): a slash that automatic semicolon insertion or a prefix operator makes a regex.
+test("invariant 4: round 8 - a denied process name anywhere inside a computed member bracket is reported", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const caught = (src) => refs(src).some((r) => /binding|_linkedBinding|execve|unparseable/.test(r));
+  const head = "import p from 'node:process';\n";
+  const must = {};
+  for (const name of ["binding", "_linkedBinding", "execve"]) {
+    const q = JSON.stringify(name);
+    must["parenthesised " + name] = head + "p[(" + q + ")];";
+    must["double parenthesised " + name] = head + "p[((" + q + "))]('x');";
+    must["array wrapped " + name] = head + "p[[" + q + "]];";
+    must["parenthesised, then call " + name] = head + "p[(" + q + ")].call(p, 'x');";
+    must["parenthesised, then apply " + name] = head + "p[(" + q + ")].apply(p, ['x']);";
+    must["passed as a value " + name] = head + "['x'].map(p[(" + q + ")]);";
+    must["a parenthesised object " + name] = head + "(process)[(" + q + ")]('x');";
+    must["a ternary " + name] = head + "p[1 ? " + q + " : 'y']('x');";
+    must["a ternary, else branch " + name] = head + "p[0 ? 'y' : " + q + "]('x');";
+    must["a sequence " + name] = head + "p[(0, " + q + ")]('x');";
+    must["a template " + name] = head + "p[`" + name + "`]('x');";
+    must["a call result " + name] = head + "p[String(" + q + ")]('x');";
+    must["an optional chain " + name] = head + "p?.[(" + q + ")]('x');";
+    must["a logical or " + name] = head + "p[" + q + " || 'y']('x');";
+  }
+  assert.deepEqual(Object.entries(must).filter(([, src]) => !caught(src)).map(([label]) => label), [], "bracket forms that hide a denied process member");
+  const may = {
+    "a bare array of names": "const names = [\"binding\", \"execve\"];",
+    "an array in a call": "log([\"binding\"]);",
+    "an argument list": "log(a, \"binding\");",
+    "a text constant": "const s = \"binding\";",
+    "an array assigned to an indexed slot": "const t = [];\nt[0] = [\"binding\"];",
+    "an array after return": "function f() { return [\"binding\"]; }",
+    "an array in an object": "const o = { list: [\"binding\", \"x\"] };",
+    "an export alias": "const x = 1;\nexport { x as \"binding\" };",
+    "an index with a denied-looking word only in a comment": "const a = [1];\nconst b = a[0]; // [\"binding\"]",
+  };
+  assert.deepEqual(Object.entries(may).filter(([, src]) => caught(src)).map(([label]) => label), [], "clean forms that are reported");
+});
+
 test("invariant 4: round 7 - a quoted name in an import or export specifier list reads a denied process member", () => {
   const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
   const refs = (src) => externalReferences(src + "\n", where);
