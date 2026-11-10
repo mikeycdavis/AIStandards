@@ -461,6 +461,11 @@ test("YAML: properties directly after a quoted key's colon in a flow mapping kee
     ['a: {"x\\":!bogus":!!str v}\n', [["v", "!!str", null]]],
     ["a: {'it''s\":!bad':&x v}\n", [["v", null, "x"]]],
     ["a: {'x&y:!z':!!str v}\n", [["v", "!!str", null]]],
+    // review of a2c9e51: a quoted key with a blank in it, and a colon on the next line
+    ['a: {"a b":!!str v}\n', [["v", "!!str", null]]],
+    ["a: {'a b c':&x v}\n", [["v", null, "x"]]],
+    ['a: {"a"\n  :!!str v}\n', [["v", "!!str", null]]],
+    ['a: {"a b" :!!str v}\n', [["v", "!!str", null]]],
   ];
   for (const [text, expected] of cases) {
     const r = parseStructuralText("t.yml", text, "yaml");

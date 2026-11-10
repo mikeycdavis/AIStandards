@@ -727,6 +727,51 @@ test("invariant 4: loader-capable modules are matched with their subpaths, and a
   assert.ok(stripComments('#!/usr/bin/env node "\nimport x from "package";\n').includes("import"), "the import scanner also skips a hashbang line");
 });
 
+// Round 5 review of a2c9e51 (PR #147): optional-chained computed reads, regex bodies before a slash, keyword-named
+// identifiers, spreads, HTML-like comments and legacy octal escapes.
+test("invariant 4: round 5 - optional-chained computed reads, a slash after a regex literal, keyword-named identifiers, spreads", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const must = {
+    "x?.[eval]": 'x?.["eval"]("1");',
+    "o?.[constructor]": 'o?.["constructor"]("1")();',
+    "process?.[binding]": 'process?.["binding"]("fs");',
+    "o?.[execSync]": 'o?.["execSync"]("ls");',
+    "a division after a regex literal": 'x = /a+/ / 2; q = "/"; eval("1"); /* " */',
+    "a division after an alternation regex": 'x = /a|b+/ / 2; q = "/"; eval("1"); /* " */',
+    "a division after a class regex": 'x = /\\d+/ / 2; q = "/"; eval("1"); /* " */',
+    "of as a variable": 'let of = 4; q = of / 2; r = "/"; eval("1"); /* " */',
+    "a private name in": 'class A { #in = 1; f() { return this.#in / 2; } } r = "/"; eval("1"); /* " */',
+    "a private name of": 'class A { #of = 1; f() { return this.#of / 2; } } r = "/"; eval("1"); /* " */',
+    "a private name return": 'class A { #return = 1; f() { return this.#return / 2; } } r = "/"; eval("1"); /* " */',
+    "a private name default after ?.": 'class A { #default = 1; f(o) { return o?.#default / 2; } } r = "/"; eval("1"); /* " */',
+    "a parameter named of": 'const f = (of) => of / 2; r = "/"; eval("1"); /* " */',
+    "yield as a variable": 'var yield = 4; q = yield / 2; r = "/"; eval("1"); /* " */',
+    "await as a variable": 'var await = 4; q = await / 2; r = "/"; eval("1"); /* " */',
+    "a spread of typeof then a regex": "[...typeof /'/, eval(\"1\"), /'/]",
+    "a spread of void then a regex": "[...void /'/, eval(\"1\"), /'/]",
+    "a spread of await then a regex": 'async function f() { return [...await /"/, eval("1"), /"/]; }',
+    "a spread of typeof then a backtick regex": "[...typeof /\u0060/, eval(\"1\"), /\u0060/]",
+    "a legacy octal escape for eval": 'globalThis["\\145val"]("1");',
+    "a legacy octal escape inside a name": 'process["bi\\156ding"]("fs");',
+    "a legacy octal escape of three digits": 'globalThis["\\145\\166\\141\\154"]("1");',
+    "an HTML-like comment hiding a block comment": '<!-- /*\neval("x");\n--> */',
+    "a closing HTML-like comment line": 'a = 1;\n--> /*\neval("x");\n*/ x = "',
+  };
+  assert.deepEqual(Object.entries(must).filter(([, src]) => !refs(src).some((r) => /eval|constructor|binding|execSync|unparseable|\bimport\b/.test(r))).map(([label]) => label), [], "forms the scan accepts but must reject");
+  const may = {
+    "a spread array of names": "const a = [...['x', 'y']];",
+    "division after a regex literal, no strings": "const x = /a+/.source.length / 2;",
+    "for of over a regex match": "for (const m of s.matchAll(/a/g)) f(m);",
+    "an optional-chained numeric index": "const v = a?.[0] / 2;",
+    "an optional-chained literal key": 'const v = a?.["name"];',
+    "an octal escape that is plain text": 'const s = "\\101\\102";',
+    "a NUL escape": 'const s = "a\\0b";',
+    "a plain regex after return": "function f() { return /ab+/.test(s); }",
+  };
+  assert.deepEqual(Object.entries(may).filter(([, src]) => refs(src).length > 0).map(([label]) => label), [], "forms the scan must accept");
+});
+
 // Codex findings on PR #147, rounds on 4d5a005, a1dd371 and 4557d13.
 test("invariant 4: Codex findings - denied process names as reflective keys, a selected callee behind inner groups", () => {
   const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
