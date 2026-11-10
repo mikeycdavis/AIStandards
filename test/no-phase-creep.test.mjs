@@ -772,6 +772,92 @@ test("invariant 4: round 5 - optional-chained computed reads, a slash after a re
 });
 
 // Round 6 review of 0bf32b7 (PR #147): a slash that automatic semicolon insertion or a prefix operator makes a regex.
+test("invariant 4: round 10 - a keyword used as a member or variable name before a bracket is an operand", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const caught = (src) => refs(src).length > 0;
+  const must = {
+    "a default namespace member": "import * as ns from \"node:process\";\nns.default[\"getBuiltinModule\"](\"child_process\");",
+    "a default namespace member, binding": "import * as ns from \"node:process\";\nns.default[\"binding\"](\"natives\");",
+    "a default namespace member, run-time key": "import * as ns from \"node:process\";\nns.default[k](\"x\");",
+    "an object member default, run-time key": "const o = { default: globalThis };\no.default[k](\"x\");",
+    "a variable named of": "const of = process;\nof[\"binding\"](\"fs\");",
+    "a variable named of, eval": "const of = globalThis;\nof[\"eval\"](\"1\");",
+    "a private name in": "class A { #in = process; m() { return this.#in[\"getBuiltinModule\"](\"child_process\"); } }",
+    "an optional member of": "const o = { of: globalThis };\no?.of[\"eval\"](\"1\");",
+    "a member in an array key": "const o = { in: globalThis };\no.in[[\"eval\"]](\"1\");",
+  };
+  for (const w of ["of", "return", "in", "delete", "typeof", "new", "else", "void", "case", "do", "throw", "instanceof", "debugger", "break", "continue", "extends", "export", "default"]) {
+    must["a member named " + w + ", eval"] = "const o = {};\no." + w + "[\"eval\"](\"1\");";
+    must["a member named " + w + ", binding"] = "const o = {};\no." + w + "[\"binding\"](\"fs\");";
+    must["a member named " + w + ", run-time key"] = "const o = {};\no." + w + "[k](\"x\");";
+    must["a member named " + w + ", array key"] = "const o = {};\no." + w + "[[\"Function\"]](\"x\");";
+  }
+  assert.deepEqual(Object.entries(must).filter(([, src]) => !caught(src)).map(([label]) => label), [], "keyword-named operands that hide a member read");
+  const may = {
+    "of in a for head": "for (const n of [\"eval\", \"binding\"]) log(n);",
+    "of in a for head with a destructure": "for (const [a, b] of [[\"eval\", 1]]) log(a, b);",
+    "return of an array": "function f() { return [\"eval\", \"binding\"]; }",
+    "typeof then an array": "const t = typeof [\"eval\"];",
+    "in then an array": "const t = \"a\" in [\"eval\"];",
+    "an array after default": "export default [\"eval\", \"binding\"];",
+    "a plain array": "const n = [\"eval\", \"Function\", \"binding\"];",
+  };
+  assert.deepEqual(Object.entries(may).filter(([, src]) => caught(src)).map(([label]) => label), [], "clean forms that are reported");
+});
+
+test("invariant 4: round 10 - Reflect reached through a global object is analysed like a bare Reflect", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const caught = (src) => refs(src).length > 0;
+  const must = {
+    "globalThis.Reflect, built key": "globalThis.Reflect.get(globalThis, \"ev\" + \"al\")(\"1\");",
+    "globalThis?.Reflect, built key": "globalThis?.Reflect.get(globalThis, \"ev\" + \"al\")(\"2+2\");",
+    "globalThis.Reflect, process binding": "globalThis.Reflect.get(process, \"binding\")(\"fs\");",
+    "self.Reflect, process execve": "self.Reflect.get(process, \"execve\");",
+    "window.Reflect, run-time key": "window.Reflect.get(process, k);",
+    "global.Reflect, run-time key": "global.Reflect.get(process, k);",
+    "globalThis string Reflect, run-time key": "globalThis[\"Reflect\"].get(process, k);",
+    "globalThis string Reflect, process binding": "globalThis[\"Reflect\"].get(process, \"binding\");",
+    "globalThis.Reflect, descriptor": "globalThis.Reflect.getOwnPropertyDescriptor(process, \"binding\").value(\"fs\");",
+    "globalThis.Reflect held": "const R = globalThis.Reflect;",
+    "globalThis.Reflect, method not called": "const g = globalThis.Reflect.get;",
+  };
+  assert.deepEqual(Object.entries(must).filter(([, src]) => !caught(src)).map(([label]) => label), [], "global Reflect forms that hide a lookup");
+  const may = {
+    "a bare Reflect with a literal key": "const v = Reflect.get(o, \"name\");",
+    "a global Reflect with a literal key": "const v = globalThis.Reflect.get(o, \"name\");",
+    "a global Reflect has": "const v = globalThis.Reflect.has(o, \"name\");",
+    "a member named Reflect of an unrelated object": "const v = lib.Reflect;",
+  };
+  assert.deepEqual(Object.entries(may).filter(([, src]) => caught(src)).map(([label]) => label), [], "clean forms that are reported");
+});
+
+test("invariant 4: round 10 - constructor is exempt only as a method of a class body", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const caught = (src) => refs(src).length > 0;
+  const must = {
+    "with an arrow function": "with (() => {}) { console.log(constructor(\"return 7\")()); }",
+    "with after a statement": "with (() => {}) { a(); constructor(\"return 7\"); }",
+    "a bare block": "{ constructor(\"return 7\"); }",
+    "a function body": "function f() { constructor(\"return 7\"); }",
+    "after a semicolon": "a();\nconstructor(\"return 7\");",
+    "a with inside a class method": "class A { m() { with (() => {}) { constructor(\"return 7\"); } } }",
+    "an if block": "if (a) { constructor(\"return 7\"); }",
+  };
+  assert.deepEqual(Object.entries(must).filter(([, src]) => !caught(src)).map(([label]) => label), [], "constructor calls outside a class body");
+  const may = {
+    "a class constructor": "class A { constructor() { this.a = 1; } }",
+    "a derived class constructor": "class B extends A { constructor() { super(); } }",
+    "a class with fields before": "class C { a = 1; constructor() {} }",
+    "a class with a method before": "class D { m() {} constructor() {} }",
+    "a class expression": "const E = class { constructor() {} };",
+    "a class with a semicolon before": "class F { a = 1;\n constructor() {} }",
+  };
+  assert.deepEqual(Object.entries(may).filter(([, src]) => caught(src)).map(([label]) => label), [], "class constructors that are reported");
+});
+
 test("invariant 4: round 9 - a code-running name inside a computed member bracket is reported even as an array element", () => {
   const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
   const refs = (src) => externalReferences(src + "\n", where);
