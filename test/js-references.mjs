@@ -19,7 +19,15 @@ function isLineEnd(ch) {
 // One numeric literal (hex, binary, octal, decimal with an optional fraction and exponent, separators, bigint).
 // A number ends where the literal ends: 1..constructor is the number "1." then the member ".constructor".
 const NUMERIC_LITERAL = /0[xX][\da-fA-F_]+n?|0[bB][01_]+n?|0[oO][0-7_]+n?|(?:\d[\d_]*(?:\.[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?n?/y;
-const REGEX_KEYWORDS = new Set(["return", "typeof", "case", "do", "else", "in", "of", "void", "delete", "throw", "new", "yield", "await", "instanceof"]);
+const REGEX_KEYWORDS = new Set(["return", "typeof", "case", "do", "else", "in", "of", "void", "delete", "throw", "new", "yield", "await", "instanceof", "default", "extends"]);
+
+// The keyword that ends the text, or null when it ends in another word or in a member name: o.of, o?.default and
+// o.new name properties, so a slash after them divides.
+function trailingKeyword(text) {
+  const m = /[\w$]+$/.exec(text);
+  if (m === null || !REGEX_KEYWORDS.has(m[0])) return null;
+  return /\.\s*$/.test(text.slice(0, m.index)) ? null : m[0];
+}
 
 // Whether the `)` that ends `before` closes the head of `if`, `while`, `for` or `with`: the statement
 // after it begins an expression, so a slash there starts a regex, not a division. An unmatched `)` is
@@ -31,7 +39,9 @@ function closesControlHead(before) {
     else if (before[k] === "(") {
       depth -= 1;
       if (depth === 0) {
-        const head = /([A-Za-z_$][\w$]*)\s*$/.exec(before.slice(0, k));
+        const pre = before.slice(0, k);
+        const head = /([A-Za-z_$][\w$]*)\s*$/.exec(pre);
+        if (head !== null && /\.\s*$/.test(pre.slice(0, head.index))) return false; // o.if(x) is a method call
         return head !== null && (["if", "while", "for", "with"].includes(head[1]) || (head[1] === "await" && /\bfor\s+await\s*$/.test(before.slice(0, k))));
       }
     }
@@ -45,7 +55,7 @@ function postfixOperandText(text) {
   const last = text[text.length - 1];
   if (last === undefined) return false;
   if (last === ")" || last === "]") return true;
-  if (/[\w$]/.test(last)) return !REGEX_KEYWORDS.has(/[\w$]+$/.exec(text)[0]);
+  if (/[\w$]/.test(last)) return trailingKeyword(text) === null;
   return false;
 }
 
@@ -58,6 +68,8 @@ export function stripComments(source, keepStrings = false) {
     let i = start;
     let depth = 0;
     const n = source.length;
+    // a hashbang line at the very start of the file is a line comment
+    if (start === 0 && !inInterpolation && source.startsWith("#!")) while (i < n && !isLineEnd(source[i])) i += 1;
     while (i < n) {
       const c = source[i];
       const d = source[i + 1];
@@ -83,7 +95,7 @@ export function stripComments(source, keepStrings = false) {
         else if (last === ")") regex = closesControlHead(before);
         else if (last === "]") regex = false;
         else if ((last === "+" || last === "-") && before.endsWith(last + last) && postfixOperandText(before.slice(0, -2).trimEnd())) regex = false;
-        else if (/[\w$]/.test(last)) regex = REGEX_KEYWORDS.has(/[\w$]+$/.exec(before)[0]);
+        else if (/[\w$]/.test(last)) regex = trailingKeyword(before) !== null;
         else regex = true;
         let j = i + 1;
         let closed = false;
@@ -200,15 +212,34 @@ function decodeEscape(source, i) {
 }
 
 // Whether a token can be followed by a postfix ++ / --: a name that is not a keyword, a literal, `)` or `]`.
-function postfixOperandToken(x) {
+function postfixOperandToken(x, before) {
   if (!x || x.inRegex) return false;
-  if (x.t === "id") return !REGEX_KEYWORDS.has(x.v);
+  if (x.t === "id") return !REGEX_KEYWORDS.has(x.v) || isMemberDot(before);
   if (x.t === "num" || x.t === "str" || x.t === "tmpl") return true;
   return x.t === "punct" && (x.v === ")" || x.v === "]");
 }
 
+// Whether a token is the "." of a member access ("?." is a "?" and then a ".").
+function isMemberDot(x) {
+  return Boolean(x) && x.t === "punct" && x.v === "." && !x.inRegex;
+}
+
+// The tokens of the source, read the way the code most likely runs. A slash the scan cannot place (after a closing
+// brace, or after a prefix ++ / --) is read as a regex in the first reading and as a division in the second; when
+// the two readings disagree about where strings, templates or comments begin and end, nothing the scan found can be
+// trusted and the source is reported as unparseable (toward detecting, never toward accepting).
 export function tokenize(source) {
+  const first = tokenizeOnce(source, false);
+  if (!first.ambiguous) return first;
+  const second = tokenizeOnce(source, true);
+  if (first.ok && second.ok && first.bounds === second.bounds) return first;
+  return { tokens: first.tokens, ok: false };
+}
+
+function tokenizeOnce(source, divide) {
   const toks = [];
+  const comments = [];
+  let ambiguous = false;
   const n = source.length;
   const parens = [];
   let lastCloseControl = false;
@@ -225,10 +256,12 @@ export function tokenize(source) {
         continue;
       }
       if (c === "/" && d === "/") {
+        comments.push(i);
         while (i < n && !isLineEnd(source[i])) i += 1;
         continue;
       }
       if (c === "/" && d === "*") {
+        comments.push(i);
         const end = source.indexOf("*/", i + 2);
         if (end === -1) {
           ok = false;
@@ -333,7 +366,7 @@ export function tokenize(source) {
         let ambiguousRegex = false;
         if (p) {
           if (p.t === "punct") regex = p.v === ")" ? lastCloseControl : p.v !== "]";
-          else if (p.t === "id") regex = REGEX_KEYWORDS.has(p.v);
+          else if (p.t === "id") regex = REGEX_KEYWORDS.has(p.v) && !isMemberDot(toks[toks.length - 2]);
           else regex = false;
           // After a postfix ++ / -- (two adjacent signs, the second after an operand) a slash divides. A prefix
           // ++ / -- before a slash is not valid code, and a slash after a closing brace may be a block end or
@@ -341,12 +374,16 @@ export function tokenize(source) {
           if (p.t === "punct" && (p.v === "+" || p.v === "-")) {
             const p2 = toks[toks.length - 2];
             if (p2 && p2.t === "punct" && p2.v === p.v && p2.e === p.s && !p2.inRegex) {
-              if (postfixOperandToken(toks[toks.length - 3])) regex = false;
+              if (postfixOperandToken(toks[toks.length - 3], toks[toks.length - 4])) regex = false;
               else ambiguousRegex = true;
             }
           } else if (p.t === "punct" && p.v === "}") {
             ambiguousRegex = true;
           }
+        }
+        if (ambiguousRegex) {
+          ambiguous = true;
+          if (divide) regex = false;
         }
         if (regex) {
           let j = i + 1;
@@ -374,7 +411,7 @@ export function tokenize(source) {
             toks.push({ t: "regex", v: source.slice(s, j), s, e: j, ambiguous: ambiguousRegex, body: source.slice(s + 1, bodyEnd) });
             // A regex body is also read as code, toward detecting: its tokens follow the literal, flagged so
             // that stray delimiters inside it cannot unbalance an enclosing call.
-            const inner = tokenize(source.slice(s + 1, bodyEnd));
+            const inner = tokenizeOnce(source.slice(s + 1, bodyEnd), divide);
             for (const t of inner.tokens) toks.push({ ...t, s: t.s + s + 1, e: t.e + s + 1, inRegex: true });
             continue;
           }
@@ -384,7 +421,7 @@ export function tokenize(source) {
       if (c === "(") {
         const p = toks[toks.length - 1];
         const p2 = toks[toks.length - 2];
-        parens.push(Boolean(p && p.t === "id" && (["if", "while", "for", "with"].includes(p.v) || (p.v === "await" && p2 && p2.t === "id" && p2.v === "for"))));
+        parens.push(Boolean(p && p.t === "id" && ((["if", "while", "for", "with"].includes(p.v) && !isMemberDot(p2)) || (p.v === "await" && p2 && p2.t === "id" && p2.v === "for"))));
       } else if (c === ")") {
         lastCloseControl = parens.length > 0 ? parens.pop() : true;
       } else if (c === "{") {
@@ -399,8 +436,10 @@ export function tokenize(source) {
     return !untilBrace;
   }
 
+  if (source.startsWith("#!")) while (i < n && !isLineEnd(source[i])) i += 1; // a hashbang line is a comment
   lex(false);
-  return { tokens: toks, ok };
+  const bounds = [...comments.map((c) => "c" + c), ...toks.filter((x) => (x.t === "str" || x.t === "tmpl") && !x.inRegex).map((x) => x.s + ":" + x.e)].join(",");
+  return { tokens: toks, ok, ambiguous, bounds };
 }
 
 const CLOSERS = { "(": ")", "[": "]", "{": "}" };
@@ -631,6 +670,12 @@ function readUrlConstruction(tokens, open, offset, specifiers, unreadable) {
 // alias p.binding); as a string only as a computed member or a quoted key, because the word is common in text.
 const PROCESS_DENIED_NAMES = ["binding", "_linkedBinding", "execve"];
 const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH", "dlopen", "_load", "_resolveFilename", "getBuiltinModule"];
+// A module name, or a subpath of one (inspector/promises), with or without the node: prefix.
+export function isLoaderCapable(specifier) {
+  const bare = specifier.startsWith("node:") ? specifier.slice(5) : specifier;
+  return LOADER_CAPABLE_MODULES.some((m) => bare === m || bare.startsWith(m + "/"));
+}
+
 export const LOADER_CAPABLE_MODULES = ["child_process", "worker_threads", "vm", "module", "cluster", "repl", "inspector", "wasi", "v8", "trace_events", "async_hooks"];
 const TIMER_NAMES = ["setTimeout", "setInterval", "setImmediate"];
 
@@ -1091,7 +1136,7 @@ export function externalReferences(source, where) {
   const { specifiers, unreadable } = moduleReferences(source, { dynamicCode: where.dynamicCode !== false });
   const out = unreadable.map((u) => `${u.form} ${u.specifier}`);
   for (const { form, specifier } of specifiers) {
-    if (where.dynamicCode !== false && LOADER_CAPABLE_MODULES.some((m) => specifier === m || specifier === "node:" + m)) {
+    if (where.dynamicCode !== false && isLoaderCapable(specifier)) {
       out.push(`${form} ${specifier} is a loader-capable module (starts processes, runs source text, loads native code or changes module loading)`);
       continue;
     }
