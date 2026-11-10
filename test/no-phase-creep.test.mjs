@@ -771,6 +771,50 @@ test("invariant 4: round 5 - optional-chained computed reads, a slash after a re
   assert.deepEqual(Object.entries(may).filter(([, src]) => refs(src).length > 0).map(([label]) => label), [], "forms the scan must accept");
 });
 
+// Round 6 review of 0bf32b7 (PR #147): a slash that automatic semicolon insertion or a prefix operator makes a regex.
+test("invariant 4: round 6 - a slash after a line break that ends a statement, or after a prefix ++ / --, starts a regex", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const tail = "/'/.test(1); eval(\"1\"); // '\n";
+  const hidden = (src) => !refs(src).some((r) => /eval|unparseable/.test(r));
+  const must = {
+    "debugger then a line break": "debugger\n" + tail,
+    "break then a line break": "a: for (;;) { break a\n" + tail + "}",
+    "continue then a line break": "a: for (;;) { continue\n" + tail + "}",
+    "a bare break then a line break": "for (;;) { break\n" + tail + "}",
+    "a bare continue then a line break": "for (;;) { continue\n" + tail + "}",
+    "a line break before a prefix ++": "var a = 1;\na\n++" + tail,
+    "a line break before a prefix --": "var a = 1;\na\n--" + tail,
+    "a line comment before a prefix ++": "var a = 1;\na //c\n++" + tail,
+    "a block comment with a line break before a prefix ++": "var a = 1;\na /*\n*/++" + tail,
+    "a call then a line break before a prefix ++": "var f = () => 1;\nf()\n++" + tail,
+    "an array then a line break before a prefix ++": "[1]\n++" + tail,
+    "a blank before a prefix ++ on the next line": "var a = 1;\na\n ++" + tail,
+    "a side-effect import without a semicolon": "import 'node:fs'\n" + tail,
+    "a default import without a semicolon": "import a from 'node:fs'\n" + tail,
+    "an export star without a semicolon": "export * from 'node:fs'\n" + tail,
+    "an export star as a name without a semicolon": "export * as n from 'node:fs'\n" + tail,
+    "an export list without a semicolon": "export {a as b} from 'node:fs'\n" + tail,
+    "a var without an initializer": "var q\n" + tail,
+    "a let without an initializer": "let q\n" + tail,
+    "an exported var without an initializer": "export var q\n" + tail,
+    "a string statement": "'use strict'\n" + tail,
+  };
+  assert.deepEqual(Object.entries(must).filter(([, src]) => hidden(src)).map(([label]) => label), [], "forms that hide eval");
+  const may = {
+    "a postfix ++ then division": "let i = 0; const h = i++ / 2; const s = \"/\";",
+    "a postfix ++ after a block comment on one line": "let a = 1; a /* c */++ / 2; const s = \"/\";",
+    "a side-effect import then a plain regex": "import 'node:fs'\n/x/.test(1);",
+    "a var then a plain regex": "var q\n/x/.test(1);",
+    "a division continued on the next line": "const t = a\n/ 2 / 3;",
+    "a member named break": "const t = o.break / 2 / 3;",
+    "a loop with break and continue": "for (;;) { if (a) break; continue; }",
+    "a labelled break": "a: for (;;) { break a; }",
+    "a prefix ++ on its own line": "let a = 1;\n++a;",
+  };
+  assert.deepEqual(Object.entries(may).filter(([, src]) => refs(src).length > 0).map(([label]) => label), [], "forms the scan must accept");
+});
+
 // Codex findings on PR #147, rounds on 4d5a005, a1dd371 and 4557d13.
 test("invariant 4: Codex findings - denied process names as reflective keys, a selected callee behind inner groups", () => {
   const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
