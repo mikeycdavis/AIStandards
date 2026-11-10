@@ -265,7 +265,7 @@ export function tokenize(source) {
       }
       if (c === "`") {
         i += 1;
-        const tok = { t: "str", v: "", s, e: s };
+        const tok = { t: "str", v: "", s, e: s, tpl: true };
         toks.push(tok);
         let closed = false;
         while (i < n) {
@@ -573,6 +573,10 @@ function readUrlConstruction(tokens, open, offset, specifiers, unreadable) {
 //     require, so the loader-capable module rule above would never see it;
 //   * `Reflect.get` / `Reflect.getOwnPropertyDescriptor` with a key that is not one literal: a reflective lookup
 //     by a name built at run time is the same as a computed access.
+//     It is also reported spelt Reflect["get"], Reflect?.get, held, passed on (Reflect.apply(Reflect.get, ...)),
+//     reached by a computed method, or with Reflect itself held or destructured;
+//   * a computed member that is the tag of a template (o[k]`x`, (o[k])`x`): a tagged template calls its tag;
+//     and a grouped callee after an if, while, for or with head (if (x) (o[k])(1)).
 // A file that legitimately needs one of these is named, with its reason and the exact calls reviewed, on the
 // allowlist in no-phase-creep.test.mjs; nothing else is exempt. The boundary of reading text is that a name
 // assembled at run time never reaches a loader without one of the denied constructs above.
@@ -645,6 +649,20 @@ function openParenIndex(tokens, close) {
   return -1;
 }
 
+// Whether the token at index k is the ")" that closes an if, while, for (also for await) or with head: a
+// parenthesised group right after it starts a statement, it does not take arguments.
+const CONTROL_HEADS = new Set(["if", "while", "for", "with"]);
+function closesStatementHead(tokens, k) {
+  const t = tokens[k];
+  if (!t || t.t !== "punct" || t.v !== ")" || t.inRegex) return false;
+  const open = openParenIndex(tokens, k);
+  if (open === -1) return false;
+  const head = tokens[open - 1];
+  if (!head || head.t !== "id" || head.inRegex) return false;
+  if (CONTROL_HEADS.has(head.v)) return !(tokens[open - 2] && tokens[open - 2].v === ".");
+  return head.v === "await" && Boolean(tokens[open - 2]) && tokens[open - 2].v === "for";
+}
+
 // The index of the last token of a member access that is wrapped in grouping parentheses: from the `]` at
 // `close`, step over every following `)` whose `(` only groups (it is not a call's or a control head's
 // argument list: the token before it is not an identifier other than a keyword that takes an expression, a
@@ -657,10 +675,16 @@ function stepOutOfGroups(tokens, close) {
     const open = openParenIndex(tokens, at + 1);
     if (open === -1) return at;
     const before = tokens[open - 1];
-    const groups = !before || (before.t === "punct" && ![")", "]"].includes(before.v)) || (before.t === "id" && LITERAL_PRECEDERS.has(before.v));
+    const groups = !before || (before.t === "punct" && ![")", "]"].includes(before.v)) || (before.t === "id" && LITERAL_PRECEDERS.has(before.v)) || closesStatementHead(tokens, open - 1);
     if (!groups) return at;
     at += 1;
   }
+}
+
+// Whether the token at k is directly followed by a template literal (a tagged template calls its tag).
+function isTaggedAt(tokens, k) {
+  const a = tokens[k + 1];
+  return Boolean(a && !a.inRegex && (a.t === "tmpl" || (a.t === "str" && a.tpl === true)));
 }
 
 // Whether the token at `k` is directly called: `x(...)` or `x?.(...)`.
@@ -728,17 +752,46 @@ export function moduleReferences(source, options = {}) {
       if (close !== -1) {
         const key = tokens.slice(k + 1, close);
         const literalKey = key.length === 1 && (key[0].t === "str" || key[0].t === "num");
-        if (!literalKey && isCalledAt(tokens, stepOutOfGroups(tokens, close))) dynamic("a computed member called, whose name is built at run time");
+        if (!literalKey && (isCalledAt(tokens, stepOutOfGroups(tokens, close)) || isTaggedAt(tokens, stepOutOfGroups(tokens, close)))) dynamic("a computed member called, whose name is built at run time");
         else if (!literalKey && prev.t === "id" && GLOBAL_OBJECTS.includes(prev.v)) dynamic(`computed access on ${prev.v} with a key built at run time`);
       }
     }
     // `Reflect.get(target, key)` is a computed access spelled as a call: its key must be one string or number
-    // literal (a literal that names a code-running member is reported by the string rule above).
-    if (tk.t === "id" && tk.v === "Reflect" && !tk.inRegex && tokens[k + 1] && tokens[k + 1].v === "." && tokens[k + 2] && tokens[k + 2].t === "id" && ["get", "getOwnPropertyDescriptor"].includes(tokens[k + 2].v) && tokens[k + 3] && tokens[k + 3].v === "(" && !tokens[k + 3].syn) {
-      const reflected = callArguments(tokens, k + 3);
-      const key = reflected && reflected[1];
-      const literalKey = Boolean(key) && key.length === 1 && (key[0].t === "str" || key[0].t === "num");
-      if (!literalKey) dynamic(`Reflect.${tokens[k + 2].v} with a key that is not one literal`);
+    // literal (a literal that names a code-running member is reported by the string rule above). The method may be
+    // written `Reflect.get`, `Reflect?.get` or `Reflect["get"]`, and the call `(...)` or `?.(...)`. The method taken
+    // without being called (held, passed to Reflect.apply), a computed method (`Reflect[m]`) and `Reflect` itself
+    // held or destructured are reported: each reaches the lookup without a key anyone can read here.
+    if (tk.t === "id" && tk.v === "Reflect" && !tk.inRegex && !(tokens[k - 1] && tokens[k - 1].v === ".")) {
+      let p = k + 1;
+      if (tokens[p] && tokens[p].v === "?" && tokens[p + 1] && tokens[p + 1].v === ".") p += 1;
+      let method = null;
+      let last = k;
+      if (tokens[p] && tokens[p].t === "punct" && tokens[p].v === "." && tokens[p + 1] && tokens[p + 1].t === "id") {
+        method = tokens[p + 1].v;
+        last = p + 1;
+      } else if (tokens[p] && tokens[p].t === "punct" && tokens[p].v === "[" && !tokens[p].syn) {
+        const closeAt = closeBracketIndex(tokens, p);
+        const inner = closeAt === -1 ? [] : tokens.slice(p + 1, closeAt);
+        if (inner.length === 1 && inner[0].t === "str") {
+          method = inner[0].v;
+          last = closeAt;
+        } else {
+          dynamic("Reflect with a method that is not one literal");
+        }
+      } else {
+        dynamic("Reflect used other than as Reflect.<method>, so a lookup can be reached through it");
+      }
+      if (method === "get" || method === "getOwnPropertyDescriptor") {
+        if (isCalledAt(tokens, last)) {
+          const open = tokens[last + 1].v === "(" ? last + 1 : last + 3;
+          const reflected = callArguments(tokens, open);
+          const key = reflected && reflected[1];
+          const literalKey = Boolean(key) && key.length === 1 && (key[0].t === "str" || key[0].t === "num");
+          if (!literalKey) dynamic(`Reflect.${method} with a key that is not one literal`);
+        } else {
+          dynamic(`Reflect.${method} used other than as a direct call`);
+        }
+      }
     }
     if (tk.t === "id" && tk.v === "binding" && tokens[k - 1] && tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "process") {
       dynamic("process.binding, which reaches internal modules");
@@ -1003,6 +1056,45 @@ export function indirectNameReferences(source, names) {
     if (tk.t !== "id" || !names.includes(tk.v) || tk.inRegex || inImport.has(k)) continue;
     const direct = tokens[k + 1] && tokens[k + 1].v === "(" && !tokens[k + 1].syn && !(tokens[k - 1] && tokens[k - 1].v === ".");
     if (!direct) out.push(`${tk.v} at offset ${tk.s}`);
+  }
+  return out;
+}
+
+/**
+ * The import statements in `source` of the module `specifier` whose bindings are not exactly named imports, each
+ * one of `names`, unaliased (`import { spawnSync } from "node:child_process"`). A namespace, a default, an alias
+ * (`{ spawn as sp }`), a name not listed and a bare `import "x"` all bind or load the module in a way an
+ * allowlist entry that records only `names` did not review. Each result is the clause as written.
+ */
+export function unreviewedImports(source, specifier, names) {
+  const { tokens } = tokenize(source);
+  const out = [];
+  for (let k = 0; k < tokens.length; k += 1) {
+    const tk = tokens[k];
+    if (tk.t !== "id" || tk.v !== "import" || tk.inRegex || (tokens[k - 1] && tokens[k - 1].v === ".")) continue;
+    const after = tokens[k + 1];
+    if (!after || (after.t === "punct" && (after.v === "(" || after.v === "."))) continue; // import(...) and import.meta
+    let j = k + 1;
+    while (j < tokens.length && tokens[j].t !== "str" && !(tokens[j].t === "punct" && tokens[j].v === ";")) j += 1;
+    if (!tokens[j] || tokens[j].t !== "str" || tokens[j].v !== specifier) continue;
+    // the clause is everything between `import` and the `from` before the specifier
+    const clause = tokens.slice(k + 1, j - 1);
+    const text = clause.map((c) => c.v).join(" ");
+    let valid = clause.length >= 3 && clause[0].v === "{" && clause[clause.length - 1].v === "}";
+    if (valid) {
+      let inner = clause.slice(1, -1);
+      if (inner.length > 0 && inner[inner.length - 1].v === ",") inner = inner.slice(0, -1);
+      for (let n = 0; n < inner.length; n += 1) {
+        const c = inner[n];
+        if (n % 2 === 0) {
+          if (c.t !== "id" || !names.includes(c.v)) valid = false;
+        } else if (!(c.t === "punct" && c.v === ",")) {
+          valid = false;
+        }
+      }
+      if (inner.length % 2 === 0) valid = false;
+    }
+    if (!valid) out.push(text || "(no bindings)");
   }
   return out;
 }

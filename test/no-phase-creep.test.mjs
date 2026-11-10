@@ -17,7 +17,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { REPO, cli, validate, fixture } from "./helpers.mjs";
-import { externalReferences, directCallTexts, indirectNameReferences } from "./js-references.mjs";
+import { externalReferences, directCallTexts, indirectNameReferences, unreviewedImports } from "./js-references.mjs";
 
 const read = (rel) => fs.readFileSync(path.join(REPO, rel), "utf8");
 const exists = (rel) => fs.existsSync(path.join(REPO, rel));
@@ -133,7 +133,8 @@ function runtimeOffenders(root, allowlist = RUNTIME_ALLOWLIST) {
         let found = externalReferences(text, { file: full, root, dynamicCode: !vendored });
         const allowed = allowlist.find((e) => e.file === rel);
         if (allowed) {
-          found = found.filter((o) => !allowed.modules.some((m) => o.startsWith("import " + m + " is a loader-capable module")));
+          // The import is excused only when every import of the module binds exactly the reviewed names, unaliased.
+          found = found.filter((o) => !allowed.modules.some((m) => o.startsWith("import " + m + " is a loader-capable module") && unreviewedImports(text, m, allowed.names).length === 0));
           const calls = directCallTexts(text, allowed.names);
           if (JSON.stringify(calls) !== JSON.stringify(allowed.calls)) found.push("the reviewed calls changed: " + JSON.stringify(calls));
           for (const ref of indirectNameReferences(text, allowed.names)) found.push("a reviewed name is used other than as a direct call (not a direct call): " + ref);
@@ -431,6 +432,31 @@ test("invariant 4: built-in module access without an import, reflective lookup w
     "a parenthesised computed callee that is constructed": "new (registry[name])(1);",
     "a parenthesised computed callee after return": "function f() { return (registry[name])(1); }",
     "a parenthesised computed callee with a call inside the group": "(make()[name])(1);",
+    // review of 4d5a005: a group that follows a control head
+    "a grouped computed callee after an if head": 'if (0) ((()=>{})[key])("return 1")();',
+    "a grouped computed callee after a while head": 'while (0) (o[k])("x");',
+    "a grouped computed callee after a for-of head": 'for (const a of b) (o[k])("x");',
+    "a grouped computed callee after else if": 'if (x) {} else if (y) (o[k])("x")',
+    "a grouped computed callee after a for-await head": 'async function f() { for await (const a of b) (o[k])("x"); }',
+    "a grouped computed callee after a with head": 'with (o) (p[k])("x");',
+    // review of 4d5a005: Reflect spelt another way
+    "Reflect with a quoted method name": 'Reflect["get"](globalThis, ["ev","al"].join(""))("1");',
+    "Reflect.get optionally called": "Reflect.get?.(globalThis, k);",
+    "Reflect.get optionally called after a newline": "Reflect.get\n?.(globalThis, k);",
+    "Reflect.get handed to Reflect.apply": "Reflect.apply(Reflect.get, Reflect, [globalThis, k]);",
+    "Reflect.get held": "const g = Reflect.get;",
+    "Reflect.get taken by an optional chain": "Reflect?.get(globalThis, k);",
+    "Reflect.get with a quoted method name, optionally called": 'Reflect["get"]?.(globalThis, k);',
+    "Reflect.getOwnPropertyDescriptor held": "const g = Reflect.getOwnPropertyDescriptor;",
+    "Reflect with a computed method": "Reflect[m](globalThis, k);",
+    "Reflect destructured": "const { get } = Reflect;",
+    "Reflect aliased": "const R = Reflect; R.get(globalThis, k);",
+    // review of 4d5a005: a tagged template calls its tag
+    "a computed tag": "o[k]`x`;",
+    "a computed tag with a substitution": "o[k]`x${1}`;",
+    "a grouped computed tag": "(o[k])`x`;",
+    "a grouped computed tag with a substitution": "(o[k])`x${y}`;",
+    "a computed tag after a control head": "if (a) (o[k])`x`;",
   };
   assert.deepEqual(Object.entries(must).filter(([, src]) => refs(src).length === 0).map(([label]) => label), [], "forms the scan accepts but must reject");
   const may = {
@@ -441,6 +467,15 @@ test("invariant 4: built-in module access without an import, reflective lookup w
     "a parenthesised literal-key callee": 'const r = (handlers["start"])(1);',
     "a computed read passed as an argument to a call": "const r = run(items[i])(1);",
     "a computed read in a control head followed by a parenthesised statement": "if (items[i]) (done)(1);",
+    "an argument group after a call, not a control head": "f(a[k])(x);",
+    "a computed read in an if head, then a group": "if (a[k]) (x);",
+    "a computed read in a while head, then a group": "while (a[k]) (x);",
+    "a literal-key tag": 'o["k"]`x`;',
+    "a computed read concatenated with a template": "const s = a[k] + `x`;",
+    "a computed read inside a template substitution": "const s = `x${a[k]}y`;",
+    "a plain tag": "tag`x`;",
+    "Reflect.ownKeys": "const ks = Reflect.ownKeys(o);",
+    "Reflect.get with a quoted method name and a literal key": 'const v = Reflect["get"](o, "kind");',
     "the word getBuiltinModule in a comment": "// process.getBuiltinModule is denied\nconst a = 1;",
     "an identifier that merely contains the word": "const getBuiltinModules = 1;",
   };
@@ -476,6 +511,48 @@ test("an allowlisted file may not alias, pass on or re-call a reviewed name: onl
       if (!runtimeOffenders(root, list).some((o) => o.includes("spawnSync") && o.includes("not a direct call"))) missed.push(label);
     }
     assert.deepEqual(missed, [], "forms the allowlist accepts but must reject");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// Review of 4d5a005: the allowlist excuses the loader-capable IMPORT only for the exact reviewed names, as
+// written. Any other binding of the same module is a function nobody read.
+test("an allowlisted file may import only the reviewed names of its module, unaliased", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "aistd-import-"));
+  try {
+    const put = (text) => {
+      const full = path.join(root, "scripts", "run.mjs");
+      fs.mkdirSync(path.dirname(full), { recursive: true });
+      fs.writeFileSync(full, text);
+    };
+    const list = [{ file: "scripts/run.mjs", reason: "starts the one reviewed child process", modules: ["node:child_process"], names: ["spawnSync"], calls: ['spawnSync ( "git" , [ "status" ] )'] }];
+    const reviewed = 'spawnSync("git", ["status"]);\n';
+    const clean = {
+      "the reviewed import": 'import { spawnSync } from "node:child_process";\n',
+      "the reviewed import over several lines with a trailing comma": 'import {\n  spawnSync,\n} from "node:child_process";\n',
+    };
+    for (const [label, head] of Object.entries(clean)) {
+      put(head + reviewed);
+      assert.deepEqual(runtimeOffenders(root, list), [], "must be accepted: " + label);
+    }
+    const bad = {
+      "another named import, called": 'import { spawnSync, execSync } from "node:child_process";\nexecSync("evil");\n',
+      "only another named import": 'import { execSync } from "node:child_process";\nexecSync("evil");\n',
+      "a namespace import": 'import * as cp from "node:child_process";\ncp.execSync("evil");\n',
+      "an aliased import": 'import { spawn as sp } from "node:child_process";\nsp("evil");\n',
+      "the reviewed name under an alias": 'import { spawnSync as run } from "node:child_process";\nrun("evil");\n',
+      "a default import": 'import cp from "node:child_process";\ncp.execSync("evil");\n',
+      "a default and a namespace": 'import cp, * as all from "node:child_process";\n',
+      "a side-effect import": 'import "node:child_process";\n',
+      "a second import of the module": 'import { spawnSync } from "node:child_process";\nimport { execFileSync } from "node:child_process";\nexecFileSync("evil");\n',
+    };
+    const missed = [];
+    for (const [label, head] of Object.entries(bad)) {
+      put(head + reviewed);
+      if (!runtimeOffenders(root, list).some((o) => o.includes("node:child_process is a loader-capable module"))) missed.push(label);
+    }
+    assert.deepEqual(missed, [], "imports the allowlist accepts but must reject");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
