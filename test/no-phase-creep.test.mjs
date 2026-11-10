@@ -775,7 +775,7 @@ test("invariant 4: round 5 - optional-chained computed reads, a slash after a re
 test("invariant 4: round 7 - a quoted name in an import or export specifier list reads a denied process member", () => {
   const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
   const refs = (src) => externalReferences(src + "\n", where);
-  const caught = (src) => refs(src).some((r) => /binding|_linkedBinding|execve|unparseable/.test(r));
+  const caught = (src) => refs(src).some((r) => /binding|_linkedBinding|execve|dlopen|unparseable/.test(r));
   const must = {};
   for (const name of ["binding", "_linkedBinding", "execve"]) {
     must["import { \"" + name + "\" as b } from node:process"] = "import { \"" + name + "\" as b } from \"node:process\";\nb(\"natives\");";
@@ -787,7 +787,7 @@ test("invariant 4: round 7 - a quoted name in an import or export specifier list
     must["export { a, \"" + name + "\" } from"] = "export { a, \"" + name + "\" } from \"node:process\";";
   }
   must["dlopen is an identifier"] = "import { \"dlopen\" as d } from \"node:process\";\nd();";
-  assert.deepEqual(Object.entries(must).filter(([label, src]) => label !== "dlopen is an identifier" && !caught(src)).map(([label]) => label), [], "specifier forms that hide a denied process member");
+  assert.deepEqual(Object.entries(must).filter(([, src]) => !caught(src)).map(([label]) => label), [], "specifier forms that hide a denied process member");
   // Adjacent: names that are not denied, a denied name only as an export alias, a string that is not in a specifier list.
   const may = {
     "a non-denied import name": "import { \"other\" as b } from \"node:process\";",

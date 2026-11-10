@@ -763,6 +763,18 @@ const TIMER_NAMES = ["setTimeout", "setInterval", "setImmediate"];
 // data. A `[` after an identifier, a string, a number or a closing delimiter is a member access (`o["eval"]`),
 // not a literal, and a `[` after a keyword such as `return` is one.
 const LITERAL_PRECEDERS = new Set([...REGEX_KEYWORDS, "default", "export", "else", "extends"]);
+// Whether the token at index k (a "{" or a ",") lies in the braces of an import or export list.
+function inModuleList(tokens, k) {
+  let j = k;
+  while (j >= 0 && !(tokens[j].t === "punct" && (tokens[j].v === "{" || tokens[j].v === "}"))) j -= 1;
+  if (j < 0 || tokens[j].v !== "{") return false;
+  const p = tokens[j - 1];
+  if (!p) return false;
+  if (p.t === "id" && (p.v === "import" || p.v === "export")) return true;
+  // import d, { ... } from "m": the comma follows the default binding
+  return p.t === "punct" && p.v === "," && tokens[j - 2] && tokens[j - 2].t === "id" && tokens[j - 3] && tokens[j - 3].t === "id" && tokens[j - 3].v === "import";
+}
+
 function arrayElementStrings(tokens) {
   const out = new Set();
   const stack = [];
@@ -959,7 +971,11 @@ export function moduleReferences(source, options = {}) {
       const after = tokens[k + 1];
       const computed = before && after && before.v === "[" && after.v === "]";
       const quotedKey = before && after && (before.v === "{" || before.v === ",") && after.v === ":";
-      if (computed || quotedKey) dynamic(`the string "${tk.v}" naming a member that reaches internal modules or replaces the process`);
+      // A quoted name that starts a specifier in an import or export list (import { "binding" as b } from "node:process",
+      // export { "binding" } from ...) reads that member of the module. The name after "as" is only a new name
+      // (export { x as "binding" } reads x, not binding) and is not reported. Any module is treated alike.
+      const specifier = before && after && (before.v === "{" || before.v === ",") && (after.v === "," || after.v === "}" || (after.t === "id" && after.v === "as")) && inModuleList(tokens, k - 1);
+      if (computed || quotedKey || specifier) dynamic(`the string "${tk.v}" naming a member that reaches internal modules or replaces the process`);
     }
     // A string equal to one of these names is a way of naming the property or function without writing it as an
     // identifier ("eval": true as an object key, o["execSync"], Reflect.get(f, "constructor")). It is reported
