@@ -648,6 +648,85 @@ test("invariant 4: a slash after a postfix ++ or -- is division, so the code aft
   assert.deepEqual(Object.entries(may).filter(([, src]) => refs(src).length > 0).map(([label]) => label), [], "forms the scan must accept");
 });
 
+// Round 4 review of be0215c (PR #147): keyword member names, export default / extends, ambiguous slashes, module
+// subpaths, hashbang lines.
+test("invariant 4: a keyword used as a member name does not start a regex, and default / extends do", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const hidesEval = (src) => !refs(src).some((r) => r.includes("eval"));
+  const keywords = ["case", "default", "delete", "do", "else", "extends", "in", "instanceof", "new", "return", "throw", "typeof", "void", "yield", "await", "of", "if", "while", "for", "with"];
+  const missed = [];
+  for (const k of keywords) {
+    for (const dot of [".", "?."]) {
+      if (hidesEval(`o${dot}${k} / 2; const s = "/"; eval("1"); // "`)) missed.push(`o${dot}${k} / 2`);
+      if (hidesEval(`o${dot}${k}++ / 2; const s = "/"; eval("1"); // "`)) missed.push(`o${dot}${k}++ / 2`);
+    }
+    for (const k2 of ["if", "while", "for", "with"]) {
+      if (hidesEval(`o.${k2}(x) / 2; const s = "/"; eval("1"); // "`)) missed.push(`o.${k2}(x) / 2`);
+    }
+    if (hidesEval(`o.${k}(x) / 2; const s = "/"; eval("1"); // "`)) missed.push(`o.${k}(x) / 2`);
+  }
+  assert.deepEqual([...new Set(missed)], [], "member names after which the scan lost track of strings and comments");
+  const must = {
+    "export default then a regex with a quote": 'export default /"/; eval("1"); const q = "x"; const r = /"/;',
+    "export default then a regex with a single quote": "export default /'/; eval(\"1\"); const q = 'x'; const r = /'/;",
+    "export default then a regex with a backtick": "export default /`/; eval(\"1\"); const q = `x`; const r = /`/;",
+    "export default with a flag and a test": 'export default /"/g.test(1) || eval("1") || /"/;',
+    "extends then a regex": 'class A extends /"/ {} ; eval("1"); const q = "x"; const r = /"/;',
+    "extends then a regex with a single quote": "class A extends /'/ {} ; eval(\"1\"); const q = 'x'; const r = /'/;",
+    "return then a regex": 'function f() { return /"/; } eval("1"); const q = "x"; const r = /"/;',
+    "typeof then a regex": 'const t = typeof /"/; eval("1"); const q = "x"; const r = /"/;',
+  };
+  assert.deepEqual(Object.entries(must).filter(([, src]) => hidesEval(src)).map(([label]) => label), [], "forms that hide eval");
+  const may = {
+    "default as a member then division": "const a = o.default / 2 / 3;",
+    "extends as a member then division": "const a = o.extends / 2 / 3;",
+    "a regex after export default": "export default /abc/.test(s);",
+    "a regex after extends": "class A extends /abc/ {}",
+  };
+  assert.deepEqual(Object.entries(may).filter(([, src]) => refs(src).length > 0).map(([label]) => label), [], "forms the scan must accept");
+});
+
+test("invariant 4: a slash the scan cannot place, whose two readings disagree about strings or comments, is unreadable", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const must = {
+    "an object end divided, then a string and a comment": 'x = {} / 2; const s = "/"; eval("1"); // "',
+    "an object end divided, single quotes": "x = {} / 2; const s = '/'; eval(\"1\"); // '",
+    "an object end divided, a template": "x = {} / 2; const s = `/`; eval(\"1\"); const t = `",
+    "a prefix decrement before a slash": 'x = --/2; const s = "/"; eval("1"); // "',
+  };
+  assert.deepEqual(Object.entries(must).filter(([, src]) => refs(src).length === 0).map(([label]) => label), [], "forms the scan accepts but must reject");
+  const may = {
+    "a member divided after an object": "const o = {}; const n = o.a / 2;",
+    "a block then a plain regex": "function f() {}\n/abc/.test(s);",
+    "an object end divided, no strings": "x = {} / 2; const y = 3 / 4;",
+    "a block then a regex with a class": "if (a) {}\n/[a-z]+/.test(s);",
+  };
+  assert.deepEqual(Object.entries(may).filter(([, src]) => refs(src).length > 0).map(([label]) => label), [], "forms the scan must accept");
+});
+
+test("invariant 4: loader-capable modules are matched with their subpaths, and a hashbang line is a comment", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const must = {
+    "a static import of inspector/promises": 'import "inspector/promises";',
+    "a node: static import of inspector/promises": 'import "node:inspector/promises";',
+    "a dynamic import of inspector/promises": 'import("node:inspector/promises");',
+    "a named import of a subpath": 'import { Session } from "node:inspector/promises";',
+    "a subpath of worker_threads": 'import("worker_threads/x");',
+    "a require of a subpath": 'require("node:child_process/x");',
+  };
+  assert.deepEqual(Object.entries(must).filter(([, src]) => !refs(src).some((r) => r.includes("loader-capable"))).map(([label]) => label), [], "subpaths that pass as ordinary modules");
+  assert.deepEqual(refs('import "node:fs/promises";'), [], "an ordinary node: subpath stays accepted");
+  assert.deepEqual(refs('import "node:inspectorx";').filter((r) => r.includes("loader-capable")), [], "only a / boundary extends a module name");
+  const hash = refs('#!/usr/bin/env node "\neval("1");');
+  assert.ok(hash.some((r) => r.includes("eval")), "the code after a hashbang line is scanned");
+  assert.ok(!hash.some((r) => r.includes("unparseable")), "a quote in a hashbang line is not an unterminated string");
+  assert.deepEqual(refs("#!/usr/bin/env node\nconst a = 1;"), [], "a plain hashbang is accepted");
+  assert.ok(stripComments('#!/usr/bin/env node "\nimport x from "package";\n').includes("import"), "the import scanner also skips a hashbang line");
+});
+
 // Codex findings on PR #147, rounds on 4d5a005, a1dd371 and 4557d13.
 test("invariant 4: Codex findings - denied process names as reflective keys, a selected callee behind inner groups", () => {
   const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
