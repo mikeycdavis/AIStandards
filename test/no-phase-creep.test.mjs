@@ -772,6 +772,101 @@ test("invariant 4: round 5 - optional-chained computed reads, a slash after a re
 });
 
 // Round 6 review of 0bf32b7 (PR #147): a slash that automatic semicolon insertion or a prefix operator makes a regex.
+const ROUND11 = () => ({
+  where: { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } },
+});
+const round11 = (must, may, label) => {
+  const { where } = ROUND11();
+  const caught = (src) => externalReferences(src + "\n", where).length > 0;
+  assert.deepEqual(Object.entries(must).filter(([, src]) => !caught(src)).map(([k]) => k), [], "forms that hide a read: " + label);
+  assert.deepEqual(Object.entries(may).filter(([, src]) => caught(src)).map(([k]) => k), [], "clean forms that are reported: " + label);
+};
+
+test("invariant 4: round 11 - the third dot of a spread is not a member dot", () => {
+  round11({
+    "an object spread of a data: import": "var o = {...import(\"data:text/javascript,globalThis.__x=9\")};",
+    "an argument spread of a data: import": "f(...import(\"data:text/javascript,1\"));",
+    "an object spread of a node: import": "var o = {...import(\"node:child_process\")};",
+    "an object spread of a run-time import": "var o = {...import(u)};",
+    "an array spread of a data: import": "var a = [...import(\"data:text/javascript,1\")];",
+    "an array spread of Reflect.get": "var a = [...Reflect.get(globalThis, \"ev\" + \"al\")(\"__x=1; []\")];",
+    "an object spread of Reflect.get": "var o = {...Reflect.get(globalThis, \"ev\" + \"al\")(\"__x=1\")};",
+    "an argument spread of Reflect.get": "f(...Reflect.get(globalThis, \"ev\" + \"al\")(\"1\"));",
+    "a spread of a string-named Reflect.get": "var a = [...Reflect[\"get\"](globalThis, \"ev\" + \"al\")(\"1\")];",
+    "a spread of a process binding": "var a = [...Reflect.get(globalThis, \"binding\")];",
+  }, {
+    "a member named import": "const m = o.import(\"data:text/javascript,1\");",
+    "an optional member named import": "const m = o?.import(\"data:text/javascript,1\");",
+    "an object spread of a name": "const o = {...a, ...b};",
+    "an array spread of a name": "const x = [...a, ...b];",
+    "an argument spread of a call": "f(...g(1));",
+    "a member named Reflect": "const v = lib.Reflect;",
+  }, "spread");
+});
+
+test("invariant 4: round 11 - a bracket after a closing brace is a computed access", () => {
+  round11({
+    "an object literal with a built key": "{__proto__: globalThis}[\"ev\" + \"al\"](\"__x=2\");",
+    "an object literal with a template key": "{__proto__: globalThis}[`ev${\"al\"}`](\"1\");",
+    "an empty literal with a built Function": "{}[\"Fun\" + \"ction\"](\"return 7\")();",
+    "new on an object literal member": "new {__proto__: globalThis}[\"Fun\" + \"ction\"](\"return 7\");",
+    "a process literal with a template key": "{__proto__: process}[`bind${\"ing\"}`](\"fs\");",
+    "a process literal with an array key": "{__proto__: process}[[\"binding\"]](\"fs\");",
+    "an assigned object literal": "var x = {__proto__: globalThis}[\"ev\" + \"al\"](\"1\");",
+    "after an if block": "if (a) {}\n[\"Fun\" + \"ction\"](\"x\")();",
+    "after a function body": "function f() {}\n[\"ev\" + \"al\"](\"1\");",
+  }, {
+    "a class with a computed method": "class A { m() {}\n [Symbol.iterator]() { return []; } }",
+    "a class with a computed method after a field": "class B { x = 1;\n [k]() {} }",
+    "a class with two computed methods": "class C { [a]() {} [b]() {} }",
+    "an array statement after a block": "if (a) { b(); }\n[1, 2].forEach(f);",
+    "an array of names after a function": "function f() {}\nconst names = [\"x\", \"y\"];",
+    "an object member with a literal key": "const v = {a: 1}[\"a\"];",
+  }, "brace");
+});
+
+test("invariant 4: round 11 - of is a keyword only right after the binding of a for-of head", () => {
+  round11({
+    "a variable named of in a for update": "for (var of = globalThis, i = 0; i < 1; i++, of[\"ev\" + \"al\"](\"__x=1\")) {}",
+    "an arrow parameter named of in a for head": "for (var f = of => of[\"ev\" + \"al\"](\"__x=1\"), r = f(globalThis); ;) break;",
+    "a variable named of in a for initialiser": "for (var of = process, b = of[\"binding\"](\"fs\"); ;) break;",
+    "an iterable named of": "var of = globalThis;\nfor (var q of of[\"ev\" + \"al\"](\"[]\")) {}",
+    "a let named of": "for (let of = globalThis; ; of[\"ev\" + \"al\"](\"1\")) break;",
+  }, {
+    "of after a name": "for (const n of [\"eval\", \"binding\"]) log(n);",
+    "of after an assigned name": "for (n of [\"eval\"]) log(n);",
+    "of after a destructure": "for (const [a, b] of [[\"eval\", 1]]) log(a, b);",
+    "of after an object destructure": "for (const { a } of [{ a: \"eval\" }]) log(a);",
+    "for await of": "async function f() { for await (const n of [\"eval\"]) log(n); }",
+    "of after a member": "for (o.k of [\"eval\"]) log(o.k);",
+  }, "of");
+});
+
+test("invariant 4: round 11 - Reflect reached through a held or grouped global object", () => {
+  round11({
+    "a parenthesised global": "(globalThis).Reflect.get(globalThis, \"ev\" + \"al\")(\"1\");",
+    "a sequence holding the global": "(0, globalThis).Reflect.get(globalThis, \"ev\" + \"al\")(\"1\");",
+    "an array holding the global": "[globalThis][0].Reflect.get(globalThis, \"ev\" + \"al\")(\"1\");",
+    "the global reached through itself": "globalThis[\"globalThis\"].Reflect.get(globalThis, \"ev\" + \"al\")(\"1\");",
+    "a parenthesised optional global": "(globalThis)?.Reflect.get(globalThis, \"ev\" + \"al\")(\"1\");",
+  }, {
+    "a plain member named Reflect": "const v = lib.Reflect;",
+    "a bare Reflect with a literal key": "const v = Reflect.get(o, \"name\");",
+    "a parenthesised global Reflect with a literal key": "const v = (globalThis).Reflect.get(o, \"name\");",
+  }, "reflect");
+});
+
+test("invariant 4: round 11 - an await or yield group is a group", () => {
+  round11({
+    "an await group": "async function f() { return (await (o[k]))(1); }",
+    "a yield group": "function* g() { return (yield (o[k]))(1); }",
+    "an await call group": "async function f() { return (await o[k])(1); }",
+  }, {
+    "an await of a call": "async function f() { return (await g(1))(2); }",
+    "an await of a literal member": "async function f() { return (await o[\"a\"])(2); }",
+  }, "await");
+});
+
 test("invariant 4: round 10 - a keyword used as a member or variable name before a bracket is an operand", () => {
   const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
   const refs = (src) => externalReferences(src + "\n", where);
