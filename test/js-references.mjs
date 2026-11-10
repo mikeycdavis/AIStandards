@@ -567,8 +567,7 @@ function calleeAt(tokens, openAt) {
   if (!p) return null;
   const objectAt = (k) => (tokens[k] && tokens[k].t === "id" ? tokens[k].v : null);
   if (p.t === "id") {
-    const dot = tokens[open - 2];
-    const member = Boolean(dot && dot.t === "punct" && dot.v === ".");
+    const member = isMemberDot(tokens, open - 2);
     return { name: p.v, member, object: member ? objectAt(open - 3) : null };
   }
   if (p.t === "punct" && p.v === "]") {
@@ -774,8 +773,17 @@ function literalPreceder(tokens, idx) {
   if (!x || x.t !== "id" || x.inRegex || !LITERAL_PRECEDERS.has(x.v)) return false;
   if (isMemberDot(tokens, idx - 1) || isPrivateName(tokens, idx)) return false;
   if (x.v === "yield" || x.v === "await") return false;
-  if (x.v === "of") return inForHead(tokens, idx);
+  if (x.v === "of") return inForHead(tokens, idx) && endsForBinding(tokens, idx - 1);
   return true;
+}
+
+// Whether the token at idx ends the binding of a for-of head (a name, a member, a pattern or a group). A declaration
+// word, an operator, a comma or another keyword before it means the word after it is an operand, not the keyword of.
+function endsForBinding(tokens, idx) {
+  const x = tokens[idx];
+  if (!x || x.inRegex) return false;
+  if (x.t === "id") return !LITERAL_PRECEDERS.has(x.v) && x.v !== "var" && x.v !== "let" && x.v !== "const";
+  return x.t === "punct" && (x.v === "]" || x.v === "}" || x.v === ")");
 }
 
 // Whether the token at idx lies directly inside the parentheses of a for or for await head.
@@ -806,6 +814,37 @@ function inModuleList(tokens, k) {
   if (p.t === "id" && (p.v === "import" || p.v === "export")) return true;
   // import d, { ... } from "m": the comma follows the default binding
   return p.t === "punct" && p.v === "," && tokens[j - 2] && tokens[j - 2].t === "id" && tokens[j - 3] && tokens[j - 3].t === "id" && tokens[j - 3].v === "import";
+}
+
+// Whether a token can hold the global object in front of a member: a global object's name, or the end of a group or
+// an index (the global in parentheses, in a sequence, in an array). A plain other name is not one.
+function globalHolder(x) {
+  if (!x || x.inRegex) return false;
+  if (x.t === "id") return GLOBAL_OBJECTS.includes(x.v);
+  return x.t === "punct" && (x.v === ")" || x.v === "]");
+}
+
+// Whether the "[" at index j, which follows a "}", opens a computed access (an object literal's member) and not the
+// key of a method or a field in a class body ({ m() {} [k]() {} }).
+function braceAccess(tokens, j) {
+  if (!inClassBody(tokens, j)) return true;
+  const close = closeBracketIndex(tokens, j);
+  const a = close === -1 ? null : tokens[close + 1];
+  if (!a || a.inRegex) return true;
+  if (a.t === "punct" && (a.v === "=" || a.v === ";" || a.v === "}")) return false;
+  if (a.t === "punct" && a.v === "(") {
+    let depth = 0;
+    for (let q = close + 1; q < tokens.length; q += 1) {
+      const x = tokens[q];
+      if (x.inRegex || x.t !== "punct") continue;
+      if (x.v === "(" || x.v === "[" || x.v === "{") depth += 1;
+      else if (x.v === ")" || x.v === "]" || x.v === "}") {
+        depth -= 1;
+        if (depth === 0) return !(tokens[q + 1] && tokens[q + 1].t === "punct" && tokens[q + 1].v === "{");
+      }
+    }
+  }
+  return true;
 }
 
 // Whether the token at index k sits directly in a class body: the nearest unmatched "{" before it was opened by
@@ -852,7 +891,7 @@ function inAccessBracket(tokens, k) {
         // x?.[k] is tokenized x ? . [ k ]: step over the optional-chain dot to the object.
         const optional = tokens[j - 1] && tokens[j - 1].t === "punct" && tokens[j - 1].v === "." && tokens[j - 2] && tokens[j - 2].v === "?";
         const prev = optional ? tokens[j - 3] : tokens[j - 1];
-        const access = optional ? Boolean(prev) : prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !literalPreceder(tokens, j - 1)));
+        const access = optional ? Boolean(prev) : prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !literalPreceder(tokens, j - 1)) || (prev.t === "punct" && prev.v === "}" && braceAccess(tokens, j)));
         if (access) return true;
       }
     }
@@ -947,7 +986,7 @@ function stepOutOfGroups(tokens, close) {
     const open = openParenIndex(tokens, at + 1);
     if (open === -1) return at;
     const before = tokens[open - 1];
-    const groups = !before || (before.t === "punct" && ![")", "]"].includes(before.v)) || (before.t === "id" && literalPreceder(tokens, open - 1)) || closesStatementHead(tokens, open - 1);
+    const groups = !before || (before.t === "punct" && ![")", "]"].includes(before.v)) || (before.t === "id" && (literalPreceder(tokens, open - 1) || ((before.v === "await" || before.v === "yield") && !isMemberDot(tokens, open - 2)))) || closesStatementHead(tokens, open - 1);
     if (!groups) return at;
     at += 1;
   }
@@ -1093,7 +1132,7 @@ export function moduleReferences(source, options = {}) {
       // `x?.[k]` is tokenized `x ? . [ k ]`: step over the optional-chain dot to the object.
       const optional = tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "?";
       const prev = optional ? tokens[k - 3] : tokens[k - 1];
-      const access = optional ? Boolean(prev) : prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !literalPreceder(tokens, optional ? k - 3 : k - 1)));
+      const access = optional ? Boolean(prev) : prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !literalPreceder(tokens, optional ? k - 3 : k - 1)) || (prev.t === "punct" && prev.v === "}" && braceAccess(tokens, k)));
       const close = access ? closeBracketIndex(tokens, k) : -1;
       if (close !== -1) {
         const key = tokens.slice(k + 1, close);
@@ -1112,15 +1151,12 @@ export function moduleReferences(source, options = {}) {
     // different thing and is not analysed.
     const reflectThroughGlobal = (() => {
       if (tk.t === "id" && tk.v === "Reflect" && !tk.inRegex) {
-        const dot = tokens[k - 1];
-        if (!dot || dot.v !== ".") return true;
-        const obj = tokens[k - 2] && tokens[k - 2].v === "?" ? tokens[k - 3] : tokens[k - 2];
-        return Boolean(obj) && obj.t === "id" && GLOBAL_OBJECTS.includes(obj.v);
+        if (!isMemberDot(tokens, k - 1)) return true;
+        return globalHolder(tokens[tokens[k - 2] && tokens[k - 2].v === "?" ? k - 3 : k - 2]);
       }
       return tk.t === "str" && tk.v === "Reflect" && !tk.inRegex && tokens[k - 1] && tokens[k - 1].v === "[" && tokens[k + 1] && tokens[k + 1].v === "]" && (() => {
         const optionalDot = tokens[k - 2] && tokens[k - 2].v === "." && tokens[k - 3] && tokens[k - 3].v === "?";
-        const obj = optionalDot ? tokens[k - 4] : tokens[k - 2];
-        return Boolean(obj) && obj.t === "id" && GLOBAL_OBJECTS.includes(obj.v);
+        return globalHolder(optionalDot ? tokens[k - 4] : tokens[k - 2]);
       })();
     })();
     if (reflectThroughGlobal) {
@@ -1174,7 +1210,7 @@ export function moduleReferences(source, options = {}) {
       // string and a boolean cannot load anything. These two are the only member uses that are permitted.
       const n2 = tokens[k + 2];
       const n3 = tokens[k + 3];
-      const memberBefore = before && before.t === "punct" && before.v === ".";
+      const memberBefore = isMemberDot(tokens, k - 1);
       const named = memberBefore && ((after && after.v === "." && n2 && n2.t === "id" && n2.v === "name") || (after && after.v === "?" && n2 && n2.v === "." && n3 && n3.t === "id" && n3.v === "name"));
       const compared = memberBefore && after && (after.v === "=" || after.v === "!") && n2 && n2.v === "=";
       if (!classMethod && !named && !compared) dynamic("constructor used other than as a class's own method, compared, or named, which reaches Function");
@@ -1194,7 +1230,7 @@ export function moduleReferences(source, options = {}) {
     if (tk.t === "id" && TIMER_NAMES.includes(tk.v) && !inClause.has(k) && !isCalledAt(tokens, k)) {
       dynamic(`reference to ${tk.v} that is not a direct call`);
     }
-    const memberOf = tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === ".";
+    const memberOf = isMemberDot(tokens, k - 1);
     if (tk.t === "id" && tk.v === "require" && !isCalledAt(tokens, k)) {
       unreadable.push({ form: "require", specifier: `reference that is not a literal call at offset ${tk.s}` });
     }
@@ -1406,7 +1442,7 @@ function staticImports(tokens) {
   const out = [];
   for (let k = 0; k < tokens.length; k += 1) {
     const tk = tokens[k];
-    if (tk.t !== "id" || tk.v !== "import" || tk.inRegex || (tokens[k - 1] && tokens[k - 1].v === ".")) continue;
+    if (tk.t !== "id" || tk.v !== "import" || tk.inRegex || isMemberDot(tokens, k - 1)) continue;
     const after = tokens[k + 1];
     if (!after || (after.t === "punct" && (after.v === "(" || after.v === "."))) continue;
     if (after.t === "str") {
@@ -1444,7 +1480,7 @@ export function indirectNameReferences(source, names) {
   for (let k = 0; k < tokens.length; k += 1) {
     const tk = tokens[k];
     if (tk.t !== "id" || !names.includes(tk.v) || tk.inRegex || inImport.has(k)) continue;
-    const direct = tokens[k + 1] && tokens[k + 1].v === "(" && !tokens[k + 1].syn && !(tokens[k - 1] && tokens[k - 1].v === ".");
+    const direct = tokens[k + 1] && tokens[k + 1].v === "(" && !tokens[k + 1].syn && !isMemberDot(tokens, k - 1);
     if (!direct) out.push(`${tk.v} at offset ${tk.s}`);
   }
   return out;

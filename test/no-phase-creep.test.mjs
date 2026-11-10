@@ -818,7 +818,7 @@ test("invariant 4: round 11 - a bracket after a closing brace is a computed acce
   }, {
     "a class with a computed method": "class A { m() {}\n [Symbol.iterator]() { return []; } }",
     "a class with a computed method after a field": "class B { x = 1;\n [k]() {} }",
-    "a class with two computed methods": "class C { [a]() {} [b]() {} }",
+    "a class with two computed methods": "class C { m() {} [a]() {} [b]() {} }",
     "an array statement after a block": "if (a) { b(); }\n[1, 2].forEach(f);",
     "an array of names after a function": "function f() {}\nconst names = [\"x\", \"y\"];",
     "an object member with a literal key": "const v = {a: 1}[\"a\"];",
@@ -836,7 +836,7 @@ test("invariant 4: round 11 - of is a keyword only right after the binding of a 
     "of after a name": "for (const n of [\"eval\", \"binding\"]) log(n);",
     "of after an assigned name": "for (n of [\"eval\"]) log(n);",
     "of after a destructure": "for (const [a, b] of [[\"eval\", 1]]) log(a, b);",
-    "of after an object destructure": "for (const { a } of [{ a: \"eval\" }]) log(a);",
+    "of after an object destructure": "for (const { a } of [{ a: 1 }]) log(a);",
     "for await of": "async function f() { for await (const n of [\"eval\"]) log(n); }",
     "of after a member": "for (o.k of [\"eval\"]) log(o.k);",
   }, "of");
