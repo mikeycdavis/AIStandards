@@ -255,7 +255,7 @@ and all source code, is scanned lexically, as described above. `misuse.safety-co
 (Standard 9) stays on the lexical layer; this standard does not move it.
 
 **A file the parser cannot read is unknown, not clean.** A syntax error in any document, a file that is not
-valid UTF-8 or begins with a UTF-16 byte order mark, a control character, a lone carriage return (not part of CRLF), a file past the 512 KiB read
+valid UTF-8 or begins with a UTF-16 byte order mark, a control character, a lone carriage return (not part of CRLF) in a YAML file, a file past the 512 KiB read
 bound, an undefined alias, an empty JSON document, a parser exception and an unreadable file each make that one file *unknown* for `promptsec.prompt-is-versioned-artifact`
 and `promptsec.no-inline-system-prompt`. Unknown is never a pass and is not a finding of its own. The file
 is not scanned as text instead, and in the first release no part of it is recovered, because a guess made after the parser

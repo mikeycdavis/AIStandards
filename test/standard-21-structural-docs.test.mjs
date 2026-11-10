@@ -94,7 +94,7 @@ test("the unparseable outcome is unknown, never a pass, with no lexical fallback
 
 test("every failure reason the reader can return has a cause in the Standard 21 unknown paragraph", () => {
   const para = SECTION.slice(SECTION.indexOf("A file the parser cannot read is unknown"), SECTION.indexOf("Named non-claims"));
-  for (const phrase of ["syntax error", "not valid UTF-8", "UTF-16 byte order mark", "control character", "lone carriage return", "512 KiB", "undefined alias", "empty JSON document", "parser exception", "unreadable file"])
+  for (const phrase of ["syntax error", "not valid UTF-8", "UTF-16 byte order mark", "control character", "lone carriage return (not part of CRLF) in a YAML file", "512 KiB", "undefined alias", "empty JSON document", "parser exception", "unreadable file"])
     assert.ok(para.includes(phrase), `cause named: ${phrase}`);
 });
 
