@@ -19,7 +19,7 @@ function isLineEnd(ch) {
 // One numeric literal (hex, binary, octal, decimal with an optional fraction and exponent, separators, bigint).
 // A number ends where the literal ends: 1..constructor is the number "1." then the member ".constructor".
 const NUMERIC_LITERAL = /0[xX][\da-fA-F_]+n?|0[bB][01_]+n?|0[oO][0-7_]+n?|(?:\d[\d_]*(?:\.[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?n?/y;
-const REGEX_KEYWORDS = new Set(["return", "typeof", "case", "do", "else", "in", "of", "void", "delete", "throw", "new", "yield", "await", "instanceof", "default", "extends"]);
+const REGEX_KEYWORDS = new Set(["return", "typeof", "case", "do", "else", "in", "of", "void", "delete", "throw", "new", "yield", "await", "instanceof", "default", "extends", "debugger", "break", "continue"]);
 
 // The keyword that ends the text, or null when it ends in another word or in a member name: o.of, o?.default and
 // o.new name properties, so a slash after them divides.
@@ -62,6 +62,13 @@ function postfixOperandText(text) {
   return false;
 }
 
+const NL_CHAR = String.fromCharCode(10);
+
+function hasLineEnd(text) {
+  for (let k = 0; k < text.length; k += 1) if (isLineEnd(text[k])) return true;
+  return false;
+}
+
 export function stripComments(source, keepStrings = false) {
   // Scans `source` as code from `start`. Inside a template literal's `${ ... }` the scan recurses, so an
   // interpolation is CODE (its imports are found, nested templates and comments inside it are handled)
@@ -79,10 +86,11 @@ export function stripComments(source, keepStrings = false) {
       if (c === "/" && d === "/") {
         while (i < n && !isLineEnd(source[i])) i += 1;
       } else if (c === "/" && d === "*") {
+        const commentStart = i;
         i += 2;
         while (i < n && !(source[i] === "*" && source[i + 1] === "/")) i += 1;
         i += 2;
-        out += " ";
+        out += hasLineEnd(source.slice(commentStart, i)) ? NL_CHAR : " "; // a comment with a line break counts as one
       } else if (c === "/") {
         // Regex literal or division? A slash after an identifier, number, `)` or `]` is division; after a
         // keyword such as `return`, after an operator or opener (`( , = : ? ! & | ; [ {`), after `}` or at
@@ -97,7 +105,7 @@ export function stripComments(source, keepStrings = false) {
         if (last === undefined) regex = true;
         else if (last === ")") regex = closesControlHead(before);
         else if (last === "]") regex = false;
-        else if ((last === "+" || last === "-") && before.endsWith(last + last) && postfixOperandText(before.slice(0, -2).trimEnd())) regex = false;
+        else if ((last === "+" || last === "-") && before.endsWith(last + last) && postfixOperandText(before.slice(0, -2).trimEnd()) && !hasLineEnd(before.slice(before.slice(0, -2).trimEnd().length, -2))) regex = false;
         else if (/[\w$]/.test(last)) regex = trailingKeyword(before) !== null;
         else regex = true;
         let j = i + 1;
@@ -250,6 +258,12 @@ function isMemberDot(toks, idx) {
   if (!x || x.t !== "punct" || x.v !== "." || x.inRegex) return false;
   const before = toks[idx - 1];
   return !(before && before.t === "punct" && before.v === "." && before.e === x.s);
+}
+
+// Whether a line terminator lies in source between the two offsets (a comment that spans lines holds one).
+function lineBreakBetween(source, from, to) {
+  for (let k = from; k < to; k += 1) if (isLineEnd(source[k])) return true;
+  return false;
 }
 
 // Whether only blanks and comments precede position i on its line (the token list ends before i).
@@ -425,16 +439,24 @@ function tokenizeOnce(source, divide, html) {
             if (regex && CONTEXTUAL_KEYWORDS.has(p.v)) ambiguousRegex = true;
           }
           else regex = false;
-          // After a postfix ++ / -- (two adjacent signs, the second after an operand) a slash divides. A prefix
-          // ++ / -- before a slash is not valid code, and a slash after a closing brace may be a block end or
-          // an object end: both are read as a regex and marked ambiguous, so the body is still scanned as code.
+          // After a postfix ++ / -- (two adjacent signs, the second after an operand on the SAME line: a line
+          // break before ++ / -- makes it a prefix operator) a slash divides. After a prefix ++ / -- the slash
+          // starts a regex (a\n++/x/.lastIndex). An ++ / -- with no operand at all is not valid code and is read
+          // both ways. A slash after a closing brace may be a block end or an object end, and a slash that starts a
+          // line after a string or a name may continue the expression (a division) or follow a statement that
+          // automatic semicolon insertion ended (import 'x'\n/re/, var q\n/re/): these are read both ways, and
+          // the regex reading's body is also scanned as code.
           if (p.t === "punct" && (p.v === "+" || p.v === "-")) {
             const p2 = toks[li - 1];
             if (p2 && p2.t === "punct" && p2.v === p.v && p2.e === p.s && !p2.inRegex) {
-              if (postfixOperandToken(toks, li - 2)) regex = false;
-              else ambiguousRegex = true;
+              if (!postfixOperandToken(toks, li - 2)) ambiguousRegex = true;
+              else if (lineBreakBetween(source, toks[li - 2].e, p2.s)) regex = true;
+              else regex = false;
             }
           } else if (p.t === "punct" && p.v === "}") {
+            ambiguousRegex = true;
+          } else if (!regex && (p.t === "str" || (p.t === "id" && !keywordUse(toks, li))) && lineBreakBetween(source, p.e, i)) {
+            regex = true;
             ambiguousRegex = true;
           }
         }
@@ -463,7 +485,8 @@ function tokenizeOnce(source, divide, html) {
           if (closed) {
             const bodyEnd = j;
             j += 1;
-            while (j < n && /[\w$]/.test(source[j])) j += 1;
+            // the flags of a regex that may be a division are left to be read as code (a/b/eval(1) divides by eval)
+            while (!ambiguousRegex && j < n && /[\w$]/.test(source[j])) j += 1;
             i = j;
             toks.push({ t: "regex", v: source.slice(s, j), s, e: j, ambiguous: ambiguousRegex, body: source.slice(s + 1, bodyEnd) });
             // A regex body is also read as code, toward detecting: its tokens follow the literal, flagged so

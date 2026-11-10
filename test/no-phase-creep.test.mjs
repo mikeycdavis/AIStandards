@@ -799,6 +799,8 @@ test("invariant 4: round 6 - a slash after a line break that ends a statement, o
     "a let without an initializer": "let q\n" + tail,
     "an exported var without an initializer": "export var q\n" + tail,
     "a string statement": "'use strict'\n" + tail,
+    "a division whose divisor reads as regex flags": "var a = 1, b = 2;\nvar x = a\n/b/eval(\"1\");",
+    "a division whose divisor reads as flags, then code": "var a = 1, b = 2, g = 3;\nvar x = a\n/b/g + eval(\"1\");",
   };
   assert.deepEqual(Object.entries(must).filter(([, src]) => hidden(src)).map(([label]) => label), [], "forms that hide eval");
   const may = {
