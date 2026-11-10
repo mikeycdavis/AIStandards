@@ -775,6 +775,31 @@ function inModuleList(tokens, k) {
   return p.t === "punct" && p.v === "," && tokens[j - 2] && tokens[j - 2].t === "id" && tokens[j - 3] && tokens[j - 3].t === "id" && tokens[j - 3].v === "import";
 }
 
+// Whether the token at index k lies inside the brackets of a computed member access (an "[" that follows an
+// operand), at any depth: the enclosing groups are walked outward and an array literal "[" does not count.
+function inAccessBracket(tokens, k) {
+  let depth = 0;
+  for (let j = k - 1; j >= 0; j -= 1) {
+    const t = tokens[j];
+    if (t.t !== "punct" || t.inRegex) continue;
+    if (t.v === ")" || t.v === "]" || t.v === "}") depth += 1;
+    else if (t.v === "(" || t.v === "[" || t.v === "{") {
+      if (depth > 0) {
+        depth -= 1;
+        continue;
+      }
+      if (t.v === "[" && !t.syn) {
+        // x?.[k] is tokenized x ? . [ k ]: step over the optional-chain dot to the object.
+        const optional = tokens[j - 1] && tokens[j - 1].t === "punct" && tokens[j - 1].v === "." && tokens[j - 2] && tokens[j - 2].v === "?";
+        const prev = optional ? tokens[j - 3] : tokens[j - 1];
+        const access = optional ? Boolean(prev) : prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !LITERAL_PRECEDERS.has(prev.v)));
+        if (access) return true;
+      }
+    }
+  }
+  return false;
+}
+
 function arrayElementStrings(tokens) {
   const out = new Set();
   const stack = [];
@@ -966,6 +991,12 @@ export function moduleReferences(source, options = {}) {
     };
     if (tk.t === "id" && DYNAMIC_CODE_NAMES.includes(tk.v)) dynamic(`reference to ${tk.v}, which runs source text`);
     if (tk.t === "id" && PROCESS_DENIED_NAMES.includes(tk.v) && !tk.inRegex) dynamic(`reference to ${tk.v}, which reaches internal modules or replaces the process`);
+    // A denied name anywhere inside the brackets of a computed member access names that member however it is
+    // wrapped: p[("binding")], p[["binding"]], p[1 ? "binding" : "y"], p[(0, "binding")], p[String("binding")].
+    // Every enclosing bracket is considered, so the string may sit at any depth of parentheses, arrays and calls.
+    if (tk.t === "str" && PROCESS_DENIED_NAMES.includes(tk.v) && inAccessBracket(tokens, k)) {
+      dynamic(`the string "${tk.v}" inside a computed member access naming a member that reaches internal modules or replaces the process`);
+    }
     if (tk.t === "str" && PROCESS_DENIED_NAMES.includes(tk.v) && !arrayElements.has(k)) {
       const before = tokens[k - 1];
       const after = tokens[k + 1];
