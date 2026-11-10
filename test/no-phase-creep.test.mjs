@@ -772,6 +772,34 @@ test("invariant 4: round 5 - optional-chained computed reads, a slash after a re
 });
 
 // Round 6 review of 0bf32b7 (PR #147): a slash that automatic semicolon insertion or a prefix operator makes a regex.
+test("invariant 4: round 7 - a quoted name in an import or export specifier list reads a denied process member", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const caught = (src) => refs(src).some((r) => /binding|_linkedBinding|execve|unparseable/.test(r));
+  const must = {};
+  for (const name of ["binding", "_linkedBinding", "execve"]) {
+    must["import { \"" + name + "\" as b } from node:process"] = "import { \"" + name + "\" as b } from \"node:process\";\nb(\"natives\");";
+    must["import { \"" + name + "\" as b } from process"] = "import { \"" + name + "\" as b } from \"process\";\nb(\"natives\");";
+    must["import { a, \"" + name + "\" as b } from"] = "import { a, \"" + name + "\" as b } from \"node:process\";";
+    must["import d, { \"" + name + "\" as b } from"] = "import d, { \"" + name + "\" as b } from \"node:process\";";
+    must["export { \"" + name + "\" as b } from"] = "export { \"" + name + "\" as b } from \"node:process\";";
+    must["export { \"" + name + "\" } from"] = "export { \"" + name + "\" } from \"node:process\";";
+    must["export { a, \"" + name + "\" } from"] = "export { a, \"" + name + "\" } from \"node:process\";";
+  }
+  must["dlopen is an identifier"] = "import { \"dlopen\" as d } from \"node:process\";\nd();";
+  assert.deepEqual(Object.entries(must).filter(([label, src]) => label !== "dlopen is an identifier" && !caught(src)).map(([label]) => label), [], "specifier forms that hide a denied process member");
+  // Adjacent: names that are not denied, a denied name only as an export alias, a string that is not in a specifier list.
+  const may = {
+    "a non-denied import name": "import { \"other\" as b } from \"node:process\";",
+    "a denied name as the exported alias of a local": "const x = 1;\nexport { x as \"binding\" };",
+    "a denied name as the import side of a plain list string": "const t = { a: 1, b: \"x\" };",
+    "a denied name in a call argument list": "log(a, \"binding\");",
+    "a denied name in a text constant": "const s = \"binding\";",
+    "a denied name in an array of names": "const names = [\"binding\", \"execve\"];",
+  };
+  assert.deepEqual(Object.entries(may).filter(([, src]) => caught(src)).map(([label]) => label), [], "clean forms that are reported");
+});
+
 test("invariant 4: round 6 - a slash after a line break that ends a statement, or after a prefix ++ / --, starts a regex", () => {
   const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
   const refs = (src) => externalReferences(src + "\n", where);
