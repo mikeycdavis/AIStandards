@@ -782,6 +782,72 @@ const round11 = (must, may, label) => {
   assert.deepEqual(Object.entries(may).filter(([, src]) => caught(src)).map(([k]) => k), [], "clean forms that are reported: " + label);
 };
 
+test("invariant 4: round 12 - from as a binding name in an import or export clause", () => {
+  round11({
+    "an import binding named from": "import from from \"node:child_process\";\nfrom.execSync(\"echo PWNED\");",
+    "a binding named from, then a named list": "import from, { a } from \"node:child_process\";",
+    "a binding named from from vm": "import from from \"node:vm\";",
+    "a namespace named from": "import * as from from \"node:child_process\";",
+    "an export of from from a loader": "export { from } from \"node:child_process\";",
+    "a binding named from and a name list": "import from, * as ns from \"node:worker_threads\";",
+  }, {
+    "an import binding named from of a clean module": "import from from \"node:fs\";\nfrom.readFileSync(\"x\");",
+    "a plain default import": "import fs from \"node:fs\";",
+    "a namespace import": "import * as p from \"node:path\";",
+    "an export of a name from a clean module": "export { join } from \"node:path\";",
+  }, "from");
+});
+
+test("invariant 4: round 12 - a class body is the brace that opens the class, not any brace in its heritage", () => {
+  round11({
+    "a heritage function with a brace block": "class A extends (function () { var g = function () {}[\"const\" + \"ructor\"](\"globalThis.PWNED = 42\")\n{}\n g(); return Object; })() {}",
+    "a heritage arrow with a built access": "class B extends (() => { return {}[\"ev\" + \"al\"](\"1\")\n{}\n })() {}",
+    "a heritage call holding a function": "class C extends f(function () { return {}[\"Fun\" + \"ction\"](\"1\")\n{}\n }) {}",
+    "a constructor call in a heritage function": "class D extends (function () { constructor(\"return 7\")\n{}\n return Object; })() {}",
+  }, {
+    "a derived class with a call heritage": "class E extends f(1) { m() {}\n [a]() {} }",
+    "a derived class with a name heritage": "class F extends G { m() {}\n [a]() {} constructor() { super(); } }",
+    "a class with a field and a method": "class H { x = 1;\n m() {} [k]() {} }",
+  }, "heritage");
+});
+
+test("invariant 4: round 12 - a quoted destructuring key is read like an identifier key", () => {
+  round11({
+    "a quoted Reflect key": "const { \"Reflect\": R } = globalThis;\nR.get(globalThis, \"ev\" + \"al\")(\"40+2\");",
+    "a single-quoted Reflect key": "const { 'Reflect': R } = self;\nR.get(self, k);",
+    "an assigned quoted Reflect key": "var R;\n({ \"Reflect\": R } = globalThis);\nR.get(globalThis, k);",
+    "a quoted require key": "const { \"require\": r } = module;\nr(\"child_process\");",
+    "a quoted require key in a function parameter": "function f({ \"require\": r }) { return r(\"child_process\"); }\nf(module);",
+    "a quoted createRequire key": "const { \"createRequire\": c } = m;\nc(__filename)(\"child_process\");",
+  }, {
+    "a quoted key that is not a loader": "const { \"name\": n } = o;",
+    "an unrelated quoted object key": "const o = { \"a\": 1, \"b\": 2 };",
+    "a quoted key naming a version": "const { \"version\": v } = process;",
+  }, "quoted key");
+});
+
+test("invariant 4: round 12 - the module instance members that run code", () => {
+  round11({
+    "module._compile": "module._compile(\"globalThis.PWNED = 1\", \"x.js\");",
+    "module string _compile": "module[\"_compile\"](\"globalThis.PWNED = 1\", \"x.js\");",
+    "Module._extensions": "Module._extensions[\".js\"](module, \"x.js\");",
+    "Module string _extensions": "Module[\"_extensions\"][\".js\"](module, \"x.js\");",
+    "module.load": "module.load(\"x.js\");",
+    "module string load": "module[\"load\"](\"x.js\");",
+    "Module.prototype.load": "Module.prototype.load.call(m, \"x.js\");",
+    "prototype string load": "Module.prototype[\"load\"].call(m, \"x.js\");",
+    "module optional load": "module?.load(\"x.js\");",
+    "Module.runMain": "Module.runMain(\"x.js\");",
+    "Module._preloadModules": "Module._preloadModules([\"x\"]);",
+  }, {
+    "a method named load on a plain object": "yaml.load(text);",
+    "a method named load defined": "const loader = { load(x) { return x; } };",
+    "a function named load": "function load(x) { return x; }\nload(1);",
+    "a cache load": "cache.load(\"x\");",
+    "a window load event": "window.addEventListener(\"load\", f);",
+  }, "module members");
+});
+
 test("invariant 4: round 11 - the third dot of a spread is not a member dot", () => {
   round11({
     "an object spread of a data: import": "var o = {...import(\"data:text/javascript,globalThis.__x=9\")};",
