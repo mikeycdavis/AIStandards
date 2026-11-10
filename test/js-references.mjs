@@ -567,11 +567,16 @@ function readUrlConstruction(tokens, open, offset, specifiers, unreadable) {
 //   * `.constructor` and `{ constructor: C }` (it reaches Function); only a class's own `constructor(...)`
 //     method is permitted;
 //   * a timer whose first argument is not a function expression;
-//   * a computed member that is called, or taken from the global scope, with a key built at run time.
+//   * a computed member that is called, or taken from the global scope, with a key built at run time, also
+//     when the access is wrapped in grouping parentheses (`(o[k])(x)`);
+//   * `process.getBuiltinModule` (DYNAMIC_CODE_NAMES): it returns a built-in module without an import or a
+//     require, so the loader-capable module rule above would never see it;
+//   * `Reflect.get` / `Reflect.getOwnPropertyDescriptor` with a key that is not one literal: a reflective lookup
+//     by a name built at run time is the same as a computed access.
 // A file that legitimately needs one of these is named, with its reason and the exact calls reviewed, on the
 // allowlist in no-phase-creep.test.mjs; nothing else is exempt. The boundary of reading text is that a name
 // assembled at run time never reaches a loader without one of the denied constructs above.
-const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH", "dlopen", "_load", "_resolveFilename"];
+const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH", "dlopen", "_load", "_resolveFilename", "getBuiltinModule"];
 export const LOADER_CAPABLE_MODULES = ["child_process", "worker_threads", "vm", "module", "cluster", "repl", "inspector", "wasi", "v8", "trace_events", "async_hooks"];
 const TIMER_NAMES = ["setTimeout", "setInterval", "setImmediate"];
 
@@ -623,6 +628,39 @@ function closeBracketIndex(tokens, open) {
     }
   }
   return -1;
+}
+
+// The index of the `(` that matches the `)` at `close`, or -1.
+function openParenIndex(tokens, close) {
+  let depth = 0;
+  for (let k = close; k >= 0; k -= 1) {
+    const t = tokens[k];
+    if (t.inRegex || t.t !== "punct") continue;
+    if (t.v === ")" || t.v === "]" || t.v === "}") depth += 1;
+    else if (t.v === "(" || t.v === "[" || t.v === "{") {
+      depth -= 1;
+      if (depth === 0) return t.v === "(" ? k : -1;
+    }
+  }
+  return -1;
+}
+
+// The index of the last token of a member access that is wrapped in grouping parentheses: from the `]` at
+// `close`, step over every following `)` whose `(` only groups (it is not a call's or a control head's
+// argument list: the token before it is not an identifier other than a keyword that takes an expression, a
+// string, a number or a closing delimiter). `((fn)[key])("code")` is read as `fn[key]("code")`.
+function stepOutOfGroups(tokens, close) {
+  let at = close;
+  for (;;) {
+    const next = tokens[at + 1];
+    if (!next || next.t !== "punct" || next.v !== ")" || next.inRegex) return at;
+    const open = openParenIndex(tokens, at + 1);
+    if (open === -1) return at;
+    const before = tokens[open - 1];
+    const groups = !before || (before.t === "punct" && ![")", "]"].includes(before.v)) || (before.t === "id" && LITERAL_PRECEDERS.has(before.v));
+    if (!groups) return at;
+    at += 1;
+  }
 }
 
 // Whether the token at `k` is directly called: `x(...)` or `x?.(...)`.
@@ -690,9 +728,17 @@ export function moduleReferences(source, options = {}) {
       if (close !== -1) {
         const key = tokens.slice(k + 1, close);
         const literalKey = key.length === 1 && (key[0].t === "str" || key[0].t === "num");
-        if (!literalKey && isCalledAt(tokens, close)) dynamic("a computed member called, whose name is built at run time");
+        if (!literalKey && isCalledAt(tokens, stepOutOfGroups(tokens, close))) dynamic("a computed member called, whose name is built at run time");
         else if (!literalKey && prev.t === "id" && GLOBAL_OBJECTS.includes(prev.v)) dynamic(`computed access on ${prev.v} with a key built at run time`);
       }
+    }
+    // `Reflect.get(target, key)` is a computed access spelled as a call: its key must be one string or number
+    // literal (a literal that names a code-running member is reported by the string rule above).
+    if (tk.t === "id" && tk.v === "Reflect" && !tk.inRegex && tokens[k + 1] && tokens[k + 1].v === "." && tokens[k + 2] && tokens[k + 2].t === "id" && ["get", "getOwnPropertyDescriptor"].includes(tokens[k + 2].v) && tokens[k + 3] && tokens[k + 3].v === "(" && !tokens[k + 3].syn) {
+      const reflected = callArguments(tokens, k + 3);
+      const key = reflected && reflected[1];
+      const literalKey = Boolean(key) && key.length === 1 && (key[0].t === "str" || key[0].t === "num");
+      if (!literalKey) dynamic(`Reflect.${tokens[k + 2].v} with a key that is not one literal`);
     }
     if (tk.t === "id" && tk.v === "binding" && tokens[k - 1] && tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "process") {
       dynamic("process.binding, which reaches internal modules");
@@ -929,6 +975,34 @@ export function directCallTexts(source, names) {
     const info = {};
     if (callArguments(tokens, open, info) === null) continue;
     out.push(tokens.slice(k, info.end + 1).map((t) => (t.t === "str" ? JSON.stringify(t.v) : t.v)).join(" "));
+  }
+  return out;
+}
+
+/**
+ * Every reference to one of `names` in `source` that is not a direct call `name(...)` and not part of an import
+ * clause: an alias (`const a = spawnSync`), `.call` / `.apply` / `.bind`, an optional or parenthesised call, a
+ * value passed on or listed, a re-export. An allowlist entry records the direct calls a reviewer read
+ * (directCallTexts); any other way of reaching the same function is a call nobody read.
+ */
+export function indirectNameReferences(source, names) {
+  const { tokens } = tokenize(source);
+  const inImport = new Set();
+  for (let k = 0; k < tokens.length; k += 1) {
+    const tk = tokens[k];
+    if (tk.t !== "id" || tk.v !== "import" || tk.inRegex || (tokens[k - 1] && tokens[k - 1].v === ".")) continue;
+    // the clause runs to the `from` that precedes the specifier string, or to the string of a bare `import "x"`
+    for (let j = k + 1; j < tokens.length; j += 1) {
+      inImport.add(j);
+      if (tokens[j].t === "str" || tokens[j].t === "punct" && tokens[j].v === ";") break;
+    }
+  }
+  const out = [];
+  for (let k = 0; k < tokens.length; k += 1) {
+    const tk = tokens[k];
+    if (tk.t !== "id" || !names.includes(tk.v) || tk.inRegex || inImport.has(k)) continue;
+    const direct = tokens[k + 1] && tokens[k + 1].v === "(" && !tokens[k + 1].syn && !(tokens[k - 1] && tokens[k - 1].v === ".");
+    if (!direct) out.push(`${tk.v} at offset ${tk.s}`);
   }
   return out;
 }

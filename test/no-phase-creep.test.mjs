@@ -17,7 +17,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { REPO, cli, validate, fixture } from "./helpers.mjs";
-import { externalReferences, directCallTexts } from "./js-references.mjs";
+import { externalReferences, directCallTexts, indirectNameReferences } from "./js-references.mjs";
 
 const read = (rel) => fs.readFileSync(path.join(REPO, rel), "utf8");
 const exists = (rel) => fs.existsSync(path.join(REPO, rel));
@@ -136,6 +136,7 @@ function runtimeOffenders(root, allowlist = RUNTIME_ALLOWLIST) {
           found = found.filter((o) => !allowed.modules.some((m) => o.startsWith("import " + m + " is a loader-capable module")));
           const calls = directCallTexts(text, allowed.names);
           if (JSON.stringify(calls) !== JSON.stringify(allowed.calls)) found.push("the reviewed calls changed: " + JSON.stringify(calls));
+          for (const ref of indirectNameReferences(text, allowed.names)) found.push("a reviewed name is used other than as a direct call (not a direct call): " + ref);
         }
         for (const o of found) out.push(rel + ": " + o);
       }
@@ -404,6 +405,80 @@ test("dynamic-code loaders are unreadable references: eval, Function, vm, timers
     "a class with a Script name that is not constructed": "const Script = 1;",
   };
   for (const [label, src] of Object.entries(may)) assert.deepEqual(refs(src + "\n"), [], "must be accepted: " + label);
+});
+
+// ST-57 (#119): three loader forms the contract above did not reject (found by audit of develop 94b05f7, and
+// raised as open review threads on PR #138). Each is a way to run or load code that the scan reads as inert.
+test("invariant 4: built-in module access without an import, reflective lookup with a built key, and a parenthesised computed callee are offenders", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const must = {
+    "process.getBuiltinModule of a loader-capable module": 'const cp = process.getBuiltinModule("child_process"); cp.execSync("x");',
+    "process.getBuiltinModule of a harmless module (the loader entry point itself is denied)": 'const fs = process.getBuiltinModule("node:fs");',
+    "process.getBuiltinModule with a built name": "const m = process.getBuiltinModule(name);",
+    "getBuiltinModule held": "const g = process.getBuiltinModule;",
+    "getBuiltinModule optionally called": 'process.getBuiltinModule?.("vm");',
+    "getBuiltinModule as a computed string": 'const m = process["getBuiltinModule"]("vm");',
+    "Reflect.get of a global with a joined name": 'Reflect.get(globalThis, ["ev", "al"].join(""))("import(\\"package\\")");',
+    "Reflect.get of a global with a variable key": "const f = Reflect.get(globalThis, name);",
+    "Reflect.get of an object with a concatenated key": 'const f = Reflect.get(o, "ev" + "al");',
+    "Reflect.get with a spread argument list": "const f = Reflect.get(...args);",
+    "Reflect.get with one argument": "const f = Reflect.get(o);",
+    "Reflect.getOwnPropertyDescriptor with a built key": "const d = Reflect.getOwnPropertyDescriptor(globalThis, key);",
+    "a parenthesised computed callee": 'const [key] = ["constructor"]; ((() => {})[key])("return import(\'package\')")();',
+    "a doubly parenthesised computed callee": "((registry[name]))(1);",
+    "a parenthesised computed callee called optionally": "(registry[name])?.(1);",
+    "a parenthesised computed callee that is constructed": "new (registry[name])(1);",
+    "a parenthesised computed callee after return": "function f() { return (registry[name])(1); }",
+    "a parenthesised computed callee with a call inside the group": "(make()[name])(1);",
+  };
+  assert.deepEqual(Object.entries(must).filter(([, src]) => refs(src).length === 0).map(([label]) => label), [], "forms the scan accepts but must reject");
+  const may = {
+    "Reflect.get with a string literal key": 'const v = Reflect.get(o, "kind");',
+    "Reflect.get with a numeric literal key": "const v = Reflect.get(o, 0);",
+    "Reflect.has with a variable key (no value is returned)": "const b = Reflect.has(o, key);",
+    "a parenthesised computed read that is not called": "const x = (items[i]);",
+    "a parenthesised literal-key callee": 'const r = (handlers["start"])(1);',
+    "a computed read passed as an argument to a call": "const r = run(items[i])(1);",
+    "a computed read in a control head followed by a parenthesised statement": "if (items[i]) (done)(1);",
+    "the word getBuiltinModule in a comment": "// process.getBuiltinModule is denied\nconst a = 1;",
+    "an identifier that merely contains the word": "const getBuiltinModules = 1;",
+  };
+  for (const [label, src] of Object.entries(may)) assert.deepEqual(refs(src), [], "must be accepted: " + label);
+});
+
+test("an allowlisted file may not alias, pass on or re-call a reviewed name: only the recorded direct calls are allowed", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "aistd-alias-"));
+  try {
+    const put = (text) => {
+      const full = path.join(root, "scripts", "run.mjs");
+      fs.mkdirSync(path.dirname(full), { recursive: true });
+      fs.writeFileSync(full, text);
+    };
+    const list = [{ file: "scripts/run.mjs", reason: "starts the one reviewed child process", modules: ["node:child_process"], names: ["spawnSync"], calls: ['spawnSync ( "git" , [ "status" ] )'] }];
+    const header = 'import { spawnSync } from "node:child_process";\n';
+    const reviewed = 'spawnSync("git", ["status"]);\n';
+    put(header + reviewed);
+    assert.deepEqual(runtimeOffenders(root, list), [], "the reviewed form is clean");
+    const extra = {
+      "an alias then a call": 'const again = spawnSync;\nagain(process.execPath, ["--eval", "import(\\"package\\")"]);\n',
+      ".call": 'spawnSync.call(null, "git", ["log"]);\n',
+      ".apply": 'spawnSync.apply(null, ["git", ["log"]]);\n',
+      "an optional call": 'spawnSync?.("git", ["log"]);\n',
+      "a parenthesised call": '(spawnSync)("git", ["log"]);\n',
+      "passed on as a value": "run(spawnSync);\n",
+      "held in a list": 'const fns = [spawnSync];\nfns[0]("git", ["log"]);\n',
+      "re-exported": "export { spawnSync };\n",
+    };
+    const missed = [];
+    for (const [label, add] of Object.entries(extra)) {
+      put(header + reviewed + add);
+      if (!runtimeOffenders(root, list).some((o) => o.includes("spawnSync") && o.includes("not a direct call"))) missed.push(label);
+    }
+    assert.deepEqual(missed, [], "forms the allowlist accepts but must reject");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 
 // A file at <root>/scripts/a.mjs, for the scan's own tests. The injected file system says every path exists

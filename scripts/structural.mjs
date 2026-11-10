@@ -429,6 +429,17 @@ function propsBefore(text, start, anchorName, hasTag) {
       while (begin > 0 && !isWs(text[begin - 1]) && !FLOW_INDICATORS.includes(text[begin - 1])) begin -= 1;
     }
     if (begin === end) break;
+    // JSON-compatible flow YAML allows a value to follow a quoted key's colon with no blank
+    // (`{"k":!!str v}`): the word then starts at the key's closing quote, and the property begins after
+    // the colon. The colon must follow a closing quote and be followed by `!` or `&`.
+    if (text[begin] !== "!" && text[begin] !== "&") {
+      for (let c = begin + 1; c < end - 1; c += 1) {
+        if (text[c] === ":" && (text[c - 1] === '"' || text[c - 1] === "'") && (text[c + 1] === "!" || text[c + 1] === "&")) {
+          begin = c + 1;
+          break;
+        }
+      }
+    }
     const word = text.slice(begin, end);
     if (word[0] === "&" && anchorName !== null && anchor === null && word === `&${anchorName}`) {
       anchor = { name: anchorName, offset: begin };
