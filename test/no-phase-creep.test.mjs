@@ -820,6 +820,7 @@ test("invariant 4: round 10 - Reflect reached through a global object is analyse
     "globalThis string Reflect, run-time key": "globalThis[\"Reflect\"].get(process, k);",
     "globalThis string Reflect, process binding": "globalThis[\"Reflect\"].get(process, \"binding\");",
     "globalThis.Reflect, descriptor": "globalThis.Reflect.getOwnPropertyDescriptor(process, \"binding\").value(\"fs\");",
+    "globalThis optional string Reflect, built key": "globalThis?.[\"Reflect\"].get(globalThis, \"ev\" + \"al\")(\"1\");",
     "globalThis.Reflect held": "const R = globalThis.Reflect;",
     "globalThis.Reflect, method not called": "const g = globalThis.Reflect.get;",
   };

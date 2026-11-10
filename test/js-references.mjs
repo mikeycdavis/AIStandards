@@ -763,6 +763,39 @@ const TIMER_NAMES = ["setTimeout", "setInterval", "setImmediate"];
 // data. A `[` after an identifier, a string, a number or a closing delimiter is a member access (`o["eval"]`),
 // not a literal, and a `[` after a keyword such as `return` is one.
 const LITERAL_PRECEDERS = new Set([...REGEX_KEYWORDS, "default", "export", "else", "extends"]);
+
+// Whether the token at idx is a word after which a "[" or "(" starts a literal or a group (return [..], typeof [..],
+// in [..]) and not an operand. A keyword-named member (ns.default[k], o.in[k], o?.of[k]), a private name (this.#in[k])
+// and the words of, yield and await used as variable names (const of = process; of["binding"]) are operands: an
+// "[" after them is a computed access. Of is a keyword only in a for head, and yield and await are read as names,
+// so an array right after one of them is read as an access, toward detecting.
+function literalPreceder(tokens, idx) {
+  const x = tokens[idx];
+  if (!x || x.t !== "id" || x.inRegex || !LITERAL_PRECEDERS.has(x.v)) return false;
+  if (isMemberDot(tokens, idx - 1) || isPrivateName(tokens, idx)) return false;
+  if (x.v === "yield" || x.v === "await") return false;
+  if (x.v === "of") return inForHead(tokens, idx);
+  return true;
+}
+
+// Whether the token at idx lies directly inside the parentheses of a for or for await head.
+function inForHead(tokens, idx) {
+  let depth = 0;
+  for (let j = idx - 1; j >= 0; j -= 1) {
+    const t = tokens[j];
+    if (t.t !== "punct" || t.inRegex) continue;
+    if (t.v === ")" || t.v === "]" || t.v === "}") depth += 1;
+    else if (t.v === "(" || t.v === "[" || t.v === "{") {
+      if (depth > 0) depth -= 1;
+      else {
+        if (t.v !== "(") return false;
+        const p = tokens[j - 1];
+        return Boolean(p) && p.t === "id" && (p.v === "for" || (p.v === "await" && tokens[j - 2] && tokens[j - 2].v === "for"));
+      }
+    }
+  }
+  return false;
+}
 // Whether the token at index k (a "{" or a ",") lies in the braces of an import or export list.
 function inModuleList(tokens, k) {
   let j = k;
@@ -773,6 +806,33 @@ function inModuleList(tokens, k) {
   if (p.t === "id" && (p.v === "import" || p.v === "export")) return true;
   // import d, { ... } from "m": the comma follows the default binding
   return p.t === "punct" && p.v === "," && tokens[j - 2] && tokens[j - 2].t === "id" && tokens[j - 3] && tokens[j - 3].t === "id" && tokens[j - 3].v === "import";
+}
+
+// Whether the token at index k sits directly in a class body: the nearest unmatched "{" before it was opened by
+// a class (class A {, class B extends C {, class {). Scanning back from that brace to a class keyword stops at a
+// statement or block boundary, so a heritage that holds a brace or a semicolon is not recognised (it fails closed).
+function inClassBody(tokens, k) {
+  let depth = 0;
+  let open = -1;
+  for (let j = k - 1; j >= 0; j -= 1) {
+    const t = tokens[j];
+    if (t.t !== "punct" || t.inRegex) continue;
+    if (t.v === ")" || t.v === "]" || t.v === "}") depth += 1;
+    else if (t.v === "(" || t.v === "[" || t.v === "{") {
+      if (depth > 0) depth -= 1;
+      else {
+        open = t.v === "{" ? j : -1;
+        break;
+      }
+    }
+  }
+  if (open === -1) return false;
+  for (let j = open - 1; j >= 0; j -= 1) {
+    const t = tokens[j];
+    if (t.t === "punct" && !t.inRegex && (t.v === "{" || t.v === "}" || t.v === ";")) return false;
+    if (t.t === "id" && !t.inRegex && t.v === "class" && !isMemberDot(tokens, j - 1) && !isPrivateName(tokens, j)) return true;
+  }
+  return false;
 }
 
 // Whether the token at index k lies inside the brackets of a computed member access (an "[" that follows an
@@ -792,7 +852,7 @@ function inAccessBracket(tokens, k) {
         // x?.[k] is tokenized x ? . [ k ]: step over the optional-chain dot to the object.
         const optional = tokens[j - 1] && tokens[j - 1].t === "punct" && tokens[j - 1].v === "." && tokens[j - 2] && tokens[j - 2].v === "?";
         const prev = optional ? tokens[j - 3] : tokens[j - 1];
-        const access = optional ? Boolean(prev) : prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !LITERAL_PRECEDERS.has(prev.v)));
+        const access = optional ? Boolean(prev) : prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !literalPreceder(tokens, j - 1)));
         if (access) return true;
       }
     }
@@ -808,7 +868,7 @@ function arrayElementStrings(tokens) {
     if (tk.inRegex) continue;
     if (tk.t === "punct" && (tk.v === "(" || tk.v === "[" || tk.v === "{")) {
       const prev = tokens[k - 1];
-      let literal = tk.v === "[" && (!prev || (prev.t === "punct" && ![")", "]", "}"].includes(prev.v) && !isMemberDot(tokens, k - 1)) || (prev.t === "id" && LITERAL_PRECEDERS.has(prev.v)));
+      let literal = tk.v === "[" && (!prev || (prev.t === "punct" && ![")", "]", "}"].includes(prev.v) && !isMemberDot(tokens, k - 1)) || (prev.t === "id" && literalPreceder(tokens, k - 1)));
       if (literal) {
         // `{ ["eval"]: true }` and `{ ["run"]() {} }`: a bracket group in key position that is followed by `:`
         // or `(` is a computed property name, whose string names a member; it is not a list of names.
@@ -887,7 +947,7 @@ function stepOutOfGroups(tokens, close) {
     const open = openParenIndex(tokens, at + 1);
     if (open === -1) return at;
     const before = tokens[open - 1];
-    const groups = !before || (before.t === "punct" && ![")", "]"].includes(before.v)) || (before.t === "id" && LITERAL_PRECEDERS.has(before.v)) || closesStatementHead(tokens, open - 1);
+    const groups = !before || (before.t === "punct" && ![")", "]"].includes(before.v)) || (before.t === "id" && literalPreceder(tokens, open - 1)) || closesStatementHead(tokens, open - 1);
     if (!groups) return at;
     at += 1;
   }
@@ -1033,7 +1093,7 @@ export function moduleReferences(source, options = {}) {
       // `x?.[k]` is tokenized `x ? . [ k ]`: step over the optional-chain dot to the object.
       const optional = tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "?";
       const prev = optional ? tokens[k - 3] : tokens[k - 1];
-      const access = optional ? Boolean(prev) : prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !LITERAL_PRECEDERS.has(prev.v)));
+      const access = optional ? Boolean(prev) : prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !literalPreceder(tokens, optional ? k - 3 : k - 1)));
       const close = access ? closeBracketIndex(tokens, k) : -1;
       if (close !== -1) {
         const key = tokens.slice(k + 1, close);
@@ -1047,11 +1107,28 @@ export function moduleReferences(source, options = {}) {
     // written `Reflect.get`, `Reflect?.get` or `Reflect["get"]`, and the call `(...)` or `?.(...)`. The method taken
     // without being called (held, passed to Reflect.apply), a computed method (`Reflect[m]`) and `Reflect` itself
     // held or destructured are reported: each reaches the lookup without a key anyone can read here.
-    if (tk.t === "id" && tk.v === "Reflect" && !tk.inRegex && !(tokens[k - 1] && tokens[k - 1].v === ".")) {
-      let p = k + 1;
+    // Reflect is analysed when it is the bare name and also when it is reached through a global object
+    // (globalThis.Reflect, self?.Reflect, window["Reflect"]): a member named Reflect of any other object is a
+    // different thing and is not analysed.
+    const reflectThroughGlobal = (() => {
+      if (tk.t === "id" && tk.v === "Reflect" && !tk.inRegex) {
+        const dot = tokens[k - 1];
+        if (!dot || dot.v !== ".") return true;
+        const obj = tokens[k - 2] && tokens[k - 2].v === "?" ? tokens[k - 3] : tokens[k - 2];
+        return Boolean(obj) && obj.t === "id" && GLOBAL_OBJECTS.includes(obj.v);
+      }
+      return tk.t === "str" && tk.v === "Reflect" && !tk.inRegex && tokens[k - 1] && tokens[k - 1].v === "[" && tokens[k + 1] && tokens[k + 1].v === "]" && (() => {
+        const optionalDot = tokens[k - 2] && tokens[k - 2].v === "." && tokens[k - 3] && tokens[k - 3].v === "?";
+        const obj = optionalDot ? tokens[k - 4] : tokens[k - 2];
+        return Boolean(obj) && obj.t === "id" && GLOBAL_OBJECTS.includes(obj.v);
+      })();
+    })();
+    if (reflectThroughGlobal) {
+      const reflectEnd = tk.t === "id" ? k : k + 1;
+      let p = reflectEnd + 1;
       if (tokens[p] && tokens[p].v === "?" && tokens[p + 1] && tokens[p + 1].v === ".") p += 1;
       let method = null;
-      let last = k;
+      let last = reflectEnd;
       if (tokens[p] && tokens[p].t === "punct" && tokens[p].v === "." && tokens[p + 1] && tokens[p + 1].t === "id") {
         method = tokens[p + 1].v;
         last = p + 1;
@@ -1092,7 +1169,7 @@ export function moduleReferences(source, options = {}) {
     if (tk.t === "id" && tk.v === "constructor") {
       const before = tokens[k - 1];
       const after = tokens[k + 1];
-      const classMethod = before && before.t === "punct" && ["{", "}", ";"].includes(before.v) && after && after.t === "punct" && after.v === "(";
+      const classMethod = before && before.t === "punct" && ["{", "}", ";"].includes(before.v) && after && after.t === "punct" && after.v === "(" && inClassBody(tokens, k);
       // `x.constructor.name` and `x.constructor === Y` consume the value without keeping a reference to it: a
       // string and a boolean cannot load anything. These two are the only member uses that are permitted.
       const n2 = tokens[k + 2];
