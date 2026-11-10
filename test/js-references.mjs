@@ -653,8 +653,9 @@ function statementSpecifier(tokens, at, isImport) {
         return null;
       }
     } else if (tk.t === "id" && tk.v === "from" && depth === 0) {
+      // A from that is not followed by a string is a binding named from (import from from "x"): keep scanning.
       const spec = tokens[j + 1];
-      return spec && spec.t === "str" ? { spec: spec.v, end: j + 1 } : null;
+      if (spec && spec.t === "str") return { spec: spec.v, end: j + 1 };
     } else if (tk.t !== "id" && tk.t !== "str") {
       return null;
     }
@@ -748,7 +749,7 @@ function readUrlConstruction(tokens, open, offset, specifiers, unreadable) {
 // wherever they appear (process.binding, process?.binding, (process).binding, const { binding } = process, an
 // alias p.binding); as a string only as a computed member or a quoted key, because the word is common in text.
 const PROCESS_DENIED_NAMES = ["binding", "_linkedBinding", "execve"];
-const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH", "dlopen", "_load", "_resolveFilename", "getBuiltinModule"];
+const DYNAMIC_CODE_NAMES = ["_compile", "_extensions", "_preloadModules", "runMain", "eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH", "dlopen", "_load", "_resolveFilename", "getBuiltinModule"];
 // A module name, or a subpath of one (inspector/promises), with or without the node: prefix.
 export function isLoaderCapable(specifier) {
   const bare = specifier.startsWith("node:") ? specifier.slice(5) : specifier;
@@ -816,6 +817,29 @@ function inModuleList(tokens, k) {
   return p.t === "punct" && p.v === "," && tokens[j - 2] && tokens[j - 2].t === "id" && tokens[j - 3] && tokens[j - 3].t === "id" && tokens[j - 3].v === "import";
 }
 
+// Whether the string at index k is a quoted key in an object literal or a destructuring pattern ({ "x": v }).
+function quotedKeyAt(tokens, k) {
+  const tk = tokens[k];
+  const before = tokens[k - 1];
+  const after = tokens[k + 1];
+  return Boolean(tk) && tk.t === "str" && !tk.inRegex && Boolean(before) && Boolean(after) && before.t === "punct" && (before.v === "{" || before.v === ",") && after.t === "punct" && after.v === ":";
+}
+
+// The module-instance objects whose load and compile members run code: module.load(file), Module.prototype.load.
+const MODULE_OBJECTS = ["module", "Module", "prototype"];
+// Whether the id or string at index k names a member (o.load or o["load"], also o?.load) of one of those objects.
+function memberOfModuleObject(tokens, k) {
+  const tk = tokens[k];
+  let objAt = -1;
+  if (tk.t === "id" && isMemberDot(tokens, k - 1)) objAt = k - 2;
+  else if (tk.t === "str" && tokens[k - 1] && tokens[k - 1].v === "[" && tokens[k + 1] && tokens[k + 1].v === "]") objAt = k - 2;
+  else return false;
+  if (tokens[objAt] && tokens[objAt].v === "?" ) objAt -= 1;
+  else if (tokens[objAt] && tokens[objAt].v === "." && tokens[objAt - 1] && tokens[objAt - 1].v === "?") objAt -= 2;
+  const obj = tokens[objAt];
+  return Boolean(obj) && obj.t === "id" && MODULE_OBJECTS.includes(obj.v);
+}
+
 // Whether a token can hold the global object in front of a member: a global object's name, or the end of a group or
 // an index (the global in parentheses, in a sequence, in an array). A plain other name is not one.
 function globalHolder(x) {
@@ -866,8 +890,16 @@ function inClassBody(tokens, k) {
     }
   }
   if (open === -1) return false;
+  // From the brace back to the class keyword every group must be balanced: a brace that sits inside an open group
+  // of the heritage (class A extends (function () { ... }) {}) is not the brace that opens the class body.
+  let groups = 0;
   for (let j = open - 1; j >= 0; j -= 1) {
     const t = tokens[j];
+    if (t.t === "punct" && !t.inRegex && (t.v === ")" || t.v === "]")) groups += 1;
+    else if (t.t === "punct" && !t.inRegex && (t.v === "(" || t.v === "[")) {
+      if (groups === 0) return false;
+      groups -= 1;
+    }
     if (t.t === "punct" && !t.inRegex && (t.v === "{" || t.v === "}" || t.v === ";")) return false;
     if (t.t === "id" && !t.inRegex && t.v === "class" && !isMemberDot(tokens, j - 1) && !isPrivateName(tokens, j)) return true;
   }
@@ -888,15 +920,21 @@ function inAccessBracket(tokens, k) {
         continue;
       }
       if (t.v === "[" && !t.syn) {
-        // x?.[k] is tokenized x ? . [ k ]: step over the optional-chain dot to the object.
-        const optional = tokens[j - 1] && tokens[j - 1].t === "punct" && tokens[j - 1].v === "." && tokens[j - 2] && tokens[j - 2].v === "?";
-        const prev = optional ? tokens[j - 3] : tokens[j - 1];
-        const access = optional ? Boolean(prev) : prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !literalPreceder(tokens, j - 1)) || (prev.t === "punct" && prev.v === "}" && braceAccess(tokens, j)));
-        if (access) return true;
+        if (accessBracket(tokens, j).access) return true;
       }
     }
   }
   return false;
+}
+
+// Whether the [ at index k opens a member access (x[k], x?.[k], f()[k], {}[k]) rather than an array literal,
+// and the object token it is applied to. The one place this is decided.
+function accessBracket(tokens, k) {
+  // x?.[k] is tokenized x ? . [ k ]: step over the optional-chain dot to the object.
+  const optional = tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "?";
+  const prev = optional ? tokens[k - 3] : tokens[k - 1];
+  const access = optional ? Boolean(prev) : Boolean(prev) && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !literalPreceder(tokens, k - 1)) || (prev.t === "punct" && prev.v === "}" && braceAccess(tokens, k)));
+  return { access, prev };
 }
 
 function arrayElementStrings(tokens) {
@@ -1129,10 +1167,7 @@ export function moduleReferences(source, options = {}) {
       }
     }
     if (tk.t === "punct" && tk.v === "[" && !tk.syn) {
-      // `x?.[k]` is tokenized `x ? . [ k ]`: step over the optional-chain dot to the object.
-      const optional = tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "?";
-      const prev = optional ? tokens[k - 3] : tokens[k - 1];
-      const access = optional ? Boolean(prev) : prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !literalPreceder(tokens, optional ? k - 3 : k - 1)) || (prev.t === "punct" && prev.v === "}" && braceAccess(tokens, k)));
+      const { access, prev } = accessBracket(tokens, k);
       const close = access ? closeBracketIndex(tokens, k) : -1;
       if (close !== -1) {
         const key = tokens.slice(k + 1, close);
@@ -1154,6 +1189,7 @@ export function moduleReferences(source, options = {}) {
         if (!isMemberDot(tokens, k - 1)) return true;
         return globalHolder(tokens[tokens[k - 2] && tokens[k - 2].v === "?" ? k - 3 : k - 2]);
       }
+      if (quotedKeyAt(tokens, k) && tk.v === "Reflect") return true;
       return tk.t === "str" && tk.v === "Reflect" && !tk.inRegex && tokens[k - 1] && tokens[k - 1].v === "[" && tokens[k + 1] && tokens[k + 1].v === "]" && (() => {
         const optionalDot = tokens[k - 2] && tokens[k - 2].v === "." && tokens[k - 3] && tokens[k - 3].v === "?";
         return globalHolder(optionalDot ? tokens[k - 4] : tokens[k - 2]);
@@ -1234,6 +1270,14 @@ export function moduleReferences(source, options = {}) {
     if (tk.t === "id" && tk.v === "require" && !isCalledAt(tokens, k)) {
       unreadable.push({ form: "require", specifier: `reference that is not a literal call at offset ${tk.s}` });
     }
+    // { "require": r } takes require into the binding r (a quoted key bound to a name, then , } or =); a quoted key whose
+    // value is an expression (an arrow, a call, a string) only stores something under that key.
+    const boundValue = tokens[k + 2] && tokens[k + 2].t === "id" && tokens[k + 3] && tokens[k + 3].t === "punct" && [",", "}", "="].includes(tokens[k + 3].v);
+    if (tk.t === "str" && tk.v === "require" && quotedKeyAt(tokens, k) && boundValue) {
+      unreadable.push({ form: "require", specifier: `quoted key naming require at offset ${tk.s}` });
+    }
+    if (tk.t === "str" && tk.v === "createRequire" && !arrayElements.has(k)) unreadable.push({ form: "createRequire", specifier: `at offset ${tk.s}` });
+    if ((tk.t === "id" || tk.t === "str") && tk.v === "load" && !tk.inRegex && memberOfModuleObject(tokens, k)) dynamic("module load, which runs a file");
     if (tk.t === "str" && tk.v === "require" && tokens[k - 1] && tokens[k - 1].v === "[" && tokens[k + 1] && tokens[k + 1].v === "]" && !isCalledAt(tokens, k + 1)) {
       unreadable.push({ form: "require", specifier: `computed reference that is not a literal call at offset ${tk.s}` });
     }
