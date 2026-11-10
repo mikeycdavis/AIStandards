@@ -17,7 +17,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { REPO, cli, validate, fixture } from "./helpers.mjs";
-import { externalReferences, directCallTexts, indirectNameReferences, unreviewedImports } from "./js-references.mjs";
+import { externalReferences, directCallTexts, indirectNameReferences, unreviewedImports, stripComments } from "./js-references.mjs";
 
 const read = (rel) => fs.readFileSync(path.join(REPO, rel), "utf8");
 const exists = (rel) => fs.existsSync(path.join(REPO, rel));
@@ -514,6 +514,82 @@ test("an allowlisted file may not alias, pass on or re-call a reviewed name: onl
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
+});
+
+// Round 2 review of a1dd371 (PR #147): number literals that swallow a member chain, `for await` as a control
+// head, process members spelt around `process.binding`, and a grouped callee whose computed member is not last.
+test("invariant 4: number literals end before a member access, for await is a control head, process internals are denied however spelt, and a selected computed callee is called", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const must = {
+    "a number with an empty fraction, then a member chain": '1..constructor.constructor("return process")();',
+    "a hex number, then a member chain": '0x1.constructor.constructor("return process")();',
+    "a bigint, then a member chain": '1n.constructor.constructor("return process")();',
+    "a separated number with an empty fraction, then a member chain": '1_0..constructor.constructor("return process")();',
+    "a decimal fraction, then a member chain": '1.0.constructor.constructor("return process")();',
+    "an exponent number, then a member chain": '1e3.constructor.constructor("return process")();',
+    "a leading-dot number, then a member chain": '.5.constructor.constructor("return process")();',
+    "process[\"binding\"]": 'const b = process["binding"]("natives");',
+    "process?.binding": 'const b = process?.binding("natives");',
+    "(process).binding": 'const b = (process).binding("natives");',
+    "binding destructured from process": 'const { binding } = process; binding("natives");',
+    "binding destructured under another name": 'const { binding: b } = process;',
+    "binding destructured by a quoted key": 'const { "binding": b } = process;',
+    "binding through an alias of process": 'const p = process; p.binding("natives");',
+    "an alias member read by a quoted key": 'const p = process; p["binding"]("natives");',
+    "process.execve": 'process.execve("/bin/sh", [], []);',
+    "process[\"execve\"]": 'process["execve"]("/bin/sh", [], []);',
+    "execve destructured from process": "const { execve } = process;",
+    "process._linkedBinding": 'process._linkedBinding("x");',
+    "process[\"_linkedBinding\"]": 'process["_linkedBinding"]("x");',
+    "_linkedBinding through an alias": 'const p = process; p._linkedBinding("x");',
+    "a selected computed callee with ??": '(o[k] ?? 0)("1");',
+    "a selected computed callee with ||": '(o[k] || 0)("1");',
+    "a selected computed callee with &&": '(o[k] && 0)("1");',
+    "a computed callee chosen by a conditional": '(c ? o[k] : 0)("1");',
+    "a selected computed callee used as a tag": "(o[k] ?? 0)`x`;",
+    "a selected computed callee after a control head": 'if (a) (o[k] ?? 0)("1");',
+    "a selected computed callee, doubly grouped": '((o[k] ?? 0))("1");',
+  };
+  assert.deepEqual(Object.entries(must).filter(([, src]) => refs(src).length === 0).map(([label]) => label), [], "forms the scan accepts but must reject");
+  const may = {
+    "a decimal number": "const a = 1.5;",
+    "an exponent number": "const a = 1e3;",
+    "an exponent with a sign and a fraction": "const a = 1.5e-3;",
+    "a leading-dot number": "const a = .5;",
+    "a hex number": "const a = 0xff;",
+    "a separated number": "const a = 1_000;",
+    "a bigint": "const a = 10n;",
+    "a number then a method": "const a = 1.5.toFixed(1);",
+    "a number then a method after an empty fraction": "const a = 1..toFixed(1);",
+    "a range of numbers in a call": "run(1.5, 2e3, .5, 0xff);",
+    "a string that is the word binding as a call argument": 'finding("binding", "a message");',
+    "a list of names that includes binding": 'const names = ["binding", "execve"];',
+    "process.argv": "const a = process.argv.slice(2);",
+    "process.env read by a literal key": 'const e = process.env["HOME"];',
+    "a comma group whose computed member is dropped": '(a[k], 0)("1");',
+    "an argument group after a call, not a control head": "f(a[k])(x);",
+    "a conditional on a computed member whose result is not called": "const v = (c ? o[k] : 0);",
+    "a selected computed member that is not called": "const v = (o[k] ?? 0);",
+    "a selected computed member in a call's arguments": "run(o[k] ?? 0)(1);",
+    "a selected computed member in an if head": "if (o[k] ?? 0) (done)(1);",
+    "a selected literal-key member": '(o["k"] ?? 0)("1");',
+    "ordinary indexing": "const v = items[i] ?? items[0];",
+  };
+  const falsePositives = Object.entries(may).filter(([, src]) => refs(src).length > 0).map(([label]) => label);
+  assert.deepEqual(falsePositives, [], "forms the scan must accept");
+});
+
+test("invariant 4: for await ( ... ) is a control head, so a slash after it starts a regex that hides nothing", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const found = externalReferences('async function f() { for await (const x of y) /"/.test(z); eval("1"); "}\n', where);
+  assert.ok(found.some((o) => o.includes("reference to eval")), "eval after a for-await regex statement is reported: " + JSON.stringify(found));
+  // the same slash after a plain for head is already a regex
+  const plain = externalReferences('for (const x of y) /"/.test(z); eval("1"); "\n', where);
+  assert.ok(plain.some((o) => o.includes("reference to eval")), "the for head baseline: " + JSON.stringify(plain));
+  // and the import scanner (stripComments) agrees: the import after the regex statement is still found
+  const src = 'async function f() { for await (const x of y) /"/.test(z); }\nimport "node:fs";\n';
+  assert.ok(stripComments(src).includes("import"), "the import scanner keeps code after the regex");
 });
 
 // Review of 4d5a005: the allowlist excuses the loader-capable IMPORT only for the exact reviewed names, as

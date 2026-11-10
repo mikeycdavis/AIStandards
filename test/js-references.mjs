@@ -11,6 +11,9 @@ import { fileURLToPath } from "node:url";
 // Property names that make an element fetch a resource when set (see ASSIGNMENT_FORMS in the vendor test).
 export const RESOURCE_PROPS = ["src", "href", "action", "data", "poster", "formAction", "srcset"];
 
+// One numeric literal (hex, binary, octal, decimal with an optional fraction and exponent, separators, bigint).
+// A number ends where the literal ends: 1..constructor is the number "1." then the member ".constructor".
+const NUMERIC_LITERAL = /0[xX][\da-fA-F_]+n?|0[bB][01_]+n?|0[oO][0-7_]+n?|(?:\d[\d_]*(?:\.[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?n?/y;
 const REGEX_KEYWORDS = new Set(["return", "typeof", "case", "do", "else", "in", "of", "void", "delete", "throw", "new", "yield", "await", "instanceof"]);
 
 // Whether the `)` that ends `before` closes the head of `if`, `while`, `for` or `with`: the statement
@@ -24,7 +27,7 @@ function closesControlHead(before) {
       depth -= 1;
       if (depth === 0) {
         const head = /([A-Za-z_$][\w$]*)\s*$/.exec(before.slice(0, k));
-        return head !== null && ["if", "while", "for", "with"].includes(head[1]);
+        return head !== null && (["if", "while", "for", "with"].includes(head[1]) || (head[1] === "await" && /\bfor\s+await\s*$/.test(before.slice(0, k))));
       }
     }
   }
@@ -231,7 +234,9 @@ export function tokenize(source) {
         continue;
       }
       if (/[0-9]/.test(c) || (c === "." && /[0-9]/.test(d ?? ""))) {
-        while (i < n && /[\w.]/.test(source[i])) i += 1;
+        NUMERIC_LITERAL.lastIndex = i;
+        const numeric = NUMERIC_LITERAL.exec(source);
+        i += numeric ? numeric[0].length : 1;
         toks.push({ t: "num", v: source.slice(s, i), s, e: i });
         continue;
       }
@@ -341,7 +346,8 @@ export function tokenize(source) {
       i += 1;
       if (c === "(") {
         const p = toks[toks.length - 1];
-        parens.push(Boolean(p && p.t === "id" && ["if", "while", "for", "with"].includes(p.v)));
+        const p2 = toks[toks.length - 2];
+        parens.push(Boolean(p && p.t === "id" && (["if", "while", "for", "with"].includes(p.v) || (p.v === "await" && p2 && p2.t === "id" && p2.v === "for"))));
       } else if (c === ")") {
         lastCloseControl = parens.length > 0 ? parens.pop() : true;
       } else if (c === "{") {
@@ -577,9 +583,16 @@ function readUrlConstruction(tokens, open, offset, specifiers, unreadable) {
 //     reached by a computed method, or with Reflect itself held or destructured;
 //   * a computed member that is the tag of a template (o[k]`x`, (o[k])`x`): a tagged template calls its tag;
 //     and a grouped callee after an if, while, for or with head (if (x) (o[k])(1)).
+//   * a grouped callee that selects a computed member through ??, || , && or a conditional ((o[k] ?? 0)(1));
+//   * process.binding, _linkedBinding and execve in any spelling (alias, destructuring, quoted member).
+// A number literal ends where the literal ends (1..constructor is a number then a member).
 // A file that legitimately needs one of these is named, with its reason and the exact calls reviewed, on the
 // allowlist in no-phase-creep.test.mjs; nothing else is exempt. The boundary of reading text is that a name
 // assembled at run time never reaches a loader without one of the denied constructs above.
+// Members of process that reach internal modules or replace the process. As an identifier they are reported
+// wherever they appear (process.binding, process?.binding, (process).binding, const { binding } = process, an
+// alias p.binding); as a string only as a computed member or a quoted key, because the word is common in text.
+const PROCESS_DENIED_NAMES = ["binding", "_linkedBinding", "execve"];
 const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH", "dlopen", "_load", "_resolveFilename", "getBuiltinModule"];
 export const LOADER_CAPABLE_MODULES = ["child_process", "worker_threads", "vm", "module", "cluster", "repl", "inspector", "wasi", "v8", "trace_events", "async_hooks"];
 const TIMER_NAMES = ["setTimeout", "setInterval", "setImmediate"];
@@ -681,6 +694,36 @@ function stepOutOfGroups(tokens, close) {
   }
 }
 
+// A computed member that is the value of a group through `??`, `||`, `&&` or a conditional branch is still what
+// the group yields: `(o[k] ?? 0)("1")`, `(c ? o[k] : 0)("1")`. From the `]` at `close`, when the next token
+// selects (`:`, `??`, `||`, `&&`), read to the `)` that ends the group (a top-level comma drops the value, as
+// in `(a[k], 0)`), step over the groups from there, and return the last token of the grouped expression.
+function selectedGroupEnd(tokens, close) {
+  const a = tokens[close + 1];
+  const b = tokens[close + 2];
+  const punct = (x, v) => Boolean(x) && x.t === "punct" && x.v === v && !x.inRegex;
+  const selects = punct(a, ":") || ((punct(a, "?") || punct(a, "|") || punct(a, "&")) && punct(b, a.v));
+  if (!selects) return close;
+  let depth = 0;
+  for (let j = close + 1; j < tokens.length; j += 1) {
+    const x = tokens[j];
+    if (x.inRegex || x.t !== "punct") continue;
+    if (x.v === "(" || x.v === "[" || x.v === "{") depth += 1;
+    else if (x.v === ")" || x.v === "]" || x.v === "}") {
+      if (depth > 0) {
+        depth -= 1;
+        continue;
+      }
+      if (x.v !== ")") return close;
+      const end = stepOutOfGroups(tokens, j - 1);
+      return end >= j ? end : close;
+    } else if (depth === 0 && (x.v === "," || x.v === ";")) {
+      return close;
+    }
+  }
+  return close;
+}
+
 // Whether the token at k is directly followed by a template literal (a tagged template calls its tag).
 function isTaggedAt(tokens, k) {
   const a = tokens[k + 1];
@@ -723,6 +766,14 @@ export function moduleReferences(source, options = {}) {
       if (checkDynamicCode) unreadable.push({ form: "dynamic-code", specifier: `${why} at offset ${tk.s}` });
     };
     if (tk.t === "id" && DYNAMIC_CODE_NAMES.includes(tk.v)) dynamic(`reference to ${tk.v}, which runs source text`);
+    if (tk.t === "id" && PROCESS_DENIED_NAMES.includes(tk.v) && !tk.inRegex) dynamic(`reference to ${tk.v}, which reaches internal modules or replaces the process`);
+    if (tk.t === "str" && PROCESS_DENIED_NAMES.includes(tk.v) && !arrayElements.has(k)) {
+      const before = tokens[k - 1];
+      const after = tokens[k + 1];
+      const computed = before && after && before.v === "[" && after.v === "]";
+      const quotedKey = before && after && (before.v === "{" || before.v === ",") && after.v === ":";
+      if (computed || quotedKey) dynamic(`the string "${tk.v}" naming a member that reaches internal modules or replaces the process`);
+    }
     // A string equal to one of these names is a way of naming the property or function without writing it as an
     // identifier ("eval": true as an object key, o["execSync"], Reflect.get(f, "constructor")). It is reported
     // wherever it appears except as an element of an array literal, which is a list of names, not a use.
@@ -752,7 +803,7 @@ export function moduleReferences(source, options = {}) {
       if (close !== -1) {
         const key = tokens.slice(k + 1, close);
         const literalKey = key.length === 1 && (key[0].t === "str" || key[0].t === "num");
-        if (!literalKey && (isCalledAt(tokens, stepOutOfGroups(tokens, close)) || isTaggedAt(tokens, stepOutOfGroups(tokens, close)))) dynamic("a computed member called, whose name is built at run time");
+        if (!literalKey && [stepOutOfGroups(tokens, close), selectedGroupEnd(tokens, close)].some((end) => isCalledAt(tokens, end) || isTaggedAt(tokens, end))) dynamic("a computed member called, whose name is built at run time");
         else if (!literalKey && prev.t === "id" && GLOBAL_OBJECTS.includes(prev.v)) dynamic(`computed access on ${prev.v} with a key built at run time`);
       }
     }
