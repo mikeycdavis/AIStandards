@@ -1011,7 +1011,8 @@ export function moduleReferences(source, options = {}) {
     // A string equal to one of these names is a way of naming the property or function without writing it as an
     // identifier ("eval": true as an object key, o["execSync"], Reflect.get(f, "constructor")). It is reported
     // wherever it appears except as an element of an array literal, which is a list of names, not a use.
-    if (tk.t === "str" && nameStrings.has(tk.v) && !arrayElements.has(k)) {
+    // (an array element inside the brackets of a computed member access is a key, not a list of names: o[["eval"]])
+    if (tk.t === "str" && nameStrings.has(tk.v) && (!arrayElements.has(k) || inAccessBracket(tokens, k))) {
       dynamic(`the string "${tk.v}" naming a code-running or process-starting member`);
     }
     // A computed member access whose key is not a literal names its member at run time. It is unreadable when
