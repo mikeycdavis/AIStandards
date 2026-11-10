@@ -504,6 +504,9 @@ test("an allowlisted file may not alias, pass on or re-call a reviewed name: onl
       "passed on as a value": "run(spawnSync);\n",
       "held in a list": 'const fns = [spawnSync];\nfns[0]("git", ["log"]);\n',
       "re-exported": "export { spawnSync };\n",
+      // review of 4d5a005 (Codex): import.meta is not an import declaration and exempts nothing after it
+      "an alias after import.meta": 'const url = import.meta.url\nconst again = spawnSync\nagain(process.execPath, ["-e", "1"]);\n',
+      "an alias after a dynamic import": 'const m = import("node:fs")\nconst again = spawnSync\nagain("git", ["log"]);\n',
     };
     const missed = [];
     for (const [label, add] of Object.entries(extra)) {
@@ -592,6 +595,86 @@ test("invariant 4: for await ( ... ) is a control head, so a slash after it star
   assert.ok(stripComments(src).includes("import"), "the import scanner keeps code after the regex");
 });
 
+// Round 3 review of 4557d13 (PR #147): comment ends, postfix ++ before a slash, and the Codex findings.
+test("invariant 4: a line comment ends at any JavaScript line terminator, in the token scan and in the import scan", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const must = {
+    "a comment ended by a carriage return": '// x\reval("1")',
+    "a comment ended by U+2028": '// x\u2028eval("1")',
+    "a comment ended by U+2029": '// x\u2029eval("1")',
+    "code, then a comment ended by a carriage return": 'const a = 1; // c\rglobalThis.eval("1");',
+    "a comment ended by CRLF": '// x\r\neval("1")',
+    "a comment ended by a line feed": '// x\neval("1")',
+  };
+  assert.deepEqual(Object.entries(must).filter(([, src]) => !refs(src).some((o) => o.includes("eval"))).map(([label]) => label), [], "the code after the comment must be read");
+  const may = {
+    "eval inside a comment on one line": '// x eval("1")',
+    "eval inside a comment before the end of a CRLF line": '// x eval("1")\r\nconst a = 1;',
+    "a comment ended by U+2028 followed by harmless code": "// x\u2028const a = 1;",
+  };
+  assert.deepEqual(Object.entries(may).filter(([, src]) => refs(src).length > 0).map(([label]) => label), [], "text inside a comment is not code");
+  for (const [label, sep] of [["CR", "\r"], ["LS", "\u2028"], ["PS", "\u2029"]]) {
+    const stripped = stripComments("// c" + sep + 'import x from "package";\n');
+    assert.ok(stripped.includes("import"), "stripComments keeps the import after a " + label + " line end");
+  }
+  assert.ok(!stripComments('// c import x from "package";\n').includes("import"), "a comment on one line is dropped");
+});
+
+test("invariant 4: a slash after a postfix ++ or -- is division, so the code after it is not hidden as a regex", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const must = {
+    "binding destructured after a postfix increment": 'let i=0; i++ / 2; const {binding} = process; binding("spawn_sync") / 3',
+    "execve destructured after a postfix increment": 'let i=0; i++ / 2; const {execve} = process; execve("/bin/sh") / 3',
+    "an alias of process after a postfix increment": 'let i=0; i++ / 2; const p=process; p.binding("x") / 3',
+    "Reflect.get with a built key after a postfix increment": 'let i=0; i++ / 2; Reflect.get(f, k)("x") / 3',
+    "a postfix decrement": 'let i=0; i-- / 2; const {binding} = process; binding("x") / 3',
+    "a postfix increment on a member": 'o.n++ / 2; const {binding} = process; binding("x") / 3',
+    "a postfix increment on a parenthesised operand": '(i)++ / 2; const {binding} = process; binding("x") / 3',
+    // an ambiguous slash is read as a regex, but its body is still scanned as code
+    "a slash after a closing brace whose body names eval": '{} /eval("1")/.test(x);',
+  };
+  assert.deepEqual(Object.entries(must).filter(([, src]) => refs(src).length === 0).map(([label]) => label), [], "forms the scan accepts but must reject");
+  const may = {
+    "a regex literal naming binding after an operator": 'const r = /binding/.test(s);',
+    "a regex literal naming binding after a comma": "f(a, /binding/);",
+    "a regex literal after return": "function f() { return /execve/.test(s); }",
+    "a regex literal after a control head": 'if (x) /execve/.test(y);',
+    "division after a postfix increment": "let i = 0; const h = i++ / 2; const k = 4 / 2;",
+    "a unary plus before a regex after a binary plus": "const n = a + +/x/.source.length;",
+    "division after a closing bracket": "const q = a[0] / 2 / 3;",
+  };
+  assert.deepEqual(Object.entries(may).filter(([, src]) => refs(src).length > 0).map(([label]) => label), [], "forms the scan must accept");
+});
+
+// Codex findings on PR #147, rounds on 4d5a005, a1dd371 and 4557d13.
+test("invariant 4: Codex findings - denied process names as reflective keys, a selected callee behind inner groups", () => {
+  const where = { file: path.join(os.tmpdir(), "aistd-st57", "scripts", "a.cjs"), root: path.join(os.tmpdir(), "aistd-st57"), io: { existsSync: () => true, realpathSync: (q) => q } };
+  const refs = (src) => externalReferences(src + "\n", where);
+  const must = {
+    "Reflect.get of process with a literal binding key": 'Reflect.get(process, "binding")("natives");',
+    "Reflect.getOwnPropertyDescriptor of process with a literal binding key": 'const d = Reflect.getOwnPropertyDescriptor(process, "binding");',
+    "Reflect.get of process with a literal execve key": 'Reflect.get(process, "execve")("/bin/sh", [], []);',
+    "Reflect.get of process with a literal _linkedBinding key": 'Reflect["get"](process, "_linkedBinding");',
+    "a member inside inner groups, then a selection": 'const [k] = ["constructor"]; (((()=>{})[k]) ?? 0)("return 1")();',
+    "inner groups, then ||": "((o[k]) || 0)(1);",
+    "inner groups, then &&": "(((o[k])) && 0)(1);",
+    "inner groups inside a conditional": "(c ? (o[k]) : 0)(1);",
+    "a selection inside a selection": "(((o[k]) ?? 0) || 1)(1);",
+    "inner groups, then a selection, used as a tag": "((o[k]) ?? 0)`x`;",
+  };
+  assert.deepEqual(Object.entries(must).filter(([, src]) => refs(src).length === 0).map(([label]) => label), [], "forms the scan accepts but must reject");
+  const may = {
+    "Reflect.get of process with an ordinary literal key": 'const v = Reflect.get(process, "argv");',
+    "the word binding in a diagnostic string": 'console.log("binding", "execve");',
+    "inner groups with a comma": "((o[k]), 0)(1);",
+    "inner groups, not called": "const v = ((o[k]) ?? 0);",
+    "inner groups in an if head": "if ((o[k]) ?? 0) (done)(1);",
+  };
+  assert.deepEqual(Object.entries(may).filter(([, src]) => refs(src).length > 0).map(([label]) => label), [], "forms the scan must accept");
+});
+
 // Review of 4d5a005: the allowlist excuses the loader-capable IMPORT only for the exact reviewed names, as
 // written. Any other binding of the same module is a function nobody read.
 test("an allowlisted file may import only the reviewed names of its module, unaliased", () => {
@@ -621,6 +704,9 @@ test("an allowlisted file may import only the reviewed names of its module, unal
       "a default import": 'import cp from "node:child_process";\ncp.execSync("evil");\n',
       "a default and a namespace": 'import cp, * as all from "node:child_process";\n',
       "a side-effect import": 'import "node:child_process";\n',
+      // review of a1dd371 (Codex): a quoted import name is a string before the module specifier
+      "a quoted import name under an alias": 'import { "execSync" as run } from "node:child_process";\nrun("echo probe");\n',
+      "a quoted import name beside the reviewed one": 'import { spawnSync, "execSync" as run } from "node:child_process";\nrun("echo probe");\n',
       "a second import of the module": 'import { spawnSync } from "node:child_process";\nimport { execFileSync } from "node:child_process";\nexecFileSync("evil");\n',
     };
     const missed = [];

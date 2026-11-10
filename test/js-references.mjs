@@ -11,6 +11,11 @@ import { fileURLToPath } from "node:url";
 // Property names that make an element fetch a resource when set (see ASSIGNMENT_FORMS in the vendor test).
 export const RESOURCE_PROPS = ["src", "href", "action", "data", "poster", "formAction", "srcset"];
 
+// The JavaScript line terminators: LF, CR, U+2028 and U+2029. A line comment (and a regex literal) ends at any of them.
+function isLineEnd(ch) {
+  return ch === "\n" || ch === "\r" || ch === "\u2028" || ch === "\u2029";
+}
+
 // One numeric literal (hex, binary, octal, decimal with an optional fraction and exponent, separators, bigint).
 // A number ends where the literal ends: 1..constructor is the number "1." then the member ".constructor".
 const NUMERIC_LITERAL = /0[xX][\da-fA-F_]+n?|0[bB][01_]+n?|0[oO][0-7_]+n?|(?:\d[\d_]*(?:\.[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?n?/y;
@@ -34,6 +39,16 @@ function closesControlHead(before) {
   return true;
 }
 
+// Whether the text ends in something a postfix ++ / -- can follow: an identifier that is not a keyword, a number,
+// `)` or `]`. (`a + +/x/` has a space between the plusses and is not read here: the caller requires them adjacent.)
+function postfixOperandText(text) {
+  const last = text[text.length - 1];
+  if (last === undefined) return false;
+  if (last === ")" || last === "]") return true;
+  if (/[\w$]/.test(last)) return !REGEX_KEYWORDS.has(/[\w$]+$/.exec(text)[0]);
+  return false;
+}
+
 export function stripComments(source, keepStrings = false) {
   // Scans `source` as code from `start`. Inside a template literal's `${ ... }` the scan recurses, so an
   // interpolation is CODE (its imports are found, nested templates and comments inside it are handled)
@@ -47,7 +62,7 @@ export function stripComments(source, keepStrings = false) {
       const c = source[i];
       const d = source[i + 1];
       if (c === "/" && d === "/") {
-        while (i < n && source[i] !== "\n") i += 1;
+        while (i < n && !isLineEnd(source[i])) i += 1;
       } else if (c === "/" && d === "*") {
         i += 2;
         while (i < n && !(source[i] === "*" && source[i + 1] === "/")) i += 1;
@@ -67,13 +82,14 @@ export function stripComments(source, keepStrings = false) {
         if (last === undefined) regex = true;
         else if (last === ")") regex = closesControlHead(before);
         else if (last === "]") regex = false;
+        else if ((last === "+" || last === "-") && before.endsWith(last + last) && postfixOperandText(before.slice(0, -2).trimEnd())) regex = false;
         else if (/[\w$]/.test(last)) regex = REGEX_KEYWORDS.has(/[\w$]+$/.exec(before)[0]);
         else regex = true;
         let j = i + 1;
         let closed = false;
         if (regex) {
           let inClass = false;
-          while (j < n && source[j] !== "\n") {
+          while (j < n && !isLineEnd(source[j])) {
             const ch = source[j];
             if (ch === "\\") {
               j += 2;
@@ -183,6 +199,14 @@ function decodeEscape(source, i) {
   return { value: SIMPLE_ESCAPES[c] ?? c, next: i + 2 };
 }
 
+// Whether a token can be followed by a postfix ++ / --: a name that is not a keyword, a literal, `)` or `]`.
+function postfixOperandToken(x) {
+  if (!x || x.inRegex) return false;
+  if (x.t === "id") return !REGEX_KEYWORDS.has(x.v);
+  if (x.t === "num" || x.t === "str" || x.t === "tmpl") return true;
+  return x.t === "punct" && (x.v === ")" || x.v === "]");
+}
+
 export function tokenize(source) {
   const toks = [];
   const n = source.length;
@@ -201,7 +225,7 @@ export function tokenize(source) {
         continue;
       }
       if (c === "/" && d === "/") {
-        while (i < n && source[i] !== "\n") i += 1;
+        while (i < n && !isLineEnd(source[i])) i += 1;
         continue;
       }
       if (c === "/" && d === "*") {
@@ -306,16 +330,29 @@ export function tokenize(source) {
       if (c === "/") {
         const p = toks[toks.length - 1];
         let regex = true;
+        let ambiguousRegex = false;
         if (p) {
           if (p.t === "punct") regex = p.v === ")" ? lastCloseControl : p.v !== "]";
           else if (p.t === "id") regex = REGEX_KEYWORDS.has(p.v);
           else regex = false;
+          // After a postfix ++ / -- (two adjacent signs, the second after an operand) a slash divides. A prefix
+          // ++ / -- before a slash is not valid code, and a slash after a closing brace may be a block end or
+          // an object end: both are read as a regex and marked ambiguous, so the body is still scanned as code.
+          if (p.t === "punct" && (p.v === "+" || p.v === "-")) {
+            const p2 = toks[toks.length - 2];
+            if (p2 && p2.t === "punct" && p2.v === p.v && p2.e === p.s && !p2.inRegex) {
+              if (postfixOperandToken(toks[toks.length - 3])) regex = false;
+              else ambiguousRegex = true;
+            }
+          } else if (p.t === "punct" && p.v === "}") {
+            ambiguousRegex = true;
+          }
         }
         if (regex) {
           let j = i + 1;
           let inClass = false;
           let closed = false;
-          while (j < n && source[j] !== "\n") {
+          while (j < n && !isLineEnd(source[j])) {
             const ch = source[j];
             if (ch === "\\") {
               j += 2;
@@ -334,7 +371,7 @@ export function tokenize(source) {
             j += 1;
             while (j < n && /[\w$]/.test(source[j])) j += 1;
             i = j;
-            toks.push({ t: "regex", v: source.slice(s, j), s, e: j });
+            toks.push({ t: "regex", v: source.slice(s, j), s, e: j, ambiguous: ambiguousRegex, body: source.slice(s + 1, bodyEnd) });
             // A regex body is also read as code, toward detecting: its tokens follow the literal, flagged so
             // that stray delimiters inside it cannot unbalance an enclosing call.
             const inner = tokenize(source.slice(s + 1, bodyEnd));
@@ -724,6 +761,24 @@ function selectedGroupEnd(tokens, close) {
   return close;
 }
 
+// Every token index at which the computed access ending at `close` can be the value that is then called: the access
+// itself, each step out of grouping parentheses, and each step through a selection (`??`, `||`, `&&`, `:`) to the
+// group that yields it, repeated while either makes progress (`(((o[k]) ?? 0) || 1)(x)`).
+function callEnds(tokens, close) {
+  const ends = [close];
+  let at = close;
+  for (let guard = 0; guard < 16; guard += 1) {
+    const stepped = stepOutOfGroups(tokens, at);
+    const selected = selectedGroupEnd(tokens, stepped);
+    if (stepped !== at) ends.push(stepped);
+    if (selected !== stepped) ends.push(selected);
+    const next = selected !== stepped ? selected : stepped;
+    if (next === at) break;
+    at = next;
+  }
+  return ends;
+}
+
 // Whether the token at k is directly followed by a template literal (a tagged template calls its tag).
 function isTaggedAt(tokens, k) {
   const a = tokens[k + 1];
@@ -761,6 +816,13 @@ export function moduleReferences(source, options = {}) {
   const urlConstructions = new Set();
   for (let k = 0; k < tokens.length; k += 1) {
     const tk = tokens[k];
+    // A regex literal read after a closing brace (or after a prefix ++ / --) may really be a division: its body
+    // is then code. It is scanned as code as well, toward detecting; a regex that is certain keeps its exemption.
+    if (tk.t === "regex" && tk.ambiguous && typeof tk.body === "string") {
+      const inner = moduleReferences(tk.body, options);
+      specifiers.push(...inner.specifiers);
+      unreadable.push(...inner.unreadable.filter((u) => u.form !== "source"));
+    }
     if (tk.t === "id" && tk.v === "createRequire") unreadable.push({ form: "createRequire", specifier: `at offset ${tk.s}` });
     const dynamic = (why) => {
       if (checkDynamicCode) unreadable.push({ form: "dynamic-code", specifier: `${why} at offset ${tk.s}` });
@@ -803,7 +865,7 @@ export function moduleReferences(source, options = {}) {
       if (close !== -1) {
         const key = tokens.slice(k + 1, close);
         const literalKey = key.length === 1 && (key[0].t === "str" || key[0].t === "num");
-        if (!literalKey && [stepOutOfGroups(tokens, close), selectedGroupEnd(tokens, close)].some((end) => isCalledAt(tokens, end) || isTaggedAt(tokens, end))) dynamic("a computed member called, whose name is built at run time");
+        if (!literalKey && callEnds(tokens, close).some((end) => isCalledAt(tokens, end) || isTaggedAt(tokens, end))) dynamic("a computed member called, whose name is built at run time");
         else if (!literalKey && prev.t === "id" && GLOBAL_OBJECTS.includes(prev.v)) dynamic(`computed access on ${prev.v} with a key built at run time`);
       }
     }
@@ -839,6 +901,7 @@ export function moduleReferences(source, options = {}) {
           const key = reflected && reflected[1];
           const literalKey = Boolean(key) && key.length === 1 && (key[0].t === "str" || key[0].t === "num");
           if (!literalKey) dynamic(`Reflect.${method} with a key that is not one literal`);
+          else if (key[0].t === "str" && PROCESS_DENIED_NAMES.includes(key[0].v)) dynamic(`Reflect.${method} of the process member "${key[0].v}"`);
         } else {
           dynamic(`Reflect.${method} used other than as a direct call`);
         }
@@ -1084,6 +1147,38 @@ export function directCallTexts(source, names) {
 }
 
 /**
+ * The static import declarations of a token stream: `start` is the index of `import` and `spec` the index of the module
+ * specifier string. `import(...)`, `import.meta` and a declaration whose specifier cannot be found are not listed.
+ * The specifier is the string that follows `from` outside the braces (a quoted import name such as
+ * `{ "x" as y }` is a string inside the braces and is not the specifier), or the string right after a bare `import`.
+ */
+function staticImports(tokens) {
+  const out = [];
+  for (let k = 0; k < tokens.length; k += 1) {
+    const tk = tokens[k];
+    if (tk.t !== "id" || tk.v !== "import" || tk.inRegex || (tokens[k - 1] && tokens[k - 1].v === ".")) continue;
+    const after = tokens[k + 1];
+    if (!after || (after.t === "punct" && (after.v === "(" || after.v === "."))) continue;
+    if (after.t === "str") {
+      out.push({ start: k, spec: k + 1 });
+      continue;
+    }
+    let depth = 0;
+    for (let j = k + 1; j < tokens.length; j += 1) {
+      const x = tokens[j];
+      if (x.t === "punct" && x.v === "{") depth += 1;
+      else if (x.t === "punct" && x.v === "}") depth -= 1;
+      else if (depth === 0 && x.t === "punct" && x.v === ";") break;
+      else if (depth === 0 && x.t === "id" && x.v === "from" && tokens[j + 1] && tokens[j + 1].t === "str") {
+        out.push({ start: k, spec: j + 1 });
+        break;
+      }
+    }
+  }
+  return out;
+}
+
+/**
  * Every reference to one of `names` in `source` that is not a direct call `name(...)` and not part of an import
  * clause: an alias (`const a = spawnSync`), `.call` / `.apply` / `.bind`, an optional or parenthesised call, a
  * value passed on or listed, a re-export. An allowlist entry records the direct calls a reviewer read
@@ -1092,14 +1187,8 @@ export function directCallTexts(source, names) {
 export function indirectNameReferences(source, names) {
   const { tokens } = tokenize(source);
   const inImport = new Set();
-  for (let k = 0; k < tokens.length; k += 1) {
-    const tk = tokens[k];
-    if (tk.t !== "id" || tk.v !== "import" || tk.inRegex || (tokens[k - 1] && tokens[k - 1].v === ".")) continue;
-    // the clause runs to the `from` that precedes the specifier string, or to the string of a bare `import "x"`
-    for (let j = k + 1; j < tokens.length; j += 1) {
-      inImport.add(j);
-      if (tokens[j].t === "str" || tokens[j].t === "punct" && tokens[j].v === ";") break;
-    }
+  for (const { start, spec } of staticImports(tokens)) {
+    for (let j = start + 1; j <= spec; j += 1) inImport.add(j);
   }
   const out = [];
   for (let k = 0; k < tokens.length; k += 1) {
@@ -1120,16 +1209,11 @@ export function indirectNameReferences(source, names) {
 export function unreviewedImports(source, specifier, names) {
   const { tokens } = tokenize(source);
   const out = [];
-  for (let k = 0; k < tokens.length; k += 1) {
-    const tk = tokens[k];
-    if (tk.t !== "id" || tk.v !== "import" || tk.inRegex || (tokens[k - 1] && tokens[k - 1].v === ".")) continue;
-    const after = tokens[k + 1];
-    if (!after || (after.t === "punct" && (after.v === "(" || after.v === "."))) continue; // import(...) and import.meta
-    let j = k + 1;
-    while (j < tokens.length && tokens[j].t !== "str" && !(tokens[j].t === "punct" && tokens[j].v === ";")) j += 1;
-    if (!tokens[j] || tokens[j].t !== "str" || tokens[j].v !== specifier) continue;
-    // the clause is everything between `import` and the `from` before the specifier
-    const clause = tokens.slice(k + 1, j - 1);
+  for (const { start, spec } of staticImports(tokens)) {
+    const j = spec;
+    if (tokens[j].v !== specifier) continue;
+    // the clause is everything between `import` and the `from` before the specifier (nothing for `import "x"`)
+    const clause = tokens[j - 1] && tokens[j - 1].v === "from" && j - 1 > start ? tokens.slice(start + 1, j - 1) : [];
     const text = clause.map((c) => c.v).join(" ");
     let valid = clause.length >= 3 && clause[0].v === "{" && clause[clause.length - 1].v === "}";
     if (valid) {

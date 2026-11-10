@@ -456,6 +456,11 @@ test("YAML: properties directly after a quoted key's colon in a flow mapping kee
     ['a: {"k":&x v}\n', [["v", null, "x"]]],
     ['a: {"k":&x !!str v, "j":!local w}\n', [["v", "!!str", "x"], ["w", "!local", null]]],
     ['a: {"k":!<tag:yaml.org,2002:str> v}\n', [["v", "!<tag:yaml.org,2002:str>", null]]],
+    // review of 4557d13 (Codex): a colon-and-property sequence INSIDE the quoted key is key content, not the separator
+    ["a: {'x\":!bogus':!!str v}\n", [["v", "!!str", null]]],
+    ['a: {"x\\":!bogus":!!str v}\n', [["v", "!!str", null]]],
+    ["a: {'it''s\":!bad':&x v}\n", [["v", null, "x"]]],
+    ["a: {'x&y:!z':!!str v}\n", [["v", "!!str", null]]],
   ];
   for (const [text, expected] of cases) {
     const r = parseStructuralText("t.yml", text, "yaml");

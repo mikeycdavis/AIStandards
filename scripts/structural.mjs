@@ -432,13 +432,21 @@ function propsBefore(text, start, anchorName, hasTag) {
     // JSON-compatible flow YAML allows a value to follow a quoted key's colon with no blank
     // (`{"k":!!str v}`): the word then starts at the key's closing quote, and the property begins after
     // the colon. The colon must follow a closing quote and be followed by `!` or `&`.
-    if (text[begin] !== "!" && text[begin] !== "&") {
-      for (let c = begin + 1; c < end - 1; c += 1) {
-        if (text[c] === ":" && (text[c - 1] === '"' || text[c - 1] === "'") && (text[c + 1] === "!" || text[c + 1] === "&")) {
-          begin = c + 1;
-          break;
+    // The word must start with the key's opening quote, and the colon is the one after the quote that CLOSES
+    // that key (a backslash escapes in a double-quoted key, '' in a single-quoted one): a colon followed by
+    // ! or & inside the key is key content.
+    if ((text[begin] === '"' || text[begin] === "'")) {
+      const quote = text[begin];
+      let c = begin + 1;
+      for (; c < end; c += 1) {
+        if (quote === '"' && text[c] === "\\") {
+          c += 1;
+        } else if (text[c] === quote) {
+          if (quote === "'" && text[c + 1] === "'") c += 1;
+          else break;
         }
       }
+      if (c + 2 < end && text[c] === quote && text[c + 1] === ":" && (text[c + 2] === "!" || text[c + 2] === "&")) begin = c + 2;
     }
     const word = text.slice(begin, end);
     if (word[0] === "&" && anchorName !== null && anchor === null && word === `&${anchorName}`) {
