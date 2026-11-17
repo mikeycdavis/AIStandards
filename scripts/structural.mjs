@@ -106,7 +106,7 @@ class LocationIndex {
       if (this.lineStarts[mid] <= o) lo = mid;
       else hi = mid - 1;
     }
-    return { line: lo + 1, column: codePointLength(this.text.slice(this.lineStarts[lo], o)) + 1 };
+    return { line: lo + 1, column: codePointLength(this.text.slice(this.lineStarts.at(lo), o)) + 1 };
   }
 }
 
@@ -213,7 +213,7 @@ function parseJsonText(text) {
       if (c < 0x20) throw new JsonSyntax("control-character-in-string", i);
       if (c === 0x5c) {
         out += text.slice(chunk, i);
-        const e = text[i + 1];
+        const e = text.at(i + 1);
         if (e === undefined) throw new JsonSyntax("unterminated-string", start);
         if (e === "u") {
           const hex = text.slice(i + 2, i + 6);

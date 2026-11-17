@@ -138,7 +138,7 @@ export function documentNumber(file, lines, where) {
   const number = Number.parseInt(prefix[1], 10);
   const inFence = fenceTracker();
   for (let i = 0; i < lines.length; i += 1) {
-    const line = i === 0 ? lines[i].replace(/^﻿/, "") : lines[i];
+    const line = i === 0 ? lines.at(i).replace(/^﻿/, "") : lines.at(i);
     if (inFence(line)) continue;
     if (!/^# /.test(line)) continue;
     const h1 = /^# Standard (\d+) — /.exec(line);
@@ -271,8 +271,8 @@ export function syncDocument({ file, buffer, catalog }) {
         if (expected[k] !== actual[k]) {
           drift = {
             line: block.begin + 2 + k,
-            expected: expected[k] ?? "(nothing: the block should end before this line)",
-            found: actual[k] ?? "(nothing: the block ends here)",
+            expected: expected.at(k) ?? "(nothing: the block should end before this line)",
+            found: actual.at(k) ?? "(nothing: the block ends here)",
           };
           break;
         }
