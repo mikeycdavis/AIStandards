@@ -1,0 +1,267 @@
+{
+ "baseline": {
+  "pass": 183,
+  "fail": 0
+ },
+ "results": [
+  {
+   "id": "class-1",
+   "area": "AST classification",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "class-3",
+   "area": "AST classification",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "scope-1",
+   "area": "scope ownership",
+   "status": "KILLED",
+   "pass": null,
+   "fail": null
+  },
+  {
+   "id": "scope-2",
+   "area": "scope ownership",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "alias-1",
+   "area": "alias propagation",
+   "status": "KILLED",
+   "pass": 176,
+   "fail": 7
+  },
+  {
+   "id": "alias-2",
+   "area": "alias propagation",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "alias-3",
+   "area": "alias propagation",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "reassign-1",
+   "area": "reassignment",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "reassign-2",
+   "area": "reassignment",
+   "status": "KILLED",
+   "pass": 181,
+   "fail": 2
+  },
+  {
+   "id": "unknown-1",
+   "area": "UNKNOWN production",
+   "status": "KILLED",
+   "pass": 172,
+   "fail": 11
+  },
+  {
+   "id": "unknown-2",
+   "area": "UNKNOWN production",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "unknown-3",
+   "area": "UNKNOWN production",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "unknown-4",
+   "area": "UNKNOWN production",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "token-1",
+   "area": "token-guard defense",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "token-2",
+   "area": "token-guard defense",
+   "status": "SURVIVED",
+   "pass": 183,
+   "fail": 0
+  },
+  {
+   "id": "token-3",
+   "area": "token-guard defense",
+   "status": "KILLED",
+   "pass": 111,
+   "fail": 72
+  },
+  {
+   "id": "rev-1-fixpoint-bound",
+   "area": "reviewer survivor",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "rev-2-global-computed",
+   "area": "reviewer survivor",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "rev-3-chain-unwrap",
+   "area": "reviewer survivor",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "rev-4-spread-open",
+   "area": "reviewer survivor",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "rev-5-carveout-local",
+   "area": "reviewer survivor",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "rev-6-carveout-count",
+   "area": "reviewer survivor",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "rev-7-vendored-skips-U",
+   "area": "reviewer survivor",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "rev-8-optional-direct-call",
+   "area": "reviewer survivor",
+   "status": "KILLED",
+   "pass": 181,
+   "fail": 2
+  },
+  {
+   "id": "b1-hazard-off",
+   "area": "B1 optional keyword",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "b1-slash-check-off",
+   "area": "B1 optional keyword",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "b2-denied-any-object",
+   "area": "B2 process internals",
+   "status": "KILLED",
+   "pass": 168,
+   "fail": 15
+  },
+  {
+   "id": "b2-open-object",
+   "area": "B2 process internals",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "b2-built-name",
+   "area": "B2 process internals",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "b2-with",
+   "area": "B2 process internals",
+   "status": "KILLED",
+   "pass": 179,
+   "fail": 4
+  },
+  {
+   "id": "b2-reflective-key",
+   "area": "B2 process internals",
+   "status": "KILLED",
+   "pass": 181,
+   "fail": 2
+  },
+  {
+   "id": "b3-dynamic-reads-off",
+   "area": "B3 dynamic reads",
+   "status": "KILLED",
+   "pass": 162,
+   "fail": 21
+  },
+  {
+   "id": "b3-argument-inert",
+   "area": "B3 dynamic reads",
+   "status": "KILLED",
+   "pass": 172,
+   "fail": 11
+  },
+  {
+   "id": "b3-return-inert",
+   "area": "B3 dynamic reads",
+   "status": "KILLED",
+   "pass": 180,
+   "fail": 3
+  },
+  {
+   "id": "b3-member-call",
+   "area": "B3 dynamic reads",
+   "status": "SURVIVED",
+   "pass": 183,
+   "fail": 0
+  },
+  {
+   "id": "b3-static-fn-unbound",
+   "area": "B3 dynamic reads",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  },
+  {
+   "id": "n3-token-guard-always",
+   "area": "N3 quadratic guard",
+   "status": "KILLED",
+   "pass": 182,
+   "fail": 1
+  }
+ ]
+}
