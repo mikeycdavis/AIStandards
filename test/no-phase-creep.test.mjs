@@ -17,7 +17,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { REPO, cli, validate, fixture } from "./helpers.mjs";
-import { externalReferences, directCallTexts } from "./js-references.mjs";
+import { externalReferences, directCallTexts, analyzeSource } from "./js-references.mjs";
 
 const read = (rel) => fs.readFileSync(path.join(REPO, rel), "utf8");
 const exists = (rel) => fs.existsSync(path.join(REPO, rel));
@@ -590,10 +590,13 @@ test("the repository-wide scan decides relative specifiers against the repositor
     "a longer identifier": "export const URLS = 1; export const MyURL = 2;",
     "createRequire-free import.meta.url alone": "export const here = import.meta.url;",
   };
-  // each unreadable or offending construction is reported once, not once per pass over the tokens
+  // each unreadable or offending construction is reported once by the syntax tree, not once per pass over it; the
+  // combined guard (tree plus the defense-in-depth token reading) fails on each
+  const once = (src) => analyzeSource(src, { dynamicCode: true }).findings.filter((f) => f.outcome !== "CLEAN").length;
   assert.equal(url('export const u = new URL("../../o.mjs", import.meta.url);\n').length, 1);
-  assert.equal(url('export const u = new URL("../../o.mjs", base);\n').length, 1);
-  assert.equal(url('export const u = h("../../o.mjs", import.meta.dirname);\n').length, 1);
+  assert.equal(once('export const u = new URL("../../o.mjs", base);\n'), 1);
+  assert.equal(once('export const u = h("../../o.mjs", import.meta.dirname);\n'), 1);
+  assert.notDeepEqual(url('export const u = h("../../o.mjs", import.meta.dirname);\n'), []);
   for (const [label, expr] of Object.entries(accepted)) {
     assert.deepEqual(url(expr + ";\n"), [], "must be accepted: " + label);
   }
