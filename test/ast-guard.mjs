@@ -66,13 +66,13 @@ export const RULES = Object.freeze({
 });
 export const ODD_CALLEE_REASON = "callee is an array, object, literal or template, which is never callable and is read as a call only by a reader that places a statement boundary differently";
 
-export const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH", "dlopen", "_load", "_resolveFilename"];
-export const TIMER_NAMES = ["setTimeout", "setInterval", "setImmediate"];
 // Names that reach a loader or run code through a built-in object (module instances, process): denied as
 // identifiers and as strings, wherever they appear.
 const LOADER_MEMBER_NAMES = ["getBuiltinModule", "_compile", "_extensions", "runMain", "_preloadModules"];
-const NAME_STRINGS = new Set([...DYNAMIC_CODE_NAMES, ...LOADER_MEMBER_NAMES, "constructor", ...TIMER_NAMES]);
-const IDENT_NAMES = new Set([...DYNAMIC_CODE_NAMES, ...LOADER_MEMBER_NAMES]);
+export const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH", "dlopen", "_load", "_resolveFilename", ...LOADER_MEMBER_NAMES];
+export const TIMER_NAMES = ["setTimeout", "setInterval", "setImmediate"];
+const NAME_STRINGS = new Set([...DYNAMIC_CODE_NAMES, "constructor", ...TIMER_NAMES]);
+const IDENT_NAMES = new Set(DYNAMIC_CODE_NAMES);
 const PROCESS_DENIED = new Set(["binding", "_linkedBinding", "execve"]);
 const MODULE_DENIED = new Set(["load"]);
 const REFLECT_LOOKUPS = new Set(["get", "getOwnPropertyDescriptor"]);
@@ -139,6 +139,10 @@ class Scope {
     this.names = new Map();
   }
 }
+// The binding an identifier names, as recorded while walking (null for a global or an unrecorded name).
+function lookupFrom(analysis, identifier) {
+  return analysis.refBinding.get(identifier) ?? null;
+}
 class Binding {
   constructor(name, kind) {
     this.name = name;
@@ -175,6 +179,10 @@ class Analysis {
     this.maxSeen = 0;
     this.keyDepth = 0;
     this.alloc = new Map();
+    this.parents = new Map(); // node -> its parent, filled while walking
+    this.refs = new Map(); // binding -> identifier nodes that name it
+    this.refBinding = new Map(); // identifier node -> binding
+    this.dynReads = []; // computed member reads whose key is built at run time
   }
 
   add(rule, node, reason) {
@@ -256,7 +264,7 @@ class Analysis {
       case "FunctionDeclaration":
       case "FunctionExpression":
       case "ArrowFunctionExpression": {
-        if (node.type === "FunctionDeclaration" && node.id) this.declare(scope, node.id.name, "function").defs.push({ k: "unk" });
+        if (node.type === "FunctionDeclaration" && node.id) { const fb = this.declare(scope, node.id.name, "function"); fb.defs.push({ k: "unk" }); fb.fn = node; }
         const s = new Scope("function", scope);
         this.scopeOf.set(node, s);
         if (node.type === "FunctionExpression" && node.id) this.declare(s, node.id.name, "function").defs.push({ k: "unk" });
@@ -328,7 +336,10 @@ class Analysis {
         for (const d of node.declarations) {
           const src = d.init ? { node: d.init, scope } : null;
           if (d.id.type === "Identifier") {
-            this.declare(target, d.id.name, node.kind).defs.push(src ? { k: "expr", node: d.init, scope } : { k: "unk0" });
+            const vb = this.declare(target, d.id.name, node.kind);
+            vb.defs.push(src ? { k: "expr", node: d.init, scope } : { k: "unk0" });
+            if (d.init && (d.init.type === "ArrowFunctionExpression" || d.init.type === "FunctionExpression")) vb.fn = d.init;
+            if (d.init && d.init.type === "NewExpression" && d.init.callee.type === "Identifier" && ["Map", "Set", "WeakMap", "WeakSet"].includes(d.init.callee.name)) vb.collection = true;
           } else {
             this.patternDefs(d.id, src, [], scope, (id, def) => this.declare(target, id.name, node.kind).defs.push(def));
           }
@@ -652,7 +663,9 @@ class Analysis {
       case "ObjectExpression": {
         const props = new Map();
         let proto = null;
+        let openObj = false;
         for (const p of node.properties) {
+          if (p.type === "SpreadElement" || (p.type === "Property" && (p.computed || p.kind !== "init"))) openObj = true;
           if (p.type !== "Property" || p.computed || p.kind !== "init" || p.method) continue;
           const name = p.key.type === "Identifier" ? p.key.name : String(p.key.value);
           const v = this.ev(p.value, scope, d + 1);
@@ -663,6 +676,7 @@ class Analysis {
         this.alloc.set(node, obj);
         obj.props = props;
         obj.proto = proto;
+        obj.open = openObj;
         return [obj];
       }
       case "MemberExpression": {
@@ -675,6 +689,10 @@ class Analysis {
         if (callee && callee.type === "Identifier" && callee.name === "String" && !lookup(scope, "String") && node.arguments.length === 1 && node.arguments[0].type !== "SpreadElement") {
           const a = this.ev(node.arguments[0], scope, d + 1);
           return this.allStr(a) ? a : [UNK];
+        }
+        // Object.freeze(x) and its kin return their argument
+        if (callee && callee.type === "MemberExpression" && !callee.computed && callee.object.type === "Identifier" && callee.object.name === "Object" && !lookup(scope, "Object") && ["freeze", "seal", "preventExtensions"].includes(callee.property.name) && node.arguments.length === 1 && node.arguments[0].type !== "SpreadElement") {
+          return this.ev(node.arguments[0], scope, d + 1);
         }
         if (callee && callee.type === "MemberExpression" && !callee.computed && callee.property.name === "join" && node.arguments.length <= 1) {
           const arr = this.ev(callee.object, scope, d + 1);
@@ -714,6 +732,7 @@ class Analysis {
     this.resolvePending();
     const root = this.scopeOf.get(this.ast);
     this.walk(this.ast, [], root, 0);
+    this.checkDynamicReads();
   }
 
   isDynamic(rule) {
@@ -730,6 +749,7 @@ class Analysis {
     }
     this.nodes += 1;
     if (this.nodes > this.limits.maxNodes) return;
+    this.parents.set(node, ancestors[ancestors.length - 1] ?? null);
     const own = this.scopeOf.get(node);
     const sc = own ?? scope;
     this.check(node, ancestors, sc);
@@ -778,6 +798,7 @@ class Analysis {
         return this.checkIdentifier(node, ancestors, parent, scope);
       case "Literal":
       case "TemplateLiteral":
+        if (node.type === "TemplateLiteral" && node.expressions.length > 0) this.checkBuilt(node, scope);
         return this.checkString(node, parent, ancestors);
       case "MemberExpression":
         return this.checkMember(node, ancestors, parent, scope);
@@ -802,7 +823,9 @@ class Analysis {
       case "Property":
         return this.checkProperty(node, ancestors, parent, scope);
       case "BinaryExpression":
-        return this.checkBinary(node);
+        return node.operator === "+" ? this.checkBuilt(node, scope) : undefined;
+      case "WithStatement":
+        return this.report2("U-PARSE", node, `a with statement, whose names are looked up in an object at run time, at offset ${node.start}`);
       default:
         return undefined;
     }
@@ -811,8 +834,8 @@ class Analysis {
   // ---- identifiers ----
   checkIdentifier(node, ancestors, parent, scope) {
     const name = node.name;
+    this.noteReference(node, parent, scope);
     const inImportClause = parent && (parent.type === "ImportSpecifier" || parent.type === "ImportDefaultSpecifier" || parent.type === "ImportNamespaceSpecifier");
-    if (this.o.exemptIdentifier?.(node, scope, lookup)) return;
     if (IDENT_NAMES.has(name)) this.report("V-DYN-NAME", node, `reference to ${name}, which runs source text or reaches a loader`);
     if (name === "constructor") this.checkConstructor(node, ancestors, parent);
     if (TIMER_NAMES.includes(name)) this.checkTimer(node, ancestors, parent, inImportClause);
@@ -821,6 +844,197 @@ class Analysis {
     if (name === "Script") this.checkScript(node, ancestors, parent);
     if (name === "URL" && !inImportClause) this.checkUrlIdentifier(node, ancestors, parent);
     if ((name === "fileURLToPath" || name === "pathToFileURL") && !inImportClause) this.checkFileUrlFn(node, ancestors, parent);
+  }
+
+  // ---- dynamic reads (criterion 5) ----
+  // An identifier that can name a binding (not a property name or a key) is a reference to it.
+  noteReference(node, parent, scope) {
+    if (parent && parent.type === "MemberExpression" && parent.property === node && !parent.computed) return;
+    if (parent && (parent.type === "Property" || parent.type === "MethodDefinition" || parent.type === "PropertyDefinition") && parent.key === node && !parent.computed && !parent.shorthand) return;
+    const b = lookup(scope, node.name);
+    if (!b) return;
+    this.refBinding.set(node, b);
+    if (!this.refs.has(b)) this.refs.set(b, []);
+    this.refs.get(b).push(node);
+  }
+
+  // A computed read whose key is built at run time may yield any member of its object, the global object's eval
+  // among them. It is CLEAN only when its value is provably never invoked and never leaves the expression: a
+  // test, a comparison, a write target, a property of it, or a binding whose every use is itself such a use.
+  // Anything else (an argument, a return, a store, a spread, an array or object element, a throw, a yield, a
+  // default export, a class field, an implicit global) is UNKNOWN. Direct calls are reported by checkCallee.
+  checkDynamicReads() {
+    for (const node of this.dynReads) {
+      if (!this.valueStaysInert(node, new Set())) this.report("U-COMPUTED-CALL", node, "a computed member read whose key is built at run time, and whose value is not shown never to be invoked");
+    }
+  }
+
+  valueStaysInert(node, seen) {
+    let cur = node;
+    let p = this.parents.get(cur);
+    while (p && (p.type === "ParenthesizedExpression" || p.type === "ChainExpression")) {
+      cur = p;
+      p = this.parents.get(cur);
+    }
+    if (!p) return false;
+    switch (p.type) {
+      case "ExpressionStatement":
+      case "UnaryExpression":
+      case "UpdateExpression":
+      case "TemplateLiteral":
+        return true;
+      case "BinaryExpression":
+        return p.operator !== "instanceof" || p.left === cur;
+      case "IfStatement":
+      case "WhileStatement":
+      case "DoWhileStatement":
+      case "ForStatement":
+        return p.test === cur;
+      case "ForInStatement":
+      case "ForOfStatement":
+        return p.right === cur;
+      case "ConditionalExpression":
+        return p.test === cur ? true : this.valueStaysInert(p, seen);
+      case "LogicalExpression":
+        return this.valueStaysInert(p, seen);
+      case "SequenceExpression":
+        return p.expressions[p.expressions.length - 1] === cur ? this.valueStaysInert(p, seen) : true;
+      case "MemberExpression": {
+        if (p.property === cur && p.computed) return true; // used as a key
+        if (p.object !== cur) return false;
+        const name = p.computed ? staticString(p.property) : p.property.name;
+        return !["call", "apply", "bind"].includes(name);
+      }
+      case "AssignmentExpression": {
+        if (p.left === cur) return true;
+        return p.left.type === "Identifier" && this.bindingStaysInert(this.refBinding.get(p.left), seen) && this.valueStaysInert(p, seen);
+      }
+      case "CallExpression":
+      case "NewExpression":
+        return this.argumentStaysInert(p, cur, seen);
+      case "SpreadElement": {
+        // { ...x } copies the members of x, which are read as members of x are: by name, and judged where they are called
+        const q = this.parents.get(p);
+        return !!q && q.type === "ObjectExpression";
+      }
+      case "ReturnStatement":
+        return this.returnStaysInert(p, seen);
+      case "AssignmentPattern":
+        if (p.left === cur) return true;
+        return p.left.type === "Identifier" && this.bindingStaysInert(this.refBinding.get(p.left), seen);
+      case "ArrowFunctionExpression":
+        return p.body === cur && this.resultStaysInert(p, seen);
+      case "VariableDeclarator":
+        if (p.id === cur) return true;
+        return p.init === cur && p.id.type === "Identifier" && this.bindingStaysInert(this.refBinding.get(p.id), seen);
+      default:
+        return false;
+    }
+  }
+
+  // A value passed as an argument stays inert when the callee provably never invokes it: a local function whose
+  // parameter is itself only used inertly, or a data method of a regular expression literal, a known string or
+  // array, or a Map or Set created here (test, includes, indexOf, get, has).
+  argumentStaysInert(call, cur, seen) {
+    if (call.callee === cur) return false;
+    const i = call.arguments.indexOf(cur);
+    if (i < 0) return false;
+    const callee = call.callee;
+    if (callee.type === "Identifier") {
+      const b = lookupFrom(this, callee);
+      const fn = b && b.fn;
+      if (!fn || b.defs.length !== 1 || this.usesArguments(fn)) return false;
+      let prm = fn.params[i];
+      if (prm && prm.type === "AssignmentPattern") prm = prm.left;
+      if (!prm || prm.type !== "Identifier") return false;
+      return this.bindingStaysInert(this.refBinding.get(prm), seen);
+    }
+    if (call.type === "CallExpression" && callee.type === "MemberExpression" && !callee.computed) {
+      const m = callee.property.name;
+      // Object.prototype.hasOwnProperty.call(x, key) reads own-property presence and never calls x
+      const hop = callee.object;
+      if (m === "call" && hop.type === "MemberExpression" && !hop.computed && hop.property.name === "hasOwnProperty" && hop.object.type === "MemberExpression" && !hop.object.computed && hop.object.property.name === "prototype" && hop.object.object.type === "Identifier" && hop.object.object.name === "Object" && !this.refBinding.get(hop.object.object)) return true;
+      const recv = callee.object;
+      // static data functions of the language that read their argument and never call it
+      const STATIC = { Object: ["keys", "values", "entries", "getPrototypeOf", "isFrozen", "getOwnPropertyNames"], Array: ["isArray"], Number: ["isFinite", "isInteger", "isNaN", "isSafeInteger"], JSON: ["stringify"] };
+      if (recv.type === "Identifier" && STATIC[recv.name] && STATIC[recv.name].includes(m) && !this.refBinding.get(recv)) return true;
+      if (m === "test" && ((recv.type === "Literal" && recv.regex) || (recv.type === "NewExpression" && recv.callee.type === "Identifier" && recv.callee.name === "RegExp" && !this.refBinding.get(recv.callee)))) return true;
+      if (["includes", "indexOf", "lastIndexOf"].includes(m) && recv.type === "Identifier") {
+        const b = lookupFrom(this, recv);
+        if (b && b.defs.length === 1 && b.defs[0].k === "expr" && ["ArrayExpression", "Literal"].includes(b.defs[0].node.type) && b.kind === "const") return true;
+      }
+      if (["get", "has"].includes(m) && recv.type === "Identifier") {
+        const b = lookupFrom(this, recv);
+        if (b && b.collection && b.defs.length === 1 && b.kind === "const") return true;
+      }
+    }
+    return false;
+  }
+
+  // A returned value is inert when the function is a local, unexported, plain function and every use of it is a call
+  // whose result is itself inert.
+  returnStaysInert(ret, seen) {
+    let fn = this.parents.get(ret);
+    while (fn && !/Function/.test(fn.type)) fn = this.parents.get(fn);
+    return fn ? this.resultStaysInert(fn, seen) : false;
+  }
+
+  resultStaysInert(fn, seen) {
+    if (fn.async || fn.generator) return false;
+    let b = null;
+    const holder = this.parents.get(fn);
+    if (fn.type === "FunctionDeclaration" && fn.id) {
+      b = this.refBinding.get(fn.id) ?? null;
+      if (holder && /^Export/.test(holder.type)) return false;
+    } else if (holder && holder.type === "VariableDeclarator" && holder.init === fn && holder.id.type === "Identifier") {
+      b = this.refBinding.get(holder.id) ?? null;
+      const decl = this.parents.get(holder);
+      const outer = decl && this.parents.get(decl);
+      if (outer && /^Export/.test(outer.type)) return false;
+    }
+    if (!b || b.defs.length !== 1) return false;
+    const key = fn;
+    if (seen.has(key)) return true;
+    seen.add(key);
+    for (const ref of this.refs.get(b) ?? []) {
+      if (ref === fn.id || ref === holder.id) continue; // the declaration itself
+      const call = this.parents.get(ref);
+      if (call && call.type === "CallExpression" && call.callee === ref) {
+        if (!this.valueStaysInert(call, seen)) return false;
+      } else if (!this.valueStaysInert(ref, seen)) return false; // the function value itself is only tested or compared
+    }
+    return true;
+  }
+
+  usesArguments(fn) {
+    if (fn.usesArguments !== undefined) return fn.usesArguments;
+    let found = false;
+    const visit = (n) => {
+      if (found || !n || typeof n.type !== "string") return;
+      if (n.type === "Identifier" && n.name === "arguments") { found = true; return; }
+      if (n !== fn && (n.type === "FunctionDeclaration" || n.type === "FunctionExpression")) return;
+      for (const k of Object.keys(n)) {
+        const v = n[k];
+        if (Array.isArray(v)) v.forEach(visit);
+        else if (v && typeof v.type === "string") visit(v);
+      }
+    };
+    visit(fn.body);
+    for (const p of fn.params) visit(p);
+    fn.usesArguments = found;
+    return found;
+  }
+
+  bindingStaysInert(binding, seen) {
+    if (!binding) return false;
+    if (seen.has(binding)) return true;
+    seen.add(binding);
+    for (const ref of this.refs.get(binding) ?? []) {
+      const par = this.parents.get(ref);
+      if (par && /Function/.test(par.type) && par.params.includes(ref)) continue; // the declaration of a parameter
+      if (!this.valueStaysInert(ref, seen)) return false;
+    }
+    return true;
   }
 
   // rules that the vendored trees are NOT exempt from
@@ -923,8 +1137,8 @@ class Analysis {
         const lit = staticString(node.property);
         if (lit === null) this.report("V-DYN-NAME", node, `computed member resolved to the name "${key}", which runs code`);
       }
-      const knownLiteral = av.length > 0 && av.every((a) => a.k === "str" || a.k === "arr" || a.k === "obj");
-      if (PROCESS_DENIED.has(key) && (hasKind("process", "nsproc", "global") || ((node.computed || pattern) && !knownLiteral))) this.report("V-PROCESS-INTERNAL", node, `process.${key}, which reaches internal modules or replaces the process`);
+      const knownLiteral = av.length > 0 && av.every((a) => a.k === "str" || a.k === "arr" || (a.k === "obj" && !a.open));
+      if (PROCESS_DENIED.has(key) && (hasKind("process", "nsproc", "global") || !knownLiteral)) this.report("V-PROCESS-INTERNAL", node, `process.${key}, which reaches internal modules or replaces the process`);
       if (MODULE_DENIED.has(key) && hasKind("module")) this.report("V-MODULE-MEMBER", node, `module.${key}, which loads and runs a file`);
       if (pattern && REFLECT_LOOKUPS.has(key) && hasKind("reflect")) this.report("V-REFLECT", node, `Reflect.${key} destructured, so its calls cannot be read`);
     }
@@ -938,6 +1152,7 @@ class Analysis {
       const sensitive = obj.find((a) => ["global", "process", "nsproc", "module", "reflect"].includes(a.k));
       if (sensitive) this.report("U-COMPUTED-GLOBAL", node, `computed access on ${sensitive.k === "nsproc" ? "process" : sensitive.k} with a key built at run time`);
     }
+    if (node.computed && keys === null && !(obj.length > 0 && obj.every((a) => a.k === "str" || a.k === "arr" || (a.k === "obj" && !a.open)))) this.dynReads.push(node);
     const own = this.ev(node, scope);
     const up = this.outerOf(node, ancestors);
     const isCallee = (p) => p && ((p.type === "CallExpression" && p.callee === up.node) || (p.type === "ChainExpression" && false));
@@ -1036,8 +1251,27 @@ class Analysis {
         }
       }
     }
+    if (node.type === "CallExpression") this.checkBuilt(node, scope);
+    this.checkOwnDescriptor(node, scope);
     if (node.type === "CallExpression") this.checkSpecifierCall(node, ancestors);
     this.checkMetaBase(node, ancestors);
+  }
+
+  // Reading a denied process member by name through a reflective call, on an object that is not a known literal:
+  // the process root may have been lost through a parameter, a return or a store.
+  checkOwnDescriptor(node, scope) {
+    if (node.type !== "CallExpression" || node.arguments.length < 2 || node.arguments.some((a) => a.type === "SpreadElement")) return;
+    const ce = unwrap(node.callee);
+    if (!ce || ce.type !== "MemberExpression") return;
+    const name = ce.computed ? staticString(ce.property) : ce.property.name;
+    const viaReflect = this.ev(ce.object, scope).some((a) => a.k === "reflect") && ["get", "getOwnPropertyDescriptor", "has"].includes(name);
+    const viaObject = ce.object.type === "Identifier" && ce.object.name === "Object" && !lookup(scope, "Object") && ["getOwnPropertyDescriptor", "hasOwn"].includes(name);
+    if (!viaReflect && !viaObject) return;
+    const keys = this.keysOf(this.ev(node.arguments[1], scope));
+    if (keys === null) return;
+    const obj = this.ev(node.arguments[0], scope);
+    const literal = obj.length > 0 && obj.every((a) => a.k === "str" || a.k === "arr" || (a.k === "obj" && !a.open));
+    for (const k of keys) if (PROCESS_DENIED.has(k) && !literal) this.report("V-PROCESS-INTERNAL", node, `${name} reads process.${k} from an object that is not a known literal`);
   }
 
   // require(...) and import.meta.resolve(...) and calls whose second argument is import.meta.url
@@ -1157,7 +1391,15 @@ class Analysis {
     if (!ok) this.sink.unreadable("U-URL", node.start, `pathToFileURL outside the entry-point comparison at offset ${node.start}`, "url");
   }
 
-  checkBinary() {}
+  // A string built from parts (a concatenation, a template, a join) that names a code-running or process member.
+  checkBuilt(node, scope) {
+    const v = this.ev(node, scope);
+    if (!this.allStr(v)) return;
+    for (const a of v) {
+      if (NAME_STRINGS.has(a.v) || IDENT_NAMES.has(a.v)) this.report("V-DYN-NAME", node, `a string built from parts that names "${a.v}", which runs code`);
+      if (PROCESS_DENIED.has(a.v)) this.report("V-PROCESS-INTERNAL", node, `a string built from parts that names "${a.v}", which reaches internal modules or replaces the process`);
+    }
+  }
 
   checkMeta(node, ancestors, parent) {
     if (node.meta.name !== "import") return;
@@ -1242,14 +1484,39 @@ export function parseContracted(source, limits = DEFAULT_LIMITS) {
     }
   }
   void limits;
+  // Cross-check (ST-61 review B1): Acorn 8.19.0 reads a slash after "?." and a keyword as the start of a regular
+  // expression, where Node reads a division. The two readings differ, so the parse cannot be trusted: the whole
+  // source is UNKNOWN, never read with one of the two meanings.
+  if (programs.length > 0) {
+    const hazard = optionalKeywordHazard(source, programs);
+    if (hazard !== null) return { programs: [], errors: [...errors, hazard] };
+  }
   return { programs, errors };
+}
+
+function optionalKeywordHazard(source, programs) {
+  for (const { sourceType } of programs) {
+    let prev = null;
+    let afterKeyword = null;
+    try {
+      for (const t of acorn.tokenizer(source, { ecmaVersion: PARSE_CONTRACT.ecmaVersion, sourceType, allowHashBang: true, allowReturnOutsideFunction: true })) {
+        // After "?." and a keyword-named member Acorn allows an expression, so a slash that follows is read as the start of
+        // a regular expression, where Node reads it as a division. Only a slash right after such a member is ambiguous.
+        if (afterKeyword !== null && (t.type.label === "regexp" || t.type.label === "/" || (t.type.label === "_=" && t.value === "/="))) return `a slash after a keyword-named member of ?. at offset ${afterKeyword}, which Acorn reads as a regular expression and Node as a division`;
+        afterKeyword = prev === "?." && (t.type.keyword || (t.type.label === "name" && t.value === "of")) ? t.start : null;
+        prev = t.type.label;
+      }
+    } catch {
+      // a tokenizer error after a successful parse changes nothing the parse did not already settle
+    }
+  }
+  return null;
 }
 
 /**
  * Classifies a JavaScript source. Returns { outcome, findings, specifiers, stats }; `findings` holds every
  * VIOLATION and UNKNOWN finding, `specifiers` every module specifier the source names.
- * Options: dynamicCode (false for a pinned vendored tree), limits (override of DEFAULT_LIMITS, tests only),
- * exemptIdentifier (a fingerprinted carve-out predicate; see ambientOffenders).
+ * Options: dynamicCode (false for a pinned vendored tree), limits (override of DEFAULT_LIMITS, tests only).
  */
 export function analyzeSource(source, options = {}) {
   const limits = { ...DEFAULT_LIMITS, ...(options.limits ?? {}) };
@@ -1298,7 +1565,7 @@ function finish(sink, stats) {
   return { outcome, findings, specifiers, stats };
 }
 
-export const renderFinding = (f) => `${f.form} ${f.reason}${/at offset d+$/.test(f.reason) ? "" : ` at offset ${f.offset}`} [${f.outcome} ${f.rule}]`;
+export const renderFinding = (f) => `${f.form} ${f.reason}${/at offset \d+$/.test(f.reason) ? "" : ` at offset ${f.offset}`} [${f.outcome} ${f.rule}]`;
 
 // ---------------------------------------------------------------------------------------------------------------
 // The allowlist helpers (an allowlisted file may use its reviewed names only as recorded direct calls)
@@ -1328,8 +1595,6 @@ export function directCallTexts(source, names) {
   const out = [];
   walkAll(ast, (n, anc) => {
     if (n.type !== "CallExpression" || n.optional || n.callee.type !== "Identifier" || !names.includes(n.callee.name)) return;
-    const parent = anc[anc.length - 1];
-    if (parent && parent.type === "ChainExpression") return;
     const parts = [];
     for (const t of tokens) {
       if (t.start < n.start || t.end > n.end) continue;

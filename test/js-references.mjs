@@ -882,7 +882,9 @@ export function externalReferences(source, where) {
   // UNITED: a finding from either fails, and the token reading can never turn an UNKNOWN or VIOLATION from the
   // tree into a pass.
   const ast = analyzeSource(source, { dynamicCode: where.dynamicCode !== false });
-  const tok = moduleReferences(source, { dynamicCode: where.dynamicCode !== false });
+  // The token reading is quadratic on pathological nesting. It can only add failures, so once the tree has already
+  // failed (a violation, an unknown, a bound or a parse failure) running it cannot change the verdict and it is skipped.
+  const tok = ast.outcome === "CLEAN" ? moduleReferences(source, { dynamicCode: where.dynamicCode !== false }) : { specifiers: [], unreadable: [] };
   const out = [...new Set([...ast.findings.map(renderFinding), ...tok.unreadable.map((u) => `${u.form} ${u.specifier}`)])];
   const seenSpec = new Set();
   const specifiers = [...ast.specifiers, ...tok.specifiers].filter((s) => {
