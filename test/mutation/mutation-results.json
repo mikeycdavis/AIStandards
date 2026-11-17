@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "pass": 183,
+  "pass": 194,
   "fail": 0
  },
  "results": [
@@ -8,259 +8,392 @@
    "id": "class-1",
    "area": "AST classification",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "class-3",
    "area": "AST classification",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "scope-1",
    "area": "scope ownership",
    "status": "KILLED",
-   "pass": null,
-   "fail": null
+   "how": "assertion",
+   "pass": 184,
+   "fail": 10
   },
   {
    "id": "scope-2",
    "area": "scope ownership",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "alias-1",
    "area": "alias propagation",
    "status": "KILLED",
-   "pass": 176,
+   "how": "assertion",
+   "pass": 187,
    "fail": 7
   },
   {
    "id": "alias-2",
    "area": "alias propagation",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "alias-3",
    "area": "alias propagation",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "reassign-1",
    "area": "reassignment",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "reassign-2",
    "area": "reassignment",
    "status": "KILLED",
-   "pass": 181,
+   "how": "assertion",
+   "pass": 192,
    "fail": 2
   },
   {
    "id": "unknown-1",
    "area": "UNKNOWN production",
    "status": "KILLED",
-   "pass": 172,
-   "fail": 11
+   "how": "assertion",
+   "pass": 180,
+   "fail": 14
   },
   {
    "id": "unknown-2",
    "area": "UNKNOWN production",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "unknown-3",
    "area": "UNKNOWN production",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "unknown-4",
    "area": "UNKNOWN production",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "token-1",
    "area": "token-guard defense",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "token-2",
    "area": "token-guard defense",
    "status": "SURVIVED",
-   "pass": 183,
+   "how": null,
+   "pass": 194,
    "fail": 0
   },
   {
    "id": "token-3",
    "area": "token-guard defense",
    "status": "KILLED",
-   "pass": 111,
-   "fail": 72
+   "how": "assertion",
+   "pass": 121,
+   "fail": 73
   },
   {
    "id": "rev-1-fixpoint-bound",
    "area": "reviewer survivor",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "rev-2-global-computed",
    "area": "reviewer survivor",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "rev-3-chain-unwrap",
    "area": "reviewer survivor",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "rev-4-spread-open",
    "area": "reviewer survivor",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "rev-5-carveout-local",
    "area": "reviewer survivor",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "rev-6-carveout-count",
    "area": "reviewer survivor",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "rev-7-vendored-skips-U",
    "area": "reviewer survivor",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "rev-8-optional-direct-call",
    "area": "reviewer survivor",
    "status": "KILLED",
-   "pass": 181,
+   "how": "assertion",
+   "pass": 192,
    "fail": 2
   },
   {
-   "id": "b1-hazard-off",
-   "area": "B1 optional keyword",
+   "id": "b1-token-rule-off",
+   "area": "B1 optional slash",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 191,
+   "fail": 3
+  },
+  {
+   "id": "b1-bracket-exempt",
+   "area": "B1 optional slash",
+   "status": "KILLED",
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
-   "id": "b1-slash-check-off",
-   "area": "B1 optional keyword",
+   "id": "b1-hazard-ignored",
+   "area": "B1 optional slash",
    "status": "KILLED",
-   "pass": 182,
-   "fail": 1
+   "how": "assertion",
+   "pass": 191,
+   "fail": 3
   },
   {
    "id": "b2-denied-any-object",
    "area": "B2 process internals",
    "status": "KILLED",
-   "pass": 168,
-   "fail": 15
+   "how": "assertion",
+   "pass": 178,
+   "fail": 16
   },
   {
    "id": "b2-open-object",
    "area": "B2 process internals",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "b2-built-name",
    "area": "B2 process internals",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "b2-with",
    "area": "B2 process internals",
    "status": "KILLED",
-   "pass": 179,
+   "how": "assertion",
+   "pass": 190,
    "fail": 4
   },
   {
    "id": "b2-reflective-key",
    "area": "B2 process internals",
    "status": "KILLED",
-   "pass": 181,
+   "how": "assertion",
+   "pass": 192,
    "fail": 2
   },
   {
    "id": "b3-dynamic-reads-off",
    "area": "B3 dynamic reads",
    "status": "KILLED",
-   "pass": 162,
-   "fail": 21
+   "how": "assertion",
+   "pass": 172,
+   "fail": 22
   },
   {
    "id": "b3-argument-inert",
    "area": "B3 dynamic reads",
    "status": "KILLED",
-   "pass": 172,
+   "how": "assertion",
+   "pass": 183,
    "fail": 11
   },
   {
    "id": "b3-return-inert",
    "area": "B3 dynamic reads",
    "status": "KILLED",
-   "pass": 180,
+   "how": "assertion",
+   "pass": 191,
    "fail": 3
-  },
-  {
-   "id": "b3-member-call",
-   "area": "B3 dynamic reads",
-   "status": "SURVIVED",
-   "pass": 183,
-   "fail": 0
   },
   {
    "id": "b3-static-fn-unbound",
    "area": "B3 dynamic reads",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
+   "fail": 1
+  },
+  {
+   "id": "r2-param-pattern",
+   "area": "B2 pattern positions",
+   "status": "KILLED",
+   "how": "assertion",
+   "pass": 193,
+   "fail": 1
+  },
+  {
+   "id": "r2-catch-pattern",
+   "area": "B2 pattern positions",
+   "status": "KILLED",
+   "how": "assertion",
+   "pass": 193,
+   "fail": 1
+  },
+  {
+   "id": "r2-for-declaration",
+   "area": "B2 pattern positions",
+   "status": "KILLED",
+   "how": "assertion",
+   "pass": 0,
+   "fail": 5
+  },
+  {
+   "id": "r2-for-assignment",
+   "area": "B2 pattern positions",
+   "status": "KILLED",
+   "how": "assertion",
+   "pass": 193,
+   "fail": 1
+  },
+  {
+   "id": "r2-rest-pattern",
+   "area": "B2 pattern positions",
+   "status": "KILLED",
+   "how": "assertion",
+   "pass": 193,
+   "fail": 1
+  },
+  {
+   "id": "r2-memo-off",
+   "area": "item 3 evaluation",
+   "status": "KILLED",
+   "how": "assertion",
+   "pass": 193,
+   "fail": 1
+  },
+  {
+   "id": "r2-evals-bound-off",
+   "area": "item 3 evaluation",
+   "status": "KILLED",
+   "how": "assertion",
+   "pass": 193,
+   "fail": 1
+  },
+  {
+   "id": "r2-callee-twice",
+   "area": "item 3 evaluation",
+   "status": "KILLED",
+   "how": "assertion",
+   "pass": 104,
+   "fail": 90
+  },
+  {
+   "id": "r2-member-property-inert",
+   "area": "item 4 dynamic read",
+   "status": "KILLED",
+   "how": "assertion",
+   "pass": 193,
+   "fail": 1
+  },
+  {
+   "id": "r2-descriptor-dynamic-key",
+   "area": "item 4 dynamic read",
+   "status": "KILLED",
+   "how": "assertion",
+   "pass": 193,
+   "fail": 1
+  },
+  {
+   "id": "r2-postfix-token-scan",
+   "area": "N-b postfix division",
+   "status": "KILLED",
+   "how": "assertion",
+   "pass": 193,
+   "fail": 1
+  },
+  {
+   "id": "r2-postfix-tokenizer",
+   "area": "N-b postfix division",
+   "status": "KILLED",
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   },
   {
    "id": "n3-token-guard-always",
    "area": "N3 quadratic guard",
    "status": "KILLED",
-   "pass": 182,
+   "how": "assertion",
+   "pass": 193,
    "fail": 1
   }
  ]
