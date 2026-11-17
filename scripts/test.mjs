@@ -57,6 +57,7 @@ const FILES = [
   "ast-guard.test.mjs",
   "ast-guard-corpus.test.mjs",
   "ast-guard-hardening.test.mjs",
+  "ast-guard-round2.test.mjs",
   "structural-ledger.test.mjs",
   "structural-shapes.test.mjs",
   "structural-retirement.test.mjs",
