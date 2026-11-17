@@ -205,3 +205,21 @@ test("B3 controls: arguments to a local function whose parameter is inert, a ret
     "const r = [1].map(o[k]);",
   ]) assert.notEqual(outcome(bad), OUTCOME.CLEAN, bad);
 });
+
+// Mutants that survived the first run of this round (rev-3, class-3, b3-member-call, b3-static-fn-unbound).
+test("M3b: a parenthesised optional chain is looked through for a URL base and an import.meta.resolve specifier", () => {
+  const rules = (src) => analyzeSource(src + "\n").findings.map((f) => f.rule);
+  assert.ok(rules("(import.meta?.resolve)(x)").includes("U-SPECIFIER"));
+  assert.deepEqual(rules("const u = new (o?.URL)(x, import.meta.url)"), ["U-URL", "U-URL"]);
+});
+test("class-3: call, apply and bind of a stored dynamic member from a known table are still a call of it", () => {
+  for (const src of ["const T = { a: 1 }; const f = T[k]; f.call(null, 'x');", "const T = { a: 1 }; const f = T[k]; f.apply(null, ['x']);", "const T = { a: 1 }; const f = T[k]; const g = f.bind(null); g('x');"]) {
+    assert.notEqual(outcome(src), OUTCOME.CLEAN, src);
+  }
+});
+test("b3: a dynamic read bound through .bind is not inert, and a local Object is not the language's Object", () => {
+  assert.notEqual(outcome("const g = o[k].bind(null); g('x');"), OUTCOME.CLEAN);
+  assert.notEqual(outcome("const Object = { keys: (x) => x() }; Object.keys(o[k]);"), OUTCOME.CLEAN);
+  assert.notEqual(outcome("function f(Object, o, k) { return Object.keys(o[k]); } f({ keys: (x) => x() }, p, q);"), OUTCOME.CLEAN);
+  assert.equal(outcome("const n = Object.keys(o[k]).length;"), OUTCOME.CLEAN);
+});
