@@ -817,6 +817,20 @@ class Analysis {
         return this.checkMeta(node, ancestors, parent);
       case "VariableDeclarator":
         return this.checkDeclarator(node, scope);
+      // every other position that binds or assigns through a pattern goes through the same checkPattern (round 2, B2)
+      case "FunctionDeclaration":
+      case "FunctionExpression":
+      case "ArrowFunctionExpression":
+        for (const p of node.params) this.checkPattern(p, [UNK], scope);
+        return undefined;
+      case "CatchClause":
+        if (node.param) this.checkPattern(node.param, [UNK], scope);
+        return undefined;
+      case "ForInStatement":
+      case "ForOfStatement":
+        if (node.left.type === "VariableDeclaration") for (const d of node.left.declarations) this.checkPattern(d.id, [UNK], scope);
+        else this.checkPattern(node.left, [UNK], scope);
+        return undefined;
       case "AssignmentExpression":
         if (node.left.type === "ObjectPattern" || node.left.type === "ArrayPattern") this.checkPattern(node.left, this.ev(node.right, scope), scope);
         return undefined;
@@ -1210,6 +1224,9 @@ class Analysis {
       case "AssignmentPattern":
         this.checkPattern(pattern.left, this.union(srcAv, this.ev(pattern.right, scope)), scope);
         break;
+      case "RestElement":
+        this.checkPattern(pattern.argument, [UNK], scope);
+        break;
       default:
         break;
     }
@@ -1469,7 +1486,16 @@ class Sink {
 export function parseContracted(source, limits = DEFAULT_LIMITS) {
   const programs = [];
   const errors = [];
+  let hazard = null;
   for (const sourceType of PARSE_CONTRACT.sourceTypes) {
+    // Cross-check (ST-61 review B1, round 2): after "?." and a member name Node always reads a slash as a division, but
+    // Acorn 8.19.0 lets an expression follow some names (keywords, "of", "yield" and "await" in a generator or async
+    // function, escaped keywords) and reads a regular expression there. The tokens are taken from the parse itself, so the
+    // parser's own context decides, and no list of words is kept: any regular expression directly after "?." and a name
+    // makes the whole source UNKNOWN, because the two readings differ.
+    let before = null;
+    let beforeThat = null;
+    let local = null;
     try {
       const ast = acorn.parse(source, {
         ecmaVersion: PARSE_CONTRACT.ecmaVersion,
@@ -1477,40 +1503,22 @@ export function parseContracted(source, limits = DEFAULT_LIMITS) {
         allowHashBang: PARSE_CONTRACT.allowHashBang,
         allowReturnOutsideFunction: sourceType === "script" && PARSE_CONTRACT.allowReturnOutsideFunction,
         preserveParens: PARSE_CONTRACT.preserveParens,
+        onToken: (t) => {
+          const label = t.type.label;
+          if (local === null && label === "regexp" && beforeThat === "?." && before !== "[" && before !== "(") local = t.start;
+          beforeThat = before;
+          before = label;
+        },
       });
+      if (local !== null && hazard === null) hazard = `a slash after "?." and a member name at offset ${local}, which Acorn reads as a regular expression and Node as a division`;
       programs.push({ ast, sourceType });
     } catch (e) {
       errors.push(`${sourceType}: ${e && e.message ? e.message : String(e)}`);
     }
   }
   void limits;
-  // Cross-check (ST-61 review B1): Acorn 8.19.0 reads a slash after "?." and a keyword as the start of a regular
-  // expression, where Node reads a division. The two readings differ, so the parse cannot be trusted: the whole
-  // source is UNKNOWN, never read with one of the two meanings.
-  if (programs.length > 0) {
-    const hazard = optionalKeywordHazard(source, programs);
-    if (hazard !== null) return { programs: [], errors: [...errors, hazard] };
-  }
+  if (programs.length > 0 && hazard !== null) return { programs: [], errors: [...errors, hazard] };
   return { programs, errors };
-}
-
-function optionalKeywordHazard(source, programs) {
-  for (const { sourceType } of programs) {
-    let prev = null;
-    let afterKeyword = null;
-    try {
-      for (const t of acorn.tokenizer(source, { ecmaVersion: PARSE_CONTRACT.ecmaVersion, sourceType, allowHashBang: true, allowReturnOutsideFunction: true })) {
-        // After "?." and a keyword-named member Acorn allows an expression, so a slash that follows is read as the start of
-        // a regular expression, where Node reads it as a division. Only a slash right after such a member is ambiguous.
-        if (afterKeyword !== null && (t.type.label === "regexp" || t.type.label === "/" || (t.type.label === "_=" && t.value === "/="))) return `a slash after a keyword-named member of ?. at offset ${afterKeyword}, which Acorn reads as a regular expression and Node as a division`;
-        afterKeyword = prev === "?." && (t.type.keyword || (t.type.label === "name" && t.value === "of")) ? t.start : null;
-        prev = t.type.label;
-      }
-    } catch {
-      // a tokenizer error after a successful parse changes nothing the parse did not already settle
-    }
-  }
-  return null;
 }
 
 /**
