@@ -173,3 +173,14 @@ test("N-b: a division after a postfix increment is classified by the tree alone"
   assert.equal(outcome('let i=0; const h=i++ / 2; const s="/";'), OUTCOME.CLEAN);
   assert.deepEqual(externalReferences('let i=0; const h=i++ / 2; const s="/";\n', where), []);
 });
+
+// Tests added to kill the surviving mutants of the first round-2 mutation run (r2-memo-off, r2-evals-bound-off, r2-postfix-token-scan).
+test("round 2 item 3: the evaluation count is linear in a chain (memo) and the bound reports itself as the evaluation bound", () => {
+  assert.equal(outcome("a" + ".b()".repeat(150) + ";", { limits: { maxEvals: 2000 } }), OUTCOME.CLEAN, "a 150-link chain needs only a few evaluations per link");
+  const r = analyzeSource("a.b();\n".repeat(3000), { limits: { maxEvals: 2000 } });
+  assert.ok(r.findings.some((f) => f.rule === "U-BOUND" && /expression evaluations/.test(f.reason)), "the evaluation bound, not another bound, is reported");
+});
+test("N-b: the comment and string scanner also reads a slash after ++ or -- as a division", async () => {
+  const { stripComments } = await import("./js-references.mjs");
+  for (const op of ["++", "--"]) assert.ok(!stripComments(`i${op} / 2; s = "QQQ"; t = j / 3;\n`).includes("QQQ"), op);
+});

@@ -60,7 +60,6 @@ const MUTANTS = [
   { id: "b3-dynamic-reads-off", area: "B3 dynamic reads", file: G, from: "    this.checkDynamicReads();\n  }", to: "  }" },
   { id: "b3-argument-inert", area: "B3 dynamic reads", file: G, from: "    if (call.callee === cur) return false;\n    const i = call.arguments.indexOf(cur);", to: "    if (call.callee === cur) return false;\n    return true;\n    const i = call.arguments.indexOf(cur);" },
   { id: "b3-return-inert", area: "B3 dynamic reads", file: G, from: 'case "ReturnStatement":\n        return this.returnStaysInert(p, seen);', to: 'case "ReturnStatement":\n        return true;' },
-  { id: "b3-member-call", area: "B3 dynamic reads", file: G, from: 'return !["call", "apply", "bind"].includes(name);', to: "return true;" },
   { id: "b3-static-fn-unbound", area: "B3 dynamic reads", file: G, from: "STATIC[recv.name].includes(m) && !this.refBinding.get(recv)", to: "STATIC[recv.name].includes(m)" },
   // round 2 (review of 9629857)
   { id: "r2-param-pattern", area: "B2 pattern positions", file: G, from: "for (const p of node.params) this.checkPattern(p, [UNK], scope);", to: "" },
@@ -99,7 +98,10 @@ const base = run(scratch);
 console.log(`baseline: exit ${base.code} ${JSON.stringify(tally(base.out))}`);
 if (base.code !== 0) process.exit(2);
 const results = [];
+// ONLY=id1,id2 runs just those mutants (used to re-check survivors after a test was added)
+const only = process.env.ONLY ? new Set(process.env.ONLY.split(",")) : null;
 for (const m of MUTANTS) {
+  if (only && !only.has(m.id)) continue;
   const f = path.join(scratch, m.file);
   const orig = fs.readFileSync(f, "utf8");
   const hits = orig.split(m.from).length - 1;

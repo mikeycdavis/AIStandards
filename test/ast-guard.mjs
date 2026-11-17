@@ -957,9 +957,8 @@ class Analysis {
       case "MemberExpression": {
         if (p.property === cur && p.computed) return true; // used as a key
         if (p.object !== cur) return false;
-        const name = p.computed ? staticString(p.property) : p.property.name;
-        if (["call", "apply", "bind"].includes(name)) return false;
-        // a property of the read is as unknown as the read: it may be the function itself, so it must stay inert in turn
+        // a property of the read is as unknown as the read, .call .apply and .bind included: it may be the function itself,
+        // so it must stay inert in turn (a member that is called is not inert)
         return this.valueStaysInert(p, seen);
       }
       case "AssignmentExpression": {
