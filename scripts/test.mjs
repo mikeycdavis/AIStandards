@@ -56,6 +56,7 @@ const FILES = [
   "vendor-acorn.test.mjs",
   "ast-guard.test.mjs",
   "ast-guard-corpus.test.mjs",
+  "ast-guard-hardening.test.mjs",
   "structural-ledger.test.mjs",
   "structural-shapes.test.mjs",
   "structural-retirement.test.mjs",

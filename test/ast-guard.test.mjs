@@ -96,7 +96,8 @@ test("the parse contract is frozen: ECMAScript 2025, module and script, no plugi
   assert.deepEqual({ ...PARSE_CONTRACT, sourceTypes: [...PARSE_CONTRACT.sourceTypes], plugins: [...PARSE_CONTRACT.plugins] }, { ecmaVersion: 2025, sourceTypes: ["module", "script"], allowHashBang: true, allowReturnOutsideFunction: true, preserveParens: true, plugins: [] });
   assert.equal(Object.isFrozen(PARSE_CONTRACT), true);
   assert.equal(outcome("import fs from 'node:fs'; export const a = 1;"), C);
-  assert.equal(outcome("var a = 1; with (a) {}"), C);
+  // a with statement looks names up in an object at run time, so it is UNKNOWN (ST-61 review round, B2)
+  assert.equal(outcome("var a = 1; with (a) {}"), "UNKNOWN");
   assert.equal(outcome("return 1;"), C);
   assert.equal(outcome("#!/usr/bin/env node\nconst a = 1;"), C);
 });
