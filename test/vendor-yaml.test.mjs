@@ -147,8 +147,8 @@ test("real links are caught as entries and as import targets (skipped, and repor
   }
 });
 
-test("scripts/vendor holds only the yaml tree and its identity (a second vendored package needs its own decision)", () => {
-  assert.deepEqual(fs.readdirSync(VENDOR).sort(), ["yaml", "yaml.vendor.json"]);
+test("scripts/vendor holds only the yaml and acorn trees and their identities (another vendored package needs its own decision)", () => {
+  assert.deepEqual(fs.readdirSync(VENDOR).sort(), ["acorn", "acorn.vendor.json", "yaml", "yaml.vendor.json"]);
 });
 
 test("the upstream licence and copyright notice ship with the tree, and are not abbreviated", () => {

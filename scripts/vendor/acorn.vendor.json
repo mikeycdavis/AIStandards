@@ -1,0 +1,41 @@
+{
+  "schema": "vendor-identity/1",
+  "name": "acorn",
+  "version": "8.19.0",
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "copyright": "Copyright (C) 2012-2022 by various contributors (see AUTHORS)",
+  "source": {
+    "registryTarball": "https://registry.npmjs.org/acorn/-/acorn-8.19.0.tgz",
+    "repository": "https://github.com/acornjs/acorn",
+    "releaseIdentity": "npm acorn@8.19.0 (gitHead 0e0ece7cc7202624d4aca531be4b515b0114b5d0)",
+    "tarballIntegritySha512": "sha512-oJlA3XiRm7Cyk6qFD2Jn8ak9B7jSy0qy00ADO3+8dpT0LSjFihQYv4C02LFCSYJV3Q37xYwwRy5m+IpIiUzqWw==",
+    "tarballSha1": "6b26fd97ce1cc9dc50bdf7ad305e9f1384d4f28a",
+    "tarballSha256": "c6fad21ffa1f2ba20338bf1dde1de911c2093c1aaf7b3af17c477661bd3bfaaf"
+  },
+  "vendoredSubset": "LICENSE, package.json and dist/acorn.mjs from the package, unmodified. Nothing else from the package is vendored (no CommonJS build, no walker, no CLI, no type declarations).",
+  "modifications": "none",
+  "entrypoint": "dist/acorn.mjs",
+  "review": "ST-61 (#148): tarball integrity matched the registry (sha512 and sha1); the three files below are byte-identical to the package; dist/acorn.mjs has no import, no require, no process/fetch use and no global object access. The only ambient-looking name is the local variable `self` (a loop variable in a scope-lookup helper), pinned below by file hash and occurrence count; it is not a directory or name exemption.",
+  "ambientCarveOut": {
+    "file": "dist/acorn.mjs",
+    "identifier": "self",
+    "meaning": "local-variable occurrences only (each resolves to a binding declared in this file), valid only while the file hashes to the value below and the occurrence count is unchanged",
+    "sha256": "76254fc76529713b4dfd2532972d17a991ffd9aafeebb1f977445b5506b9fb0b",
+    "occurrences": 6
+  },
+  "files": [
+    {
+      "sha256": "76254fc76529713b4dfd2532972d17a991ffd9aafeebb1f977445b5506b9fb0b",
+      "path": "dist/acorn.mjs"
+    },
+    {
+      "sha256": "76a876cf886ff9be2a8b5e2e86514fed06223c8c9f0c1e9ee9606e93841e00b7",
+      "path": "LICENSE"
+    },
+    {
+      "sha256": "04d6fecaafb5e3d20a38fc3b64fed84bb3830a7759a8c00400ebcb87331fec00",
+      "path": "package.json"
+    }
+  ]
+}
