@@ -3,7 +3,7 @@
 // TypeScript, YAML guard or YAML tag behaviour is claimed here.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { analyzeSource, OUTCOME, RULES, PARSE_CONTRACT, DEFAULT_LIMITS, ODD_CALLEE_REASON } from "./ast-guard.mjs";
+import { analyzeSource, OUTCOME, RULES, PARSE_CONTRACT, DEFAULT_LIMITS, ODD_CALLEE_REASON, directCallTexts } from "./ast-guard.mjs";
 import { externalReferences } from "./js-references.mjs";
 
 const outcome = (src, opts) => analyzeSource(src, opts).outcome;
@@ -278,4 +278,20 @@ test("performance: adversarial alias chains and wide scopes stay bounded", () =>
   const nest = "(".repeat(5000) + "1" + ")".repeat(5000);
   const t5 = timed(() => analyzeSource(`x = ${nest};`));
   assert.ok(t5.ms < 20000);
+});
+
+// Mutation follow-ups (criterion 9): behaviours the first mutation run showed were not pinned.
+test("a compound assignment makes the binding unknown, never just its right-hand side", () => {
+  const unresolved = analyzeSource('let k = "ex"; k += "it"; process[k](0);');
+  assert.equal(unresolved.outcome, OUTCOME.UNKNOWN);
+  assert.equal(analyzeSource('let k = "ex"; process[k](0);').outcome, OUTCOME.CLEAN, "negative control: the plain binding resolves");
+});
+
+test("require as a literal callee is read as a call; any other use of the name is UNKNOWN", () => {
+  for (const ok of ['require("fs");', 'x.require("fs");', 'x?.require?.("fs");']) assert.equal(analyzeSource(ok).outcome, OUTCOME.CLEAN, ok);
+  for (const bad of ["require;", "const r = require; r('fs');", "f(require);", "x.require;"]) assert.equal(analyzeSource(bad).outcome, OUTCOME.UNKNOWN, bad);
+});
+
+test("an optional or parenthesised call is not recorded as a direct call", () => {
+  assert.deepEqual(directCallTexts("foo?.(1); foo(2); (foo)(3); a?.b(foo(4));", ["foo"]), ["foo ( 2 )", "foo ( 4 )"]);
 });
