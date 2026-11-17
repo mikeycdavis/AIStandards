@@ -36,6 +36,7 @@ export const DEFAULT_LIMITS = Object.freeze({
   maxAliasDepth: 24,
   maxFixpointRounds: 4,
   maxStringSet: 32,
+  maxEvals: 20_000_000,
 });
 
 // The stable rule table. Ids, outcomes and the reason prefixes are frozen: a test pins the table.
@@ -179,6 +180,12 @@ class Analysis {
     this.maxSeen = 0;
     this.keyDepth = 0;
     this.alloc = new Map();
+    this.memo = new Map(); // node -> its abstract value, valid while no binding is half-evaluated
+    this.stable = false; // true once the bindings are final, so the memo can live across the walk
+    this.evTop = 0;
+    this.inBinding = 0;
+    this.evals = 0;
+    this.evalBoundHit = false;
     this.parents = new Map(); // node -> its parent, filled while walking
     this.refs = new Map(); // binding -> identifier nodes that name it
     this.refBinding = new Map(); // identifier node -> binding
@@ -464,6 +471,7 @@ class Analysis {
     }
     if (b.state === 1) return b.val;
     b.state = 1;
+    this.inBinding += 1;
     const outerSeen = this.maxSeen;
     this.maxSeen = 0;
     let val = [];
@@ -479,6 +487,7 @@ class Analysis {
       if (round === this.limits.maxFixpointRounds - 1) this.sink.add("U-BOUND", 0, `binding ${b.name} did not settle within ${this.limits.maxFixpointRounds} rounds`);
     }
     b.val = val;
+    this.inBinding -= 1;
     b.depth = this.maxSeen + 1;
     b.state = 2;
     this.maxSeen = Math.max(outerSeen, b.depth);
@@ -584,7 +593,35 @@ class Analysis {
     }
   }
 
+  // One evaluation per node: the value of a node is computed once and reused, so a long chain of calls is evaluated in
+  // linear time (round 2, item 3). The memo is cleared between top-level evaluations until the bindings are final,
+  // and a value is stored only when no binding is half-evaluated (a cycle member's value is not final yet).
+  // A node-evaluation bound turns a runaway analysis into U-BOUND.
   ev(node, scope, d = 0) {
+    if (!node) return [UNK];
+    if (this.evTop === 0 && !this.stable) this.memo.clear();
+    const hit = this.memo.get(node);
+    if (hit !== undefined) return hit;
+    this.evals += 1;
+    if (this.evals > this.limits.maxEvals) {
+      if (!this.evalBoundHit) {
+        this.evalBoundHit = true;
+        this.sink.add("U-BOUND", node.start ?? 0, `more than ${this.limits.maxEvals} expression evaluations; the analysis stopped`);
+      }
+      return [UNK];
+    }
+    this.evTop += 1;
+    let v;
+    try {
+      v = this.evRaw(node, scope, d);
+    } finally {
+      this.evTop -= 1;
+    }
+    if (this.inBinding === 0) this.memo.set(node, v);
+    return v;
+  }
+
+  evRaw(node, scope, d = 0) {
     if (d > 200) {
       this.sink.add("U-BOUND", node.start ?? 0, "expression nesting deeper than the evaluation bound");
       return [UNK];
@@ -679,11 +716,8 @@ class Analysis {
         obj.open = openObj;
         return [obj];
       }
-      case "MemberExpression": {
-        const obj = this.ev(node.object, scope, d + 1);
-        const keys = node.computed ? this.keysOf(this.ev(node.property, scope, d + 1)) : [node.property.name];
-        return this.getMember(obj, keys, node.start);
-      }
+      case "MemberExpression":
+        return this.evMember(node, this.ev(node.object, scope, d + 1), scope, d);
       case "CallExpression": {
         const callee = unwrap(node.callee);
         if (callee && callee.type === "Identifier" && callee.name === "String" && !lookup(scope, "String") && node.arguments.length === 1 && node.arguments[0].type !== "SpreadElement") {
@@ -694,8 +728,9 @@ class Analysis {
         if (callee && callee.type === "MemberExpression" && !callee.computed && callee.object.type === "Identifier" && callee.object.name === "Object" && !lookup(scope, "Object") && ["freeze", "seal", "preventExtensions"].includes(callee.property.name) && node.arguments.length === 1 && node.arguments[0].type !== "SpreadElement") {
           return this.ev(node.arguments[0], scope, d + 1);
         }
+        const calleeObj = callee && callee.type === "MemberExpression" ? this.ev(callee.object, scope, d + 1) : null;
         if (callee && callee.type === "MemberExpression" && !callee.computed && callee.property.name === "join" && node.arguments.length <= 1) {
-          const arr = this.ev(callee.object, scope, d + 1);
+          const arr = calleeObj;
           const sepNode = node.arguments[0];
           const sep = sepNode ? this.ev(sepNode, scope, d + 1) : this.str(",");
           if (arr.length === 1 && arr[0].k === "arr" && !arr[0].open && this.allStr(sep) && sep.length === 1) {
@@ -709,11 +744,11 @@ class Analysis {
           return [UNK];
         }
         if (callee && callee.type === "MemberExpression") {
-          const obj = this.ev(callee.object, scope, d + 1);
+          const obj = calleeObj;
           if (obj.some((x) => x.k === "dyn") && !callee.computed && ["call", "apply", "bind"].includes(callee.property.name)) return [UNK];
         }
         // Reflect.get(obj, "key") reads like obj.key
-        const cv = this.ev(node.callee, scope, d + 1);
+        const cv = calleeObj ? this.evMember(callee, calleeObj, scope, d) : this.ev(node.callee, scope, d + 1);
         if (cv.length === 1 && cv[0].k === "rmethod" && cv[0].m === "get" && node.arguments.length >= 2 && !node.arguments.some((a) => a.type === "SpreadElement")) {
           const keys = this.keysOf(this.ev(node.arguments[1], scope, d + 1));
           return this.getMember(this.ev(node.arguments[0], scope, d + 1), keys, node.start);
@@ -725,11 +760,17 @@ class Analysis {
     }
   }
 
+  evMember(node, obj, scope, d) {
+    const keys = node.computed ? this.keysOf(this.ev(node.property, scope, d + 1)) : [node.property.name];
+    return this.getMember(obj, keys, node.start);
+  }
+
   // ---- pass 2: the checks ----
   run() {
     this.build(this.ast, null);
     if (this.boundHit) return;
     this.resolvePending();
+    this.stable = true;
     const root = this.scopeOf.get(this.ast);
     this.walk(this.ast, [], root, 0);
     this.checkDynamicReads();
@@ -917,7 +958,9 @@ class Analysis {
         if (p.property === cur && p.computed) return true; // used as a key
         if (p.object !== cur) return false;
         const name = p.computed ? staticString(p.property) : p.property.name;
-        return !["call", "apply", "bind"].includes(name);
+        if (["call", "apply", "bind"].includes(name)) return false;
+        // a property of the read is as unknown as the read: it may be the function itself, so it must stay inert in turn
+        return this.valueStaysInert(p, seen);
       }
       case "AssignmentExpression": {
         if (p.left === cur) return true;
@@ -1285,9 +1328,13 @@ class Analysis {
     const viaObject = ce.object.type === "Identifier" && ce.object.name === "Object" && !lookup(scope, "Object") && ["getOwnPropertyDescriptor", "hasOwn"].includes(name);
     if (!viaReflect && !viaObject) return;
     const keys = this.keysOf(this.ev(node.arguments[1], scope));
-    if (keys === null) return;
     const obj = this.ev(node.arguments[0], scope);
     const literal = obj.length > 0 && obj.every((a) => a.k === "str" || a.k === "arr" || (a.k === "obj" && !a.open));
+    if (keys === null) {
+      // a descriptor chosen at run time from an object that is not a known literal carries a value that may be any member
+      if (name === "getOwnPropertyDescriptor" && !literal) this.report("U-REFLECT-KEY", node, `${name} with a key built at run time on an object that is not a known literal`);
+      return;
+    }
     for (const k of keys) if (PROCESS_DENIED.has(k) && !literal) this.report("V-PROCESS-INTERNAL", node, `${name} reads process.${k} from an object that is not a known literal`);
   }
 

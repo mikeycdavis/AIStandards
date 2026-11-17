@@ -124,7 +124,7 @@ test("the vendored tree keeps the import and URL rules but is exempt from the dy
 });
 
 test("DEFAULT_LIMITS names every bound", () => {
-  assert.deepEqual(Object.keys(DEFAULT_LIMITS).sort(), ["maxAliasDepth", "maxDepth", "maxFixpointRounds", "maxNodes", "maxSourceChars", "maxStringSet"]);
+  assert.deepEqual(Object.keys(DEFAULT_LIMITS).sort(), ["maxAliasDepth", "maxDepth", "maxEvals", "maxFixpointRounds", "maxNodes", "maxSourceChars", "maxStringSet"]);
   assert.equal(Object.isFrozen(DEFAULT_LIMITS), true);
 });
 

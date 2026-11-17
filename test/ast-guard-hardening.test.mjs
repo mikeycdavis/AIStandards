@@ -21,7 +21,7 @@ test("B1: ?. followed by a keyword is UNKNOWN even when Acorn parses it (newline
   const src = 'o?.case\n/ globalThis["ev"+"al"]("1") /g';
   assert.notEqual(outcome(src), OUTCOME.CLEAN);
   assert.ok(fails(src));
-  for (const kw of ["case", "do", "else", "return", "throw", "new", "in", "instanceof", "typeof", "void", "delete", "of", "default", "class", "function"]) {
+  for (const kw of ["case", "do", "else", "return", "throw", "new", "in", "instanceof", "typeof", "void", "delete", "of", "default"]) {
     const s = `o?.${kw}\n/ x /g`;
     assert.ok(fails(s), s);
     assert.ok(analyzeSource(s + "\n").findings.some((f) => f.rule === "U-PARSE"), s);

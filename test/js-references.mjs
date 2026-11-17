@@ -68,6 +68,7 @@ export function stripComments(source, keepStrings = false) {
         else if (last === ")") regex = closesControlHead(before);
         else if (last === "]") regex = false;
         else if (/[\w$]/.test(last)) regex = REGEX_KEYWORDS.has(/[\w$]+$/.exec(before)[0]);
+        else if ((last === "+" || last === "-") && before.endsWith(last + last)) regex = false; // a postfix ++ or --: a regex is not assignable, so this is a division
         else regex = true;
         let j = i + 1;
         let closed = false;
@@ -305,7 +306,9 @@ export function tokenize(source) {
         const p = toks[toks.length - 1];
         let regex = true;
         if (p) {
-          if (p.t === "punct") regex = p.v === ")" ? lastCloseControl : p.v !== "]";
+          const pp = toks[toks.length - 2];
+          const postfix = (p.v === "+" || p.v === "-") && pp && pp.t === "punct" && pp.v === p.v && pp.e === p.s;
+          if (p.t === "punct") regex = p.v === ")" ? lastCloseControl : p.v !== "]" && !postfix;
           else if (p.t === "id") regex = REGEX_KEYWORDS.has(p.v);
           else regex = false;
         }

@@ -122,11 +122,12 @@ test("B2 (round 2): ordinary patterns stay CLEAN", () => {
 // ---- item 3: nested call chains are evaluated in linear time ----
 const guardUrl = pathToFileURL(path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "ast-guard.mjs")).href;
 const timed = (sources) => {
-  const code = `import { analyzeSource } from ${JSON.stringify(guardUrl)};
+  const code = `import fs from "node:fs";
+import { analyzeSource } from ${JSON.stringify(guardUrl)};
 const out = [];
-for (const s of JSON.parse(process.argv[1])) { const t = process.hrtime.bigint(); const r = analyzeSource(s); out.push({ ms: Number(process.hrtime.bigint() - t) / 1e6, outcome: r.outcome }); }
+for (const s of JSON.parse(fs.readFileSync(0, "utf8"))) { const t = process.hrtime.bigint(); const r = analyzeSource(s); out.push({ ms: Number(process.hrtime.bigint() - t) / 1e6, outcome: r.outcome }); }
 console.log(JSON.stringify(out));`;
-  const r = spawnSync(process.execPath, ["--input-type=module", "-e", code, JSON.stringify(sources)], { encoding: "utf8", timeout: 120000, windowsHide: true });
+  const r = spawnSync(process.execPath, ["--input-type=module", "-e", code], { input: JSON.stringify(sources), encoding: "utf8", timeout: 120000, windowsHide: true });
   assert.equal(r.status, 0, `child ended with ${r.status}/${r.signal}: ${(r.stderr || "").slice(0, 300)}`);
   return JSON.parse(r.stdout);
 };
@@ -164,7 +165,7 @@ test("round 2 item 4: a dynamic descriptor read, and a property of a dynamic rea
     'const k=Math.random()+""; const v=globalThis[k]; v.value`x`',
     'const k=Math.random()+""; const v=globalThis[k]; [1].map(v.value)',
   ]) assert.notEqual(outcome(s), OUTCOME.CLEAN, s);
-  for (const s of ['const k=Math.random()+""; if (globalThis[k].value) x();', 'const k=Math.random()+""; const n = o[k].length;', 'const k=Math.random()+""; const t = typeof o[k].value;']) assert.equal(outcome(s), OUTCOME.CLEAN, s);
+  for (const s of ['const k=Math.random()+""; if (o[k].value) x();', 'const k=Math.random()+""; const n = o[k].length;', 'const k=Math.random()+""; const t = typeof o[k].value;']) assert.equal(outcome(s), OUTCOME.CLEAN, s);
 });
 
 // ---- N-b: a division after ++ is not a regular expression ----
