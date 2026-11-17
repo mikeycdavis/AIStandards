@@ -476,7 +476,7 @@ function readYaml(file, text, index) {
   let tagCount = 0;
 
   for (let d = 0; d < docs.length; d += 1) {
-    const doc = docs[d];
+    const doc = docs.at(d);
     for (const w of doc.warnings) warnings.push({ code: w.code, offset: Array.isArray(w.pos) ? w.pos[0] : 0, documentIndex: d });
     const defined = new Set();
     let undefinedAlias = null;

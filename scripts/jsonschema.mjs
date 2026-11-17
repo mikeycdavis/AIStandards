@@ -51,7 +51,8 @@ function deepEqual(a, b) {
   if (a && typeof a === "object") {
     const ka = Object.keys(a);
     const kb = Object.keys(b);
-    return ka.length === kb.length && ka.every((k) => deepEqual(a[k], b[k]));
+    const bByKey = new Map(Object.entries(b));
+    return ka.length === kb.length && Object.entries(a).every(([k, v]) => deepEqual(v, bByKey.get(k)));
   }
   return false;
 }
@@ -66,7 +67,7 @@ function resolveRef(ref, root) {
     if (node == null || typeof node !== "object" || !(segment in node)) {
       throw new SchemaError(`$ref ${JSON.stringify(ref)} does not resolve`);
     }
-    node = node[segment];
+    node = new Map(Object.entries(node)).get(segment);
   }
   return node;
 }
@@ -156,7 +157,7 @@ export function validate(value, schema, root = schema, path = "$") {
     if (schema.uniqueItems === true) {
       for (let i = 0; i < value.length; i += 1) {
         for (let j = i + 1; j < value.length; j += 1) {
-          if (deepEqual(value[i], value[j])) {
+          if (deepEqual(value.at(i), value.at(j))) {
             errors.push(`${path}: items ${i} and ${j} are duplicates and uniqueItems is set`);
           }
         }
@@ -171,6 +172,7 @@ export function validate(value, schema, root = schema, path = "$") {
 
   if (value && typeof value === "object" && !Array.isArray(value)) {
     const keys = Object.keys(value);
+    const ownValues = new Map(Object.entries(value));
 
     if ("minProperties" in schema && keys.length < schema.minProperties) {
       errors.push(`${path}: fewer than minProperties ${schema.minProperties}`);
@@ -196,7 +198,7 @@ export function validate(value, schema, root = schema, path = "$") {
     const declared = new Set(Object.keys(schema.properties ?? {}));
     for (const [key, sub] of Object.entries(schema.properties ?? {})) {
       if (Object.prototype.hasOwnProperty.call(value, key)) {
-        errors.push(...validate(value[key], sub, root, at(key)));
+        errors.push(...validate(ownValues.get(key), sub, root, at(key)));
       }
     }
 
@@ -207,7 +209,7 @@ export function validate(value, schema, root = schema, path = "$") {
       for (const key of keys) {
         if (re.test(key)) {
           matchedByPattern.add(key);
-          errors.push(...validate(value[key], sub, root, at(key)));
+          errors.push(...validate(ownValues.get(key), sub, root, at(key)));
         }
       }
     }
@@ -220,7 +222,7 @@ export function validate(value, schema, root = schema, path = "$") {
         }
       } else if (typeof schema.additionalProperties === "object") {
         for (const key of extra) {
-          errors.push(...validate(value[key], schema.additionalProperties, root, at(key)));
+          errors.push(...validate(ownValues.get(key), schema.additionalProperties, root, at(key)));
         }
       }
     }

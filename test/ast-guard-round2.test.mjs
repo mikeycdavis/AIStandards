@@ -127,7 +127,7 @@ import { analyzeSource } from ${JSON.stringify(guardUrl)};
 const out = [];
 for (const s of JSON.parse(fs.readFileSync(0, "utf8"))) { const t = process.hrtime.bigint(); const r = analyzeSource(s); out.push({ ms: Number(process.hrtime.bigint() - t) / 1e6, outcome: r.outcome }); }
 console.log(JSON.stringify(out));`;
-  const r = spawnSync(process.execPath, ["--input-type=module", "-e", code], { input: JSON.stringify(sources), encoding: "utf8", timeout: 120000, windowsHide: true });
+  const r = spawnSync(process.execPath, ["--input-type=module", "-e", code], { input: JSON.stringify(sources), encoding: "utf8", timeout: 60000, windowsHide: true });
   assert.equal(r.status, 0, `child ended with ${r.status}/${r.signal}: ${(r.stderr || "").slice(0, 300)}`);
   return JSON.parse(r.stdout);
 };
