@@ -11,7 +11,26 @@ import { fileURLToPath } from "node:url";
 // Property names that make an element fetch a resource when set (see ASSIGNMENT_FORMS in the vendor test).
 export const RESOURCE_PROPS = ["src", "href", "action", "data", "poster", "formAction", "srcset"];
 
-const REGEX_KEYWORDS = new Set(["return", "typeof", "case", "do", "else", "in", "of", "void", "delete", "throw", "new", "yield", "await", "instanceof"]);
+// The JavaScript line terminators: LF, CR, U+2028 and U+2029. A line comment (and a regex literal) ends at any of them.
+function isLineEnd(ch) {
+  return ch === "\n" || ch === "\r" || ch === "\u2028" || ch === "\u2029";
+}
+
+// One numeric literal (hex, binary, octal, decimal with an optional fraction and exponent, separators, bigint).
+// A number ends where the literal ends: 1..constructor is the number "1." then the member ".constructor".
+const NUMERIC_LITERAL = /0[xX][\da-fA-F_]+n?|0[bB][01_]+n?|0[oO][0-7_]+n?|(?:\d[\d_]*(?:\.[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?n?/y;
+const REGEX_KEYWORDS = new Set(["return", "typeof", "case", "do", "else", "in", "of", "void", "delete", "throw", "new", "yield", "await", "instanceof", "default", "extends", "debugger", "break", "continue"]);
+
+// The keyword that ends the text, or null when it ends in another word or in a member name: o.of, o?.default and
+// o.new name properties, so a slash after them divides.
+function trailingKeyword(text) {
+  const m = /[\w$]+$/.exec(text);
+  if (m === null || !REGEX_KEYWORDS.has(m[0])) return null;
+  const head = text.slice(0, m.index);
+  // after a member dot (but not the last dot of a spread) or a # (a private name) the word is a name, not a keyword
+  if (/(?<!\.)\.\s*$/.test(head) || head.endsWith("#")) return null;
+  return m[0];
+}
 
 // Whether the `)` that ends `before` closes the head of `if`, `while`, `for` or `with`: the statement
 // after it begins an expression, so a slash there starts a regex, not a division. An unmatched `)` is
@@ -23,12 +42,31 @@ function closesControlHead(before) {
     else if (before[k] === "(") {
       depth -= 1;
       if (depth === 0) {
-        const head = /([A-Za-z_$][\w$]*)\s*$/.exec(before.slice(0, k));
-        return head !== null && ["if", "while", "for", "with"].includes(head[1]);
+        const pre = before.slice(0, k);
+        const head = /([A-Za-z_$][\w$]*)\s*$/.exec(pre);
+        if (head !== null && (/(?<!\.)\.\s*$/.test(pre.slice(0, head.index)) || pre.slice(0, head.index).endsWith("#"))) return false; // o.if(x) is a method call
+        return head !== null && (["if", "while", "for", "with"].includes(head[1]) || (head[1] === "await" && /\bfor\s+await\s*$/.test(before.slice(0, k))));
       }
     }
   }
   return true;
+}
+
+// Whether the text ends in something a postfix ++ / -- can follow: an identifier that is not a keyword, a number,
+// `)` or `]`. (`a + +/x/` has a space between the plusses and is not read here: the caller requires them adjacent.)
+function postfixOperandText(text) {
+  const last = text[text.length - 1];
+  if (last === undefined) return false;
+  if (last === ")" || last === "]") return true;
+  if (/[\w$]/.test(last)) return trailingKeyword(text) === null;
+  return false;
+}
+
+const NL_CHAR = String.fromCharCode(10);
+
+function hasLineEnd(text) {
+  for (let k = 0; k < text.length; k += 1) if (isLineEnd(text[k])) return true;
+  return false;
 }
 
 export function stripComments(source, keepStrings = false) {
@@ -40,16 +78,19 @@ export function stripComments(source, keepStrings = false) {
     let i = start;
     let depth = 0;
     const n = source.length;
+    // a hashbang line at the very start of the file is a line comment
+    if (start === 0 && !inInterpolation && source.startsWith("#!")) while (i < n && !isLineEnd(source[i])) i += 1;
     while (i < n) {
       const c = source[i];
       const d = source[i + 1];
       if (c === "/" && d === "/") {
-        while (i < n && source[i] !== "\n") i += 1;
+        while (i < n && !isLineEnd(source[i])) i += 1;
       } else if (c === "/" && d === "*") {
+        const commentStart = i;
         i += 2;
         while (i < n && !(source[i] === "*" && source[i + 1] === "/")) i += 1;
         i += 2;
-        out += " ";
+        out += hasLineEnd(source.slice(commentStart, i)) ? NL_CHAR : " "; // a comment with a line break counts as one
       } else if (c === "/") {
         // Regex literal or division? A slash after an identifier, number, `)` or `]` is division; after a
         // keyword such as `return`, after an operator or opener (`( , = : ? ! & | ; [ {`), after `}` or at
@@ -64,13 +105,14 @@ export function stripComments(source, keepStrings = false) {
         if (last === undefined) regex = true;
         else if (last === ")") regex = closesControlHead(before);
         else if (last === "]") regex = false;
-        else if (/[\w$]/.test(last)) regex = REGEX_KEYWORDS.has(/[\w$]+$/.exec(before)[0]);
+        else if ((last === "+" || last === "-") && before.endsWith(last + last) && postfixOperandText(before.slice(0, -2).trimEnd()) && !hasLineEnd(before.slice(before.slice(0, -2).trimEnd().length, -2))) regex = false;
+        else if (/[\w$]/.test(last)) regex = trailingKeyword(before) !== null;
         else regex = true;
         let j = i + 1;
         let closed = false;
         if (regex) {
           let inClass = false;
-          while (j < n && source[j] !== "\n") {
+          while (j < n && !isLineEnd(source[j])) {
             const ch = source[j];
             if (ch === "\\") {
               j += 2;
@@ -171,6 +213,10 @@ function decodeEscape(source, i) {
     }
   } else if (c === "x" && /^[0-9a-fA-F]{2}$/.test(source.slice(i + 2, i + 4))) {
     return { value: String.fromCharCode(parseInt(source.slice(i + 2, i + 4), 16)), next: i + 4 };
+  } else if (c >= "0" && c <= "7") {
+    // Annex B legacy octal escape: \0 to \377 (a lone \0 is NUL)
+    const m = /^(?:[0-3][0-7]{0,2}|[4-7][0-7]?)/.exec(source.slice(i + 1, i + 4));
+    return { value: String.fromCharCode(parseInt(m[0], 8)), next: i + 1 + m[0].length };
   } else if (c === "\r" && source[i + 2] === "\n") {
     return { value: "", next: i + 3 };
   } else if (c === "\n" || c === "\r" || c === " " || c === " ") {
@@ -180,8 +226,77 @@ function decodeEscape(source, i) {
   return { value: SIMPLE_ESCAPES[c] ?? c, next: i + 2 };
 }
 
+// Words that are keywords only in some positions: ~of~, ~yield~ and ~await~ are ordinary names in a script, so a slash
+// after one of them is ambiguous (a division after a name, or a regex after a keyword).
+const CONTEXTUAL_KEYWORDS = new Set(["of", "yield", "await"]);
+
+// Whether the token at idx is a keyword that is used as a keyword: not after a member dot (o.of), not a private name
+// (#in) and, for the others, not the last dot of a spread.
+function keywordUse(toks, idx) {
+  const x = toks[idx];
+  return Boolean(x) && x.t === "id" && !x.inRegex && REGEX_KEYWORDS.has(x.v) && !isMemberDot(toks, idx - 1) && !isPrivateName(toks, idx);
+}
+
+function isPrivateName(toks, idx) {
+  const h = toks[idx - 1];
+  return Boolean(h) && h.t === "punct" && h.v === "#" && !h.inRegex && h.e === toks[idx].s;
+}
+
+// Whether a token can be followed by a postfix ++ / --: a name that is not a keyword, a literal, `)` or `]`.
+function postfixOperandToken(toks, idx) {
+  const x = toks[idx];
+  if (!x || x.inRegex) return false;
+  if (x.t === "id") return !keywordUse(toks, idx) || CONTEXTUAL_KEYWORDS.has(x.v);
+  if (x.t === "num" || x.t === "str" || x.t === "tmpl") return true;
+  return x.t === "punct" && (x.v === ")" || x.v === "]");
+}
+
+// Whether the token at idx is the "." of a member access ("?." is a "?" and then a "."). The last dot of a spread
+// (...) is not: it follows another dot with no gap.
+function isMemberDot(toks, idx) {
+  const x = toks[idx];
+  if (!x || x.t !== "punct" || x.v !== "." || x.inRegex) return false;
+  const before = toks[idx - 1];
+  return !(before && before.t === "punct" && before.v === "." && before.e === x.s);
+}
+
+// Whether a line terminator lies in source between the two offsets (a comment that spans lines holds one).
+function lineBreakBetween(source, from, to) {
+  for (let k = from; k < to; k += 1) if (isLineEnd(source[k])) return true;
+  return false;
+}
+
+// Whether only blanks and comments precede position i on its line (the token list ends before i).
+function lineStartAt(source, toks, i) {
+  const last = toks[toks.length - 1];
+  if (!last) return true;
+  for (let k = last.e; k < i; k += 1) if (isLineEnd(source[k])) return true;
+  return false;
+}
+
+// The tokens of the source, read the way the code most likely runs. A slash the scan cannot place (after a closing
+// brace, or after a prefix ++ / --) is read as a regex in the first reading and as a division in the second; when
+// the two readings disagree about where strings, templates or comments begin and end, nothing the scan found can be
+// trusted and the source is reported as unparseable (toward detecting, never toward accepting).
 export function tokenize(source) {
+  const first = tokenizeOnce(source, false, false);
+  if (!first.ambiguous && !first.htmlSeen) return first;
+  // HTML-like comments (<!-- and a line-start -->) are comments in a script and code in a module: both are read too.
+  const others = [];
+  for (const divide of first.ambiguous ? [false, true] : [false]) {
+    for (const html of first.htmlSeen ? [false, true] : [false]) {
+      if (divide || html) others.push(tokenizeOnce(source, divide, html));
+    }
+  }
+  if (first.ok && others.every((o) => o.ok && o.bounds === first.bounds)) return first;
+  return { tokens: first.tokens, ok: false };
+}
+
+function tokenizeOnce(source, divide, html) {
+  let htmlSeen = false;
   const toks = [];
+  const comments = [];
+  let ambiguous = false;
   const n = source.length;
   const parens = [];
   let lastCloseControl = false;
@@ -197,11 +312,21 @@ export function tokenize(source) {
         i += 1;
         continue;
       }
+      if ((c === "<" && source.startsWith("<!--", i)) || (c === "-" && source.startsWith("-->", i) && lineStartAt(source, toks, i))) {
+        htmlSeen = true;
+        if (html) {
+          comments.push(i);
+          while (i < n && !isLineEnd(source[i])) i += 1;
+          continue;
+        }
+      }
       if (c === "/" && d === "/") {
-        while (i < n && source[i] !== "\n") i += 1;
+        comments.push(i);
+        while (i < n && !isLineEnd(source[i])) i += 1;
         continue;
       }
       if (c === "/" && d === "*") {
+        comments.push(i);
         const end = source.indexOf("*/", i + 2);
         if (end === -1) {
           ok = false;
@@ -231,7 +356,9 @@ export function tokenize(source) {
         continue;
       }
       if (/[0-9]/.test(c) || (c === "." && /[0-9]/.test(d ?? ""))) {
-        while (i < n && /[\w.]/.test(source[i])) i += 1;
+        NUMERIC_LITERAL.lastIndex = i;
+        const numeric = NUMERIC_LITERAL.exec(source);
+        i += numeric ? numeric[0].length : 1;
         toks.push({ t: "num", v: source.slice(s, i), s, e: i });
         continue;
       }
@@ -265,7 +392,7 @@ export function tokenize(source) {
       }
       if (c === "`") {
         i += 1;
-        const tok = { t: "str", v: "", s, e: s };
+        const tok = { t: "str", v: "", s, e: s, tpl: true };
         toks.push(tok);
         let closed = false;
         while (i < n) {
@@ -299,18 +426,49 @@ export function tokenize(source) {
         continue;
       }
       if (c === "/") {
-        const p = toks[toks.length - 1];
+        // the last token outside any regex body already read (a regex literal is followed by its own body's tokens)
+        let li = toks.length - 1;
+        while (li >= 0 && toks[li].inRegex) li -= 1;
+        const p = toks[li];
         let regex = true;
+        let ambiguousRegex = false;
         if (p) {
           if (p.t === "punct") regex = p.v === ")" ? lastCloseControl : p.v !== "]";
-          else if (p.t === "id") regex = REGEX_KEYWORDS.has(p.v);
+          else if (p.t === "id") {
+            regex = keywordUse(toks, li);
+            if (regex && CONTEXTUAL_KEYWORDS.has(p.v)) ambiguousRegex = true;
+          }
           else regex = false;
+          // After a postfix ++ / -- (two adjacent signs, the second after an operand on the SAME line: a line
+          // break before ++ / -- makes it a prefix operator) a slash divides. After a prefix ++ / -- the slash
+          // starts a regex (a\n++/x/.lastIndex). An ++ / -- with no operand at all is not valid code and is read
+          // both ways. A slash after a closing brace may be a block end or an object end, and a slash that starts a
+          // line after a string or a name may continue the expression (a division) or follow a statement that
+          // automatic semicolon insertion ended (import 'x'\n/re/, var q\n/re/): these are read both ways, and
+          // the regex reading's body is also scanned as code.
+          if (p.t === "punct" && (p.v === "+" || p.v === "-")) {
+            const p2 = toks[li - 1];
+            if (p2 && p2.t === "punct" && p2.v === p.v && p2.e === p.s && !p2.inRegex) {
+              if (!postfixOperandToken(toks, li - 2)) ambiguousRegex = true;
+              else if (lineBreakBetween(source, toks[li - 2].e, p2.s)) regex = true;
+              else regex = false;
+            }
+          } else if (p.t === "punct" && p.v === "}") {
+            ambiguousRegex = true;
+          } else if (!regex && (p.t === "str" || (p.t === "id" && !keywordUse(toks, li))) && lineBreakBetween(source, p.e, i)) {
+            regex = true;
+            ambiguousRegex = true;
+          }
+        }
+        if (ambiguousRegex) {
+          ambiguous = true;
+          if (divide) regex = false;
         }
         if (regex) {
           let j = i + 1;
           let inClass = false;
           let closed = false;
-          while (j < n && source[j] !== "\n") {
+          while (j < n && !isLineEnd(source[j])) {
             const ch = source[j];
             if (ch === "\\") {
               j += 2;
@@ -327,12 +485,13 @@ export function tokenize(source) {
           if (closed) {
             const bodyEnd = j;
             j += 1;
-            while (j < n && /[\w$]/.test(source[j])) j += 1;
+            // the flags of a regex that may be a division are left to be read as code (a/b/eval(1) divides by eval)
+            while (!ambiguousRegex && j < n && /[\w$]/.test(source[j])) j += 1;
             i = j;
-            toks.push({ t: "regex", v: source.slice(s, j), s, e: j });
+            toks.push({ t: "regex", v: source.slice(s, j), s, e: j, ambiguous: ambiguousRegex, body: source.slice(s + 1, bodyEnd) });
             // A regex body is also read as code, toward detecting: its tokens follow the literal, flagged so
             // that stray delimiters inside it cannot unbalance an enclosing call.
-            const inner = tokenize(source.slice(s + 1, bodyEnd));
+            const inner = tokenizeOnce(source.slice(s + 1, bodyEnd), divide, html);
             for (const t of inner.tokens) toks.push({ ...t, s: t.s + s + 1, e: t.e + s + 1, inRegex: true });
             continue;
           }
@@ -341,7 +500,8 @@ export function tokenize(source) {
       i += 1;
       if (c === "(") {
         const p = toks[toks.length - 1];
-        parens.push(Boolean(p && p.t === "id" && ["if", "while", "for", "with"].includes(p.v)));
+        const p2 = toks[toks.length - 2];
+        parens.push(Boolean(p && p.t === "id" && ((["if", "while", "for", "with"].includes(p.v) && !isMemberDot(toks, toks.length - 2) && !isPrivateName(toks, toks.length - 1)) || (p.v === "await" && p2 && p2.t === "id" && p2.v === "for"))));
       } else if (c === ")") {
         lastCloseControl = parens.length > 0 ? parens.pop() : true;
       } else if (c === "{") {
@@ -356,8 +516,10 @@ export function tokenize(source) {
     return !untilBrace;
   }
 
+  if (source.startsWith("#!")) while (i < n && !isLineEnd(source[i])) i += 1; // a hashbang line is a comment
   lex(false);
-  return { tokens: toks, ok };
+  const bounds = [...comments.map((c) => "c" + c), ...toks.filter((x) => (x.t === "str" || x.t === "tmpl") && !x.inRegex).map((x) => x.s + ":" + x.e)].join(",");
+  return { tokens: toks, ok, ambiguous, htmlSeen, bounds };
 }
 
 const CLOSERS = { "(": ")", "[": "]", "{": "}" };
@@ -405,8 +567,7 @@ function calleeAt(tokens, openAt) {
   if (!p) return null;
   const objectAt = (k) => (tokens[k] && tokens[k].t === "id" ? tokens[k].v : null);
   if (p.t === "id") {
-    const dot = tokens[open - 2];
-    const member = Boolean(dot && dot.t === "punct" && dot.v === ".");
+    const member = isMemberDot(tokens, open - 2);
     return { name: p.v, member, object: member ? objectAt(open - 3) : null };
   }
   if (p.t === "punct" && p.v === "]") {
@@ -492,8 +653,9 @@ function statementSpecifier(tokens, at, isImport) {
         return null;
       }
     } else if (tk.t === "id" && tk.v === "from" && depth === 0) {
+      // A from that is not followed by a string is a binding named from (import from from "x"): keep scanning.
       const spec = tokens[j + 1];
-      return spec && spec.t === "str" ? { spec: spec.v, end: j + 1 } : null;
+      if (spec && spec.t === "str") return { spec: spec.v, end: j + 1 };
     } else if (tk.t !== "id" && tk.t !== "str") {
       return null;
     }
@@ -567,11 +729,33 @@ function readUrlConstruction(tokens, open, offset, specifiers, unreadable) {
 //   * `.constructor` and `{ constructor: C }` (it reaches Function); only a class's own `constructor(...)`
 //     method is permitted;
 //   * a timer whose first argument is not a function expression;
-//   * a computed member that is called, or taken from the global scope, with a key built at run time.
+//   * a computed member that is called, or taken from the global scope, with a key built at run time, also
+//     when the access is wrapped in grouping parentheses (`(o[k])(x)`);
+//   * `process.getBuiltinModule` (DYNAMIC_CODE_NAMES): it returns a built-in module without an import or a
+//     require, so the loader-capable module rule above would never see it;
+//   * `Reflect.get` / `Reflect.getOwnPropertyDescriptor` with a key that is not one literal: a reflective lookup
+//     by a name built at run time is the same as a computed access.
+//     It is also reported spelt Reflect["get"], Reflect?.get, held, passed on (Reflect.apply(Reflect.get, ...)),
+//     reached by a computed method, or with Reflect itself held or destructured;
+//   * a computed member that is the tag of a template (o[k]`x`, (o[k])`x`): a tagged template calls its tag;
+//     and a grouped callee after an if, while, for or with head (if (x) (o[k])(1)).
+//   * a grouped callee that selects a computed member through ??, || , && or a conditional ((o[k] ?? 0)(1));
+//   * process.binding, _linkedBinding and execve in any spelling (alias, destructuring, quoted member).
+// A number literal ends where the literal ends (1..constructor is a number then a member).
 // A file that legitimately needs one of these is named, with its reason and the exact calls reviewed, on the
 // allowlist in no-phase-creep.test.mjs; nothing else is exempt. The boundary of reading text is that a name
 // assembled at run time never reaches a loader without one of the denied constructs above.
-const DYNAMIC_CODE_NAMES = ["eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH", "dlopen", "_load", "_resolveFilename"];
+// Members of process that reach internal modules or replace the process. As an identifier they are reported
+// wherever they appear (process.binding, process?.binding, (process).binding, const { binding } = process, an
+// alias p.binding); as a string only as a computed member or a quoted key, because the word is common in text.
+const PROCESS_DENIED_NAMES = ["binding", "_linkedBinding", "execve"];
+const DYNAMIC_CODE_NAMES = ["_compile", "_extensions", "_preloadModules", "runMain", "eval", "Function", "importScripts", "runInContext", "runInNewContext", "runInThisContext", "compileFunction", "SourceTextModule", "SyntheticModule", "NODE_OPTIONS", "NODE_PATH", "dlopen", "_load", "_resolveFilename", "getBuiltinModule"];
+// A module name, or a subpath of one (inspector/promises), with or without the node: prefix.
+export function isLoaderCapable(specifier) {
+  const bare = specifier.startsWith("node:") ? specifier.slice(5) : specifier;
+  return LOADER_CAPABLE_MODULES.some((m) => bare === m || bare.startsWith(m + "/"));
+}
+
 export const LOADER_CAPABLE_MODULES = ["child_process", "worker_threads", "vm", "module", "cluster", "repl", "inspector", "wasi", "v8", "trace_events", "async_hooks"];
 const TIMER_NAMES = ["setTimeout", "setInterval", "setImmediate"];
 
@@ -579,6 +763,180 @@ const TIMER_NAMES = ["setTimeout", "setInterval", "setImmediate"];
 // data. A `[` after an identifier, a string, a number or a closing delimiter is a member access (`o["eval"]`),
 // not a literal, and a `[` after a keyword such as `return` is one.
 const LITERAL_PRECEDERS = new Set([...REGEX_KEYWORDS, "default", "export", "else", "extends"]);
+
+// Whether the token at idx is a word after which a "[" or "(" starts a literal or a group (return [..], typeof [..],
+// in [..]) and not an operand. A keyword-named member (ns.default[k], o.in[k], o?.of[k]), a private name (this.#in[k])
+// and the words of, yield and await used as variable names (const of = process; of["binding"]) are operands: an
+// "[" after them is a computed access. Of is a keyword only in a for head, and yield and await are read as names,
+// so an array right after one of them is read as an access, toward detecting.
+function literalPreceder(tokens, idx) {
+  const x = tokens[idx];
+  if (!x || x.t !== "id" || x.inRegex || !LITERAL_PRECEDERS.has(x.v)) return false;
+  if (isMemberDot(tokens, idx - 1) || isPrivateName(tokens, idx)) return false;
+  if (x.v === "yield" || x.v === "await") return false;
+  if (x.v === "of") return inForHead(tokens, idx) && endsForBinding(tokens, idx - 1);
+  return true;
+}
+
+// Whether the token at idx ends the binding of a for-of head (a name, a member, a pattern or a group). A declaration
+// word, an operator, a comma or another keyword before it means the word after it is an operand, not the keyword of.
+function endsForBinding(tokens, idx) {
+  const x = tokens[idx];
+  if (!x || x.inRegex) return false;
+  if (x.t === "id") return !LITERAL_PRECEDERS.has(x.v) && x.v !== "var" && x.v !== "let" && x.v !== "const";
+  return x.t === "punct" && (x.v === "]" || x.v === "}" || x.v === ")");
+}
+
+// Whether the token at idx lies directly inside the parentheses of a for or for await head.
+function inForHead(tokens, idx) {
+  let depth = 0;
+  for (let j = idx - 1; j >= 0; j -= 1) {
+    const t = tokens[j];
+    if (t.t !== "punct" || t.inRegex) continue;
+    if (t.v === ")" || t.v === "]" || t.v === "}") depth += 1;
+    else if (t.v === "(" || t.v === "[" || t.v === "{") {
+      if (depth > 0) depth -= 1;
+      else {
+        if (t.v !== "(") return false;
+        const p = tokens[j - 1];
+        return Boolean(p) && p.t === "id" && (p.v === "for" || (p.v === "await" && tokens[j - 2] && tokens[j - 2].v === "for"));
+      }
+    }
+  }
+  return false;
+}
+// Whether the token at index k (a "{" or a ",") lies in the braces of an import or export list.
+function inModuleList(tokens, k) {
+  let j = k;
+  while (j >= 0 && !(tokens[j].t === "punct" && (tokens[j].v === "{" || tokens[j].v === "}"))) j -= 1;
+  if (j < 0 || tokens[j].v !== "{") return false;
+  const p = tokens[j - 1];
+  if (!p) return false;
+  if (p.t === "id" && (p.v === "import" || p.v === "export")) return true;
+  // import d, { ... } from "m": the comma follows the default binding
+  return p.t === "punct" && p.v === "," && tokens[j - 2] && tokens[j - 2].t === "id" && tokens[j - 3] && tokens[j - 3].t === "id" && tokens[j - 3].v === "import";
+}
+
+// Whether the string at index k is a quoted key in an object literal or a destructuring pattern ({ "x": v }).
+function quotedKeyAt(tokens, k) {
+  const tk = tokens[k];
+  const before = tokens[k - 1];
+  const after = tokens[k + 1];
+  return Boolean(tk) && tk.t === "str" && !tk.inRegex && Boolean(before) && Boolean(after) && before.t === "punct" && (before.v === "{" || before.v === ",") && after.t === "punct" && after.v === ":";
+}
+
+// The module-instance objects whose load and compile members run code: module.load(file), Module.prototype.load.
+const MODULE_OBJECTS = ["module", "Module", "prototype"];
+// Whether the id or string at index k names a member (o.load or o["load"], also o?.load) of one of those objects.
+function memberOfModuleObject(tokens, k) {
+  const tk = tokens[k];
+  let objAt = -1;
+  if (tk.t === "id" && isMemberDot(tokens, k - 1)) objAt = k - 2;
+  else if (tk.t === "str" && tokens[k - 1] && tokens[k - 1].v === "[" && tokens[k + 1] && tokens[k + 1].v === "]") objAt = k - 2;
+  else return false;
+  if (tokens[objAt] && tokens[objAt].v === "?" ) objAt -= 1;
+  else if (tokens[objAt] && tokens[objAt].v === "." && tokens[objAt - 1] && tokens[objAt - 1].v === "?") objAt -= 2;
+  const obj = tokens[objAt];
+  return Boolean(obj) && obj.t === "id" && MODULE_OBJECTS.includes(obj.v);
+}
+
+// Whether a token can hold the global object in front of a member: a global object's name, or the end of a group or
+// an index (the global in parentheses, in a sequence, in an array). A plain other name is not one.
+function globalHolder(x) {
+  if (!x || x.inRegex) return false;
+  if (x.t === "id") return GLOBAL_OBJECTS.includes(x.v);
+  return x.t === "punct" && (x.v === ")" || x.v === "]");
+}
+
+// Whether the "[" at index j, which follows a "}", opens a computed access (an object literal's member) and not the
+// key of a method or a field in a class body ({ m() {} [k]() {} }).
+function braceAccess(tokens, j) {
+  if (!inClassBody(tokens, j)) return true;
+  const close = closeBracketIndex(tokens, j);
+  const a = close === -1 ? null : tokens[close + 1];
+  if (!a || a.inRegex) return true;
+  if (a.t === "punct" && (a.v === "=" || a.v === ";" || a.v === "}")) return false;
+  if (a.t === "punct" && a.v === "(") {
+    let depth = 0;
+    for (let q = close + 1; q < tokens.length; q += 1) {
+      const x = tokens[q];
+      if (x.inRegex || x.t !== "punct") continue;
+      if (x.v === "(" || x.v === "[" || x.v === "{") depth += 1;
+      else if (x.v === ")" || x.v === "]" || x.v === "}") {
+        depth -= 1;
+        if (depth === 0) return !(tokens[q + 1] && tokens[q + 1].t === "punct" && tokens[q + 1].v === "{");
+      }
+    }
+  }
+  return true;
+}
+
+// Whether the token at index k sits directly in a class body: the nearest unmatched "{" before it was opened by
+// a class (class A {, class B extends C {, class {). Scanning back from that brace to a class keyword stops at a
+// statement or block boundary, so a heritage that holds a brace or a semicolon is not recognised (it fails closed).
+function inClassBody(tokens, k) {
+  let depth = 0;
+  let open = -1;
+  for (let j = k - 1; j >= 0; j -= 1) {
+    const t = tokens[j];
+    if (t.t !== "punct" || t.inRegex) continue;
+    if (t.v === ")" || t.v === "]" || t.v === "}") depth += 1;
+    else if (t.v === "(" || t.v === "[" || t.v === "{") {
+      if (depth > 0) depth -= 1;
+      else {
+        open = t.v === "{" ? j : -1;
+        break;
+      }
+    }
+  }
+  if (open === -1) return false;
+  // From the brace back to the class keyword every group must be balanced: a brace that sits inside an open group
+  // of the heritage (class A extends (function () { ... }) {}) is not the brace that opens the class body.
+  let groups = 0;
+  for (let j = open - 1; j >= 0; j -= 1) {
+    const t = tokens[j];
+    if (t.t === "punct" && !t.inRegex && (t.v === ")" || t.v === "]")) groups += 1;
+    else if (t.t === "punct" && !t.inRegex && (t.v === "(" || t.v === "[")) {
+      if (groups === 0) return false;
+      groups -= 1;
+    }
+    if (t.t === "punct" && !t.inRegex && (t.v === "{" || t.v === "}" || t.v === ";")) return false;
+    if (t.t === "id" && !t.inRegex && t.v === "class" && !isMemberDot(tokens, j - 1) && !isPrivateName(tokens, j)) return true;
+  }
+  return false;
+}
+
+// Whether the token at index k lies inside the brackets of a computed member access (an "[" that follows an
+// operand), at any depth: the enclosing groups are walked outward and an array literal "[" does not count.
+function inAccessBracket(tokens, k) {
+  let depth = 0;
+  for (let j = k - 1; j >= 0; j -= 1) {
+    const t = tokens[j];
+    if (t.t !== "punct" || t.inRegex) continue;
+    if (t.v === ")" || t.v === "]" || t.v === "}") depth += 1;
+    else if (t.v === "(" || t.v === "[" || t.v === "{") {
+      if (depth > 0) {
+        depth -= 1;
+        continue;
+      }
+      if (t.v === "[" && !t.syn) {
+        if (accessBracket(tokens, j).access) return true;
+      }
+    }
+  }
+  return false;
+}
+
+// Whether the [ at index k opens a member access (x[k], x?.[k], f()[k], {}[k]) rather than an array literal,
+// and the object token it is applied to. The one place this is decided.
+function accessBracket(tokens, k) {
+  // x?.[k] is tokenized x ? . [ k ]: step over the optional-chain dot to the object.
+  const optional = tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "?";
+  const prev = optional ? tokens[k - 3] : tokens[k - 1];
+  const access = optional ? Boolean(prev) : Boolean(prev) && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !literalPreceder(tokens, k - 1)) || (prev.t === "punct" && prev.v === "}" && braceAccess(tokens, k)));
+  return { access, prev };
+}
+
 function arrayElementStrings(tokens) {
   const out = new Set();
   const stack = [];
@@ -587,7 +945,7 @@ function arrayElementStrings(tokens) {
     if (tk.inRegex) continue;
     if (tk.t === "punct" && (tk.v === "(" || tk.v === "[" || tk.v === "{")) {
       const prev = tokens[k - 1];
-      let literal = tk.v === "[" && (!prev || (prev.t === "punct" && ![")", "]", "}"].includes(prev.v)) || (prev.t === "id" && LITERAL_PRECEDERS.has(prev.v)));
+      let literal = tk.v === "[" && (!prev || (prev.t === "punct" && ![")", "]", "}"].includes(prev.v) && !isMemberDot(tokens, k - 1)) || (prev.t === "id" && literalPreceder(tokens, k - 1)));
       if (literal) {
         // `{ ["eval"]: true }` and `{ ["run"]() {} }`: a bracket group in key position that is followed by `:`
         // or `(` is a computed property name, whose string names a member; it is not a list of names.
@@ -625,6 +983,107 @@ function closeBracketIndex(tokens, open) {
   return -1;
 }
 
+// The index of the `(` that matches the `)` at `close`, or -1.
+function openParenIndex(tokens, close) {
+  let depth = 0;
+  for (let k = close; k >= 0; k -= 1) {
+    const t = tokens[k];
+    if (t.inRegex || t.t !== "punct") continue;
+    if (t.v === ")" || t.v === "]" || t.v === "}") depth += 1;
+    else if (t.v === "(" || t.v === "[" || t.v === "{") {
+      depth -= 1;
+      if (depth === 0) return t.v === "(" ? k : -1;
+    }
+  }
+  return -1;
+}
+
+// Whether the token at index k is the ")" that closes an if, while, for (also for await) or with head: a
+// parenthesised group right after it starts a statement, it does not take arguments.
+const CONTROL_HEADS = new Set(["if", "while", "for", "with"]);
+function closesStatementHead(tokens, k) {
+  const t = tokens[k];
+  if (!t || t.t !== "punct" || t.v !== ")" || t.inRegex) return false;
+  const open = openParenIndex(tokens, k);
+  if (open === -1) return false;
+  const head = tokens[open - 1];
+  if (!head || head.t !== "id" || head.inRegex) return false;
+  if (CONTROL_HEADS.has(head.v)) return !(tokens[open - 2] && tokens[open - 2].v === ".");
+  return head.v === "await" && Boolean(tokens[open - 2]) && tokens[open - 2].v === "for";
+}
+
+// The index of the last token of a member access that is wrapped in grouping parentheses: from the `]` at
+// `close`, step over every following `)` whose `(` only groups (it is not a call's or a control head's
+// argument list: the token before it is not an identifier other than a keyword that takes an expression, a
+// string, a number or a closing delimiter). `((fn)[key])("code")` is read as `fn[key]("code")`.
+function stepOutOfGroups(tokens, close) {
+  let at = close;
+  for (;;) {
+    const next = tokens[at + 1];
+    if (!next || next.t !== "punct" || next.v !== ")" || next.inRegex) return at;
+    const open = openParenIndex(tokens, at + 1);
+    if (open === -1) return at;
+    const before = tokens[open - 1];
+    const groups = !before || (before.t === "punct" && ![")", "]"].includes(before.v)) || (before.t === "id" && (literalPreceder(tokens, open - 1) || ((before.v === "await" || before.v === "yield") && !isMemberDot(tokens, open - 2)))) || closesStatementHead(tokens, open - 1);
+    if (!groups) return at;
+    at += 1;
+  }
+}
+
+// A computed member that is the value of a group through `??`, `||`, `&&` or a conditional branch is still what
+// the group yields: `(o[k] ?? 0)("1")`, `(c ? o[k] : 0)("1")`. From the `]` at `close`, when the next token
+// selects (`:`, `??`, `||`, `&&`), read to the `)` that ends the group (a top-level comma drops the value, as
+// in `(a[k], 0)`), step over the groups from there, and return the last token of the grouped expression.
+function selectedGroupEnd(tokens, close) {
+  const a = tokens[close + 1];
+  const b = tokens[close + 2];
+  const punct = (x, v) => Boolean(x) && x.t === "punct" && x.v === v && !x.inRegex;
+  const selects = punct(a, ":") || ((punct(a, "?") || punct(a, "|") || punct(a, "&")) && punct(b, a.v));
+  if (!selects) return close;
+  let depth = 0;
+  for (let j = close + 1; j < tokens.length; j += 1) {
+    const x = tokens[j];
+    if (x.inRegex || x.t !== "punct") continue;
+    if (x.v === "(" || x.v === "[" || x.v === "{") depth += 1;
+    else if (x.v === ")" || x.v === "]" || x.v === "}") {
+      if (depth > 0) {
+        depth -= 1;
+        continue;
+      }
+      if (x.v !== ")") return close;
+      const end = stepOutOfGroups(tokens, j - 1);
+      return end >= j ? end : close;
+    } else if (depth === 0 && (x.v === "," || x.v === ";")) {
+      return close;
+    }
+  }
+  return close;
+}
+
+// Every token index at which the computed access ending at `close` can be the value that is then called: the access
+// itself, each step out of grouping parentheses, and each step through a selection (`??`, `||`, `&&`, `:`) to the
+// group that yields it, repeated while either makes progress (`(((o[k]) ?? 0) || 1)(x)`).
+function callEnds(tokens, close) {
+  const ends = [close];
+  let at = close;
+  for (let guard = 0; guard < 16; guard += 1) {
+    const stepped = stepOutOfGroups(tokens, at);
+    const selected = selectedGroupEnd(tokens, stepped);
+    if (stepped !== at) ends.push(stepped);
+    if (selected !== stepped) ends.push(selected);
+    const next = selected !== stepped ? selected : stepped;
+    if (next === at) break;
+    at = next;
+  }
+  return ends;
+}
+
+// Whether the token at k is directly followed by a template literal (a tagged template calls its tag).
+function isTaggedAt(tokens, k) {
+  const a = tokens[k + 1];
+  return Boolean(a && !a.inRegex && (a.t === "tmpl" || (a.t === "str" && a.tpl === true)));
+}
+
 // Whether the token at `k` is directly called: `x(...)` or `x?.(...)`.
 function isCalledAt(tokens, k) {
   const a = tokens[k + 1];
@@ -656,15 +1115,41 @@ export function moduleReferences(source, options = {}) {
   const urlConstructions = new Set();
   for (let k = 0; k < tokens.length; k += 1) {
     const tk = tokens[k];
+    // A regex literal read after a closing brace (or after a prefix ++ / --) may really be a division: its body
+    // is then code. It is scanned as code as well, toward detecting; a regex that is certain keeps its exemption.
+    if (tk.t === "regex" && tk.ambiguous && typeof tk.body === "string") {
+      const inner = moduleReferences(tk.body, options);
+      specifiers.push(...inner.specifiers);
+      unreadable.push(...inner.unreadable.filter((u) => u.form !== "source"));
+    }
     if (tk.t === "id" && tk.v === "createRequire") unreadable.push({ form: "createRequire", specifier: `at offset ${tk.s}` });
     const dynamic = (why) => {
       if (checkDynamicCode) unreadable.push({ form: "dynamic-code", specifier: `${why} at offset ${tk.s}` });
     };
     if (tk.t === "id" && DYNAMIC_CODE_NAMES.includes(tk.v)) dynamic(`reference to ${tk.v}, which runs source text`);
+    if (tk.t === "id" && PROCESS_DENIED_NAMES.includes(tk.v) && !tk.inRegex) dynamic(`reference to ${tk.v}, which reaches internal modules or replaces the process`);
+    // A denied name anywhere inside the brackets of a computed member access names that member however it is
+    // wrapped: p[("binding")], p[["binding"]], p[1 ? "binding" : "y"], p[(0, "binding")], p[String("binding")].
+    // Every enclosing bracket is considered, so the string may sit at any depth of parentheses, arrays and calls.
+    if (tk.t === "str" && PROCESS_DENIED_NAMES.includes(tk.v) && inAccessBracket(tokens, k)) {
+      dynamic(`the string "${tk.v}" inside a computed member access naming a member that reaches internal modules or replaces the process`);
+    }
+    if (tk.t === "str" && PROCESS_DENIED_NAMES.includes(tk.v) && !arrayElements.has(k)) {
+      const before = tokens[k - 1];
+      const after = tokens[k + 1];
+      const computed = before && after && before.v === "[" && after.v === "]";
+      const quotedKey = before && after && (before.v === "{" || before.v === ",") && after.v === ":";
+      // A quoted name that starts a specifier in an import or export list (import { "binding" as b } from "node:process",
+      // export { "binding" } from ...) reads that member of the module. The name after "as" is only a new name
+      // (export { x as "binding" } reads x, not binding) and is not reported. Any module is treated alike.
+      const specifier = before && after && (before.v === "{" || before.v === ",") && (after.v === "," || after.v === "}" || (after.t === "id" && after.v === "as")) && inModuleList(tokens, k - 1);
+      if (computed || quotedKey || specifier) dynamic(`the string "${tk.v}" naming a member that reaches internal modules or replaces the process`);
+    }
     // A string equal to one of these names is a way of naming the property or function without writing it as an
     // identifier ("eval": true as an object key, o["execSync"], Reflect.get(f, "constructor")). It is reported
     // wherever it appears except as an element of an array literal, which is a list of names, not a use.
-    if (tk.t === "str" && nameStrings.has(tk.v) && !arrayElements.has(k)) {
+    // (an array element inside the brackets of a computed member access is a key, not a list of names: o[["eval"]])
+    if (tk.t === "str" && nameStrings.has(tk.v) && (!arrayElements.has(k) || inAccessBracket(tokens, k))) {
       dynamic(`the string "${tk.v}" naming a code-running or process-starting member`);
     }
     // A computed member access whose key is not a literal names its member at run time. It is unreadable when
@@ -682,16 +1167,66 @@ export function moduleReferences(source, options = {}) {
       }
     }
     if (tk.t === "punct" && tk.v === "[" && !tk.syn) {
-      // `x?.[k]` is tokenized `x ? . [ k ]`: step over the optional-chain dot to the object.
-      const optional = tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "?";
-      const prev = optional ? tokens[k - 3] : tokens[k - 1];
-      const access = optional ? Boolean(prev) : prev && (prev.t === "str" || prev.t === "num" || (prev.t === "punct" && (prev.v === ")" || prev.v === "]")) || (prev.t === "id" && !LITERAL_PRECEDERS.has(prev.v)));
+      const { access, prev } = accessBracket(tokens, k);
       const close = access ? closeBracketIndex(tokens, k) : -1;
       if (close !== -1) {
         const key = tokens.slice(k + 1, close);
         const literalKey = key.length === 1 && (key[0].t === "str" || key[0].t === "num");
-        if (!literalKey && isCalledAt(tokens, close)) dynamic("a computed member called, whose name is built at run time");
+        if (!literalKey && callEnds(tokens, close).some((end) => isCalledAt(tokens, end) || isTaggedAt(tokens, end))) dynamic("a computed member called, whose name is built at run time");
         else if (!literalKey && prev.t === "id" && GLOBAL_OBJECTS.includes(prev.v)) dynamic(`computed access on ${prev.v} with a key built at run time`);
+      }
+    }
+    // `Reflect.get(target, key)` is a computed access spelled as a call: its key must be one string or number
+    // literal (a literal that names a code-running member is reported by the string rule above). The method may be
+    // written `Reflect.get`, `Reflect?.get` or `Reflect["get"]`, and the call `(...)` or `?.(...)`. The method taken
+    // without being called (held, passed to Reflect.apply), a computed method (`Reflect[m]`) and `Reflect` itself
+    // held or destructured are reported: each reaches the lookup without a key anyone can read here.
+    // Reflect is analysed when it is the bare name and also when it is reached through a global object
+    // (globalThis.Reflect, self?.Reflect, window["Reflect"]): a member named Reflect of any other object is a
+    // different thing and is not analysed.
+    const reflectThroughGlobal = (() => {
+      if (tk.t === "id" && tk.v === "Reflect" && !tk.inRegex) {
+        if (!isMemberDot(tokens, k - 1)) return true;
+        return globalHolder(tokens[tokens[k - 2] && tokens[k - 2].v === "?" ? k - 3 : k - 2]);
+      }
+      if (quotedKeyAt(tokens, k) && tk.v === "Reflect") return true;
+      return tk.t === "str" && tk.v === "Reflect" && !tk.inRegex && tokens[k - 1] && tokens[k - 1].v === "[" && tokens[k + 1] && tokens[k + 1].v === "]" && (() => {
+        const optionalDot = tokens[k - 2] && tokens[k - 2].v === "." && tokens[k - 3] && tokens[k - 3].v === "?";
+        return globalHolder(optionalDot ? tokens[k - 4] : tokens[k - 2]);
+      })();
+    })();
+    if (reflectThroughGlobal) {
+      const reflectEnd = tk.t === "id" ? k : k + 1;
+      let p = reflectEnd + 1;
+      if (tokens[p] && tokens[p].v === "?" && tokens[p + 1] && tokens[p + 1].v === ".") p += 1;
+      let method = null;
+      let last = reflectEnd;
+      if (tokens[p] && tokens[p].t === "punct" && tokens[p].v === "." && tokens[p + 1] && tokens[p + 1].t === "id") {
+        method = tokens[p + 1].v;
+        last = p + 1;
+      } else if (tokens[p] && tokens[p].t === "punct" && tokens[p].v === "[" && !tokens[p].syn) {
+        const closeAt = closeBracketIndex(tokens, p);
+        const inner = closeAt === -1 ? [] : tokens.slice(p + 1, closeAt);
+        if (inner.length === 1 && inner[0].t === "str") {
+          method = inner[0].v;
+          last = closeAt;
+        } else {
+          dynamic("Reflect with a method that is not one literal");
+        }
+      } else {
+        dynamic("Reflect used other than as Reflect.<method>, so a lookup can be reached through it");
+      }
+      if (method === "get" || method === "getOwnPropertyDescriptor") {
+        if (isCalledAt(tokens, last)) {
+          const open = tokens[last + 1].v === "(" ? last + 1 : last + 3;
+          const reflected = callArguments(tokens, open);
+          const key = reflected && reflected[1];
+          const literalKey = Boolean(key) && key.length === 1 && (key[0].t === "str" || key[0].t === "num");
+          if (!literalKey) dynamic(`Reflect.${method} with a key that is not one literal`);
+          else if (key[0].t === "str" && PROCESS_DENIED_NAMES.includes(key[0].v)) dynamic(`Reflect.${method} of the process member "${key[0].v}"`);
+        } else {
+          dynamic(`Reflect.${method} used other than as a direct call`);
+        }
       }
     }
     if (tk.t === "id" && tk.v === "binding" && tokens[k - 1] && tokens[k - 1].v === "." && tokens[k - 2] && tokens[k - 2].v === "process") {
@@ -706,12 +1241,12 @@ export function moduleReferences(source, options = {}) {
     if (tk.t === "id" && tk.v === "constructor") {
       const before = tokens[k - 1];
       const after = tokens[k + 1];
-      const classMethod = before && before.t === "punct" && ["{", "}", ";"].includes(before.v) && after && after.t === "punct" && after.v === "(";
+      const classMethod = before && before.t === "punct" && ["{", "}", ";"].includes(before.v) && after && after.t === "punct" && after.v === "(" && inClassBody(tokens, k);
       // `x.constructor.name` and `x.constructor === Y` consume the value without keeping a reference to it: a
       // string and a boolean cannot load anything. These two are the only member uses that are permitted.
       const n2 = tokens[k + 2];
       const n3 = tokens[k + 3];
-      const memberBefore = before && before.t === "punct" && before.v === ".";
+      const memberBefore = isMemberDot(tokens, k - 1);
       const named = memberBefore && ((after && after.v === "." && n2 && n2.t === "id" && n2.v === "name") || (after && after.v === "?" && n2 && n2.v === "." && n3 && n3.t === "id" && n3.v === "name"));
       const compared = memberBefore && after && (after.v === "=" || after.v === "!") && n2 && n2.v === "=";
       if (!classMethod && !named && !compared) dynamic("constructor used other than as a class's own method, compared, or named, which reaches Function");
@@ -731,10 +1266,18 @@ export function moduleReferences(source, options = {}) {
     if (tk.t === "id" && TIMER_NAMES.includes(tk.v) && !inClause.has(k) && !isCalledAt(tokens, k)) {
       dynamic(`reference to ${tk.v} that is not a direct call`);
     }
-    const memberOf = tokens[k - 1] && tokens[k - 1].t === "punct" && tokens[k - 1].v === ".";
+    const memberOf = isMemberDot(tokens, k - 1);
     if (tk.t === "id" && tk.v === "require" && !isCalledAt(tokens, k)) {
       unreadable.push({ form: "require", specifier: `reference that is not a literal call at offset ${tk.s}` });
     }
+    // { "require": r } takes require into the binding r (a quoted key bound to a name, then , } or =); a quoted key whose
+    // value is an expression (an arrow, a call, a string) only stores something under that key.
+    const boundValue = tokens[k + 2] && tokens[k + 2].t === "id" && tokens[k + 3] && tokens[k + 3].t === "punct" && [",", "}", "="].includes(tokens[k + 3].v);
+    if (tk.t === "str" && tk.v === "require" && quotedKeyAt(tokens, k) && boundValue) {
+      unreadable.push({ form: "require", specifier: `quoted key naming require at offset ${tk.s}` });
+    }
+    if (tk.t === "str" && tk.v === "createRequire" && !arrayElements.has(k)) unreadable.push({ form: "createRequire", specifier: `at offset ${tk.s}` });
+    if ((tk.t === "id" || tk.t === "str") && tk.v === "load" && !tk.inRegex && memberOfModuleObject(tokens, k)) dynamic("module load, which runs a file");
     if (tk.t === "str" && tk.v === "require" && tokens[k - 1] && tokens[k - 1].v === "[" && tokens[k + 1] && tokens[k + 1].v === "]" && !isCalledAt(tokens, k + 1)) {
       unreadable.push({ form: "require", specifier: `computed reference that is not a literal call at offset ${tk.s}` });
     }
@@ -878,7 +1421,7 @@ export function externalReferences(source, where) {
   const { specifiers, unreadable } = moduleReferences(source, { dynamicCode: where.dynamicCode !== false });
   const out = unreadable.map((u) => `${u.form} ${u.specifier}`);
   for (const { form, specifier } of specifiers) {
-    if (where.dynamicCode !== false && LOADER_CAPABLE_MODULES.some((m) => specifier === m || specifier === "node:" + m)) {
+    if (where.dynamicCode !== false && isLoaderCapable(specifier)) {
       out.push(`${form} ${specifier} is a loader-capable module (starts processes, runs source text, loads native code or changes module loading)`);
       continue;
     }
@@ -929,6 +1472,94 @@ export function directCallTexts(source, names) {
     const info = {};
     if (callArguments(tokens, open, info) === null) continue;
     out.push(tokens.slice(k, info.end + 1).map((t) => (t.t === "str" ? JSON.stringify(t.v) : t.v)).join(" "));
+  }
+  return out;
+}
+
+/**
+ * The static import declarations of a token stream: `start` is the index of `import` and `spec` the index of the module
+ * specifier string. `import(...)`, `import.meta` and a declaration whose specifier cannot be found are not listed.
+ * The specifier is the string that follows `from` outside the braces (a quoted import name such as
+ * `{ "x" as y }` is a string inside the braces and is not the specifier), or the string right after a bare `import`.
+ */
+function staticImports(tokens) {
+  const out = [];
+  for (let k = 0; k < tokens.length; k += 1) {
+    const tk = tokens[k];
+    if (tk.t !== "id" || tk.v !== "import" || tk.inRegex || isMemberDot(tokens, k - 1)) continue;
+    const after = tokens[k + 1];
+    if (!after || (after.t === "punct" && (after.v === "(" || after.v === "."))) continue;
+    if (after.t === "str") {
+      out.push({ start: k, spec: k + 1 });
+      continue;
+    }
+    let depth = 0;
+    for (let j = k + 1; j < tokens.length; j += 1) {
+      const x = tokens[j];
+      if (x.t === "punct" && x.v === "{") depth += 1;
+      else if (x.t === "punct" && x.v === "}") depth -= 1;
+      else if (depth === 0 && x.t === "punct" && x.v === ";") break;
+      else if (depth === 0 && x.t === "id" && x.v === "from" && tokens[j + 1] && tokens[j + 1].t === "str") {
+        out.push({ start: k, spec: j + 1 });
+        break;
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Every reference to one of `names` in `source` that is not a direct call `name(...)` and not part of an import
+ * clause: an alias (`const a = spawnSync`), `.call` / `.apply` / `.bind`, an optional or parenthesised call, a
+ * value passed on or listed, a re-export. An allowlist entry records the direct calls a reviewer read
+ * (directCallTexts); any other way of reaching the same function is a call nobody read.
+ */
+export function indirectNameReferences(source, names) {
+  const { tokens } = tokenize(source);
+  const inImport = new Set();
+  for (const { start, spec } of staticImports(tokens)) {
+    for (let j = start + 1; j <= spec; j += 1) inImport.add(j);
+  }
+  const out = [];
+  for (let k = 0; k < tokens.length; k += 1) {
+    const tk = tokens[k];
+    if (tk.t !== "id" || !names.includes(tk.v) || tk.inRegex || inImport.has(k)) continue;
+    const direct = tokens[k + 1] && tokens[k + 1].v === "(" && !tokens[k + 1].syn && !isMemberDot(tokens, k - 1);
+    if (!direct) out.push(`${tk.v} at offset ${tk.s}`);
+  }
+  return out;
+}
+
+/**
+ * The import statements in `source` of the module `specifier` whose bindings are not exactly named imports, each
+ * one of `names`, unaliased (`import { spawnSync } from "node:child_process"`). A namespace, a default, an alias
+ * (`{ spawn as sp }`), a name not listed and a bare `import "x"` all bind or load the module in a way an
+ * allowlist entry that records only `names` did not review. Each result is the clause as written.
+ */
+export function unreviewedImports(source, specifier, names) {
+  const { tokens } = tokenize(source);
+  const out = [];
+  for (const { start, spec } of staticImports(tokens)) {
+    const j = spec;
+    if (tokens[j].v !== specifier) continue;
+    // the clause is everything between `import` and the `from` before the specifier (nothing for `import "x"`)
+    const clause = tokens[j - 1] && tokens[j - 1].v === "from" && j - 1 > start ? tokens.slice(start + 1, j - 1) : [];
+    const text = clause.map((c) => c.v).join(" ");
+    let valid = clause.length >= 3 && clause[0].v === "{" && clause[clause.length - 1].v === "}";
+    if (valid) {
+      let inner = clause.slice(1, -1);
+      if (inner.length > 0 && inner[inner.length - 1].v === ",") inner = inner.slice(0, -1);
+      for (let n = 0; n < inner.length; n += 1) {
+        const c = inner[n];
+        if (n % 2 === 0) {
+          if (c.t !== "id" || !names.includes(c.v)) valid = false;
+        } else if (!(c.t === "punct" && c.v === ",")) {
+          valid = false;
+        }
+      }
+      if (inner.length % 2 === 0) valid = false;
+    }
+    if (!valid) out.push(text || "(no bindings)");
   }
   return out;
 }

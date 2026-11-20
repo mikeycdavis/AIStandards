@@ -447,6 +447,43 @@ test("YAML: properties separated from their node by comments keep their written 
   assert.deepEqual(names, ["x"]);
 });
 
+// Codex finding on PR #125 (still open when it merged): in JSON-compatible flow YAML a value may follow a quoted
+// key's colon with no blank, and its properties were then not recovered (the parser's resolved tag was reported).
+test("YAML: properties directly after a quoted key's colon in a flow mapping keep their written spelling and offset", () => {
+  const cases = [
+    ['a: {"k":!!str v}\n', [["v", "!!str", null]]],
+    ["a: {'k':!!str v}\n", [["v", "!!str", null]]],
+    ['a: {"k":&x v}\n', [["v", null, "x"]]],
+    ['a: {"k":&x !!str v, "j":!local w}\n', [["v", "!!str", "x"], ["w", "!local", null]]],
+    ['a: {"k":!<tag:yaml.org,2002:str> v}\n', [["v", "!<tag:yaml.org,2002:str>", null]]],
+    // review of 4557d13 (Codex): a colon-and-property sequence INSIDE the quoted key is key content, not the separator
+    ["a: {'x\":!bogus':!!str v}\n", [["v", "!!str", null]]],
+    ['a: {"x\\":!bogus":!!str v}\n', [["v", "!!str", null]]],
+    ["a: {'it''s\":!bad':&x v}\n", [["v", null, "x"]]],
+    ["a: {'x&y:!z':!!str v}\n", [["v", "!!str", null]]],
+    // review of a2c9e51: a quoted key with a blank in it, and a colon on the next line
+    ['a: {"a b":!!str v}\n', [["v", "!!str", null]]],
+    ["a: {'a b c':&x v}\n", [["v", null, "x"]]],
+    ['a: {"a"\n  :!!str v}\n', [["v", "!!str", null]]],
+    ['a: {"a b" :!!str v}\n', [["v", "!!str", null]]],
+  ];
+  for (const [text, expected] of cases) {
+    const r = parseStructuralText("t.yml", text, "yaml");
+    assert.equal(r.ok, true, text);
+    const seen = [];
+    walk(root(r), (n) => {
+      if (n.tag === undefined && n.anchor === undefined) return;
+      seen.push([n.value, n.tag?.source ?? null, n.anchor?.name ?? null]);
+      if (n.tag) {
+        assert.equal(n.tag.resolved, undefined, text + ": the written spelling is recovered, not flagged resolved");
+        assert.equal(text.slice(n.tag.offset, n.tag.offset + n.tag.source.length), n.tag.source, text + ": offset points at the spelling");
+      }
+      if (n.anchor) assert.equal(text.slice(n.anchor.offset, n.anchor.offset + 1 + n.anchor.name.length), "&" + n.anchor.name, text + ": anchor offset");
+    });
+    assert.deepEqual(seen, expected, text);
+  }
+});
+
 test("YAML: a tag that cannot be located in the text is flagged resolved, never reported as written", () => {
   // A verbatim tag followed by a comment that ends in ">" must not have the comment folded into it.
   const hidden = parseStructuralText("t.yml", "a: !<t> # x>\n  1\n", "yaml");
