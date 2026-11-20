@@ -198,7 +198,7 @@ export function splitSource(text, filePath) {
     }
     if (matched) continue;
 
-    const ch = text[i];
+    const ch = text.at(i);
 
     // The lines after a YAML block-scalar header (`key: |`, `- >-`) are string data, however much they
     // look like keys, sequence items, quotes or comments. The whole extent is one string: kept in the

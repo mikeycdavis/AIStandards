@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { analyzeSource, renderFinding, directCallTexts as astDirectCallTexts } from "./ast-guard.mjs";
+export { analyzeSource, indirectNameReferences, unreviewedImports, ambientOffenders, OUTCOME, RULES } from "./ast-guard.mjs";
+export const directCallTexts = astDirectCallTexts;
 
 // Reading JavaScript source for module references and property-setting calls, shared by the vendor
 // isolation guard (vendor-yaml.test.mjs) and the repository-wide invariant-4 scan (no-phase-creep.test.mjs).
@@ -65,6 +68,7 @@ export function stripComments(source, keepStrings = false) {
         else if (last === ")") regex = closesControlHead(before);
         else if (last === "]") regex = false;
         else if (/[\w$]/.test(last)) regex = REGEX_KEYWORDS.has(/[\w$]+$/.exec(before)[0]);
+        else if ((last === "+" || last === "-") && before.endsWith(last + last)) regex = false; // a postfix ++ or --: a regex is not assignable, so this is a division
         else regex = true;
         let j = i + 1;
         let closed = false;
@@ -302,7 +306,9 @@ export function tokenize(source) {
         const p = toks[toks.length - 1];
         let regex = true;
         if (p) {
-          if (p.t === "punct") regex = p.v === ")" ? lastCloseControl : p.v !== "]";
+          const pp = toks[toks.length - 2];
+          const postfix = (p.v === "+" || p.v === "-") && pp && pp.t === "punct" && pp.v === p.v && pp.e === p.s;
+          if (p.t === "punct") regex = p.v === ")" ? lastCloseControl : p.v !== "]" && !postfix;
           else if (p.t === "id") regex = REGEX_KEYWORDS.has(p.v);
           else regex = false;
         }
@@ -875,10 +881,23 @@ export function externalReferences(source, where) {
       return "unresolvable";
     }
   };
-  const { specifiers, unreadable } = moduleReferences(source, { dynamicCode: where.dynamicCode !== false });
-  const out = unreadable.map((u) => `${u.form} ${u.specifier}`);
+  // ST-61: the syntax tree (ast-guard.mjs) is authoritative; the token reading is defense in depth. The two are
+  // UNITED: a finding from either fails, and the token reading can never turn an UNKNOWN or VIOLATION from the
+  // tree into a pass.
+  const ast = analyzeSource(source, { dynamicCode: where.dynamicCode !== false });
+  // The token reading is quadratic on pathological nesting. It can only add failures, so once the tree has already
+  // failed (a violation, an unknown, a bound or a parse failure) running it cannot change the verdict and it is skipped.
+  const tok = ast.outcome === "CLEAN" ? moduleReferences(source, { dynamicCode: where.dynamicCode !== false }) : { specifiers: [], unreadable: [] };
+  const out = [...new Set([...ast.findings.map(renderFinding), ...tok.unreadable.map((u) => `${u.form} ${u.specifier}`)])];
+  const seenSpec = new Set();
+  const specifiers = [...ast.specifiers, ...tok.specifiers].filter((s) => {
+    const k = `${s.form}\0${s.specifier}`;
+    if (seenSpec.has(k)) return false;
+    seenSpec.add(k);
+    return true;
+  });
   for (const { form, specifier } of specifiers) {
-    if (where.dynamicCode !== false && LOADER_CAPABLE_MODULES.some((m) => specifier === m || specifier === "node:" + m)) {
+    if (where.dynamicCode !== false && LOADER_CAPABLE_MODULES.some((m) => specifier === m || specifier === "node:" + m || specifier.startsWith(m + "/") || specifier.startsWith("node:" + m + "/"))) {
       out.push(`${form} ${specifier} is a loader-capable module (starts processes, runs source text, loads native code or changes module loading)`);
       continue;
     }
@@ -918,7 +937,7 @@ export function externalReferences(source, where) {
  * space-joined token string. An allowlist entry records the calls a reviewer read; any other call, or any edit
  * of one, no longer matches.
  */
-export function directCallTexts(source, names) {
+export function tokenDirectCallTexts(source, names) {
   const { tokens } = tokenize(source);
   const out = [];
   for (let k = 0; k < tokens.length; k += 1) {

@@ -114,13 +114,13 @@ export function assertVersionIdentity(policy, frameworkVersion, policyPath) {
  * project can see how much of the catalog it never considered.
  */
 export function applyPolicy(catalog, policy) {
-  const declared = policy.rules ?? {};
-  const applicability = policy.applicability ?? {};
+  const declared = new Map(Object.entries(policy.rules ?? {}));
+  const applicability = new Map(Object.entries(policy.applicability ?? {}));
   const out = new Map();
 
   for (const [id, rule] of catalog.rules) {
-    const setting = declared[id];
-    const declaration = applicability[id];
+    const setting = declared.get(id);
+    const declaration = applicability.get(id);
     out.set(id, {
       rule,
       level: setting?.level ?? rule.level,
@@ -133,7 +133,7 @@ export function applyPolicy(catalog, policy) {
 
   // A policy naming a rule the catalog does not define is a configuration error. Silently ignoring
   // it would let a typo look like an adopted rule for as long as nobody checked.
-  const unknown = [...new Set([...Object.keys(declared), ...Object.keys(applicability)])]
+  const unknown = [...new Set([...declared.keys(), ...applicability.keys()])]
     .filter((id) => !catalog.rules.has(id));
   if (unknown.length > 0) {
     throw new PolicyError(

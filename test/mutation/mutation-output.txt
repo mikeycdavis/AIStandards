@@ -1,0 +1,52 @@
+baseline: exit 0 {"pass":194,"fail":0}
+class-1 AST classification KILLED assertion {"pass":193,"fail":1}
+class-3 AST classification KILLED assertion {"pass":193,"fail":1}
+scope-1 scope ownership KILLED assertion {"pass":184,"fail":10}
+scope-2 scope ownership KILLED assertion {"pass":193,"fail":1}
+alias-1 alias propagation KILLED assertion {"pass":187,"fail":7}
+alias-2 alias propagation KILLED assertion {"pass":193,"fail":1}
+alias-3 alias propagation KILLED assertion {"pass":193,"fail":1}
+reassign-1 reassignment KILLED assertion {"pass":193,"fail":1}
+reassign-2 reassignment KILLED assertion {"pass":192,"fail":2}
+unknown-1 UNKNOWN production KILLED assertion {"pass":180,"fail":14}
+unknown-2 UNKNOWN production KILLED assertion {"pass":193,"fail":1}
+unknown-3 UNKNOWN production KILLED assertion {"pass":193,"fail":1}
+unknown-4 UNKNOWN production KILLED assertion {"pass":193,"fail":1}
+token-1 token-guard defense KILLED assertion {"pass":193,"fail":1}
+token-2 token-guard defense SURVIVED  {"pass":194,"fail":0}
+token-3 token-guard defense KILLED assertion {"pass":121,"fail":73}
+rev-1-fixpoint-bound reviewer survivor KILLED assertion {"pass":193,"fail":1}
+rev-2-global-computed reviewer survivor KILLED assertion {"pass":193,"fail":1}
+rev-3-chain-unwrap reviewer survivor KILLED assertion {"pass":193,"fail":1}
+rev-4-spread-open reviewer survivor KILLED assertion {"pass":193,"fail":1}
+rev-5-carveout-local reviewer survivor KILLED assertion {"pass":193,"fail":1}
+rev-6-carveout-count reviewer survivor KILLED assertion {"pass":193,"fail":1}
+rev-7-vendored-skips-U reviewer survivor KILLED assertion {"pass":193,"fail":1}
+rev-8-optional-direct-call reviewer survivor KILLED assertion {"pass":192,"fail":2}
+b1-token-rule-off B1 optional slash KILLED assertion {"pass":191,"fail":3}
+b1-bracket-exempt B1 optional slash KILLED assertion {"pass":193,"fail":1}
+b1-hazard-ignored B1 optional slash KILLED assertion {"pass":191,"fail":3}
+b2-denied-any-object B2 process internals KILLED assertion {"pass":178,"fail":16}
+b2-open-object B2 process internals KILLED assertion {"pass":193,"fail":1}
+b2-built-name B2 process internals KILLED assertion {"pass":193,"fail":1}
+b2-with B2 process internals KILLED assertion {"pass":190,"fail":4}
+b2-reflective-key B2 process internals KILLED assertion {"pass":192,"fail":2}
+b3-dynamic-reads-off B3 dynamic reads KILLED assertion {"pass":172,"fail":22}
+b3-argument-inert B3 dynamic reads KILLED assertion {"pass":183,"fail":11}
+b3-return-inert B3 dynamic reads KILLED assertion {"pass":191,"fail":3}
+b3-static-fn-unbound B3 dynamic reads KILLED assertion {"pass":193,"fail":1}
+r2-param-pattern B2 pattern positions KILLED assertion {"pass":193,"fail":1}
+r2-catch-pattern B2 pattern positions KILLED assertion {"pass":193,"fail":1}
+r2-for-declaration B2 pattern positions KILLED assertion {"pass":0,"fail":5}
+r2-for-assignment B2 pattern positions KILLED assertion {"pass":193,"fail":1}
+r2-rest-pattern B2 pattern positions KILLED assertion {"pass":193,"fail":1}
+r2-memo-off item 3 evaluation KILLED assertion {"pass":193,"fail":1}
+r2-evals-bound-off item 3 evaluation KILLED assertion {"pass":193,"fail":1}
+r2-callee-twice item 3 evaluation KILLED assertion {"pass":104,"fail":90}
+r2-member-property-inert item 4 dynamic read KILLED assertion {"pass":193,"fail":1}
+r2-descriptor-dynamic-key item 4 dynamic read KILLED assertion {"pass":193,"fail":1}
+r2-postfix-token-scan N-b postfix division KILLED assertion {"pass":193,"fail":1}
+r2-postfix-tokenizer N-b postfix division KILLED assertion {"pass":193,"fail":1}
+n3-token-guard-always N3 quadratic guard KILLED assertion {"pass":193,"fail":1}
+by assertion: 48, by crash: 0, by timeout: 0
+summary: 48 killed, 1 survived, 0 not applied, of 49
